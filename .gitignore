@@ -1,0 +1,18 @@
+# Ambientes e dependências
+.venv/
+node_modules/
+dist/
+build/
+.env
+
+# Banco vetorial de teste e arquivos temporários
+data/chroma_db/
+tmp/
+*.log
+
+# Graphify caches internos (mantém graph.html, GRAPH_REPORT.md e graph.json)
+graphify-out/.graphify_*
+graphify-out/obsidian/
+
+# Subagent Development Ledger & Scratch
+.superpowers/

@@ -1,0 +1,56 @@
+{
+  "scripts/rag/index_mei.py": {
+    "mtime": 1790970765.1895037,
+    "seen": 1790970918.913278,
+    "ast_hash": "d3e3373281718817e72a8962871c79dd",
+    "semantic_hash": "d3e3373281718817e72a8962871c79dd"
+  },
+  "scripts/rag/query_mei.py": {
+    "mtime": 1790970772.300458,
+    "seen": 1790970918.9132836,
+    "ast_hash": "8a58cb3e9faaad7b8249aa53ac66b70b",
+    "semantic_hash": "8a58cb3e9faaad7b8249aa53ac66b70b"
+  },
+  "scripts/rag/recreate_rag.sh": {
+    "mtime": 1790970803.3332505,
+    "seen": 1790970918.9132864,
+    "ast_hash": "32a799874442ef8ea09a7fbab3d3ec1b",
+    "semantic_hash": "32a799874442ef8ea09a7fbab3d3ec1b"
+  },
+  "README.md": {
+    "mtime": 1790970962.5380096,
+    "seen": 1790971364.6572642,
+    "ast_hash": "9481bd5c979579b436ec4e05447d49f8",
+    "semantic_hash": ""
+  },
+  "docs/api.md": {
+    "mtime": 1790968000.6629803,
+    "seen": 1790970918.9132926,
+    "ast_hash": "6b7c61c17606038ae30ec034048e6965",
+    "semantic_hash": "6b7c61c17606038ae30ec034048e6965"
+  },
+  "docs/modelo-dados.md": {
+    "mtime": 1790971356.3500538,
+    "seen": 1790971364.6572692,
+    "ast_hash": "0e967df4eb5fb302cc43b542a1e1033d",
+    "semantic_hash": ""
+  },
+  "docs/regras-negocio.md": {
+    "mtime": 1790968011.3912725,
+    "seen": 1790970918.9132998,
+    "ast_hash": "72b2a804355c0e9562ac5cd6fe611b45",
+    "semantic_hash": "72b2a804355c0e9562ac5cd6fe611b45"
+  },
+  "plan.md": {
+    "mtime": 1790970974.9929018,
+    "seen": 1790971364.6572735,
+    "ast_hash": "3573bcd35163de0fa8a04d573151b85e",
+    "semantic_hash": ""
+  },
+  "docs/perguntaomei.pdf": {
+    "mtime": 1790970202.6628766,
+    "seen": 1790970918.913307,
+    "ast_hash": "07fd6e0d701e1149be0f795ca847905b",
+    "semantic_hash": "07fd6e0d701e1149be0f795ca847905b"
+  }
+}
