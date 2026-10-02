@@ -527,6 +527,18 @@
       "source_location": "L45"
     },
     {
+      "id": "backend_src_middlewares_authmiddleware_authmiddleware",
+      "label": "authMiddleware()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 15,
+      "community_name": "authRoutes.js",
+      "file_type": "code",
+      "norm_label": "authmiddleware()",
+      "source_file": "backend/src/middlewares/authMiddleware.js",
+      "source_location": "L8"
+    },
+    {
       "id": "backend_src_database_migrate_runmigration",
       "label": "runMigration()",
       "_callable": true,
@@ -539,16 +551,16 @@
       "source_location": "L9"
     },
     {
-      "id": "backend_src_middlewares_authmiddleware_authmiddleware",
-      "label": "authMiddleware()",
+      "id": "backend_src_database_seed_seed",
+      "label": "seed()",
       "_callable": true,
       "_origin": "ast",
-      "community": 3,
-      "community_name": "backend/package.json",
+      "community": 2,
+      "community_name": "authService.js",
       "file_type": "code",
-      "norm_label": "authmiddleware()",
-      "source_file": "backend/src/middlewares/authMiddleware.js",
-      "source_location": "L8"
+      "norm_label": "seed()",
+      "source_file": "backend/src/database/seed.js",
+      "source_location": "L4"
     },
     {
       "id": "backend_src_services_financeiroservice_normalizardata",
@@ -760,6 +772,94 @@
       "source_location": "L8"
     },
     {
+      "id": "backend_tests_agendamentos_test",
+      "label": "agendamentos.test.js",
+      "_origin": "ast",
+      "community": 12,
+      "community_name": "database.js",
+      "file_type": "code",
+      "norm_label": "agendamentos.test.js",
+      "source_file": "backend/tests/agendamentos.test.js",
+      "source_location": "L1"
+    },
+    {
+      "id": "backend_tests_agendamentos_test_app",
+      "label": "app",
+      "_origin": "ast",
+      "community": 12,
+      "community_name": "database.js",
+      "file_type": "code",
+      "norm_label": "app",
+      "source_file": "backend/tests/agendamentos.test.js",
+      "source_location": "L2"
+    },
+    {
+      "id": "backend_tests_agendamentos_test_pool",
+      "label": "pool",
+      "_origin": "ast",
+      "community": 12,
+      "community_name": "database.js",
+      "file_type": "code",
+      "norm_label": "pool",
+      "source_file": "backend/tests/agendamentos.test.js",
+      "source_location": "L3"
+    },
+    {
+      "id": "backend_tests_agendamentos_test_request",
+      "label": "request",
+      "_origin": "ast",
+      "community": 12,
+      "community_name": "database.js",
+      "file_type": "code",
+      "norm_label": "request",
+      "source_file": "backend/tests/agendamentos.test.js",
+      "source_location": "L1"
+    },
+    {
+      "id": "backend_tests_auth_test",
+      "label": "auth.test.js",
+      "_origin": "ast",
+      "community": 12,
+      "community_name": "database.js",
+      "file_type": "code",
+      "norm_label": "auth.test.js",
+      "source_file": "backend/tests/auth.test.js",
+      "source_location": "L1"
+    },
+    {
+      "id": "backend_tests_auth_test_app",
+      "label": "app",
+      "_origin": "ast",
+      "community": 12,
+      "community_name": "database.js",
+      "file_type": "code",
+      "norm_label": "app",
+      "source_file": "backend/tests/auth.test.js",
+      "source_location": "L2"
+    },
+    {
+      "id": "backend_tests_auth_test_pool",
+      "label": "pool",
+      "_origin": "ast",
+      "community": 12,
+      "community_name": "database.js",
+      "file_type": "code",
+      "norm_label": "pool",
+      "source_file": "backend/tests/auth.test.js",
+      "source_location": "L3"
+    },
+    {
+      "id": "backend_tests_auth_test_request",
+      "label": "request",
+      "_origin": "ast",
+      "community": 12,
+      "community_name": "database.js",
+      "file_type": "code",
+      "norm_label": "request",
+      "source_file": "backend/tests/auth.test.js",
+      "source_location": "L1"
+    },
+    {
       "id": "backend_tests_clientes_test",
       "label": "clientes.test.js",
       "_origin": "ast",
@@ -804,6 +904,50 @@
       "source_location": "L1"
     },
     {
+      "id": "backend_tests_dashboard_test",
+      "label": "dashboard.test.js",
+      "_origin": "ast",
+      "community": 12,
+      "community_name": "database.js",
+      "file_type": "code",
+      "norm_label": "dashboard.test.js",
+      "source_file": "backend/tests/dashboard.test.js",
+      "source_location": "L1"
+    },
+    {
+      "id": "backend_tests_dashboard_test_app",
+      "label": "app",
+      "_origin": "ast",
+      "community": 12,
+      "community_name": "database.js",
+      "file_type": "code",
+      "norm_label": "app",
+      "source_file": "backend/tests/dashboard.test.js",
+      "source_location": "L2"
+    },
+    {
+      "id": "backend_tests_dashboard_test_pool",
+      "label": "pool",
+      "_origin": "ast",
+      "community": 12,
+      "community_name": "database.js",
+      "file_type": "code",
+      "norm_label": "pool",
+      "source_file": "backend/tests/dashboard.test.js",
+      "source_location": "L3"
+    },
+    {
+      "id": "backend_tests_dashboard_test_request",
+      "label": "request",
+      "_origin": "ast",
+      "community": 12,
+      "community_name": "database.js",
+      "file_type": "code",
+      "norm_label": "request",
+      "source_file": "backend/tests/dashboard.test.js",
+      "source_location": "L1"
+    },
+    {
       "id": "backend_tests_database_test",
       "label": "database.test.js",
       "_origin": "ast",
@@ -824,6 +968,226 @@
       "norm_label": "pool",
       "source_file": "backend/tests/database.test.js",
       "source_location": "L1"
+    },
+    {
+      "id": "backend_tests_e2e_jornada_test",
+      "label": "e2e-jornada.test.js",
+      "_origin": "ast",
+      "community": 12,
+      "community_name": "database.js",
+      "file_type": "code",
+      "norm_label": "e2e-jornada.test.js",
+      "source_file": "backend/tests/e2e-jornada.test.js",
+      "source_location": "L1"
+    },
+    {
+      "id": "backend_tests_e2e_jornada_test_app",
+      "label": "app",
+      "_origin": "ast",
+      "community": 12,
+      "community_name": "database.js",
+      "file_type": "code",
+      "norm_label": "app",
+      "source_file": "backend/tests/e2e-jornada.test.js",
+      "source_location": "L2"
+    },
+    {
+      "id": "backend_tests_e2e_jornada_test_pool",
+      "label": "pool",
+      "_origin": "ast",
+      "community": 12,
+      "community_name": "database.js",
+      "file_type": "code",
+      "norm_label": "pool",
+      "source_file": "backend/tests/e2e-jornada.test.js",
+      "source_location": "L3"
+    },
+    {
+      "id": "backend_tests_e2e_jornada_test_request",
+      "label": "request",
+      "_origin": "ast",
+      "community": 12,
+      "community_name": "database.js",
+      "file_type": "code",
+      "norm_label": "request",
+      "source_file": "backend/tests/e2e-jornada.test.js",
+      "source_location": "L1"
+    },
+    {
+      "id": "backend_tests_financeiro_test",
+      "label": "financeiro.test.js",
+      "_origin": "ast",
+      "community": 12,
+      "community_name": "database.js",
+      "file_type": "code",
+      "norm_label": "financeiro.test.js",
+      "source_file": "backend/tests/financeiro.test.js",
+      "source_location": "L1"
+    },
+    {
+      "id": "backend_tests_financeiro_test_app",
+      "label": "app",
+      "_origin": "ast",
+      "community": 12,
+      "community_name": "database.js",
+      "file_type": "code",
+      "norm_label": "app",
+      "source_file": "backend/tests/financeiro.test.js",
+      "source_location": "L2"
+    },
+    {
+      "id": "backend_tests_financeiro_test_pool",
+      "label": "pool",
+      "_origin": "ast",
+      "community": 12,
+      "community_name": "database.js",
+      "file_type": "code",
+      "norm_label": "pool",
+      "source_file": "backend/tests/financeiro.test.js",
+      "source_location": "L3"
+    },
+    {
+      "id": "backend_tests_financeiro_test_request",
+      "label": "request",
+      "_origin": "ast",
+      "community": 12,
+      "community_name": "database.js",
+      "file_type": "code",
+      "norm_label": "request",
+      "source_file": "backend/tests/financeiro.test.js",
+      "source_location": "L1"
+    },
+    {
+      "id": "backend_tests_health_test",
+      "label": "health.test.js",
+      "_origin": "ast",
+      "community": 12,
+      "community_name": "database.js",
+      "file_type": "code",
+      "norm_label": "health.test.js",
+      "source_file": "backend/tests/health.test.js",
+      "source_location": "L1"
+    },
+    {
+      "id": "backend_tests_health_test_app",
+      "label": "app",
+      "_origin": "ast",
+      "community": 12,
+      "community_name": "database.js",
+      "file_type": "code",
+      "norm_label": "app",
+      "source_file": "backend/tests/health.test.js",
+      "source_location": "L2"
+    },
+    {
+      "id": "backend_tests_health_test_request",
+      "label": "request",
+      "_origin": "ast",
+      "community": 12,
+      "community_name": "database.js",
+      "file_type": "code",
+      "norm_label": "request",
+      "source_file": "backend/tests/health.test.js",
+      "source_location": "L1"
+    },
+    {
+      "id": "backend_tests_orcamentos_test",
+      "label": "orcamentos.test.js",
+      "_origin": "ast",
+      "community": 12,
+      "community_name": "database.js",
+      "file_type": "code",
+      "norm_label": "orcamentos.test.js",
+      "source_file": "backend/tests/orcamentos.test.js",
+      "source_location": "L1"
+    },
+    {
+      "id": "backend_tests_orcamentos_test_app",
+      "label": "app",
+      "_origin": "ast",
+      "community": 12,
+      "community_name": "database.js",
+      "file_type": "code",
+      "norm_label": "app",
+      "source_file": "backend/tests/orcamentos.test.js",
+      "source_location": "L2"
+    },
+    {
+      "id": "backend_tests_orcamentos_test_pool",
+      "label": "pool",
+      "_origin": "ast",
+      "community": 12,
+      "community_name": "database.js",
+      "file_type": "code",
+      "norm_label": "pool",
+      "source_file": "backend/tests/orcamentos.test.js",
+      "source_location": "L3"
+    },
+    {
+      "id": "backend_tests_orcamentos_test_request",
+      "label": "request",
+      "_origin": "ast",
+      "community": 12,
+      "community_name": "database.js",
+      "file_type": "code",
+      "norm_label": "request",
+      "source_file": "backend/tests/orcamentos.test.js",
+      "source_location": "L1"
+    },
+    {
+      "id": "backend_tests_servicos_test",
+      "label": "servicos.test.js",
+      "_origin": "ast",
+      "community": 12,
+      "community_name": "database.js",
+      "file_type": "code",
+      "norm_label": "servicos.test.js",
+      "source_file": "backend/tests/servicos.test.js",
+      "source_location": "L1"
+    },
+    {
+      "id": "backend_tests_servicos_test_app",
+      "label": "app",
+      "_origin": "ast",
+      "community": 12,
+      "community_name": "database.js",
+      "file_type": "code",
+      "norm_label": "app",
+      "source_file": "backend/tests/servicos.test.js",
+      "source_location": "L2"
+    },
+    {
+      "id": "backend_tests_servicos_test_pool",
+      "label": "pool",
+      "_origin": "ast",
+      "community": 12,
+      "community_name": "database.js",
+      "file_type": "code",
+      "norm_label": "pool",
+      "source_file": "backend/tests/servicos.test.js",
+      "source_location": "L3"
+    },
+    {
+      "id": "backend_tests_servicos_test_request",
+      "label": "request",
+      "_origin": "ast",
+      "community": 12,
+      "community_name": "database.js",
+      "file_type": "code",
+      "norm_label": "request",
+      "source_file": "backend/tests/servicos.test.js",
+      "source_location": "L1"
+    },
+    {
+      "id": "ref_supertest",
+      "label": "supertest",
+      "_origin": "ast",
+      "community": 12,
+      "community_name": "database.js",
+      "file_type": "concept",
+      "norm_label": "supertest",
+      "source_file": "backend/package.json",
+      "source_location": "L22"
     },
     {
       "id": "backend_src_app",
@@ -1409,48 +1773,92 @@
       "source_location": "L28"
     },
     {
-      "id": "backend_tests_agendamentos_test",
-      "label": "agendamentos.test.js",
+      "id": "backend_src_middlewares_authmiddleware",
+      "label": "authMiddleware.js",
       "_origin": "ast",
       "community": 15,
-      "community_name": "agendamentos.test.js",
+      "community_name": "authRoutes.js",
       "file_type": "code",
-      "norm_label": "agendamentos.test.js",
-      "source_file": "backend/tests/agendamentos.test.js",
+      "norm_label": "authmiddleware.js",
+      "source_file": "backend/src/middlewares/authMiddleware.js",
       "source_location": "L1"
     },
     {
-      "id": "backend_tests_agendamentos_test_app",
-      "label": "app",
+      "id": "backend_src_middlewares_authmiddleware_jwt",
+      "label": "jwt",
       "_origin": "ast",
       "community": 15,
-      "community_name": "agendamentos.test.js",
+      "community_name": "authRoutes.js",
       "file_type": "code",
-      "norm_label": "app",
-      "source_file": "backend/tests/agendamentos.test.js",
+      "norm_label": "jwt",
+      "source_file": "backend/src/middlewares/authMiddleware.js",
+      "source_location": "L1"
+    },
+    {
+      "id": "backend_src_routes_authroutes",
+      "label": "authRoutes.js",
+      "_origin": "ast",
+      "community": 15,
+      "community_name": "authRoutes.js",
+      "file_type": "code",
+      "norm_label": "authroutes.js",
+      "source_file": "backend/src/routes/authRoutes.js",
+      "source_location": "L1"
+    },
+    {
+      "id": "backend_src_routes_authroutes_authcontroller",
+      "label": "authController",
+      "_origin": "ast",
+      "community": 15,
+      "community_name": "authRoutes.js",
+      "file_type": "code",
+      "norm_label": "authcontroller",
+      "source_file": "backend/src/routes/authRoutes.js",
       "source_location": "L2"
     },
     {
-      "id": "backend_tests_agendamentos_test_pool",
-      "label": "pool",
+      "id": "backend_src_routes_authroutes_authmiddleware",
+      "label": "authMiddleware",
       "_origin": "ast",
       "community": 15,
-      "community_name": "agendamentos.test.js",
+      "community_name": "authRoutes.js",
       "file_type": "code",
-      "norm_label": "pool",
-      "source_file": "backend/tests/agendamentos.test.js",
+      "norm_label": "authmiddleware",
+      "source_file": "backend/src/routes/authRoutes.js",
       "source_location": "L3"
     },
     {
-      "id": "backend_tests_agendamentos_test_request",
-      "label": "request",
+      "id": "backend_src_routes_authroutes_express",
+      "label": "express",
       "_origin": "ast",
       "community": 15,
-      "community_name": "agendamentos.test.js",
+      "community_name": "authRoutes.js",
       "file_type": "code",
-      "norm_label": "request",
-      "source_file": "backend/tests/agendamentos.test.js",
+      "norm_label": "express",
+      "source_file": "backend/src/routes/authRoutes.js",
       "source_location": "L1"
+    },
+    {
+      "id": "backend_src_routes_authroutes_router",
+      "label": "router",
+      "_origin": "ast",
+      "community": 15,
+      "community_name": "authRoutes.js",
+      "file_type": "code",
+      "norm_label": "router",
+      "source_file": "backend/src/routes/authRoutes.js",
+      "source_location": "L5"
+    },
+    {
+      "id": "ref_jsonwebtoken",
+      "label": "jsonwebtoken",
+      "_origin": "ast",
+      "community": 15,
+      "community_name": "authRoutes.js",
+      "file_type": "concept",
+      "norm_label": "jsonwebtoken",
+      "source_file": "backend/package.json",
+      "source_location": "L16"
     },
     {
       "id": "backend_src_database_migrate",
@@ -1574,274 +1982,65 @@
       "source_location": "L17"
     },
     {
-      "id": "backend_tests_auth_test",
-      "label": "auth.test.js",
+      "id": "backend_src_routes_clienteroutes",
+      "label": "clienteRoutes.js",
       "_origin": "ast",
       "community": 17,
-      "community_name": "auth.test.js",
+      "community_name": "clienteRoutes.js",
       "file_type": "code",
-      "norm_label": "auth.test.js",
-      "source_file": "backend/tests/auth.test.js",
+      "norm_label": "clienteroutes.js",
+      "source_file": "backend/src/routes/clienteRoutes.js",
       "source_location": "L1"
     },
     {
-      "id": "backend_tests_auth_test_app",
-      "label": "app",
+      "id": "backend_src_routes_clienteroutes_authmiddleware",
+      "label": "authMiddleware",
       "_origin": "ast",
       "community": 17,
-      "community_name": "auth.test.js",
+      "community_name": "clienteRoutes.js",
       "file_type": "code",
-      "norm_label": "app",
-      "source_file": "backend/tests/auth.test.js",
-      "source_location": "L2"
-    },
-    {
-      "id": "backend_tests_auth_test_pool",
-      "label": "pool",
-      "_origin": "ast",
-      "community": 17,
-      "community_name": "auth.test.js",
-      "file_type": "code",
-      "norm_label": "pool",
-      "source_file": "backend/tests/auth.test.js",
+      "norm_label": "authmiddleware",
+      "source_file": "backend/src/routes/clienteRoutes.js",
       "source_location": "L3"
     },
     {
-      "id": "backend_tests_auth_test_request",
-      "label": "request",
+      "id": "backend_src_routes_clienteroutes_clientecontroller",
+      "label": "clienteController",
       "_origin": "ast",
       "community": 17,
-      "community_name": "auth.test.js",
+      "community_name": "clienteRoutes.js",
       "file_type": "code",
-      "norm_label": "request",
-      "source_file": "backend/tests/auth.test.js",
-      "source_location": "L1"
-    },
-    {
-      "id": "backend_tests_dashboard_test",
-      "label": "dashboard.test.js",
-      "_origin": "ast",
-      "community": 18,
-      "community_name": "dashboard.test.js",
-      "file_type": "code",
-      "norm_label": "dashboard.test.js",
-      "source_file": "backend/tests/dashboard.test.js",
-      "source_location": "L1"
-    },
-    {
-      "id": "backend_tests_dashboard_test_app",
-      "label": "app",
-      "_origin": "ast",
-      "community": 18,
-      "community_name": "dashboard.test.js",
-      "file_type": "code",
-      "norm_label": "app",
-      "source_file": "backend/tests/dashboard.test.js",
+      "norm_label": "clientecontroller",
+      "source_file": "backend/src/routes/clienteRoutes.js",
       "source_location": "L2"
     },
     {
-      "id": "backend_tests_dashboard_test_pool",
-      "label": "pool",
-      "_origin": "ast",
-      "community": 18,
-      "community_name": "dashboard.test.js",
-      "file_type": "code",
-      "norm_label": "pool",
-      "source_file": "backend/tests/dashboard.test.js",
-      "source_location": "L3"
-    },
-    {
-      "id": "backend_tests_dashboard_test_request",
-      "label": "request",
-      "_origin": "ast",
-      "community": 18,
-      "community_name": "dashboard.test.js",
-      "file_type": "code",
-      "norm_label": "request",
-      "source_file": "backend/tests/dashboard.test.js",
-      "source_location": "L1"
-    },
-    {
-      "id": "backend_src_controllers_cobrancacontroller",
-      "label": "cobrancaController.js",
-      "_origin": "ast",
-      "community": 19,
-      "community_name": "express",
-      "file_type": "code",
-      "norm_label": "cobrancacontroller.js",
-      "source_file": "backend/src/controllers/cobrancaController.js",
-      "source_location": "L1"
-    },
-    {
-      "id": "backend_src_controllers_cobrancacontroller_cobrancacontroller",
-      "label": "cobrancaController",
-      "_origin": "ast",
-      "community": 19,
-      "community_name": "express",
-      "file_type": "code",
-      "norm_label": "cobrancacontroller",
-      "source_file": "backend/src/controllers/cobrancaController.js",
-      "source_location": "L6"
-    },
-    {
-      "id": "backend_src_controllers_cobrancacontroller_financeiroservice",
-      "label": "financeiroService",
-      "_origin": "ast",
-      "community": 19,
-      "community_name": "express",
-      "file_type": "code",
-      "norm_label": "financeiroservice",
-      "source_file": "backend/src/controllers/cobrancaController.js",
-      "source_location": "L1"
-    },
-    {
-      "id": "backend_src_controllers_dashboardcontroller",
-      "label": "dashboardController.js",
-      "_origin": "ast",
-      "community": 19,
-      "community_name": "express",
-      "file_type": "code",
-      "norm_label": "dashboardcontroller.js",
-      "source_file": "backend/src/controllers/dashboardController.js",
-      "source_location": "L1"
-    },
-    {
-      "id": "backend_src_controllers_dashboardcontroller_dashboardcontroller",
-      "label": "dashboardController",
-      "_origin": "ast",
-      "community": 19,
-      "community_name": "express",
-      "file_type": "code",
-      "norm_label": "dashboardcontroller",
-      "source_file": "backend/src/controllers/dashboardController.js",
-      "source_location": "L6"
-    },
-    {
-      "id": "backend_src_controllers_dashboardcontroller_dashboardservice",
-      "label": "dashboardService",
-      "_origin": "ast",
-      "community": 19,
-      "community_name": "express",
-      "file_type": "code",
-      "norm_label": "dashboardservice",
-      "source_file": "backend/src/controllers/dashboardController.js",
-      "source_location": "L1"
-    },
-    {
-      "id": "backend_src_controllers_movimentacaocontroller",
-      "label": "movimentacaoController.js",
-      "_origin": "ast",
-      "community": 19,
-      "community_name": "express",
-      "file_type": "code",
-      "norm_label": "movimentacaocontroller.js",
-      "source_file": "backend/src/controllers/movimentacaoController.js",
-      "source_location": "L1"
-    },
-    {
-      "id": "backend_src_controllers_movimentacaocontroller_financeiroservice",
-      "label": "financeiroService",
-      "_origin": "ast",
-      "community": 19,
-      "community_name": "express",
-      "file_type": "code",
-      "norm_label": "financeiroservice",
-      "source_file": "backend/src/controllers/movimentacaoController.js",
-      "source_location": "L1"
-    },
-    {
-      "id": "backend_src_controllers_movimentacaocontroller_movimentacaocontroller",
-      "label": "movimentacaoController",
-      "_origin": "ast",
-      "community": 19,
-      "community_name": "express",
-      "file_type": "code",
-      "norm_label": "movimentacaocontroller",
-      "source_file": "backend/src/controllers/movimentacaoController.js",
-      "source_location": "L6"
-    },
-    {
-      "id": "backend_src_controllers_orcamentocontroller",
-      "label": "orcamentoController.js",
-      "_origin": "ast",
-      "community": 19,
-      "community_name": "express",
-      "file_type": "code",
-      "norm_label": "orcamentocontroller.js",
-      "source_file": "backend/src/controllers/orcamentoController.js",
-      "source_location": "L1"
-    },
-    {
-      "id": "backend_src_controllers_orcamentocontroller_orcamentocontroller",
-      "label": "orcamentoController",
-      "_origin": "ast",
-      "community": 19,
-      "community_name": "express",
-      "file_type": "code",
-      "norm_label": "orcamentocontroller",
-      "source_file": "backend/src/controllers/orcamentoController.js",
-      "source_location": "L6"
-    },
-    {
-      "id": "backend_src_controllers_orcamentocontroller_orcamentoservice",
-      "label": "orcamentoService",
-      "_origin": "ast",
-      "community": 19,
-      "community_name": "express",
-      "file_type": "code",
-      "norm_label": "orcamentoservice",
-      "source_file": "backend/src/controllers/orcamentoController.js",
-      "source_location": "L1"
-    },
-    {
-      "id": "backend_src_routes_cobrancaroutes",
-      "label": "cobrancaRoutes.js",
-      "_origin": "ast",
-      "community": 19,
-      "community_name": "express",
-      "file_type": "code",
-      "norm_label": "cobrancaroutes.js",
-      "source_file": "backend/src/routes/cobrancaRoutes.js",
-      "source_location": "L1"
-    },
-    {
-      "id": "backend_src_routes_cobrancaroutes_cobrancacontroller",
-      "label": "cobrancaController",
-      "_origin": "ast",
-      "community": 19,
-      "community_name": "express",
-      "file_type": "code",
-      "norm_label": "cobrancacontroller",
-      "source_file": "backend/src/routes/cobrancaRoutes.js",
-      "source_location": "L2"
-    },
-    {
-      "id": "backend_src_routes_cobrancaroutes_express",
+      "id": "backend_src_routes_clienteroutes_express",
       "label": "express",
       "_origin": "ast",
-      "community": 19,
-      "community_name": "express",
+      "community": 17,
+      "community_name": "clienteRoutes.js",
       "file_type": "code",
       "norm_label": "express",
-      "source_file": "backend/src/routes/cobrancaRoutes.js",
+      "source_file": "backend/src/routes/clienteRoutes.js",
       "source_location": "L1"
     },
     {
-      "id": "backend_src_routes_cobrancaroutes_router",
+      "id": "backend_src_routes_clienteroutes_router",
       "label": "router",
       "_origin": "ast",
-      "community": 19,
-      "community_name": "express",
+      "community": 17,
+      "community_name": "clienteRoutes.js",
       "file_type": "code",
       "norm_label": "router",
-      "source_file": "backend/src/routes/cobrancaRoutes.js",
-      "source_location": "L4"
+      "source_file": "backend/src/routes/clienteRoutes.js",
+      "source_location": "L5"
     },
     {
       "id": "backend_src_routes_dashboardroutes",
       "label": "dashboardRoutes.js",
       "_origin": "ast",
-      "community": 19,
+      "community": 18,
       "community_name": "express",
       "file_type": "code",
       "norm_label": "dashboardroutes.js",
@@ -1852,7 +2051,7 @@
       "id": "backend_src_routes_dashboardroutes_dashboardcontroller",
       "label": "dashboardController",
       "_origin": "ast",
-      "community": 19,
+      "community": 18,
       "community_name": "express",
       "file_type": "code",
       "norm_label": "dashboardcontroller",
@@ -1863,7 +2062,7 @@
       "id": "backend_src_routes_dashboardroutes_express",
       "label": "express",
       "_origin": "ast",
-      "community": 19,
+      "community": 18,
       "community_name": "express",
       "file_type": "code",
       "norm_label": "express",
@@ -1874,7 +2073,7 @@
       "id": "backend_src_routes_dashboardroutes_router",
       "label": "router",
       "_origin": "ast",
-      "community": 19,
+      "community": 18,
       "community_name": "express",
       "file_type": "code",
       "norm_label": "router",
@@ -1882,99 +2081,55 @@
       "source_location": "L4"
     },
     {
-      "id": "backend_src_routes_movimentacaoroutes",
-      "label": "movimentacaoRoutes.js",
-      "_origin": "ast",
-      "community": 19,
-      "community_name": "express",
-      "file_type": "code",
-      "norm_label": "movimentacaoroutes.js",
-      "source_file": "backend/src/routes/movimentacaoRoutes.js",
-      "source_location": "L1"
-    },
-    {
-      "id": "backend_src_routes_movimentacaoroutes_express",
+      "id": "ref_express",
       "label": "express",
       "_origin": "ast",
-      "community": 19,
+      "community": 18,
       "community_name": "express",
-      "file_type": "code",
+      "file_type": "concept",
       "norm_label": "express",
-      "source_file": "backend/src/routes/movimentacaoRoutes.js",
+      "source_file": "backend/package.json",
+      "source_location": "L15"
+    },
+    {
+      "id": "backend_src_controllers_dashboardcontroller",
+      "label": "dashboardController.js",
+      "_origin": "ast",
+      "community": 19,
+      "community_name": "dashboardController.js",
+      "file_type": "code",
+      "norm_label": "dashboardcontroller.js",
+      "source_file": "backend/src/controllers/dashboardController.js",
       "source_location": "L1"
     },
     {
-      "id": "backend_src_routes_movimentacaoroutes_movimentacaocontroller",
-      "label": "movimentacaoController",
+      "id": "backend_src_controllers_dashboardcontroller_dashboardcontroller",
+      "label": "dashboardController",
       "_origin": "ast",
       "community": 19,
-      "community_name": "express",
+      "community_name": "dashboardController.js",
       "file_type": "code",
-      "norm_label": "movimentacaocontroller",
-      "source_file": "backend/src/routes/movimentacaoRoutes.js",
-      "source_location": "L2"
+      "norm_label": "dashboardcontroller",
+      "source_file": "backend/src/controllers/dashboardController.js",
+      "source_location": "L6"
     },
     {
-      "id": "backend_src_routes_movimentacaoroutes_router",
-      "label": "router",
+      "id": "backend_src_controllers_dashboardcontroller_dashboardservice",
+      "label": "dashboardService",
       "_origin": "ast",
       "community": 19,
-      "community_name": "express",
+      "community_name": "dashboardController.js",
       "file_type": "code",
-      "norm_label": "router",
-      "source_file": "backend/src/routes/movimentacaoRoutes.js",
-      "source_location": "L4"
-    },
-    {
-      "id": "backend_src_routes_orcamentoroutes",
-      "label": "orcamentoRoutes.js",
-      "_origin": "ast",
-      "community": 19,
-      "community_name": "express",
-      "file_type": "code",
-      "norm_label": "orcamentoroutes.js",
-      "source_file": "backend/src/routes/orcamentoRoutes.js",
+      "norm_label": "dashboardservice",
+      "source_file": "backend/src/controllers/dashboardController.js",
       "source_location": "L1"
-    },
-    {
-      "id": "backend_src_routes_orcamentoroutes_express",
-      "label": "express",
-      "_origin": "ast",
-      "community": 19,
-      "community_name": "express",
-      "file_type": "code",
-      "norm_label": "express",
-      "source_file": "backend/src/routes/orcamentoRoutes.js",
-      "source_location": "L1"
-    },
-    {
-      "id": "backend_src_routes_orcamentoroutes_orcamentocontroller",
-      "label": "orcamentoController",
-      "_origin": "ast",
-      "community": 19,
-      "community_name": "express",
-      "file_type": "code",
-      "norm_label": "orcamentocontroller",
-      "source_file": "backend/src/routes/orcamentoRoutes.js",
-      "source_location": "L2"
-    },
-    {
-      "id": "backend_src_routes_orcamentoroutes_router",
-      "label": "router",
-      "_origin": "ast",
-      "community": 19,
-      "community_name": "express",
-      "file_type": "code",
-      "norm_label": "router",
-      "source_file": "backend/src/routes/orcamentoRoutes.js",
-      "source_location": "L4"
     },
     {
       "id": "backend_src_services_dashboardservice",
       "label": "dashboardService.js",
       "_origin": "ast",
       "community": 19,
-      "community_name": "express",
+      "community_name": "dashboardController.js",
       "file_type": "code",
       "norm_label": "dashboardservice.js",
       "source_file": "backend/src/services/dashboardService.js",
@@ -1985,7 +2140,7 @@
       "label": "dashboardService",
       "_origin": "ast",
       "community": 19,
-      "community_name": "express",
+      "community_name": "dashboardController.js",
       "file_type": "code",
       "norm_label": "dashboardservice",
       "source_file": "backend/src/services/dashboardService.js",
@@ -1996,242 +2151,407 @@
       "label": "pool",
       "_origin": "ast",
       "community": 19,
-      "community_name": "express",
+      "community_name": "dashboardController.js",
       "file_type": "code",
       "norm_label": "pool",
       "source_file": "backend/src/services/dashboardService.js",
       "source_location": "L1"
     },
     {
-      "id": "ref_express",
+      "id": "backend_src_controllers_authcontroller",
+      "label": "authController.js",
+      "_origin": "ast",
+      "community": 2,
+      "community_name": "authService.js",
+      "file_type": "code",
+      "norm_label": "authcontroller.js",
+      "source_file": "backend/src/controllers/authController.js",
+      "source_location": "L1"
+    },
+    {
+      "id": "backend_src_controllers_authcontroller_authcontroller",
+      "label": "authController",
+      "_origin": "ast",
+      "community": 2,
+      "community_name": "authService.js",
+      "file_type": "code",
+      "norm_label": "authcontroller",
+      "source_file": "backend/src/controllers/authController.js",
+      "source_location": "L6"
+    },
+    {
+      "id": "backend_src_controllers_authcontroller_authservice",
+      "label": "authService",
+      "_origin": "ast",
+      "community": 2,
+      "community_name": "authService.js",
+      "file_type": "code",
+      "norm_label": "authservice",
+      "source_file": "backend/src/controllers/authController.js",
+      "source_location": "L1"
+    },
+    {
+      "id": "backend_src_database_seed",
+      "label": "seed.js",
+      "_origin": "ast",
+      "community": 2,
+      "community_name": "authService.js",
+      "file_type": "code",
+      "norm_label": "seed.js",
+      "source_file": "backend/src/database/seed.js",
+      "source_location": "L1"
+    },
+    {
+      "id": "backend_src_database_seed_bcrypt",
+      "label": "bcrypt",
+      "_origin": "ast",
+      "community": 2,
+      "community_name": "authService.js",
+      "file_type": "code",
+      "norm_label": "bcrypt",
+      "source_file": "backend/src/database/seed.js",
+      "source_location": "L1"
+    },
+    {
+      "id": "backend_src_database_seed_pool",
+      "label": "pool",
+      "_origin": "ast",
+      "community": 2,
+      "community_name": "authService.js",
+      "file_type": "code",
+      "norm_label": "pool",
+      "source_file": "backend/src/database/seed.js",
+      "source_location": "L2"
+    },
+    {
+      "id": "backend_src_repositories_usuariorepository",
+      "label": "usuarioRepository.js",
+      "_origin": "ast",
+      "community": 2,
+      "community_name": "authService.js",
+      "file_type": "code",
+      "norm_label": "usuariorepository.js",
+      "source_file": "backend/src/repositories/usuarioRepository.js",
+      "source_location": "L1"
+    },
+    {
+      "id": "backend_src_repositories_usuariorepository_pool",
+      "label": "pool",
+      "_origin": "ast",
+      "community": 2,
+      "community_name": "authService.js",
+      "file_type": "code",
+      "norm_label": "pool",
+      "source_file": "backend/src/repositories/usuarioRepository.js",
+      "source_location": "L1"
+    },
+    {
+      "id": "backend_src_repositories_usuariorepository_usuariorepository",
+      "label": "usuarioRepository",
+      "_origin": "ast",
+      "community": 2,
+      "community_name": "authService.js",
+      "file_type": "code",
+      "norm_label": "usuariorepository",
+      "source_file": "backend/src/repositories/usuarioRepository.js",
+      "source_location": "L6"
+    },
+    {
+      "id": "backend_src_services_authservice",
+      "label": "authService.js",
+      "_origin": "ast",
+      "community": 2,
+      "community_name": "authService.js",
+      "file_type": "code",
+      "norm_label": "authservice.js",
+      "source_file": "backend/src/services/authService.js",
+      "source_location": "L1"
+    },
+    {
+      "id": "backend_src_services_authservice_authservice",
+      "label": "authService",
+      "_origin": "ast",
+      "community": 2,
+      "community_name": "authService.js",
+      "file_type": "code",
+      "norm_label": "authservice",
+      "source_file": "backend/src/services/authService.js",
+      "source_location": "L8"
+    },
+    {
+      "id": "backend_src_services_authservice_bcrypt",
+      "label": "bcrypt",
+      "_origin": "ast",
+      "community": 2,
+      "community_name": "authService.js",
+      "file_type": "code",
+      "norm_label": "bcrypt",
+      "source_file": "backend/src/services/authService.js",
+      "source_location": "L1"
+    },
+    {
+      "id": "backend_src_services_authservice_jwt",
+      "label": "jwt",
+      "_origin": "ast",
+      "community": 2,
+      "community_name": "authService.js",
+      "file_type": "code",
+      "norm_label": "jwt",
+      "source_file": "backend/src/services/authService.js",
+      "source_location": "L2"
+    },
+    {
+      "id": "backend_src_services_authservice_usuariorepository",
+      "label": "usuarioRepository",
+      "_origin": "ast",
+      "community": 2,
+      "community_name": "authService.js",
+      "file_type": "code",
+      "norm_label": "usuariorepository",
+      "source_file": "backend/src/services/authService.js",
+      "source_location": "L3"
+    },
+    {
+      "id": "ref_bcryptjs",
+      "label": "bcryptjs",
+      "_origin": "ast",
+      "community": 2,
+      "community_name": "authService.js",
+      "file_type": "concept",
+      "norm_label": "bcryptjs",
+      "source_file": "backend/package.json",
+      "source_location": "L12"
+    },
+    {
+      "id": "backend_src_routes_servicoroutes",
+      "label": "servicoRoutes.js",
+      "_origin": "ast",
+      "community": 20,
+      "community_name": "servicoRoutes.js",
+      "file_type": "code",
+      "norm_label": "servicoroutes.js",
+      "source_file": "backend/src/routes/servicoRoutes.js",
+      "source_location": "L1"
+    },
+    {
+      "id": "backend_src_routes_servicoroutes_authmiddleware",
+      "label": "authMiddleware",
+      "_origin": "ast",
+      "community": 20,
+      "community_name": "servicoRoutes.js",
+      "file_type": "code",
+      "norm_label": "authmiddleware",
+      "source_file": "backend/src/routes/servicoRoutes.js",
+      "source_location": "L3"
+    },
+    {
+      "id": "backend_src_routes_servicoroutes_express",
       "label": "express",
       "_origin": "ast",
-      "community": 19,
-      "community_name": "express",
-      "file_type": "concept",
+      "community": 20,
+      "community_name": "servicoRoutes.js",
+      "file_type": "code",
       "norm_label": "express",
-      "source_file": "backend/package.json",
-      "source_location": "L15"
-    },
-    {
-      "id": "backend_tests_financeiro_test",
-      "label": "financeiro.test.js",
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "supertest",
-      "file_type": "code",
-      "norm_label": "financeiro.test.js",
-      "source_file": "backend/tests/financeiro.test.js",
+      "source_file": "backend/src/routes/servicoRoutes.js",
       "source_location": "L1"
     },
     {
-      "id": "backend_tests_financeiro_test_app",
-      "label": "app",
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "supertest",
-      "file_type": "code",
-      "norm_label": "app",
-      "source_file": "backend/tests/financeiro.test.js",
-      "source_location": "L2"
-    },
-    {
-      "id": "backend_tests_financeiro_test_pool",
-      "label": "pool",
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "supertest",
-      "file_type": "code",
-      "norm_label": "pool",
-      "source_file": "backend/tests/financeiro.test.js",
-      "source_location": "L3"
-    },
-    {
-      "id": "backend_tests_financeiro_test_request",
-      "label": "request",
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "supertest",
-      "file_type": "code",
-      "norm_label": "request",
-      "source_file": "backend/tests/financeiro.test.js",
-      "source_location": "L1"
-    },
-    {
-      "id": "backend_tests_health_test",
-      "label": "health.test.js",
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "supertest",
-      "file_type": "code",
-      "norm_label": "health.test.js",
-      "source_file": "backend/tests/health.test.js",
-      "source_location": "L1"
-    },
-    {
-      "id": "backend_tests_health_test_app",
-      "label": "app",
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "supertest",
-      "file_type": "code",
-      "norm_label": "app",
-      "source_file": "backend/tests/health.test.js",
-      "source_location": "L2"
-    },
-    {
-      "id": "backend_tests_health_test_request",
-      "label": "request",
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "supertest",
-      "file_type": "code",
-      "norm_label": "request",
-      "source_file": "backend/tests/health.test.js",
-      "source_location": "L1"
-    },
-    {
-      "id": "ref_supertest",
-      "label": "supertest",
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "supertest",
-      "file_type": "concept",
-      "norm_label": "supertest",
-      "source_file": "backend/package.json",
-      "source_location": "L22"
-    },
-    {
-      "id": "backend_tests_e2e_jornada_test",
-      "label": "e2e-jornada.test.js",
+      "id": "backend_src_routes_servicoroutes_router",
+      "label": "router",
       "_origin": "ast",
       "community": 20,
-      "community_name": "e2e-jornada.test.js",
+      "community_name": "servicoRoutes.js",
       "file_type": "code",
-      "norm_label": "e2e-jornada.test.js",
-      "source_file": "backend/tests/e2e-jornada.test.js",
-      "source_location": "L1"
+      "norm_label": "router",
+      "source_file": "backend/src/routes/servicoRoutes.js",
+      "source_location": "L5"
     },
     {
-      "id": "backend_tests_e2e_jornada_test_app",
-      "label": "app",
+      "id": "backend_src_routes_servicoroutes_servicocontroller",
+      "label": "servicoController",
       "_origin": "ast",
       "community": 20,
-      "community_name": "e2e-jornada.test.js",
+      "community_name": "servicoRoutes.js",
       "file_type": "code",
-      "norm_label": "app",
-      "source_file": "backend/tests/e2e-jornada.test.js",
+      "norm_label": "servicocontroller",
+      "source_file": "backend/src/routes/servicoRoutes.js",
       "source_location": "L2"
     },
     {
-      "id": "backend_tests_e2e_jornada_test_pool",
-      "label": "pool",
+      "id": "backend_src_routes_agendamentoroutes",
+      "label": "agendamentoRoutes.js",
       "_origin": "ast",
-      "community": 20,
-      "community_name": "e2e-jornada.test.js",
+      "community": 21,
+      "community_name": "agendamentoRoutes.js",
       "file_type": "code",
-      "norm_label": "pool",
-      "source_file": "backend/tests/e2e-jornada.test.js",
-      "source_location": "L3"
-    },
-    {
-      "id": "backend_tests_e2e_jornada_test_request",
-      "label": "request",
-      "_origin": "ast",
-      "community": 20,
-      "community_name": "e2e-jornada.test.js",
-      "file_type": "code",
-      "norm_label": "request",
-      "source_file": "backend/tests/e2e-jornada.test.js",
+      "norm_label": "agendamentoroutes.js",
+      "source_file": "backend/src/routes/agendamentoRoutes.js",
       "source_location": "L1"
     },
     {
-      "id": "backend_tests_orcamentos_test",
-      "label": "orcamentos.test.js",
+      "id": "backend_src_routes_agendamentoroutes_agendamentocontroller",
+      "label": "agendamentoController",
       "_origin": "ast",
       "community": 21,
-      "community_name": "orcamentos.test.js",
+      "community_name": "agendamentoRoutes.js",
       "file_type": "code",
-      "norm_label": "orcamentos.test.js",
-      "source_file": "backend/tests/orcamentos.test.js",
-      "source_location": "L1"
-    },
-    {
-      "id": "backend_tests_orcamentos_test_app",
-      "label": "app",
-      "_origin": "ast",
-      "community": 21,
-      "community_name": "orcamentos.test.js",
-      "file_type": "code",
-      "norm_label": "app",
-      "source_file": "backend/tests/orcamentos.test.js",
+      "norm_label": "agendamentocontroller",
+      "source_file": "backend/src/routes/agendamentoRoutes.js",
       "source_location": "L2"
     },
     {
-      "id": "backend_tests_orcamentos_test_pool",
-      "label": "pool",
+      "id": "backend_src_routes_agendamentoroutes_express",
+      "label": "express",
       "_origin": "ast",
       "community": 21,
-      "community_name": "orcamentos.test.js",
+      "community_name": "agendamentoRoutes.js",
       "file_type": "code",
-      "norm_label": "pool",
-      "source_file": "backend/tests/orcamentos.test.js",
-      "source_location": "L3"
-    },
-    {
-      "id": "backend_tests_orcamentos_test_request",
-      "label": "request",
-      "_origin": "ast",
-      "community": 21,
-      "community_name": "orcamentos.test.js",
-      "file_type": "code",
-      "norm_label": "request",
-      "source_file": "backend/tests/orcamentos.test.js",
+      "norm_label": "express",
+      "source_file": "backend/src/routes/agendamentoRoutes.js",
       "source_location": "L1"
     },
     {
-      "id": "backend_tests_servicos_test",
-      "label": "servicos.test.js",
+      "id": "backend_src_routes_agendamentoroutes_router",
+      "label": "router",
+      "_origin": "ast",
+      "community": 21,
+      "community_name": "agendamentoRoutes.js",
+      "file_type": "code",
+      "norm_label": "router",
+      "source_file": "backend/src/routes/agendamentoRoutes.js",
+      "source_location": "L4"
+    },
+    {
+      "id": "backend_src_routes_cobrancaroutes",
+      "label": "cobrancaRoutes.js",
       "_origin": "ast",
       "community": 22,
-      "community_name": "servicos.test.js",
+      "community_name": "cobrancaRoutes.js",
       "file_type": "code",
-      "norm_label": "servicos.test.js",
-      "source_file": "backend/tests/servicos.test.js",
+      "norm_label": "cobrancaroutes.js",
+      "source_file": "backend/src/routes/cobrancaRoutes.js",
       "source_location": "L1"
     },
     {
-      "id": "backend_tests_servicos_test_app",
-      "label": "app",
+      "id": "backend_src_routes_cobrancaroutes_cobrancacontroller",
+      "label": "cobrancaController",
       "_origin": "ast",
       "community": 22,
-      "community_name": "servicos.test.js",
+      "community_name": "cobrancaRoutes.js",
       "file_type": "code",
-      "norm_label": "app",
-      "source_file": "backend/tests/servicos.test.js",
+      "norm_label": "cobrancacontroller",
+      "source_file": "backend/src/routes/cobrancaRoutes.js",
       "source_location": "L2"
     },
     {
-      "id": "backend_tests_servicos_test_pool",
-      "label": "pool",
+      "id": "backend_src_routes_cobrancaroutes_express",
+      "label": "express",
       "_origin": "ast",
       "community": 22,
-      "community_name": "servicos.test.js",
+      "community_name": "cobrancaRoutes.js",
       "file_type": "code",
-      "norm_label": "pool",
-      "source_file": "backend/tests/servicos.test.js",
-      "source_location": "L3"
+      "norm_label": "express",
+      "source_file": "backend/src/routes/cobrancaRoutes.js",
+      "source_location": "L1"
     },
     {
-      "id": "backend_tests_servicos_test_request",
-      "label": "request",
+      "id": "backend_src_routes_cobrancaroutes_router",
+      "label": "router",
       "_origin": "ast",
       "community": 22,
-      "community_name": "servicos.test.js",
+      "community_name": "cobrancaRoutes.js",
       "file_type": "code",
-      "norm_label": "request",
-      "source_file": "backend/tests/servicos.test.js",
+      "norm_label": "router",
+      "source_file": "backend/src/routes/cobrancaRoutes.js",
+      "source_location": "L4"
+    },
+    {
+      "id": "backend_src_routes_movimentacaoroutes",
+      "label": "movimentacaoRoutes.js",
+      "_origin": "ast",
+      "community": 23,
+      "community_name": "movimentacaoRoutes.js",
+      "file_type": "code",
+      "norm_label": "movimentacaoroutes.js",
+      "source_file": "backend/src/routes/movimentacaoRoutes.js",
       "source_location": "L1"
+    },
+    {
+      "id": "backend_src_routes_movimentacaoroutes_express",
+      "label": "express",
+      "_origin": "ast",
+      "community": 23,
+      "community_name": "movimentacaoRoutes.js",
+      "file_type": "code",
+      "norm_label": "express",
+      "source_file": "backend/src/routes/movimentacaoRoutes.js",
+      "source_location": "L1"
+    },
+    {
+      "id": "backend_src_routes_movimentacaoroutes_movimentacaocontroller",
+      "label": "movimentacaoController",
+      "_origin": "ast",
+      "community": 23,
+      "community_name": "movimentacaoRoutes.js",
+      "file_type": "code",
+      "norm_label": "movimentacaocontroller",
+      "source_file": "backend/src/routes/movimentacaoRoutes.js",
+      "source_location": "L2"
+    },
+    {
+      "id": "backend_src_routes_movimentacaoroutes_router",
+      "label": "router",
+      "_origin": "ast",
+      "community": 23,
+      "community_name": "movimentacaoRoutes.js",
+      "file_type": "code",
+      "norm_label": "router",
+      "source_file": "backend/src/routes/movimentacaoRoutes.js",
+      "source_location": "L4"
+    },
+    {
+      "id": "backend_src_routes_orcamentoroutes",
+      "label": "orcamentoRoutes.js",
+      "_origin": "ast",
+      "community": 24,
+      "community_name": "orcamentoRoutes.js",
+      "file_type": "code",
+      "norm_label": "orcamentoroutes.js",
+      "source_file": "backend/src/routes/orcamentoRoutes.js",
+      "source_location": "L1"
+    },
+    {
+      "id": "backend_src_routes_orcamentoroutes_express",
+      "label": "express",
+      "_origin": "ast",
+      "community": 24,
+      "community_name": "orcamentoRoutes.js",
+      "file_type": "code",
+      "norm_label": "express",
+      "source_file": "backend/src/routes/orcamentoRoutes.js",
+      "source_location": "L1"
+    },
+    {
+      "id": "backend_src_routes_orcamentoroutes_orcamentocontroller",
+      "label": "orcamentoController",
+      "_origin": "ast",
+      "community": 24,
+      "community_name": "orcamentoRoutes.js",
+      "file_type": "code",
+      "norm_label": "orcamentocontroller",
+      "source_file": "backend/src/routes/orcamentoRoutes.js",
+      "source_location": "L2"
+    },
+    {
+      "id": "backend_src_routes_orcamentoroutes_router",
+      "label": "router",
+      "_origin": "ast",
+      "community": 24,
+      "community_name": "orcamentoRoutes.js",
+      "file_type": "code",
+      "norm_label": "router",
+      "source_file": "backend/src/routes/orcamentoRoutes.js",
+      "source_location": "L4"
     },
     {
       "id": "backend_package",
@@ -2454,215 +2774,6 @@
       "source_location": "L3"
     },
     {
-      "id": "backend_src_controllers_authcontroller",
-      "label": "authController.js",
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "backend/package.json",
-      "file_type": "code",
-      "norm_label": "authcontroller.js",
-      "source_file": "backend/src/controllers/authController.js",
-      "source_location": "L1"
-    },
-    {
-      "id": "backend_src_controllers_authcontroller_authcontroller",
-      "label": "authController",
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "backend/package.json",
-      "file_type": "code",
-      "norm_label": "authcontroller",
-      "source_file": "backend/src/controllers/authController.js",
-      "source_location": "L6"
-    },
-    {
-      "id": "backend_src_controllers_authcontroller_authservice",
-      "label": "authService",
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "backend/package.json",
-      "file_type": "code",
-      "norm_label": "authservice",
-      "source_file": "backend/src/controllers/authController.js",
-      "source_location": "L1"
-    },
-    {
-      "id": "backend_src_middlewares_authmiddleware",
-      "label": "authMiddleware.js",
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "backend/package.json",
-      "file_type": "code",
-      "norm_label": "authmiddleware.js",
-      "source_file": "backend/src/middlewares/authMiddleware.js",
-      "source_location": "L1"
-    },
-    {
-      "id": "backend_src_middlewares_authmiddleware_jwt",
-      "label": "jwt",
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "backend/package.json",
-      "file_type": "code",
-      "norm_label": "jwt",
-      "source_file": "backend/src/middlewares/authMiddleware.js",
-      "source_location": "L1"
-    },
-    {
-      "id": "backend_src_repositories_usuariorepository",
-      "label": "usuarioRepository.js",
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "backend/package.json",
-      "file_type": "code",
-      "norm_label": "usuariorepository.js",
-      "source_file": "backend/src/repositories/usuarioRepository.js",
-      "source_location": "L1"
-    },
-    {
-      "id": "backend_src_repositories_usuariorepository_pool",
-      "label": "pool",
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "backend/package.json",
-      "file_type": "code",
-      "norm_label": "pool",
-      "source_file": "backend/src/repositories/usuarioRepository.js",
-      "source_location": "L1"
-    },
-    {
-      "id": "backend_src_repositories_usuariorepository_usuariorepository",
-      "label": "usuarioRepository",
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "backend/package.json",
-      "file_type": "code",
-      "norm_label": "usuariorepository",
-      "source_file": "backend/src/repositories/usuarioRepository.js",
-      "source_location": "L6"
-    },
-    {
-      "id": "backend_src_routes_authroutes",
-      "label": "authRoutes.js",
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "backend/package.json",
-      "file_type": "code",
-      "norm_label": "authroutes.js",
-      "source_file": "backend/src/routes/authRoutes.js",
-      "source_location": "L1"
-    },
-    {
-      "id": "backend_src_routes_authroutes_authcontroller",
-      "label": "authController",
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "backend/package.json",
-      "file_type": "code",
-      "norm_label": "authcontroller",
-      "source_file": "backend/src/routes/authRoutes.js",
-      "source_location": "L2"
-    },
-    {
-      "id": "backend_src_routes_authroutes_authmiddleware",
-      "label": "authMiddleware",
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "backend/package.json",
-      "file_type": "code",
-      "norm_label": "authmiddleware",
-      "source_file": "backend/src/routes/authRoutes.js",
-      "source_location": "L3"
-    },
-    {
-      "id": "backend_src_routes_authroutes_express",
-      "label": "express",
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "backend/package.json",
-      "file_type": "code",
-      "norm_label": "express",
-      "source_file": "backend/src/routes/authRoutes.js",
-      "source_location": "L1"
-    },
-    {
-      "id": "backend_src_routes_authroutes_router",
-      "label": "router",
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "backend/package.json",
-      "file_type": "code",
-      "norm_label": "router",
-      "source_file": "backend/src/routes/authRoutes.js",
-      "source_location": "L5"
-    },
-    {
-      "id": "backend_src_services_authservice",
-      "label": "authService.js",
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "backend/package.json",
-      "file_type": "code",
-      "norm_label": "authservice.js",
-      "source_file": "backend/src/services/authService.js",
-      "source_location": "L1"
-    },
-    {
-      "id": "backend_src_services_authservice_authservice",
-      "label": "authService",
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "backend/package.json",
-      "file_type": "code",
-      "norm_label": "authservice",
-      "source_file": "backend/src/services/authService.js",
-      "source_location": "L8"
-    },
-    {
-      "id": "backend_src_services_authservice_bcrypt",
-      "label": "bcrypt",
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "backend/package.json",
-      "file_type": "code",
-      "norm_label": "bcrypt",
-      "source_file": "backend/src/services/authService.js",
-      "source_location": "L1"
-    },
-    {
-      "id": "backend_src_services_authservice_jwt",
-      "label": "jwt",
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "backend/package.json",
-      "file_type": "code",
-      "norm_label": "jwt",
-      "source_file": "backend/src/services/authService.js",
-      "source_location": "L2"
-    },
-    {
-      "id": "backend_src_services_authservice_usuariorepository",
-      "label": "usuarioRepository",
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "backend/package.json",
-      "file_type": "code",
-      "norm_label": "usuariorepository",
-      "source_file": "backend/src/services/authService.js",
-      "source_location": "L3"
-    },
-    {
-      "id": "ref_bcryptjs",
-      "label": "bcryptjs",
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "backend/package.json",
-      "file_type": "concept",
-      "norm_label": "bcryptjs",
-      "source_file": "backend/package.json",
-      "source_location": "L12"
-    },
-    {
       "id": "ref_cors",
       "label": "cors",
       "_origin": "ast",
@@ -2694,17 +2805,6 @@
       "norm_label": "jest",
       "source_file": "backend/package.json",
       "source_location": "L20"
-    },
-    {
-      "id": "ref_jsonwebtoken",
-      "label": "jsonwebtoken",
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "backend/package.json",
-      "file_type": "concept",
-      "norm_label": "jsonwebtoken",
-      "source_file": "backend/package.json",
-      "source_location": "L16"
     },
     {
       "id": "ref_nodemon",
@@ -3169,6 +3269,105 @@
       "source_location": "L1"
     },
     {
+      "id": "backend_src_controllers_cobrancacontroller",
+      "label": "cobrancaController.js",
+      "_origin": "ast",
+      "community": 6,
+      "community_name": "financeiroService.js",
+      "file_type": "code",
+      "norm_label": "cobrancacontroller.js",
+      "source_file": "backend/src/controllers/cobrancaController.js",
+      "source_location": "L1"
+    },
+    {
+      "id": "backend_src_controllers_cobrancacontroller_cobrancacontroller",
+      "label": "cobrancaController",
+      "_origin": "ast",
+      "community": 6,
+      "community_name": "financeiroService.js",
+      "file_type": "code",
+      "norm_label": "cobrancacontroller",
+      "source_file": "backend/src/controllers/cobrancaController.js",
+      "source_location": "L6"
+    },
+    {
+      "id": "backend_src_controllers_cobrancacontroller_financeiroservice",
+      "label": "financeiroService",
+      "_origin": "ast",
+      "community": 6,
+      "community_name": "financeiroService.js",
+      "file_type": "code",
+      "norm_label": "financeiroservice",
+      "source_file": "backend/src/controllers/cobrancaController.js",
+      "source_location": "L1"
+    },
+    {
+      "id": "backend_src_controllers_movimentacaocontroller",
+      "label": "movimentacaoController.js",
+      "_origin": "ast",
+      "community": 6,
+      "community_name": "financeiroService.js",
+      "file_type": "code",
+      "norm_label": "movimentacaocontroller.js",
+      "source_file": "backend/src/controllers/movimentacaoController.js",
+      "source_location": "L1"
+    },
+    {
+      "id": "backend_src_controllers_movimentacaocontroller_financeiroservice",
+      "label": "financeiroService",
+      "_origin": "ast",
+      "community": 6,
+      "community_name": "financeiroService.js",
+      "file_type": "code",
+      "norm_label": "financeiroservice",
+      "source_file": "backend/src/controllers/movimentacaoController.js",
+      "source_location": "L1"
+    },
+    {
+      "id": "backend_src_controllers_movimentacaocontroller_movimentacaocontroller",
+      "label": "movimentacaoController",
+      "_origin": "ast",
+      "community": 6,
+      "community_name": "financeiroService.js",
+      "file_type": "code",
+      "norm_label": "movimentacaocontroller",
+      "source_file": "backend/src/controllers/movimentacaoController.js",
+      "source_location": "L6"
+    },
+    {
+      "id": "backend_src_controllers_orcamentocontroller",
+      "label": "orcamentoController.js",
+      "_origin": "ast",
+      "community": 6,
+      "community_name": "financeiroService.js",
+      "file_type": "code",
+      "norm_label": "orcamentocontroller.js",
+      "source_file": "backend/src/controllers/orcamentoController.js",
+      "source_location": "L1"
+    },
+    {
+      "id": "backend_src_controllers_orcamentocontroller_orcamentocontroller",
+      "label": "orcamentoController",
+      "_origin": "ast",
+      "community": 6,
+      "community_name": "financeiroService.js",
+      "file_type": "code",
+      "norm_label": "orcamentocontroller",
+      "source_file": "backend/src/controllers/orcamentoController.js",
+      "source_location": "L6"
+    },
+    {
+      "id": "backend_src_controllers_orcamentocontroller_orcamentoservice",
+      "label": "orcamentoService",
+      "_origin": "ast",
+      "community": 6,
+      "community_name": "financeiroService.js",
+      "file_type": "code",
+      "norm_label": "orcamentoservice",
+      "source_file": "backend/src/controllers/orcamentoController.js",
+      "source_location": "L1"
+    },
+    {
       "id": "backend_src_repositories_clienterepository",
       "label": "clienteRepository.js",
       "_origin": "ast",
@@ -3299,61 +3498,6 @@
       "norm_label": "pool",
       "source_file": "backend/src/repositories/orcamentoRepository.js",
       "source_location": "L1"
-    },
-    {
-      "id": "backend_src_routes_clienteroutes",
-      "label": "clienteRoutes.js",
-      "_origin": "ast",
-      "community": 6,
-      "community_name": "financeiroService.js",
-      "file_type": "code",
-      "norm_label": "clienteroutes.js",
-      "source_file": "backend/src/routes/clienteRoutes.js",
-      "source_location": "L1"
-    },
-    {
-      "id": "backend_src_routes_clienteroutes_authmiddleware",
-      "label": "authMiddleware",
-      "_origin": "ast",
-      "community": 6,
-      "community_name": "financeiroService.js",
-      "file_type": "code",
-      "norm_label": "authmiddleware",
-      "source_file": "backend/src/routes/clienteRoutes.js",
-      "source_location": "L3"
-    },
-    {
-      "id": "backend_src_routes_clienteroutes_clientecontroller",
-      "label": "clienteController",
-      "_origin": "ast",
-      "community": 6,
-      "community_name": "financeiroService.js",
-      "file_type": "code",
-      "norm_label": "clientecontroller",
-      "source_file": "backend/src/routes/clienteRoutes.js",
-      "source_location": "L2"
-    },
-    {
-      "id": "backend_src_routes_clienteroutes_express",
-      "label": "express",
-      "_origin": "ast",
-      "community": 6,
-      "community_name": "financeiroService.js",
-      "file_type": "code",
-      "norm_label": "express",
-      "source_file": "backend/src/routes/clienteRoutes.js",
-      "source_location": "L1"
-    },
-    {
-      "id": "backend_src_routes_clienteroutes_router",
-      "label": "router",
-      "_origin": "ast",
-      "community": 6,
-      "community_name": "financeiroService.js",
-      "file_type": "code",
-      "norm_label": "router",
-      "source_file": "backend/src/routes/clienteRoutes.js",
-      "source_location": "L5"
     },
     {
       "id": "backend_src_services_financeiroservice",
@@ -3540,7 +3684,7 @@
       "file_type": "code",
       "norm_label": "author",
       "source_file": "package.json",
-      "source_location": "L24"
+      "source_location": "L27"
     },
     {
       "id": "package_description",
@@ -3562,7 +3706,7 @@
       "file_type": "code",
       "norm_label": "keywords",
       "source_file": "package.json",
-      "source_location": "L16"
+      "source_location": "L19"
     },
     {
       "id": "package_license",
@@ -3573,7 +3717,7 @@
       "file_type": "code",
       "norm_label": "license",
       "source_file": "package.json",
-      "source_location": "L25"
+      "source_location": "L28"
     },
     {
       "id": "package_name",
@@ -3617,7 +3761,18 @@
       "file_type": "code",
       "norm_label": "build:frontend",
       "source_file": "package.json",
-      "source_location": "L10"
+      "source_location": "L12"
+    },
+    {
+      "id": "package_scripts_db_seed",
+      "label": "db:seed",
+      "_origin": "ast",
+      "community": 7,
+      "community_name": "scripts",
+      "file_type": "code",
+      "norm_label": "db:seed",
+      "source_file": "package.json",
+      "source_location": "L13"
     },
     {
       "id": "package_scripts_dev_backend",
@@ -3650,7 +3805,7 @@
       "file_type": "code",
       "norm_label": "graphify:query",
       "source_file": "package.json",
-      "source_location": "L13"
+      "source_location": "L16"
     },
     {
       "id": "package_scripts_graphify_update",
@@ -3661,7 +3816,7 @@
       "file_type": "code",
       "norm_label": "graphify:update",
       "source_file": "package.json",
-      "source_location": "L14"
+      "source_location": "L17"
     },
     {
       "id": "package_scripts_rag_query",
@@ -3672,7 +3827,7 @@
       "file_type": "code",
       "norm_label": "rag:query",
       "source_file": "package.json",
-      "source_location": "L11"
+      "source_location": "L14"
     },
     {
       "id": "package_scripts_rag_recreate",
@@ -3683,7 +3838,18 @@
       "file_type": "code",
       "norm_label": "rag:recreate",
       "source_file": "package.json",
-      "source_location": "L12"
+      "source_location": "L15"
+    },
+    {
+      "id": "package_scripts_test",
+      "label": "test",
+      "_origin": "ast",
+      "community": 7,
+      "community_name": "scripts",
+      "file_type": "code",
+      "norm_label": "test",
+      "source_file": "package.json",
+      "source_location": "L9"
     },
     {
       "id": "package_scripts_test_backend",
@@ -3694,7 +3860,18 @@
       "file_type": "code",
       "norm_label": "test:backend",
       "source_file": "package.json",
-      "source_location": "L9"
+      "source_location": "L10"
+    },
+    {
+      "id": "package_scripts_test_frontend",
+      "label": "test:frontend",
+      "_origin": "ast",
+      "community": 7,
+      "community_name": "scripts",
+      "file_type": "code",
+      "norm_label": "test:frontend",
+      "source_file": "package.json",
+      "source_location": "L11"
     },
     {
       "id": "package_version",
@@ -3838,105 +4015,6 @@
       "norm_label": "servicorepository",
       "source_file": "backend/src/repositories/servicoRepository.js",
       "source_location": "L6"
-    },
-    {
-      "id": "backend_src_routes_agendamentoroutes",
-      "label": "agendamentoRoutes.js",
-      "_origin": "ast",
-      "community": 8,
-      "community_name": "agendamentoService.js",
-      "file_type": "code",
-      "norm_label": "agendamentoroutes.js",
-      "source_file": "backend/src/routes/agendamentoRoutes.js",
-      "source_location": "L1"
-    },
-    {
-      "id": "backend_src_routes_agendamentoroutes_agendamentocontroller",
-      "label": "agendamentoController",
-      "_origin": "ast",
-      "community": 8,
-      "community_name": "agendamentoService.js",
-      "file_type": "code",
-      "norm_label": "agendamentocontroller",
-      "source_file": "backend/src/routes/agendamentoRoutes.js",
-      "source_location": "L2"
-    },
-    {
-      "id": "backend_src_routes_agendamentoroutes_express",
-      "label": "express",
-      "_origin": "ast",
-      "community": 8,
-      "community_name": "agendamentoService.js",
-      "file_type": "code",
-      "norm_label": "express",
-      "source_file": "backend/src/routes/agendamentoRoutes.js",
-      "source_location": "L1"
-    },
-    {
-      "id": "backend_src_routes_agendamentoroutes_router",
-      "label": "router",
-      "_origin": "ast",
-      "community": 8,
-      "community_name": "agendamentoService.js",
-      "file_type": "code",
-      "norm_label": "router",
-      "source_file": "backend/src/routes/agendamentoRoutes.js",
-      "source_location": "L4"
-    },
-    {
-      "id": "backend_src_routes_servicoroutes",
-      "label": "servicoRoutes.js",
-      "_origin": "ast",
-      "community": 8,
-      "community_name": "agendamentoService.js",
-      "file_type": "code",
-      "norm_label": "servicoroutes.js",
-      "source_file": "backend/src/routes/servicoRoutes.js",
-      "source_location": "L1"
-    },
-    {
-      "id": "backend_src_routes_servicoroutes_authmiddleware",
-      "label": "authMiddleware",
-      "_origin": "ast",
-      "community": 8,
-      "community_name": "agendamentoService.js",
-      "file_type": "code",
-      "norm_label": "authmiddleware",
-      "source_file": "backend/src/routes/servicoRoutes.js",
-      "source_location": "L3"
-    },
-    {
-      "id": "backend_src_routes_servicoroutes_express",
-      "label": "express",
-      "_origin": "ast",
-      "community": 8,
-      "community_name": "agendamentoService.js",
-      "file_type": "code",
-      "norm_label": "express",
-      "source_file": "backend/src/routes/servicoRoutes.js",
-      "source_location": "L1"
-    },
-    {
-      "id": "backend_src_routes_servicoroutes_router",
-      "label": "router",
-      "_origin": "ast",
-      "community": 8,
-      "community_name": "agendamentoService.js",
-      "file_type": "code",
-      "norm_label": "router",
-      "source_file": "backend/src/routes/servicoRoutes.js",
-      "source_location": "L5"
-    },
-    {
-      "id": "backend_src_routes_servicoroutes_servicocontroller",
-      "label": "servicoController",
-      "_origin": "ast",
-      "community": 8,
-      "community_name": "agendamentoService.js",
-      "file_type": "code",
-      "norm_label": "servicocontroller",
-      "source_file": "backend/src/routes/servicoRoutes.js",
-      "source_location": "L2"
     },
     {
       "id": "backend_src_services_agendamentoservice",
@@ -5145,7 +5223,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/src/pages/Dashboard.jsx",
-      "source_location": "L154",
+      "source_location": "L171",
       "weight": 1.0
     },
     {
@@ -5157,7 +5235,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/src/pages/Dashboard.jsx",
-      "source_location": "L411",
+      "source_location": "L428",
       "weight": 1.0
     },
     {
@@ -5169,7 +5247,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/src/pages/Dashboard.jsx",
-      "source_location": "L414",
+      "source_location": "L431",
       "weight": 1.0
     },
     {
@@ -5181,7 +5259,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/src/pages/Dashboard.jsx",
-      "source_location": "L450",
+      "source_location": "L467",
       "weight": 1.0
     },
     {
@@ -6886,6 +6964,30 @@
       "context": "import",
       "source_file": "backend/src/database/migrate.js",
       "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "backend_src_database_seed",
+      "target": "ref_bcryptjs",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "backend/src/database/seed.js",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "backend_src_database_seed",
+      "target": "backend_src_config_database",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "backend/src/database/seed.js",
+      "source_location": "L2",
       "weight": 1.0
     },
     {
@@ -10047,6 +10149,39 @@
       "weight": 1.0
     },
     {
+      "source": "backend_src_database_seed",
+      "target": "backend_src_database_seed_bcrypt",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "backend/src/database/seed.js",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "backend_src_database_seed",
+      "target": "backend_src_database_seed_pool",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "backend/src/database/seed.js",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "backend_src_database_seed",
+      "target": "backend_src_database_seed_seed",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "backend/src/database/seed.js",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
       "source": "backend_src_middlewares_authmiddleware",
       "target": "backend_src_middlewares_authmiddleware_jwt",
       "relation": "contains",
@@ -11836,7 +11971,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "package.json",
-      "source_location": "L16",
+      "source_location": "L19",
       "weight": 1.0
     },
     {
@@ -11858,7 +11993,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "package.json",
-      "source_location": "L24",
+      "source_location": "L27",
       "weight": 1.0
     },
     {
@@ -11869,7 +12004,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "package.json",
-      "source_location": "L25",
+      "source_location": "L28",
       "weight": 1.0
     },
     {
@@ -11918,7 +12053,7 @@
     },
     {
       "source": "package_scripts",
-      "target": "package_scripts_build_frontend",
+      "target": "package_scripts_test_backend",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -11929,7 +12064,7 @@
     },
     {
       "source": "package_scripts",
-      "target": "package_scripts_rag_query",
+      "target": "package_scripts_test_frontend",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -11940,7 +12075,7 @@
     },
     {
       "source": "package_scripts",
-      "target": "package_scripts_rag_recreate",
+      "target": "package_scripts_build_frontend",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -11951,7 +12086,7 @@
     },
     {
       "source": "package_scripts",
-      "target": "package_scripts_graphify_query",
+      "target": "package_scripts_db_seed",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -11962,13 +12097,46 @@
     },
     {
       "source": "package_scripts",
-      "target": "package_scripts_graphify_update",
+      "target": "package_scripts_rag_query",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "package.json",
       "source_location": "L14",
+      "weight": 1.0
+    },
+    {
+      "source": "package_scripts",
+      "target": "package_scripts_rag_recreate",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "package.json",
+      "source_location": "L15",
+      "weight": 1.0
+    },
+    {
+      "source": "package_scripts",
+      "target": "package_scripts_graphify_query",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "package.json",
+      "source_location": "L16",
+      "weight": 1.0
+    },
+    {
+      "source": "package_scripts",
+      "target": "package_scripts_graphify_update",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "package.json",
+      "source_location": "L17",
       "weight": 1.0
     },
     {
@@ -11995,7 +12163,7 @@
     },
     {
       "source": "package_scripts",
-      "target": "package_scripts_test_backend",
+      "target": "package_scripts_test",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -12550,5 +12718,5 @@
       "source_file": "README.md"
     }
   ],
-  "built_at_commit": "d41c9cf01b3a4e69584b9d50deb5c6adf5a2bb93"
+  "built_at_commit": "66d25edcaee199847197849af1bb8492f80a94b7"
 }

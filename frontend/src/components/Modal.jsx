@@ -44,14 +44,14 @@ export default function Modal({
     >
       {/* Backdrop overlay */}
       <div
-        className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm transition-opacity animate-fade-in"
+        className="fixed inset-0 bg-slate-900/50 animate-fade-in"
         onClick={onClose}
         aria-hidden="true"
       />
 
       {/* Modal Dialog Box */}
       <div
-        className={`relative w-full ${maxWidth} bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-10 my-8 transform transition-all animate-scale-in`}
+        className={`relative w-full ${maxWidth} bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-10 my-8 transform-gpu animate-scale-in`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}

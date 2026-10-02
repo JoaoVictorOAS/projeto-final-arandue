@@ -73,15 +73,22 @@ export default function Dashboard() {
     try {
       const res = await api.get('/dashboard/resumo');
       const dados = res?.data?.dados || res?.data || {};
+      const fin = dados.financeiro || {};
+      const op = dados.operacional || {};
 
       let proximos =
-        dados.proximos_agendamentos ||
-        dados.proximos_atendimentos ||
-        dados.agendamentos ||
+        dados.proximos_agendamentos ??
+        op.proximos_agendamentos ??
+        dados.proximos_atendimentos ??
+        dados.agendamentos ??
         [];
 
-      // If no upcoming appointments inside resumo, try fetching agendamentos fallback
-      if (!Array.isArray(proximos) || proximos.length === 0) {
+      // Se o endpoint não retornou a lista nem chave de agendamentos, tenta fallback
+      const hasAgendamentosKey =
+        dados.proximos_agendamentos !== undefined ||
+        op.proximos_agendamentos !== undefined;
+
+      if (!hasAgendamentosKey && (!Array.isArray(proximos) || proximos.length === 0)) {
         try {
           const resAgend = await api.get('/agendamentos');
           const listaAgend = Array.isArray(resAgend?.data?.dados)
@@ -97,42 +104,52 @@ export default function Dashboard() {
         }
       }
 
+      const entradas = Number(
+        dados.entradas_mes ??
+        fin.entradas_mes ??
+        dados.entradas ??
+        dados.total_entradas ??
+        0
+      );
+
+      const saidas = Number(
+        dados.saidas_mes ??
+        fin.saidas_mes ??
+        dados.saidas ??
+        dados.total_saidas ??
+        0
+      );
+
+      const saldo =
+        dados.saldo_mes !== undefined
+          ? Number(dados.saldo_mes)
+          : fin.saldo_mes !== undefined
+          ? Number(fin.saldo_mes)
+          : dados.saldo !== undefined
+          ? Number(dados.saldo)
+          : Number((entradas - saidas).toFixed(2));
+
+      const aReceber = Number(
+        dados.a_receber_pendente ??
+        fin.a_receber_pendente ??
+        dados.a_receber ??
+        dados.cobrancas_pendentes ??
+        0
+      );
+
+      const agendHoje = Number(
+        dados.agendamentos_hoje ??
+        op.agendamentos_hoje ??
+        dados.atendimentos_hoje ??
+        0
+      );
+
       setResumo({
-        saldo_mes:
-          dados.saldo_mes !== undefined
-            ? Number(dados.saldo_mes)
-            : dados.saldo !== undefined
-            ? Number(dados.saldo)
-            : (Number(dados.entradas_mes || dados.entradas || 0) -
-               Number(dados.saidas_mes || dados.saidas || 0)),
-        entradas_mes: Number(
-          dados.entradas_mes !== undefined
-            ? dados.entradas_mes
-            : dados.entradas !== undefined
-            ? dados.entradas
-            : dados.total_entradas || 0
-        ),
-        saidas_mes: Number(
-          dados.saidas_mes !== undefined
-            ? dados.saidas_mes
-            : dados.saidas !== undefined
-            ? dados.saidas
-            : dados.total_saidas || 0
-        ),
-        a_receber_pendente: Number(
-          dados.a_receber_pendente !== undefined
-            ? dados.a_receber_pendente
-            : dados.a_receber !== undefined
-            ? dados.a_receber
-            : dados.cobrancas_pendentes || 0
-        ),
-        agendamentos_hoje: Number(
-          dados.agendamentos_hoje !== undefined
-            ? dados.agendamentos_hoje
-            : dados.atendimentos_hoje !== undefined
-            ? dados.atendimentos_hoje
-            : 0
-        ),
+        saldo_mes: saldo,
+        entradas_mes: entradas,
+        saidas_mes: saidas,
+        a_receber_pendente: aReceber,
+        agendamentos_hoje: agendHoje,
         proximos_agendamentos: Array.isArray(proximos) ? proximos : [],
       });
     } catch (err) {
@@ -246,13 +263,13 @@ export default function Dashboard() {
         <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
           <div className="space-y-2 max-w-2xl">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/20 text-xs font-semibold uppercase tracking-wider backdrop-blur-sm">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/20 text-xs font-semibold uppercase tracking-wider">
                 <Sparkles className="w-3.5 h-3.5 text-amber-300" />
                 Painel Consolidado
               </span>
               <span
                 data-testid="status-sistema"
-                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-400/20 text-emerald-200 border border-emerald-400/30 text-xs font-medium backdrop-blur-sm"
+                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-400/20 text-emerald-200 border border-emerald-400/30 text-xs font-medium"
               >
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                 Sistema Operacional
@@ -273,7 +290,7 @@ export default function Dashboard() {
               type="button"
               onClick={fetchDashboard}
               disabled={loading}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-semibold transition backdrop-blur-sm border border-white/10"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-semibold transition border border-white/10"
               title="Atualizar indicadores"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />

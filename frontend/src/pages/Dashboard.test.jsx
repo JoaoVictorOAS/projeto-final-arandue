@@ -142,4 +142,54 @@ describe('Módulo Dashboard - Visão Consolidada com Indicadores', () => {
     expect(screen.getByText(/nova cobrança/i)).toBeInTheDocument();
     expect(screen.getByText(/lançar despesa/i)).toBeInTheDocument();
   });
+
+  test('deve processar corretamente payload com estrutura aninhada (financeiro e operacional)', async () => {
+    api.get.mockImplementation((url) => {
+      if (url === '/dashboard/resumo') {
+        return Promise.resolve({
+          data: {
+            sucesso: true,
+            dados: {
+              financeiro: {
+                saldo_mes: 2450.5,
+                entradas_mes: 4000.0,
+                saidas_mes: 1549.5,
+                a_receber_pendente: 850.0,
+              },
+              operacional: {
+                agendamentos_hoje: 3,
+                proximos_agendamentos: [
+                  {
+                    id: 99,
+                    cliente_nome: 'Cliente Estrutura Aninhada',
+                    servico_nome: 'Serviço de Teste',
+                    data_hora: '2026-10-10T09:00:00',
+                    status: 'CONFIRMADO',
+                  },
+                ],
+                orcamentos_pendentes: 2,
+                total_clientes: 5,
+              },
+            },
+          },
+        });
+      }
+      return Promise.resolve({ data: { dados: [] } });
+    });
+
+    render(
+      <MemoryRouter>
+        <Dashboard />
+      </MemoryRouter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getAllByText(/2\.450,50/).length).toBeGreaterThan(0);
+      expect(screen.getAllByText(/4\.000,00/).length).toBeGreaterThan(0);
+      expect(screen.getAllByText(/1\.549,50/).length).toBeGreaterThan(0);
+      expect(screen.getAllByText(/850,00/).length).toBeGreaterThan(0);
+      expect(screen.getByText('3')).toBeInTheDocument();
+      expect(screen.getByText('Cliente Estrutura Aninhada')).toBeInTheDocument();
+    });
+  });
 });
