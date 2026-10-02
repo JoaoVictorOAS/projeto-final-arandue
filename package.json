@@ -1,0 +1,26 @@
+{
+  "name": "projeto-final-arandue",
+  "version": "1.0.0",
+  "description": "MEI — Gestão Simplificada para Microempreendedores Individuais (Recode Pro AI)",
+  "private": true,
+  "scripts": {
+    "dev:backend": "npm --prefix backend run dev",
+    "dev:frontend": "npm --prefix frontend run dev",
+    "test:backend": "npm --prefix backend test",
+    "build:frontend": "npm --prefix frontend run build",
+    "rag:query": ".venv/bin/python scripts/rag/query_mei.py",
+    "rag:recreate": "./scripts/rag/recreate_rag.sh",
+    "graphify:query": ".venv/bin/graphify query",
+    "graphify:update": ".venv/bin/graphify update"
+  },
+  "keywords": [
+    "mei",
+    "gestao",
+    "react",
+    "nodejs",
+    "mysql",
+    "recode-pro-ai"
+  ],
+  "author": "João Victor & Equipe Aranduê",
+  "license": "ISC"
+}
