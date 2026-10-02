@@ -1,6 +1,6 @@
 # MEI — Gestão Simplificada para Microempreendedores Individuais Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Construir a aplicação web completa MEI (ReactJS + Node.js Express REST API + MySQL) que centraliza gestão de clientes, catálogo de serviços, agenda de atendimentos, orçamentos calculados no backend, cobranças com baixa automática e livro caixa com dashboard financeiro para microempreendedores individuais.
 
@@ -47,7 +47,7 @@
 - Consumes: N/A
 - Produces: Scripts de inicialização `npm run dev`, `npm run test` para backend e frontend.
 
-- [ ] **Step 1: Write the failing test (Package config test)**
+- [x] **Step 1: Write the failing test (Package config test)**
 
 Crie o arquivo de teste `backend/tests/setup.test.js`:
 ```javascript
@@ -64,12 +64,12 @@ describe('Ambiente e Scaffolding', () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `node --test backend/tests/setup.test.js`
 Expected: FAIL (arquivos não existem ainda).
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 Crie `backend/package.json`:
 ```json
@@ -118,12 +118,12 @@ build/
 *.log
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `node --test backend/tests/setup.test.js`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add package.json backend/package.json backend/.env.example .gitignore backend/tests/setup.test.js
@@ -144,7 +144,7 @@ git commit -m "chore: setup inicial do backend e configuracoes do monorepo"
 - Consumes: Variáveis de ambiente (`DB_HOST`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`, `DB_PORT`).
 - Produces: `pool.execute(query, params)` exportado por `database.js`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Crie `backend/tests/database.test.js`:
 ```javascript
@@ -162,12 +162,12 @@ describe('Conexao com Banco de Dados MySQL', () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx jest backend/tests/database.test.js`
 Expected: FAIL com erro `Cannot find module '../src/config/database'`.
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 Crie `backend/src/config/database.js`:
 ```javascript
@@ -193,12 +193,12 @@ Crie `backend/src/database/schema.sql` com o DDL completo especificado em `docs/
 
 Crie `backend/src/database/migrate.js` para ler `schema.sql` e executar as queries no MySQL.
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `npx jest backend/tests/database.test.js`
 Expected: PASS com `resultado: 2`.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add backend/src/config/database.js backend/src/database/schema.sql backend/src/database/migrate.js backend/tests/database.test.js
@@ -222,7 +222,7 @@ git commit -m "feat(db): pool de conexoes mysql e script de migracao ddl"
 - Consumes: `pool.execute()` de `database.js`.
 - Produces: Rotas `POST /api/auth/register`, `POST /api/auth/login`, `GET /api/auth/me` e `authMiddleware` que anexa `req.usuario = { id, nome, email }`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Crie `backend/tests/auth.test.js`:
 ```javascript
@@ -277,12 +277,12 @@ describe('Autenticação API', () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx jest backend/tests/auth.test.js`
 Expected: FAIL com módulo não encontrado.
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 Implemente:
 1. `backend/src/repositories/usuarioRepository.js`: `criar({ nome, email, senhaHash })`, `buscarPorEmail(email)`, `buscarPorId(id)`.
@@ -291,12 +291,12 @@ Implemente:
 4. `backend/src/controllers/authController.js` e `backend/src/routes/authRoutes.js`.
 5. `backend/src/app.js` configurando Express, CORS e rotas.
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `npx jest backend/tests/auth.test.js`
 Expected: PASS com 3 testes passando.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add backend/src/ backend/tests/auth.test.js
@@ -320,7 +320,7 @@ git commit -m "feat(auth): registro, login jwt e middleware de autenticacao"
 - Consumes: `/api/auth/login` e `/api/auth/register` via Axios.
 - Produces: `useAuth()` disponibilizando `{ usuario, login, logout, estaAutenticado, carregando }`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Crie `frontend/src/pages/Login.test.jsx`:
 ```javascript
@@ -345,24 +345,24 @@ describe('Tela de Login', () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npm test -- Login.test.jsx`
 Expected: FAIL.
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 1. Crie `frontend/src/services/api.js` com interceptor anexando `Bearer <token>` do localStorage.
 2. Crie `frontend/src/context/AuthContext.jsx` gerenciando estado de autenticação e persistência no localStorage.
 3. Crie `frontend/src/pages/Login.jsx` e `frontend/src/pages/Register.jsx` com formulários validados e mensagens de feedback.
 4. Crie `frontend/src/components/PrivateRoute.jsx` redirecionando para `/login` caso não autenticado.
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `npm test -- Login.test.jsx`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add frontend/src/
@@ -387,7 +387,7 @@ git commit -m "feat(front-auth): integracao com api de autenticacao, contexto e 
 - Consumes: `authMiddleware` (`req.usuario.id`).
 - Produces: `POST /api/clientes`, `GET /api/clientes`, `GET /api/clientes/:id`, `PUT /api/clientes/:id`, `DELETE /api/clientes/:id`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Crie `backend/tests/clientes.test.js`:
 ```javascript
@@ -441,12 +441,12 @@ describe('CRUD de Clientes com Isolamento de Tenant', () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx jest backend/tests/clientes.test.js`
 Expected: FAIL (rotas não existem).
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 Implemente:
 1. `clienteRepository.js` com métodos `listarPorUsuario(usuario_id, busca)`, `buscarPorId(id, usuario_id)`, `criar(dados)`, `atualizar(id, usuario_id, dados)`, `inativarOuExcluir(id, usuario_id)`.
@@ -454,12 +454,12 @@ Implemente:
 3. `clienteRoutes.js` montando rotas protegidas pelo middleware `authMiddleware`.
 4. Plugue em `app.js`: `app.use('/api/clientes', authMiddleware, clienteRoutes)`.
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `npx jest backend/tests/clientes.test.js`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add backend/src/ backend/tests/clientes.test.js
@@ -481,7 +481,7 @@ git commit -m "feat(clientes): api crud de clientes com garantia de isolamento p
 - Consumes: `api.get('/clientes')`, `api.post('/clientes')`, `api.put('/clientes/:id')`, `api.delete('/clientes/:id')`.
 - Produces: Tela `/clientes` com ações funcionais de busca, criação e edição.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Crie `frontend/src/pages/Clientes.test.jsx`:
 ```javascript
@@ -509,21 +509,21 @@ describe('Tela de Clientes', () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npm test -- Clientes.test.jsx`
 Expected: FAIL.
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 Implemente `frontend/src/pages/Clientes.jsx` e os componentes reutilizáveis `DataTable`, `Modal` e `FormField` com estados de loading, feedback de sucesso e tratamento de erros.
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `npm test -- Clientes.test.jsx`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add frontend/src/
@@ -544,7 +544,7 @@ git commit -m "feat(front-clientes): tela de clientes com tabela de registros, b
 - Consumes: `req.usuario.id`.
 - Produces: `POST /api/servicos`, `GET /api/servicos`, `GET /api/servicos/:id`, `PUT /api/servicos/:id`, `DELETE /api/servicos/:id`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Crie `backend/tests/servicos.test.js`:
 ```javascript
@@ -595,24 +595,24 @@ describe('CRUD de Serviços/Produtos', () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx jest backend/tests/servicos.test.js`
 Expected: FAIL.
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 Implemente:
 1. `servicoRepository.js` filtrando sempre por `usuario_id` e `ativo = 1`.
 2. `servicoController.js` validando `preco >= 0` e `nome` preenchido.
 3. `servicoRoutes.js` e inclusão em `app.js`.
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `npx jest backend/tests/servicos.test.js`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add backend/src/ backend/tests/servicos.test.js
@@ -631,7 +631,7 @@ git commit -m "feat(servicos): crud do catalogo de produtos e servicos com valid
 - Consumes: `/api/servicos` endpoints.
 - Produces: Tela de catálogo de serviços/produtos com filtro por categoria, listagem e formulário de novo serviço.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Crie `frontend/src/pages/Servicos.test.jsx`:
 ```javascript
@@ -659,21 +659,21 @@ describe('Tela de Servicos', () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npm test -- Servicos.test.jsx`
 Expected: FAIL.
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 Implemente `frontend/src/pages/Servicos.jsx` permitindo criar, listar, alterar preço e desativar produtos/serviços.
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `npm test -- Servicos.test.jsx`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add frontend/src/pages/Servicos*
@@ -699,7 +699,7 @@ git commit -m "feat(front-servicos): tela de gestao de catalogo de servicos e pr
 - Consumes: `clientes`, `servicos`, `authMiddleware`.
 - Produces: `POST /api/orcamentos` (recalculando subtotal e total no backend), `GET /api/orcamentos`, `GET /api/orcamentos/:id`, `PATCH /api/orcamentos/:id/status`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Crie `backend/tests/orcamentos.test.js`:
 ```javascript
@@ -764,12 +764,12 @@ describe('Módulo de Orçamentos com Validação de Totais', () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx jest backend/tests/orcamentos.test.js`
 Expected: FAIL.
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 Implemente:
 1. `orcamentoService.js` com regras de validação:
@@ -780,12 +780,12 @@ Implemente:
 2. `orcamentoRepository.js` executando inserção atômica (transação MySQL `START TRANSACTION`, insere em `orcamentos`, insere em `orcamento_itens`, `COMMIT`).
 3. `orcamentoController.js` e `orcamentoRoutes.js`.
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `npx jest backend/tests/orcamentos.test.js`
 Expected: PASS com cálculos corretos de subtotal e total.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add backend/src/ backend/tests/orcamentos.test.js
@@ -805,7 +805,7 @@ git commit -m "feat(orcamentos): calculo auditado no backend de orcamentos e ite
 - Consumes: `/api/orcamentos`, `/api/clientes`, `/api/servicos`.
 - Produces: Interface de emissão de orçamentos com adição dinâmica de itens, cálculo de subtotal na tela e visualização com badge de status.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Crie `frontend/src/pages/Orcamentos.test.jsx`:
 ```javascript
@@ -833,21 +833,21 @@ describe('Tela de Orçamentos', () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npm test -- Orcamentos.test.jsx`
 Expected: FAIL.
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 Implemente `frontend/src/pages/Orcamentos.jsx` e `frontend/src/components/OrcamentoFormModal.jsx` permitindo selecionar cliente, adicionar linhas de itens, aplicar desconto e enviar para a API.
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `npm test -- Orcamentos.test.jsx`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add frontend/src/pages/Orcamentos* frontend/src/components/Orcamento*
@@ -869,7 +869,7 @@ git commit -m "feat(front-orcamentos): emissao e acompanhamento de propostas com
 - Consumes: `req.usuario.id`.
 - Produces: `POST /api/agendamentos`, `GET /api/agendamentos`, `PUT /api/agendamentos/:id`, `DELETE /api/agendamentos/:id`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Crie `backend/tests/agendamentos.test.js`:
 ```javascript
@@ -924,24 +924,24 @@ describe('Agenda e Prevenção de Conflitos', () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx jest backend/tests/agendamentos.test.js`
 Expected: FAIL.
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 Implemente:
 1. `agendamentoService.js` com verificação de horário ocupado (`buscarPorDataHora(usuario_id, data_hora)`).
 2. Se horário já estiver ocupado por agendamento com status `PENDENTE` ou `CONFIRMADO`, retornar erro 409 (Conflito).
 3. `agendamentoRepository.js`, `agendamentoController.js` e `agendamentoRoutes.js`.
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `npx jest backend/tests/agendamentos.test.js`
 Expected: PASS (rejeitando conflitos de horário).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add backend/src/ backend/tests/agendamentos.test.js
@@ -961,7 +961,7 @@ git commit -m "feat(agenda): crud de agendamentos com bloqueio de conflito de ho
 - Consumes: `/api/agendamentos`.
 - Produces: Tela de agenda com visualização em lista/cards, filtro de data e status (`CONFIRMADO`, `PENDENTE`, `CONCLUIDO`).
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Crie `frontend/src/pages/Agenda.test.jsx`:
 ```javascript
@@ -989,21 +989,21 @@ describe('Tela de Agenda', () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npm test -- Agenda.test.jsx`
 Expected: FAIL.
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 Implemente `frontend/src/pages/Agenda.jsx` e `frontend/src/components/StatusBadge.jsx` permitindo agendar novo serviço, alterar status (confirmar, concluir ou cancelar).
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `npm test -- Agenda.test.jsx`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add frontend/src/pages/Agenda* frontend/src/components/StatusBadge*
@@ -1032,7 +1032,7 @@ git commit -m "feat(front-agenda): modulo de agenda com status de atendimento"
 - Consumes: `req.usuario.id`.
 - Produces: `POST /api/cobrancas`, `GET /api/cobrancas`, `PATCH /api/cobrancas/:id/pagar`, `GET /api/movimentacoes`, `POST /api/movimentacoes`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Crie `backend/tests/financeiro.test.js`:
 ```javascript
@@ -1099,12 +1099,12 @@ describe('Integração Cobrança -> Livro Caixa na Baixa', () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx jest backend/tests/financeiro.test.js`
 Expected: FAIL.
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 Implemente:
 1. `financeiroService.js` com método `darBaixaCobranca(id, usuario_id, { data_pagamento, gerar_movimentacao_caixa })`:
@@ -1112,12 +1112,12 @@ Implemente:
    - Se `gerar_movimentacao_caixa === true`, executa `movimentacaoRepository.criar()` com `tipo = 'ENTRADA'`, `cobranca_id = id`, `valor = cobranca.valor`.
 2. `cobrancaController.js`, `movimentacaoController.js` e respectivas rotas.
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `npx jest backend/tests/financeiro.test.js`
 Expected: PASS com entrada no caixa gerada automaticamente após baixa.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add backend/src/ backend/tests/financeiro.test.js
@@ -1137,7 +1137,7 @@ git commit -m "feat(financeiro): cobrancas e automacao de baixa refletindo no li
 - Consumes: `/api/cobrancas`, `/api/movimentacoes`.
 - Produces: Tela de Cobranças (com botão de ação "Dar Baixa") e Tela de Caixa (com extrato de entradas/saídas e saldo).
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Crie `frontend/src/pages/Financeiro.test.jsx`:
 ```javascript
@@ -1165,23 +1165,23 @@ describe('Telas Financeiras', () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npm test -- Financeiro.test.jsx`
 Expected: FAIL.
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 Implemente:
 1. `frontend/src/pages/Cobrancas.jsx` com modal de confirmação de recebimento que aciona `api.patch('/cobrancas/:id/pagar')`.
 2. `frontend/src/pages/Caixa.jsx` com resumo de saldo total, entradas verdes, saídas vermelhas e modal para lançamento manual de despesas operacionais.
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `npm test -- Financeiro.test.jsx`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add frontend/src/pages/Cobrancas* frontend/src/pages/Caixa*
@@ -1205,7 +1205,7 @@ git commit -m "feat(front-fin): telas de cobrancas e fluxo de caixa com baixa de
 - Consumes: Queries agregadas sobre `movimentacoes`, `cobrancas`, `agendamentos` e `orcamentos`.
 - Produces: `GET /api/dashboard/resumo` retornando resumo financeiro e operacional.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Crie `backend/tests/dashboard.test.js`:
 ```javascript
@@ -1240,12 +1240,12 @@ describe('Dashboard Consolidado', () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx jest backend/tests/dashboard.test.js`
 Expected: FAIL.
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 Implemente `backend/src/controllers/dashboardController.js` realizando queries agregadas:
 - Soma de entradas e saídas do mês corrente em `movimentacoes`;
@@ -1253,12 +1253,12 @@ Implemente `backend/src/controllers/dashboardController.js` realizando queries a
 - Contagem e lista dos próximos agendamentos em `agendamentos`.
 Conecte a rota em `backend/src/routes/dashboardRoutes.js` e em `app.js`.
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `npx jest backend/tests/dashboard.test.js`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add backend/src/ backend/tests/dashboard.test.js
@@ -1280,7 +1280,7 @@ git commit -m "feat(dashboard): endpoint de consolidacao de metricas do negocio"
 - Consumes: `/api/dashboard/resumo`.
 - Produces: Layout principal com menu lateral, topo com dados do MEI autenticado e cards de métricas.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Crie `frontend/src/pages/Dashboard.test.jsx`:
 ```javascript
@@ -1311,24 +1311,24 @@ describe('Tela do Dashboard', () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npm test -- Dashboard.test.jsx`
 Expected: FAIL.
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 Implemente:
 1. `frontend/src/components/Navbar.jsx` e `frontend/src/components/Sidebar.jsx` com navegação para todas as telas.
 2. `frontend/src/components/SummaryCard.jsx` com ícones Lucide e cores semânticas.
 3. `frontend/src/pages/Dashboard.jsx` montando os cards e tabela de compromissos imediatos.
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `npm test -- Dashboard.test.jsx`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add frontend/src/components/Navbar* frontend/src/components/Sidebar* frontend/src/components/SummaryCard* frontend/src/pages/Dashboard*
@@ -1351,7 +1351,7 @@ git commit -m "feat(front-dash): painel de indicadores com layout responsivo e c
 - Produces: Validação automatizada do fluxo completo:
   $$\text{Cadastro MEI} \rightarrow \text{Cliente} \rightarrow \text{Serviço} \rightarrow \text{Orçamento} \rightarrow \text{Agenda} \rightarrow \text{Cobrança} \rightarrow \text{Baixa Caixa} \rightarrow \text{Dashboard}$$
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Crie `backend/tests/e2e-jornada.test.js`:
 ```javascript
@@ -1431,12 +1431,12 @@ describe('Jornada de Ponta a Ponta do Microempreendedor', () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it passes**
+- [x] **Step 2: Run test to verify it passes**
 
 Run: `npx jest backend/tests/e2e-jornada.test.js`
 Expected: PASS (demonstrando a integração de todas as fases).
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add backend/tests/e2e-jornada.test.js
