@@ -8,6 +8,7 @@
     "dev:frontend": "npm --prefix frontend run dev",
     "test:backend": "npm --prefix backend test",
     "build:frontend": "npm --prefix frontend run build",
+    "db:seed": "node backend/src/database/seed.js",
     "rag:query": ".venv/bin/python scripts/rag/query_mei.py",
     "rag:recreate": "./scripts/rag/recreate_rag.sh",
     "graphify:query": ".venv/bin/graphify query",
