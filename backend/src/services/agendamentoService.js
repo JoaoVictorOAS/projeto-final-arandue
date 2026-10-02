@@ -1,3 +1,4 @@
+const pool = require('../config/database');
 const agendamentoRepository = require('../repositories/agendamentoRepository');
 const clienteRepository = require('../repositories/clienteRepository');
 const servicoRepository = require('../repositories/servicoRepository');

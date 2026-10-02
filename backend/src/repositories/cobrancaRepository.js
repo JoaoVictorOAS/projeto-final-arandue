@@ -21,6 +21,7 @@ const cobrancaRepository = {
     {
       usuario_id,
       cliente_id,
+      agendamento_id = null,
       orcamento_id = null,
       valor,
       vencimento,
@@ -32,12 +33,13 @@ const cobrancaRepository = {
     const exec = connection || pool;
     const [result] = await exec.execute(
       `INSERT INTO cobrancas 
-        (usuario_id, cliente_id, orcamento_id, valor, vencimento, status, observacoes) 
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        (usuario_id, cliente_id, agendamento_id, orcamento_id, valor, vencimento, status, observacoes) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         usuario_id,
         cliente_id,
-        orcamento_id || null,
+        agendamento_id ? Number(agendamento_id) : null,
+        orcamento_id ? Number(orcamento_id) : null,
         valor,
         vencimento,
         status || 'PENDENTE',
@@ -62,6 +64,7 @@ const cobrancaRepository = {
         c.id,
         c.usuario_id,
         c.cliente_id,
+        c.agendamento_id,
         c.orcamento_id,
         c.valor,
         DATE_FORMAT(c.vencimento, '%Y-%m-%d') AS vencimento,
@@ -110,6 +113,7 @@ const cobrancaRepository = {
         c.id,
         c.usuario_id,
         c.cliente_id,
+        c.agendamento_id,
         c.orcamento_id,
         c.valor,
         DATE_FORMAT(c.vencimento, '%Y-%m-%d') AS vencimento,
@@ -146,6 +150,10 @@ const cobrancaRepository = {
     if (dados.cliente_id !== undefined) {
       campos.push('cliente_id = ?');
       valores.push(Number(dados.cliente_id));
+    }
+    if (dados.agendamento_id !== undefined) {
+      campos.push('agendamento_id = ?');
+      valores.push(dados.agendamento_id ? Number(dados.agendamento_id) : null);
     }
     if (dados.orcamento_id !== undefined) {
       campos.push('orcamento_id = ?');

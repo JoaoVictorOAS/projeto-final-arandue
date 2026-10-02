@@ -18,6 +18,7 @@ const agendamentoRepository = {
         a.id,
         a.usuario_id,
         a.cliente_id,
+        a.orcamento_id,
         c.nome AS cliente_nome,
         c.telefone AS cliente_telefone,
         c.email AS cliente_email,
@@ -65,6 +66,7 @@ const agendamentoRepository = {
         a.id,
         a.usuario_id,
         a.cliente_id,
+        a.orcamento_id,
         c.nome AS cliente_nome,
         c.telefone AS cliente_telefone,
         c.email AS cliente_email,
@@ -117,20 +119,22 @@ const agendamentoRepository = {
    * @param {Object} dados
    * @param {number} dados.usuario_id
    * @param {number} dados.cliente_id
+   * @param {number|null} [dados.orcamento_id]
    * @param {number|null} [dados.servico_id]
    * @param {string} dados.data_hora Formato YYYY-MM-DD HH:mm:ss
    * @param {string} [dados.status]
    * @param {string|null} [dados.observacoes]
    * @returns {Promise<Object>}
    */
-  async criar({ usuario_id, cliente_id, servico_id, data_hora, status = 'PENDENTE', observacoes = null }) {
+  async criar({ usuario_id, cliente_id, orcamento_id = null, servico_id, data_hora, status = 'PENDENTE', observacoes = null }) {
     const [result] = await pool.execute(
       `INSERT INTO agendamentos 
-        (usuario_id, cliente_id, servico_id, data_hora, status, observacoes) 
-       VALUES (?, ?, ?, ?, ?, ?)`,
+        (usuario_id, cliente_id, orcamento_id, servico_id, data_hora, status, observacoes) 
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
       [
         usuario_id,
         cliente_id,
+        orcamento_id ? Number(orcamento_id) : null,
         servico_id || null,
         data_hora,
         status || 'PENDENTE',
@@ -155,6 +159,10 @@ const agendamentoRepository = {
     if (dados.cliente_id !== undefined) {
       campos.push('cliente_id = ?');
       valores.push(Number(dados.cliente_id));
+    }
+    if (dados.orcamento_id !== undefined) {
+      campos.push('orcamento_id = ?');
+      valores.push(dados.orcamento_id ? Number(dados.orcamento_id) : null);
     }
     if (dados.servico_id !== undefined) {
       campos.push('servico_id = ?');
