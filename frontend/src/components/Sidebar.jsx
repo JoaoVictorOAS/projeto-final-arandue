@@ -13,6 +13,7 @@ import {
   Building2,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import Logo from './Logo';
 
 const NAV_ITEMS = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true },
@@ -38,15 +39,7 @@ export default function Sidebar({ isOpen, setIsOpen }) {
     <div className="flex flex-col h-full bg-white border-r border-gray-200">
       {/* Brand Header */}
       <div className="h-16 flex items-center justify-between px-6 border-b border-gray-100">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white shadow-md shadow-indigo-200">
-            <Building2 className="w-6 h-6" />
-          </div>
-          <div>
-            <span className="text-base font-bold text-gray-900 block leading-tight">Painel MEI</span>
-            <span className="text-xs text-indigo-600 font-medium">Gestão Simplificada</span>
-          </div>
-        </div>
+        <Logo size="md" subtitle="Gestão MEI" />
 
         {setIsOpen && (
           <button

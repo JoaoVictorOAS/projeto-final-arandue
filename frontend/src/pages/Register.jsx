@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Building2, UserPlus, AlertCircle, CheckCircle2 } from 'lucide-react';
+import Logo from '../components/Logo';
 import { useAuth } from '../context/AuthContext';
 
 export default function Register() {
@@ -57,13 +58,12 @@ export default function Register() {
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-gray-50 flex items-center justify-center p-4 sm:p-6 lg:p-8">
       <div className="w-full max-w-md bg-white rounded-2xl shadow-xl border border-gray-100 p-8 sm:p-10">
         {/* Brand Header */}
-        <div className="text-center mb-8">
-          <div className="w-14 h-14 bg-indigo-600 rounded-2xl flex items-center justify-center text-white mx-auto shadow-lg shadow-indigo-200 mb-4">
-            <Building2 className="w-8 h-8" />
-          </div>
-          <h2 className="text-2xl font-bold text-gray-900 tracking-tight">Crie sua Conta MEI</h2>
-          <p className="text-sm text-gray-500 mt-1">
-            Organize clientes, serviços, orçamentos e financeiro num só lugar
+        <div className="text-center mb-8 flex flex-col items-center">
+          <Logo size="xl" showText={false} className="mb-4" />
+          <h2 className="text-2xl font-black text-gray-900 tracking-tight">Crie sua Conta no Aranduê</h2>
+          <p className="text-xs font-semibold text-indigo-600 uppercase tracking-widest mt-0.5">Gestão Inteligente para MEI</p>
+          <p className="text-sm text-gray-500 mt-2">
+            Organize clientes, serviços, agenda, orçamentos e financeiro num só lugar
           </p>
         </div>
 
