@@ -15,13 +15,10 @@ import {
   PlusCircle,
   CheckCircle2,
   AlertCircle,
-  Sparkles,
   Loader2,
-  RefreshCw,
   Activity,
   UserPlus,
 } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 import StatusBadge from '../components/StatusBadge';
 
@@ -56,8 +53,6 @@ const formatTime = (dateStr) => {
 };
 
 export default function Dashboard() {
-  const { usuario } = useAuth();
-
   const [loading, setLoading] = useState(true);
   const [resumo, setResumo] = useState({
     saldo_mes: 0,
@@ -163,8 +158,6 @@ export default function Dashboard() {
     fetchDashboard();
   }, [fetchDashboard]);
 
-  const nomeExibicao = usuario?.nome ? usuario.nome.split(' ')[0] : 'Empreendedor';
-
   const kpis = [
     {
       title: 'Saldo do Mês',
@@ -258,55 +251,6 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6">
-      {/* Welcome Banner */}
-      <div className="relative overflow-hidden bg-gradient-to-r from-indigo-800 via-indigo-700 to-indigo-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl shadow-indigo-100">
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-          <div className="space-y-2 max-w-2xl">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/20 text-xs font-semibold uppercase tracking-wider">
-                <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-                Painel Consolidado
-              </span>
-              <span
-                data-testid="status-sistema"
-                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-400/20 text-emerald-200 border border-emerald-400/30 text-xs font-medium"
-              >
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                Sistema Operacional
-              </span>
-            </div>
-
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
-              Olá, {nomeExibicao}! 👋
-            </h1>
-
-            <p className="text-indigo-100 text-sm sm:text-base leading-relaxed">
-              Aqui está a visão consolidada com indicadores do seu negócio MEI em tempo real.
-            </p>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={fetchDashboard}
-              disabled={loading}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-semibold transition border border-white/10"
-              title="Atualizar indicadores"
-            >
-              <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-              Atualizar
-            </button>
-            <Link
-              to="/orcamentos?novo=true"
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white text-indigo-700 text-xs font-bold hover:bg-indigo-50 transition shadow-md"
-            >
-              <FileText className="w-4 h-4" />
-              Novo Orçamento
-            </Link>
-          </div>
-        </div>
-      </div>
-
       {/* Seção de Ações Rápidas */}
       <div className="bg-white rounded-2xl p-5 border border-gray-200/80 shadow-sm">
         <h2 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-3 flex items-center gap-2">

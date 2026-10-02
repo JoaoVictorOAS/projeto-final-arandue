@@ -69,18 +69,14 @@ describe('Módulo Dashboard - Visão Consolidada com Indicadores', () => {
     });
   });
 
-  test('deve renderizar mensagem de boas-vindas personalizada e badge de status do sistema', async () => {
+  test('deve renderizar a seção de Ações Rápidas e navegação do dashboard', async () => {
     render(
       <MemoryRouter>
         <Dashboard />
       </MemoryRouter>
     );
 
-    // Boas-vindas com o nome do MEI logado
-    expect(screen.getByText(/olá, ana!/i)).toBeInTheDocument();
-
-    // Badge de status do sistema operacional
-    expect(screen.getByTestId('status-sistema')).toHaveTextContent(/sistema operacional/i);
+    expect(screen.getByText(/ações rápidas/i)).toBeInTheDocument();
   });
 
   test('deve renderizar os cards de indicadores principais (KPIs) com valores formatados em BRL e contadores', async () => {
