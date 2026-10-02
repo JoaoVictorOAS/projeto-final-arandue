@@ -10,7 +10,7 @@ async function seed() {
     const EMAIL_DEMO = 'admin@mei.com';
     const SENHA_DEMO = 'admin123';
 
-    // 1. Limpa dados prévios do usuário demo se existirem
+    // 1. Limpa dados prévios do usuário demo se existirem (respeitando chaves estrangeiras)
     const [userRows] = await connection.execute(
       'SELECT id FROM usuarios WHERE email = ?',
       [EMAIL_DEMO]
@@ -150,49 +150,8 @@ async function seed() {
     ha3Dias.setDate(hoje.getDate() - 3);
     const dataHa3Dias = formatData(ha3Dias);
 
-    // 5. Cria Agendamentos
-    const agendamentosData = [
-      {
-        cliente_id: clienteIds['Carlos Eduardo Santos'],
-        servico_id: servicoIds['Instalação Elétrica Residencial Padrão'],
-        data_hora: `${dataHoje} 10:00:00`,
-        status: 'CONFIRMADO',
-        observacoes: 'Levar disjuntores de 20A sobressalentes.',
-      },
-      {
-        cliente_id: clienteIds['Mariana Souza Lima'],
-        servico_id: servicoIds['Troca de Fiação e Quadro de Disjuntores'],
-        data_hora: `${dataHoje} 15:30:00`,
-        status: 'PENDENTE',
-        observacoes: 'Acesso pela portaria de serviço.',
-      },
-      {
-        cliente_id: clienteIds['Roberto Mendes de Oliveira'],
-        servico_id: servicoIds['Manutenção Preventiva de Ar-Condicionado'],
-        data_hora: `${dataAmanha} 09:00:00`,
-        status: 'CONFIRMADO',
-        observacoes: 'Aparelho na sala principal da cobertura.',
-      },
-      {
-        cliente_id: clienteIds['Beatriz Albuquerque'],
-        servico_id: servicoIds['Consultoria Técnica de Eficiência Energética'],
-        data_hora: `${dataEm7Dias} 14:00:00`,
-        status: 'PENDENTE',
-        observacoes: 'Analisar contas de luz dos últimos 6 meses.',
-      },
-    ];
-
-    for (const a of agendamentosData) {
-      await connection.execute(
-        `INSERT INTO agendamentos (usuario_id, cliente_id, servico_id, data_hora, status, observacoes)
-         VALUES (?, ?, ?, ?, ?, ?)`,
-        [usuarioId, a.cliente_id, a.servico_id, a.data_hora, a.status, a.observacoes]
-      );
-    }
-    console.log(`✅ 4 Agendamentos criados`);
-
-    // 6. Cria Orçamentos com Itens
-    // Orçamento 1: Mariana Souza (Aprovado)
+    // 5. Cria Orçamentos com Itens (Orçamentos nascem antes dos Agendamentos no fluxo integrado)
+    // Orçamento 1: Mariana Souza Lima (Aprovado - Fluxo completo liquidado)
     const [orc1Result] = await connection.execute(
       `INSERT INTO orcamentos (usuario_id, cliente_id, data_emissao, validade, status, subtotal, desconto, total, observacoes)
        VALUES (?, ?, ?, ?, 'APROVADO', 630.00, 30.00, 600.00, ?)`,
@@ -216,8 +175,27 @@ async function seed() {
       ]
     );
 
-    // Orçamento 2: Roberto Mendes (Enviado)
+    // Orçamento 2: Carlos Eduardo Santos (Aprovado - Fluxo com cobrança pendente)
     const [orc2Result] = await connection.execute(
+      `INSERT INTO orcamentos (usuario_id, cliente_id, data_emissao, validade, status, subtotal, desconto, total, observacoes)
+       VALUES (?, ?, ?, ?, 'APROVADO', 250.00, 0.00, 250.00, ?)`,
+      [
+        usuarioId,
+        clienteIds['Carlos Eduardo Santos'],
+        dataHa3Dias,
+        dataEm7Dias,
+        'Instalação de circuito e luminárias conforme solicitado.',
+      ]
+    );
+    const orc2Id = orc2Result.insertId;
+    await connection.execute(
+      `INSERT INTO orcamento_itens (orcamento_id, servico_id, quantidade, preco_unitario, subtotal)
+       VALUES (?, ?, 1, 250.00, 250.00)`,
+      [orc2Id, servicoIds['Instalação Elétrica Residencial Padrão']]
+    );
+
+    // Orçamento 3: Roberto Mendes (Enviado)
+    const [orc3Result] = await connection.execute(
       `INSERT INTO orcamentos (usuario_id, cliente_id, data_emissao, validade, status, subtotal, desconto, total, observacoes)
        VALUES (?, ?, ?, ?, 'ENVIADO', 360.00, 0.00, 360.00, ?)`,
       [
@@ -228,15 +206,15 @@ async function seed() {
         'Manutenção preventiva para 2 unidades split.',
       ]
     );
-    const orc2Id = orc2Result.insertId;
+    const orc3Id = orc3Result.insertId;
     await connection.execute(
       `INSERT INTO orcamento_itens (orcamento_id, servico_id, quantidade, preco_unitario, subtotal)
        VALUES (?, ?, 2, 180.00, 360.00)`,
-      [orc2Id, servicoIds['Manutenção Preventiva de Ar-Condicionado']]
+      [orc3Id, servicoIds['Manutenção Preventiva de Ar-Condicionado']]
     );
 
-    // Orçamento 3: Beatriz Albuquerque (Rascunho)
-    const [orc3Result] = await connection.execute(
+    // Orçamento 4: Beatriz Albuquerque (Rascunho)
+    const [orc4Result] = await connection.execute(
       `INSERT INTO orcamentos (usuario_id, cliente_id, data_emissao, validade, status, subtotal, desconto, total, observacoes)
        VALUES (?, ?, ?, ?, 'RASCUNHO', 600.00, 0.00, 600.00, ?)`,
       [
@@ -247,42 +225,100 @@ async function seed() {
         'Proposta preliminar de consultoria e revisão de quadros.',
       ]
     );
-    const orc3Id = orc3Result.insertId;
+    const orc4Id = orc4Result.insertId;
     await connection.execute(
       `INSERT INTO orcamento_itens (orcamento_id, servico_id, quantidade, preco_unitario, subtotal)
        VALUES (?, ?, 1, 350.00, 350.00), (?, ?, 1, 250.00, 250.00)`,
       [
-        orc3Id,
+        orc4Id,
         servicoIds['Consultoria Técnica de Eficiência Energética'],
-        orc3Id,
+        orc4Id,
         servicoIds['Instalação Elétrica Residencial Padrão'],
       ]
     );
-    console.log(`✅ 3 Orçamentos com itens gerados`);
+    console.log(`✅ 4 Orçamentos com itens gerados (2 Aprovados, 1 Enviado, 1 Rascunho)`);
 
-    // 7. Cria Cobranças
-    // Cobrança 1: Mariana Souza - Paga
+    // 6. Cria Agendamentos (com vínculos estritos orcamento_id)
+    // Agendamento 1: Mariana Souza Lima (Concluído, vinculado ao Orçamento 1)
+    const [ag1Res] = await connection.execute(
+      `INSERT INTO agendamentos (usuario_id, cliente_id, orcamento_id, servico_id, data_hora, status, observacoes)
+       VALUES (?, ?, ?, ?, ?, 'CONCLUIDO', ?)`,
+      [
+        usuarioId,
+        clienteIds['Mariana Souza Lima'],
+        orc1Id,
+        servicoIds['Troca de Fiação e Quadro de Disjuntores'],
+        `${dataHa3Dias} 14:00:00`,
+        'Troca de fiação e quadros concluídos com sucesso conforme orçamento aprovado.',
+      ]
+    );
+    const ag1Id = ag1Res.insertId;
+
+    // Agendamento 2: Carlos Eduardo Santos (Concluído, vinculado ao Orçamento 2)
+    const [ag2Res] = await connection.execute(
+      `INSERT INTO agendamentos (usuario_id, cliente_id, orcamento_id, servico_id, data_hora, status, observacoes)
+       VALUES (?, ?, ?, ?, ?, 'CONCLUIDO', ?)`,
+      [
+        usuarioId,
+        clienteIds['Carlos Eduardo Santos'],
+        orc2Id,
+        servicoIds['Instalação Elétrica Residencial Padrão'],
+        `${dataHoje} 10:00:00`,
+        'Instalação executada e testada. Aguardando quitação da cobrança.',
+      ]
+    );
+    const ag2Id = ag2Res.insertId;
+
+    // Agendamento 3: Roberto Mendes de Oliveira (Confirmado na agenda)
+    await connection.execute(
+      `INSERT INTO agendamentos (usuario_id, cliente_id, orcamento_id, servico_id, data_hora, status, observacoes)
+       VALUES (?, ?, NULL, ?, ?, 'CONFIRMADO', ?)`,
+      [
+        usuarioId,
+        clienteIds['Roberto Mendes de Oliveira'],
+        servicoIds['Manutenção Preventiva de Ar-Condicionado'],
+        `${dataAmanha} 09:00:00`,
+        'Aparelho na sala principal da cobertura.',
+      ]
+    );
+
+    // Agendamento 4: Beatriz Albuquerque (Pendente de confirmação)
+    await connection.execute(
+      `INSERT INTO agendamentos (usuario_id, cliente_id, orcamento_id, servico_id, data_hora, status, observacoes)
+       VALUES (?, ?, NULL, ?, ?, 'PENDENTE', ?)`,
+      [
+        usuarioId,
+        clienteIds['Beatriz Albuquerque'],
+        servicoIds['Consultoria Técnica de Eficiência Energética'],
+        `${dataEm7Dias} 14:00:00`,
+        'Analisar contas de luz dos últimos 6 meses.',
+      ]
+    );
+    console.log(`✅ 4 Agendamentos criados (2 Concluídos com vínculo a Orçamento, 1 Confirmado, 1 Pendente)`);
+
+    // 7. Cria Cobranças (com vínculos estritos agendamento_id e orcamento_id)
+    // Cobrança 1: Mariana Souza - Paga (vinculada a Agendamento 1 e Orçamento 1)
     const [cob1Res] = await connection.execute(
-      `INSERT INTO cobrancas (usuario_id, cliente_id, orcamento_id, valor, vencimento, status, data_pagamento, observacoes)
-       VALUES (?, ?, ?, 600.00, ?, 'PAGO', ?, 'Pagamento recebido integral via Pix.')`,
-      [usuarioId, clienteIds['Mariana Souza Lima'], orc1Id, dataHoje, dataHoje]
+      `INSERT INTO cobrancas (usuario_id, cliente_id, agendamento_id, orcamento_id, valor, vencimento, status, data_pagamento, observacoes)
+       VALUES (?, ?, ?, ?, 600.00, ?, 'PAGO', ?, 'Pagamento recebido integral via Pix ref. atendimento #1.')`,
+      [usuarioId, clienteIds['Mariana Souza Lima'], ag1Id, orc1Id, dataHoje, dataHoje]
     );
     const cob1Id = cob1Res.insertId;
 
-    // Cobrança 2: Carlos Eduardo - Pendente
+    // Cobrança 2: Carlos Eduardo - Pendente (vinculada a Agendamento 2 e Orçamento 2)
     await connection.execute(
-      `INSERT INTO cobrancas (usuario_id, cliente_id, orcamento_id, valor, vencimento, status, observacoes)
-       VALUES (?, ?, NULL, 250.00, ?, 'PENDENTE', 'Aguardando confirmação do Pix.')`,
-      [usuarioId, clienteIds['Carlos Eduardo Santos'], dataEm7Dias]
+      `INSERT INTO cobrancas (usuario_id, cliente_id, agendamento_id, orcamento_id, valor, vencimento, status, observacoes)
+       VALUES (?, ?, ?, ?, 250.00, ?, 'PENDENTE', 'Aguardando confirmação do Pix ref. atendimento concluído.')`,
+      [usuarioId, clienteIds['Carlos Eduardo Santos'], ag2Id, orc2Id, dataEm7Dias]
     );
 
     // Cobrança 3: Roberto Mendes - Atrasada
     await connection.execute(
-      `INSERT INTO cobrancas (usuario_id, cliente_id, orcamento_id, valor, vencimento, status, observacoes)
-       VALUES (?, ?, NULL, 360.00, ?, 'ATRASADO', 'Aviso de vencimento enviado por WhatsApp.')`,
+      `INSERT INTO cobrancas (usuario_id, cliente_id, agendamento_id, orcamento_id, valor, vencimento, status, observacoes)
+       VALUES (?, ?, NULL, NULL, 360.00, ?, 'ATRASADO', 'Aviso de vencimento enviado por WhatsApp.')`,
       [usuarioId, clienteIds['Roberto Mendes de Oliveira'], dataHa3Dias]
     );
-    console.log(`✅ 3 Cobranças emitidas (1 Paga, 1 Pendente, 1 Atrasada)`);
+    console.log(`✅ 3 Cobranças emitidas (1 Paga vinculada ao fluxo, 1 Pendente vinculada, 1 Atrasada)`);
 
     // 8. Cria Movimentações no Livro Caixa
     // Entrada automática da Cobrança 1
