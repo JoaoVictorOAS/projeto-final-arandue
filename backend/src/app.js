@@ -3,6 +3,8 @@ const cors = require('cors');
 const authRoutes = require('./routes/authRoutes');
 const clienteRoutes = require('./routes/clienteRoutes');
 const servicoRoutes = require('./routes/servicoRoutes');
+const orcamentoRoutes = require('./routes/orcamentoRoutes');
+const agendamentoRoutes = require('./routes/agendamentoRoutes');
 const authMiddleware = require('./middlewares/authMiddleware');
 
 const app = express();
@@ -25,5 +27,7 @@ app.get('/api/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/clientes', authMiddleware, clienteRoutes);
 app.use('/api/servicos', authMiddleware, servicoRoutes);
+app.use('/api/orcamentos', authMiddleware, orcamentoRoutes);
+app.use('/api/agendamentos', authMiddleware, agendamentoRoutes);
 
 module.exports = app;
