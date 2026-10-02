@@ -42,8 +42,29 @@ const STATUS_CONFIG = {
     badgeClass: 'bg-emerald-50 text-emerald-700 border-emerald-200',
     dotClass: 'bg-emerald-500',
   },
-  CANCELADO: {
-    label: 'Cancelado',
+  // Cobranças & Financeiro
+  PAGO: {
+    label: 'Pago',
+    badgeClass: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    dotClass: 'bg-emerald-500',
+  },
+  ATRASADO: {
+    label: 'Atrasado',
+    badgeClass: 'bg-rose-50 text-rose-700 border-rose-200',
+    dotClass: 'bg-rose-500',
+  },
+  VENCIDO: {
+    label: 'Atrasado',
+    badgeClass: 'bg-rose-50 text-rose-700 border-rose-200',
+    dotClass: 'bg-rose-500',
+  },
+  ENTRADA: {
+    label: 'Entrada',
+    badgeClass: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    dotClass: 'bg-emerald-500',
+  },
+  SAIDA: {
+    label: 'Saída',
     badgeClass: 'bg-rose-50 text-rose-700 border-rose-200',
     dotClass: 'bg-rose-500',
   },
