@@ -1,17 +1,17 @@
 # Graph Report - projeto-final-arandue  (2026-10-02)
 
 ## Corpus Check
-- 43 files · ~28,694 words
+- 49 files · ~30,276 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 9 file(s) not represented in the graph (top: (none) 6, .example 2, .css 1)
 
 ## Summary
-- 215 nodes · 314 edges · 12 communities (10 shown, 2 thin omitted)
+- 239 nodes · 345 edges · 13 communities (11 shown, 2 thin omitted)
 - Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 3 edges (avg confidence: 0.92)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `dddac64e`
+- Built from commit: `0cf41d3a`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -22,10 +22,11 @@
 - backend/package.json
 - frontend/package.json
 - Visão Geral do Projeto MEI
-- migrate.js
+- database.js
 - scripts
 - devDependencies
 - Google Skill Finder
+- dependencies
 
 ## God Nodes (most connected - your core abstractions)
 1. `react` - 18 edges
@@ -42,13 +43,13 @@
 ## Surprising Connections (you probably didn't know these)
 - `Obrigações Tributárias: DAS e Relatório Mensal` --conceptually_related_to--> `Entidade MySQL: movimentacoes (Livro Caixa)`  [INFERRED]
   docs/perguntaomei.pdf → docs/modelo-dados.md
+- `Fase 1: Base e Autenticação JWT` --implements--> `Endpoint REST: /api/auth`  [EXTRACTED]
+  plan.md → docs/api.md
 - `Fase 2: Cadastros Clientes e Serviços` --implements--> `Endpoint REST: /api/clientes`  [EXTRACTED]
   plan.md → docs/api.md
 - `Fase 3: Operação Orçamentos e Agenda` --implements--> `Endpoint REST: /api/orcamentos`  [EXTRACTED]
   plan.md → docs/api.md
 - `Fase 4: Financeiro Cobranças e Livro Caixa` --implements--> `Endpoint REST: /api/cobrancas`  [EXTRACTED]
-  plan.md → docs/api.md
-- `Fase 1: Base e Autenticação JWT` --implements--> `Endpoint REST: /api/auth`  [EXTRACTED]
   plan.md → docs/api.md
 
 ## Import Cycles
@@ -58,35 +59,35 @@
 - **Suíte RAG ChromaDB para Regras do MEI** — scripts_rag_index_mei, scripts_rag_query_mei, docs_perguntaomei_regras_gerais [EXTRACTED 1.00]
 - **Fluxo Operacional Integrado do MEI** — docs_modelo_dados_clientes, docs_modelo_dados_orcamentos, docs_modelo_dados_agendamentos, docs_modelo_dados_cobrancas, docs_modelo_dados_movimentacoes [INFERRED 0.95]
 
-## Communities (12 total, 2 thin omitted)
+## Communities (13 total, 2 thin omitted)
 
 ### Community 0 - "Entidade MySQL: clientes"
 Cohesion: 0.09
-Nodes (21): Endpoint REST: /api/agendamentos, Endpoint REST: /api/auth, Endpoint REST: /api/clientes, Endpoint REST: /api/cobrancas, Endpoint REST: /api/dashboard, Endpoint REST: /api/movimentacoes, Endpoint REST: /api/orcamentos, Endpoint REST: /api/servicos (+13 more)
+Nodes (22): Endpoint REST: /api/agendamentos, Endpoint REST: /api/auth, Endpoint REST: /api/clientes, Endpoint REST: /api/cobrancas, Endpoint REST: /api/dashboard, Endpoint REST: /api/movimentacoes, Endpoint REST: /api/orcamentos, Endpoint REST: /api/servicos (+14 more)
 
 ### Community 1 - "index_mei.py"
-Cohesion: 0.12
-Nodes (9): Limite de Faturamento e Enquadramento MEI, Obrigações Tributárias: DAS e Relatório Mensal, Perguntas e Respostas MEI e Simei (Receita Federal), build_vector_db(), extract_chunks_from_pdf(), main(), consultar_regras_mei(), main() (+1 more)
+Cohesion: 0.13
+Nodes (8): Limite de Faturamento e Enquadramento MEI, Perguntas e Respostas MEI e Simei (Receita Federal), build_vector_db(), extract_chunks_from_pdf(), main(), consultar_regras_mei(), main(), recreate_rag.sh script
 
 ### Community 2 - "App.jsx"
-Cohesion: 0.16
-Nodes (22): App(), Layout(), Navbar(), PrivateRoute(), NAV_ITEMS, Sidebar(), AuthContext, AuthProvider() (+14 more)
+Cohesion: 0.15
+Nodes (24): App(), Layout(), Navbar(), PrivateRoute(), NAV_ITEMS, Sidebar(), AuthContext, AuthProvider() (+16 more)
 
 ### Community 3 - "backend/package.json"
-Cohesion: 0.06
-Nodes (32): dependencies, bcryptjs, cors, dotenv, express, jsonwebtoken, mysql2, description (+24 more)
+Cohesion: 0.05
+Nodes (40): description, devDependencies, jest, nodemon, supertest, main, name, scripts (+32 more)
 
 ### Community 4 - "frontend/package.json"
 Cohesion: 0.07
-Nodes (27): dependencies, axios, lucide-react, react, react-dom, react-router-dom, name, private (+19 more)
+Nodes (25): dependencies, axios, lucide-react, react, react-dom, react-router-dom, name, private (+17 more)
 
 ### Community 5 - "Visão Geral do Projeto MEI"
 Cohesion: 0.33
 Nodes (6): Fase 6: Validação E2E da Jornada, Arquitetura React + Node.js + MySQL, Jornada Integrada do MEI, ODS 1 Erradicação da Pobreza, ODS 8 Trabalho Decente e Crescimento Econômico, Visão Geral do Projeto MEI
 
-### Community 6 - "migrate.js"
-Cohesion: 0.11
-Nodes (12): mysql, path, pool, fs, mysql, path, app, path (+4 more)
+### Community 6 - "database.js"
+Cohesion: 0.09
+Nodes (14): mysql, path, pool, fs, mysql, path, pool, usuarioRepository (+6 more)
 
 ### Community 7 - "scripts"
 Cohesion: 0.12
@@ -100,25 +101,29 @@ Nodes (10): devDependencies, autoprefixer, jsdom, postcss, tailwindcss, @testing
 Cohesion: 0.40
 Nodes (4): Google Skill Finder, Rules, When the fetch fails, Workflow
 
+### Community 12 - "dependencies"
+Cohesion: 0.29
+Nodes (7): dependencies, bcryptjs, cors, dotenv, express, jsonwebtoken, mysql2
+
 ## Knowledge Gaps
-- **97 isolated node(s):** `name`, `version`, `description`, `main`, `start` (+92 more)
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 114 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+- **112 isolated node(s):** `name`, `version`, `description`, `main`, `start` (+107 more)
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 130 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
 - **2 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `react` connect `App.jsx` to `frontend/package.json`?**
-  _High betweenness centrality (0.035) - this node is a cross-community bridge._
+  _High betweenness centrality (0.029) - this node is a cross-community bridge._
 - **Why does `devDependencies` connect `devDependencies` to `frontend/package.json`?**
-  _High betweenness centrality (0.030) - this node is a cross-community bridge._
-- **Why does `Entidade MySQL: movimentacoes (Livro Caixa)` connect `Entidade MySQL: clientes` to `index_mei.py`?**
-  _High betweenness centrality (0.027) - this node is a cross-community bridge._
+  _High betweenness centrality (0.024) - this node is a cross-community bridge._
 - **What connects `name`, `version`, `description` to the rest of the system?**
-  _97 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _112 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Entidade MySQL: clientes` be split into smaller, more focused modules?**
-  _Cohesion score 0.09 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.08615384615384615 - nodes in this community are weakly interconnected._
 - **Should `index_mei.py` be split into smaller, more focused modules?**
-  _Cohesion score 0.11857707509881422 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.12554112554112554 - nodes in this community are weakly interconnected._
+- **Should `App.jsx` be split into smaller, more focused modules?**
+  _Cohesion score 0.14878048780487804 - nodes in this community are weakly interconnected._
 - **Should `backend/package.json` be split into smaller, more focused modules?**
-  _Cohesion score 0.06050420168067227 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.0467687074829932 - nodes in this community are weakly interconnected._

@@ -287,12 +287,24 @@
       "source_location": "L4"
     },
     {
+      "id": "backend_src_middlewares_authmiddleware_authmiddleware",
+      "label": "authMiddleware()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 3,
+      "community_name": "backend/package.json",
+      "file_type": "code",
+      "norm_label": "authmiddleware()",
+      "source_file": "backend/src/middlewares/authMiddleware.js",
+      "source_location": "L8"
+    },
+    {
       "id": "backend_src_database_migrate_runmigration",
       "label": "runMigration()",
       "_callable": true,
       "_origin": "ast",
       "community": 6,
-      "community_name": "migrate.js",
+      "community_name": "database.js",
       "file_type": "code",
       "norm_label": "runmigration()",
       "source_file": "backend/src/database/migrate.js",
@@ -428,6 +440,83 @@
       "source_location": "L1"
     },
     {
+      "id": "backend_package_dependencies",
+      "label": "dependencies",
+      "_origin": "ast",
+      "community": 12,
+      "community_name": "dependencies",
+      "file_type": "code",
+      "norm_label": "dependencies",
+      "source_file": "backend/package.json",
+      "source_location": "L11"
+    },
+    {
+      "id": "backend_package_dependencies_bcryptjs",
+      "label": "bcryptjs",
+      "_origin": "ast",
+      "community": 12,
+      "community_name": "dependencies",
+      "file_type": "code",
+      "norm_label": "bcryptjs",
+      "source_file": "backend/package.json",
+      "source_location": "L12"
+    },
+    {
+      "id": "backend_package_dependencies_cors",
+      "label": "cors",
+      "_origin": "ast",
+      "community": 12,
+      "community_name": "dependencies",
+      "file_type": "code",
+      "norm_label": "cors",
+      "source_file": "backend/package.json",
+      "source_location": "L13"
+    },
+    {
+      "id": "backend_package_dependencies_dotenv",
+      "label": "dotenv",
+      "_origin": "ast",
+      "community": 12,
+      "community_name": "dependencies",
+      "file_type": "code",
+      "norm_label": "dotenv",
+      "source_file": "backend/package.json",
+      "source_location": "L14"
+    },
+    {
+      "id": "backend_package_dependencies_express",
+      "label": "express",
+      "_origin": "ast",
+      "community": 12,
+      "community_name": "dependencies",
+      "file_type": "code",
+      "norm_label": "express",
+      "source_file": "backend/package.json",
+      "source_location": "L15"
+    },
+    {
+      "id": "backend_package_dependencies_jsonwebtoken",
+      "label": "jsonwebtoken",
+      "_origin": "ast",
+      "community": 12,
+      "community_name": "dependencies",
+      "file_type": "code",
+      "norm_label": "jsonwebtoken",
+      "source_file": "backend/package.json",
+      "source_location": "L16"
+    },
+    {
+      "id": "backend_package_dependencies_mysql2",
+      "label": "mysql2",
+      "_origin": "ast",
+      "community": 12,
+      "community_name": "dependencies",
+      "file_type": "code",
+      "norm_label": "mysql2",
+      "source_file": "backend/package.json",
+      "source_location": "L17"
+    },
+    {
       "id": "frontend_src_app",
       "label": "App.jsx",
       "_origin": "ast",
@@ -525,17 +614,6 @@
       "norm_label": "storage",
       "source_file": "frontend/src/context/AuthContext.jsx",
       "source_location": "L4"
-    },
-    {
-      "id": "frontend_src_main",
-      "label": "main.jsx",
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "App.jsx",
-      "file_type": "code",
-      "norm_label": "main.jsx",
-      "source_file": "frontend/src/main.jsx",
-      "source_location": "L1"
     },
     {
       "id": "frontend_src_pages_agenda",
@@ -648,6 +726,39 @@
       "source_location": "L1"
     },
     {
+      "id": "frontend_src_services_api",
+      "label": "api.js",
+      "_origin": "ast",
+      "community": 2,
+      "community_name": "App.jsx",
+      "file_type": "code",
+      "norm_label": "api.js",
+      "source_file": "frontend/src/services/api.js",
+      "source_location": "L1"
+    },
+    {
+      "id": "frontend_src_services_api_api",
+      "label": "api",
+      "_origin": "ast",
+      "community": 2,
+      "community_name": "App.jsx",
+      "file_type": "code",
+      "norm_label": "api",
+      "source_file": "frontend/src/services/api.js",
+      "source_location": "L3"
+    },
+    {
+      "id": "ref_axios",
+      "label": "axios",
+      "_origin": "ast",
+      "community": 2,
+      "community_name": "App.jsx",
+      "file_type": "concept",
+      "norm_label": "axios",
+      "source_file": "frontend/package.json",
+      "source_location": "L13"
+    },
+    {
       "id": "ref_lucide_react",
       "label": "lucide-react",
       "_origin": "ast",
@@ -690,83 +801,6 @@
       "norm_label": "backend/package.json",
       "source_file": "backend/package.json",
       "source_location": "L1"
-    },
-    {
-      "id": "backend_package_dependencies",
-      "label": "dependencies",
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "backend/package.json",
-      "file_type": "code",
-      "norm_label": "dependencies",
-      "source_file": "backend/package.json",
-      "source_location": "L11"
-    },
-    {
-      "id": "backend_package_dependencies_bcryptjs",
-      "label": "bcryptjs",
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "backend/package.json",
-      "file_type": "code",
-      "norm_label": "bcryptjs",
-      "source_file": "backend/package.json",
-      "source_location": "L12"
-    },
-    {
-      "id": "backend_package_dependencies_cors",
-      "label": "cors",
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "backend/package.json",
-      "file_type": "code",
-      "norm_label": "cors",
-      "source_file": "backend/package.json",
-      "source_location": "L13"
-    },
-    {
-      "id": "backend_package_dependencies_dotenv",
-      "label": "dotenv",
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "backend/package.json",
-      "file_type": "code",
-      "norm_label": "dotenv",
-      "source_file": "backend/package.json",
-      "source_location": "L14"
-    },
-    {
-      "id": "backend_package_dependencies_express",
-      "label": "express",
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "backend/package.json",
-      "file_type": "code",
-      "norm_label": "express",
-      "source_file": "backend/package.json",
-      "source_location": "L15"
-    },
-    {
-      "id": "backend_package_dependencies_jsonwebtoken",
-      "label": "jsonwebtoken",
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "backend/package.json",
-      "file_type": "code",
-      "norm_label": "jsonwebtoken",
-      "source_file": "backend/package.json",
-      "source_location": "L16"
-    },
-    {
-      "id": "backend_package_dependencies_mysql2",
-      "label": "mysql2",
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "backend/package.json",
-      "file_type": "code",
-      "norm_label": "mysql2",
-      "source_file": "backend/package.json",
-      "source_location": "L17"
     },
     {
       "id": "backend_package_description",
@@ -920,7 +954,18 @@
       "file_type": "code",
       "norm_label": "app",
       "source_file": "backend/src/app.js",
-      "source_location": "L4"
+      "source_location": "L5"
+    },
+    {
+      "id": "backend_src_app_authroutes",
+      "label": "authRoutes",
+      "_origin": "ast",
+      "community": 3,
+      "community_name": "backend/package.json",
+      "file_type": "code",
+      "norm_label": "authroutes",
+      "source_file": "backend/src/app.js",
+      "source_location": "L3"
     },
     {
       "id": "backend_src_app_cors",
@@ -942,6 +987,215 @@
       "file_type": "code",
       "norm_label": "express",
       "source_file": "backend/src/app.js",
+      "source_location": "L1"
+    },
+    {
+      "id": "backend_src_controllers_authcontroller",
+      "label": "authController.js",
+      "_origin": "ast",
+      "community": 3,
+      "community_name": "backend/package.json",
+      "file_type": "code",
+      "norm_label": "authcontroller.js",
+      "source_file": "backend/src/controllers/authController.js",
+      "source_location": "L1"
+    },
+    {
+      "id": "backend_src_controllers_authcontroller_authcontroller",
+      "label": "authController",
+      "_origin": "ast",
+      "community": 3,
+      "community_name": "backend/package.json",
+      "file_type": "code",
+      "norm_label": "authcontroller",
+      "source_file": "backend/src/controllers/authController.js",
+      "source_location": "L6"
+    },
+    {
+      "id": "backend_src_controllers_authcontroller_authservice",
+      "label": "authService",
+      "_origin": "ast",
+      "community": 3,
+      "community_name": "backend/package.json",
+      "file_type": "code",
+      "norm_label": "authservice",
+      "source_file": "backend/src/controllers/authController.js",
+      "source_location": "L1"
+    },
+    {
+      "id": "backend_src_middlewares_authmiddleware",
+      "label": "authMiddleware.js",
+      "_origin": "ast",
+      "community": 3,
+      "community_name": "backend/package.json",
+      "file_type": "code",
+      "norm_label": "authmiddleware.js",
+      "source_file": "backend/src/middlewares/authMiddleware.js",
+      "source_location": "L1"
+    },
+    {
+      "id": "backend_src_middlewares_authmiddleware_jwt",
+      "label": "jwt",
+      "_origin": "ast",
+      "community": 3,
+      "community_name": "backend/package.json",
+      "file_type": "code",
+      "norm_label": "jwt",
+      "source_file": "backend/src/middlewares/authMiddleware.js",
+      "source_location": "L1"
+    },
+    {
+      "id": "backend_src_routes_authroutes",
+      "label": "authRoutes.js",
+      "_origin": "ast",
+      "community": 3,
+      "community_name": "backend/package.json",
+      "file_type": "code",
+      "norm_label": "authroutes.js",
+      "source_file": "backend/src/routes/authRoutes.js",
+      "source_location": "L1"
+    },
+    {
+      "id": "backend_src_routes_authroutes_authcontroller",
+      "label": "authController",
+      "_origin": "ast",
+      "community": 3,
+      "community_name": "backend/package.json",
+      "file_type": "code",
+      "norm_label": "authcontroller",
+      "source_file": "backend/src/routes/authRoutes.js",
+      "source_location": "L2"
+    },
+    {
+      "id": "backend_src_routes_authroutes_authmiddleware",
+      "label": "authMiddleware",
+      "_origin": "ast",
+      "community": 3,
+      "community_name": "backend/package.json",
+      "file_type": "code",
+      "norm_label": "authmiddleware",
+      "source_file": "backend/src/routes/authRoutes.js",
+      "source_location": "L3"
+    },
+    {
+      "id": "backend_src_routes_authroutes_express",
+      "label": "express",
+      "_origin": "ast",
+      "community": 3,
+      "community_name": "backend/package.json",
+      "file_type": "code",
+      "norm_label": "express",
+      "source_file": "backend/src/routes/authRoutes.js",
+      "source_location": "L1"
+    },
+    {
+      "id": "backend_src_routes_authroutes_router",
+      "label": "router",
+      "_origin": "ast",
+      "community": 3,
+      "community_name": "backend/package.json",
+      "file_type": "code",
+      "norm_label": "router",
+      "source_file": "backend/src/routes/authRoutes.js",
+      "source_location": "L5"
+    },
+    {
+      "id": "backend_src_services_authservice",
+      "label": "authService.js",
+      "_origin": "ast",
+      "community": 3,
+      "community_name": "backend/package.json",
+      "file_type": "code",
+      "norm_label": "authservice.js",
+      "source_file": "backend/src/services/authService.js",
+      "source_location": "L1"
+    },
+    {
+      "id": "backend_src_services_authservice_authservice",
+      "label": "authService",
+      "_origin": "ast",
+      "community": 3,
+      "community_name": "backend/package.json",
+      "file_type": "code",
+      "norm_label": "authservice",
+      "source_file": "backend/src/services/authService.js",
+      "source_location": "L8"
+    },
+    {
+      "id": "backend_src_services_authservice_bcrypt",
+      "label": "bcrypt",
+      "_origin": "ast",
+      "community": 3,
+      "community_name": "backend/package.json",
+      "file_type": "code",
+      "norm_label": "bcrypt",
+      "source_file": "backend/src/services/authService.js",
+      "source_location": "L1"
+    },
+    {
+      "id": "backend_src_services_authservice_jwt",
+      "label": "jwt",
+      "_origin": "ast",
+      "community": 3,
+      "community_name": "backend/package.json",
+      "file_type": "code",
+      "norm_label": "jwt",
+      "source_file": "backend/src/services/authService.js",
+      "source_location": "L2"
+    },
+    {
+      "id": "backend_src_services_authservice_usuariorepository",
+      "label": "usuarioRepository",
+      "_origin": "ast",
+      "community": 3,
+      "community_name": "backend/package.json",
+      "file_type": "code",
+      "norm_label": "usuariorepository",
+      "source_file": "backend/src/services/authService.js",
+      "source_location": "L3"
+    },
+    {
+      "id": "backend_tests_auth_test",
+      "label": "auth.test.js",
+      "_origin": "ast",
+      "community": 3,
+      "community_name": "backend/package.json",
+      "file_type": "code",
+      "norm_label": "auth.test.js",
+      "source_file": "backend/tests/auth.test.js",
+      "source_location": "L1"
+    },
+    {
+      "id": "backend_tests_auth_test_app",
+      "label": "app",
+      "_origin": "ast",
+      "community": 3,
+      "community_name": "backend/package.json",
+      "file_type": "code",
+      "norm_label": "app",
+      "source_file": "backend/tests/auth.test.js",
+      "source_location": "L2"
+    },
+    {
+      "id": "backend_tests_auth_test_pool",
+      "label": "pool",
+      "_origin": "ast",
+      "community": 3,
+      "community_name": "backend/package.json",
+      "file_type": "code",
+      "norm_label": "pool",
+      "source_file": "backend/tests/auth.test.js",
+      "source_location": "L3"
+    },
+    {
+      "id": "backend_tests_auth_test_request",
+      "label": "request",
+      "_origin": "ast",
+      "community": 3,
+      "community_name": "backend/package.json",
+      "file_type": "code",
+      "norm_label": "request",
+      "source_file": "backend/tests/auth.test.js",
       "source_location": "L1"
     },
     {
@@ -1242,26 +1496,15 @@
       "source_location": "L4"
     },
     {
-      "id": "frontend_src_services_api",
-      "label": "api.js",
+      "id": "frontend_src_main",
+      "label": "main.jsx",
       "_origin": "ast",
       "community": 4,
       "community_name": "frontend/package.json",
       "file_type": "code",
-      "norm_label": "api.js",
-      "source_file": "frontend/src/services/api.js",
+      "norm_label": "main.jsx",
+      "source_file": "frontend/src/main.jsx",
       "source_location": "L1"
-    },
-    {
-      "id": "frontend_src_services_api_api",
-      "label": "api",
-      "_origin": "ast",
-      "community": 4,
-      "community_name": "frontend/package.json",
-      "file_type": "code",
-      "norm_label": "api",
-      "source_file": "frontend/src/services/api.js",
-      "source_location": "L3"
     },
     {
       "id": "frontend_src_setuptests",
@@ -1295,17 +1538,6 @@
       "norm_label": "autoprefixer",
       "source_file": "frontend/package.json",
       "source_location": "L23"
-    },
-    {
-      "id": "ref_axios",
-      "label": "axios",
-      "_origin": "ast",
-      "community": 4,
-      "community_name": "frontend/package.json",
-      "file_type": "concept",
-      "norm_label": "axios",
-      "source_file": "frontend/package.json",
-      "source_location": "L13"
     },
     {
       "id": "ref_jsdom",
@@ -1411,7 +1643,7 @@
       "label": "database.js",
       "_origin": "ast",
       "community": 6,
-      "community_name": "migrate.js",
+      "community_name": "database.js",
       "file_type": "code",
       "norm_label": "database.js",
       "source_file": "backend/src/config/database.js",
@@ -1422,7 +1654,7 @@
       "label": "mysql",
       "_origin": "ast",
       "community": 6,
-      "community_name": "migrate.js",
+      "community_name": "database.js",
       "file_type": "code",
       "norm_label": "mysql",
       "source_file": "backend/src/config/database.js",
@@ -1433,7 +1665,7 @@
       "label": "path",
       "_origin": "ast",
       "community": 6,
-      "community_name": "migrate.js",
+      "community_name": "database.js",
       "file_type": "code",
       "norm_label": "path",
       "source_file": "backend/src/config/database.js",
@@ -1444,7 +1676,7 @@
       "label": "pool",
       "_origin": "ast",
       "community": 6,
-      "community_name": "migrate.js",
+      "community_name": "database.js",
       "file_type": "code",
       "norm_label": "pool",
       "source_file": "backend/src/config/database.js",
@@ -1455,7 +1687,7 @@
       "label": "migrate.js",
       "_origin": "ast",
       "community": 6,
-      "community_name": "migrate.js",
+      "community_name": "database.js",
       "file_type": "code",
       "norm_label": "migrate.js",
       "source_file": "backend/src/database/migrate.js",
@@ -1466,7 +1698,7 @@
       "label": "fs",
       "_origin": "ast",
       "community": 6,
-      "community_name": "migrate.js",
+      "community_name": "database.js",
       "file_type": "code",
       "norm_label": "fs",
       "source_file": "backend/src/database/migrate.js",
@@ -1477,7 +1709,7 @@
       "label": "mysql",
       "_origin": "ast",
       "community": 6,
-      "community_name": "migrate.js",
+      "community_name": "database.js",
       "file_type": "code",
       "norm_label": "mysql",
       "source_file": "backend/src/database/migrate.js",
@@ -1488,18 +1720,51 @@
       "label": "path",
       "_origin": "ast",
       "community": 6,
-      "community_name": "migrate.js",
+      "community_name": "database.js",
       "file_type": "code",
       "norm_label": "path",
       "source_file": "backend/src/database/migrate.js",
       "source_location": "L3"
     },
     {
+      "id": "backend_src_repositories_usuariorepository",
+      "label": "usuarioRepository.js",
+      "_origin": "ast",
+      "community": 6,
+      "community_name": "database.js",
+      "file_type": "code",
+      "norm_label": "usuariorepository.js",
+      "source_file": "backend/src/repositories/usuarioRepository.js",
+      "source_location": "L1"
+    },
+    {
+      "id": "backend_src_repositories_usuariorepository_pool",
+      "label": "pool",
+      "_origin": "ast",
+      "community": 6,
+      "community_name": "database.js",
+      "file_type": "code",
+      "norm_label": "pool",
+      "source_file": "backend/src/repositories/usuarioRepository.js",
+      "source_location": "L1"
+    },
+    {
+      "id": "backend_src_repositories_usuariorepository_usuariorepository",
+      "label": "usuarioRepository",
+      "_origin": "ast",
+      "community": 6,
+      "community_name": "database.js",
+      "file_type": "code",
+      "norm_label": "usuariorepository",
+      "source_file": "backend/src/repositories/usuarioRepository.js",
+      "source_location": "L6"
+    },
+    {
       "id": "backend_src_server",
       "label": "server.js",
       "_origin": "ast",
       "community": 6,
-      "community_name": "migrate.js",
+      "community_name": "database.js",
       "file_type": "code",
       "norm_label": "server.js",
       "source_file": "backend/src/server.js",
@@ -1510,7 +1775,7 @@
       "label": "app",
       "_origin": "ast",
       "community": 6,
-      "community_name": "migrate.js",
+      "community_name": "database.js",
       "file_type": "code",
       "norm_label": "app",
       "source_file": "backend/src/server.js",
@@ -1521,7 +1786,7 @@
       "label": "path",
       "_origin": "ast",
       "community": 6,
-      "community_name": "migrate.js",
+      "community_name": "database.js",
       "file_type": "code",
       "norm_label": "path",
       "source_file": "backend/src/server.js",
@@ -1532,7 +1797,7 @@
       "label": "database.test.js",
       "_origin": "ast",
       "community": 6,
-      "community_name": "migrate.js",
+      "community_name": "database.js",
       "file_type": "code",
       "norm_label": "database.test.js",
       "source_file": "backend/tests/database.test.js",
@@ -1543,7 +1808,7 @@
       "label": "pool",
       "_origin": "ast",
       "community": 6,
-      "community_name": "migrate.js",
+      "community_name": "database.js",
       "file_type": "code",
       "norm_label": "pool",
       "source_file": "backend/tests/database.test.js",
@@ -1554,7 +1819,7 @@
       "label": "setup.test.js",
       "_origin": "ast",
       "community": 6,
-      "community_name": "migrate.js",
+      "community_name": "database.js",
       "file_type": "code",
       "norm_label": "setup.test.js",
       "source_file": "backend/tests/setup.test.js",
@@ -1565,7 +1830,7 @@
       "label": "fs",
       "_origin": "ast",
       "community": 6,
-      "community_name": "migrate.js",
+      "community_name": "database.js",
       "file_type": "code",
       "norm_label": "fs",
       "source_file": "backend/tests/setup.test.js",
@@ -1576,7 +1841,7 @@
       "label": "path",
       "_origin": "ast",
       "community": 6,
-      "community_name": "migrate.js",
+      "community_name": "database.js",
       "file_type": "code",
       "norm_label": "path",
       "source_file": "backend/tests/setup.test.js",
@@ -1587,7 +1852,7 @@
       "label": "mysql2",
       "_origin": "ast",
       "community": 6,
-      "community_name": "migrate.js",
+      "community_name": "database.js",
       "file_type": "concept",
       "norm_label": "mysql2",
       "source_file": "backend/package.json",
@@ -1969,6 +2234,21 @@
       "contributor": null,
       "file_type": "paper",
       "norm_label": "perguntas e respostas mei e simei (receita federal)",
+      "source_file": "docs/perguntaomei.pdf",
+      "source_location": null,
+      "source_url": null
+    },
+    {
+      "id": "docs_perguntaomei_obrigacoes_tributarias",
+      "label": "Obriga\u00e7\u00f5es Tribut\u00e1rias: DAS e Relat\u00f3rio Mensal",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 0,
+      "community_name": "Entidade MySQL: clientes",
+      "contributor": null,
+      "file_type": "concept",
+      "norm_label": "obrigacoes tributarias: das e relatorio mensal",
       "source_file": "docs/perguntaomei.pdf",
       "source_location": null,
       "source_url": null
@@ -2364,21 +2644,6 @@
       "source_url": null
     },
     {
-      "id": "docs_perguntaomei_obrigacoes_tributarias",
-      "label": "Obriga\u00e7\u00f5es Tribut\u00e1rias: DAS e Relat\u00f3rio Mensal",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 1,
-      "community_name": "index_mei.py",
-      "contributor": null,
-      "file_type": "concept",
-      "norm_label": "obrigacoes tributarias: das e relatorio mensal",
-      "source_file": "docs/perguntaomei.pdf",
-      "source_location": null,
-      "source_url": null
-    },
-    {
       "id": "plan_fase_6_e2e",
       "label": "Fase 6: Valida\u00e7\u00e3o E2E da Jornada",
       "_origin": "semantic",
@@ -2555,8 +2820,9 @@
     {
       "id": "frontend_src_index",
       "label": "frontend_src_index",
-      "community": 2,
-      "community_name": "App.jsx",
+      "_origin": "semantic",
+      "community": 4,
+      "community_name": "frontend/package.json",
       "external": true,
       "file_type": "concept",
       "norm_label": "frontend_src_index",
@@ -2566,8 +2832,9 @@
     {
       "id": "ref_fs",
       "label": "ref_fs",
+      "_origin": "semantic",
       "community": 6,
-      "community_name": "migrate.js",
+      "community_name": "database.js",
       "external": true,
       "file_type": "concept",
       "norm_label": "ref_fs",
@@ -2577,8 +2844,9 @@
     {
       "id": "ref_path",
       "label": "ref_path",
+      "_origin": "semantic",
       "community": 6,
-      "community_name": "migrate.js",
+      "community_name": "database.js",
       "external": true,
       "file_type": "concept",
       "norm_label": "ref_path",
@@ -2861,6 +3129,18 @@
       "context": "call",
       "source_file": "scripts/rag/query_mei.py",
       "source_location": "L62",
+      "weight": 1.0
+    },
+    {
+      "source": "backend_tests_auth_test",
+      "target": "backend_tests_auth_test_request",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "backend/tests/auth.test.js",
+      "source_location": "L1",
       "weight": 1.0
     },
     {
@@ -3560,6 +3840,18 @@
       "weight": 1.0
     },
     {
+      "source": "backend_src_app",
+      "target": "backend_src_routes_authroutes",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "backend/src/app.js",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
       "source": "backend_src_config_database",
       "target": "ref_mysql2",
       "relation": "imports_from",
@@ -3581,6 +3873,18 @@
       "context": "import",
       "source_file": "backend/src/config/database.js",
       "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "backend_src_controllers_authcontroller",
+      "target": "backend_src_services_authservice",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "backend/src/controllers/authController.js",
+      "source_location": "L1",
       "weight": 1.0
     },
     {
@@ -3620,6 +3924,66 @@
       "weight": 1.0
     },
     {
+      "source": "backend_src_middlewares_authmiddleware",
+      "target": "ref_jsonwebtoken",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "backend/src/middlewares/authMiddleware.js",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "backend_src_repositories_usuariorepository",
+      "target": "backend_src_config_database",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "backend/src/repositories/usuarioRepository.js",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "backend_src_routes_authroutes",
+      "target": "ref_express",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "backend/src/routes/authRoutes.js",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "backend_src_routes_authroutes",
+      "target": "backend_src_controllers_authcontroller",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "backend/src/routes/authRoutes.js",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "backend_src_routes_authroutes",
+      "target": "backend_src_middlewares_authmiddleware",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "backend/src/routes/authRoutes.js",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
       "source": "backend_src_server",
       "target": "backend_src_app",
       "relation": "imports_from",
@@ -3641,6 +4005,78 @@
       "context": "import",
       "source_file": "backend/src/server.js",
       "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "backend_src_services_authservice",
+      "target": "ref_bcryptjs",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "backend/src/services/authService.js",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "backend_src_services_authservice",
+      "target": "ref_jsonwebtoken",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "backend/src/services/authService.js",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "backend_src_services_authservice",
+      "target": "backend_src_repositories_usuariorepository",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "backend/src/services/authService.js",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "backend_tests_auth_test",
+      "target": "ref_supertest",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "backend/tests/auth.test.js",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "backend_tests_auth_test",
+      "target": "backend_src_app",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "backend/tests/auth.test.js",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "backend_tests_auth_test",
+      "target": "backend_src_config_database",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "backend/tests/auth.test.js",
+      "source_location": "L3",
       "weight": 1.0
     },
     {
@@ -4868,13 +5304,24 @@
     },
     {
       "source": "backend_src_app",
+      "target": "backend_src_app_authroutes",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "backend/src/app.js",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "backend_src_app",
       "target": "backend_src_app_app",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "backend/src/app.js",
-      "source_location": "L4",
+      "source_location": "L5",
       "weight": 1.0
     },
     {
@@ -4908,6 +5355,28 @@
       "confidence_score": 1.0,
       "source_file": "backend/src/config/database.js",
       "source_location": "L8",
+      "weight": 1.0
+    },
+    {
+      "source": "backend_src_controllers_authcontroller",
+      "target": "backend_src_controllers_authcontroller_authservice",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "backend/src/controllers/authController.js",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "backend_src_controllers_authcontroller",
+      "target": "backend_src_controllers_authcontroller_authcontroller",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "backend/src/controllers/authController.js",
+      "source_location": "L6",
       "weight": 1.0
     },
     {
@@ -4955,6 +5424,94 @@
       "weight": 1.0
     },
     {
+      "source": "backend_src_middlewares_authmiddleware",
+      "target": "backend_src_middlewares_authmiddleware_jwt",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "backend/src/middlewares/authMiddleware.js",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "backend_src_middlewares_authmiddleware",
+      "target": "backend_src_middlewares_authmiddleware_authmiddleware",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "backend/src/middlewares/authMiddleware.js",
+      "source_location": "L8",
+      "weight": 1.0
+    },
+    {
+      "source": "backend_src_repositories_usuariorepository",
+      "target": "backend_src_repositories_usuariorepository_pool",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "backend/src/repositories/usuarioRepository.js",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "backend_src_repositories_usuariorepository",
+      "target": "backend_src_repositories_usuariorepository_usuariorepository",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "backend/src/repositories/usuarioRepository.js",
+      "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "backend_src_routes_authroutes",
+      "target": "backend_src_routes_authroutes_express",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "backend/src/routes/authRoutes.js",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "backend_src_routes_authroutes",
+      "target": "backend_src_routes_authroutes_authcontroller",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "backend/src/routes/authRoutes.js",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "backend_src_routes_authroutes",
+      "target": "backend_src_routes_authroutes_authmiddleware",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "backend/src/routes/authRoutes.js",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "backend_src_routes_authroutes",
+      "target": "backend_src_routes_authroutes_router",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "backend/src/routes/authRoutes.js",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
       "source": "backend_src_server",
       "target": "backend_src_server_app",
       "relation": "contains",
@@ -4974,6 +5531,72 @@
       "confidence_score": 1.0,
       "source_file": "backend/src/server.js",
       "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "backend_src_services_authservice",
+      "target": "backend_src_services_authservice_bcrypt",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "backend/src/services/authService.js",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "backend_src_services_authservice",
+      "target": "backend_src_services_authservice_jwt",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "backend/src/services/authService.js",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "backend_src_services_authservice",
+      "target": "backend_src_services_authservice_usuariorepository",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "backend/src/services/authService.js",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "backend_src_services_authservice",
+      "target": "backend_src_services_authservice_authservice",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "backend/src/services/authService.js",
+      "source_location": "L8",
+      "weight": 1.0
+    },
+    {
+      "source": "backend_tests_auth_test",
+      "target": "backend_tests_auth_test_app",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "backend/tests/auth.test.js",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "backend_tests_auth_test",
+      "target": "backend_tests_auth_test_pool",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "backend/tests/auth.test.js",
+      "source_location": "L3",
       "weight": 1.0
     },
     {
@@ -6237,5 +6860,5 @@
       "source_file": "README.md"
     }
   ],
-  "built_at_commit": "dddac64ebb665d0ce5443aeb15cc2e5656622df1"
+  "built_at_commit": "0cf41d3af8e62decffe1221624617ab212550c52"
 }
