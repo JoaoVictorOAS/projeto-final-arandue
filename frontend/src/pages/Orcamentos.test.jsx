@@ -1,4 +1,5 @@
 import React from 'react';
+import { MemoryRouter } from 'react-router-dom';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { describe, test, expect, vi, beforeEach } from 'vitest';
 import Orcamentos from './Orcamentos';
@@ -113,8 +114,15 @@ describe('Módulo de Orçamentos', () => {
     });
   });
 
+  const renderOrcamentos = () =>
+    render(
+      <MemoryRouter>
+        <Orcamentos />
+      </MemoryRouter>
+    );
+
   test('deve renderizar a listagem de orçamentos mockada com padrão sucesso/dados e formatação BRL', async () => {
-    render(<Orcamentos />);
+    renderOrcamentos();
 
     expect(screen.getByText(/carregando orçamentos/i)).toBeInTheDocument();
 
@@ -137,7 +145,7 @@ describe('Módulo de Orçamentos', () => {
   });
 
   test('deve abrir o modal de proposta comercial detalhada ao clicar no botão de visualização', async () => {
-    render(<Orcamentos />);
+    renderOrcamentos();
 
     await waitFor(() => {
       expect(screen.getByLabelText(/ver proposta do orçamento 101/i)).toBeInTheDocument();
@@ -157,7 +165,7 @@ describe('Módulo de Orçamentos', () => {
   });
 
   test('deve abrir o modal de emissão de orçamento com campos dinâmicos e seleção de catálogo', async () => {
-    render(<Orcamentos />);
+    renderOrcamentos();
 
     await waitFor(() => {
       expect(screen.getByRole('button', { name: /novo orçamento/i })).toBeInTheDocument();
@@ -188,10 +196,44 @@ describe('Módulo de Orçamentos', () => {
       return Promise.resolve({ data: { sucesso: true, dados: [] } });
     });
 
-    render(<Orcamentos />);
+    renderOrcamentos();
 
     await waitFor(() => {
       expect(screen.getByText(/nenhum orçamento emitido/i)).toBeInTheDocument();
+    });
+  });
+
+  test('deve exibir o botão Agendar quando o orçamento estiver com status APROVADO', async () => {
+    api.get.mockImplementation((url) => {
+      if (url === '/orcamentos') {
+        return Promise.resolve({
+          data: {
+            sucesso: true,
+            dados: [
+              {
+                id: 103,
+                cliente_id: 1,
+                cliente_nome: 'João Silva',
+                data_emissao: '2026-10-01',
+                validade: '2026-10-16',
+                subtotal: 1000.0,
+                desconto: 0,
+                total: 1000.0,
+                status: 'APROVADO',
+                itens: [],
+                fluxo: null
+              }
+            ]
+          }
+        });
+      }
+      return Promise.resolve({ data: { sucesso: true, dados: [] } });
+    });
+
+    renderOrcamentos();
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /agendar/i })).toBeInTheDocument();
     });
   });
 });

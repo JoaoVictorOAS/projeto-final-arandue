@@ -1,4 +1,5 @@
 import React from 'react';
+import { MemoryRouter } from 'react-router-dom';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { describe, test, expect, vi, beforeEach } from 'vitest';
 import Agenda from './Agenda';
@@ -57,6 +58,7 @@ describe('Módulo de Agenda', () => {
       data_hora: '2026-10-10T14:00:00',
       status: 'PENDENTE',
       observacoes: 'Trazer pasta térmica nova.',
+      orcamento_id: 301,
     },
     {
       id: 502,
@@ -67,6 +69,26 @@ describe('Módulo de Agenda', () => {
       data_hora: '2026-10-11T10:30:00',
       status: 'CONFIRMADO',
       observacoes: 'Fazer backup prévio.',
+      orcamento_id: 302,
+    },
+  ];
+
+  const mockOrcamentos = [
+    {
+      id: 301,
+      cliente_id: 1,
+      cliente_nome: 'Carlos Drummond',
+      status: 'APROVADO',
+      total: 250.0,
+      itens: [{ servico_id: 10, quantidade: 1, preco_unitario: 250.0 }],
+    },
+    {
+      id: 302,
+      cliente_id: 2,
+      cliente_nome: 'Clarice Lispector',
+      status: 'APROVADO',
+      total: 120.0,
+      itens: [{ servico_id: 20, quantidade: 1, preco_unitario: 120.0 }],
     },
   ];
 
@@ -82,12 +104,22 @@ describe('Módulo de Agenda', () => {
       if (url === '/servicos') {
         return Promise.resolve({ data: { sucesso: true, dados: mockServicos } });
       }
+      if (url === '/orcamentos') {
+        return Promise.resolve({ data: { sucesso: true, dados: mockOrcamentos } });
+      }
       return Promise.resolve({ data: { sucesso: true, dados: [] } });
     });
   });
 
+  const renderAgenda = () =>
+    render(
+      <MemoryRouter>
+        <Agenda />
+      </MemoryRouter>
+    );
+
   test('deve renderizar a listagem de agendamentos mockados e o badge de status', async () => {
-    render(<Agenda />);
+    renderAgenda();
 
     expect(screen.getByText(/carregando agendamentos/i)).toBeInTheDocument();
 
@@ -114,7 +146,7 @@ describe('Módulo de Agenda', () => {
   });
 
   test('deve abrir o modal de novo agendamento com os campos necessários', async () => {
-    render(<Agenda />);
+    renderAgenda();
 
     await waitFor(() => {
       expect(screen.getByRole('button', { name: /novo agendamento/i })).toBeInTheDocument();
@@ -125,6 +157,7 @@ describe('Módulo de Agenda', () => {
 
     // Modal
     expect(screen.getByRole('heading', { name: /novo agendamento/i })).toBeInTheDocument();
+    expect(screen.getByLabelText(/orçamento aprovado/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/cliente/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/serviço a realizar/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/data e horário do atendimento/i)).toBeInTheDocument();
@@ -141,7 +174,7 @@ describe('Módulo de Agenda', () => {
       },
     });
 
-    render(<Agenda />);
+    renderAgenda();
 
     await waitFor(() => {
       expect(screen.getByRole('button', { name: /novo agendamento/i })).toBeInTheDocument();
@@ -172,10 +205,43 @@ describe('Módulo de Agenda', () => {
       return Promise.resolve({ data: { sucesso: true, dados: [] } });
     });
 
-    render(<Agenda />);
+    renderAgenda();
 
     await waitFor(() => {
       expect(screen.getByText(/nenhum compromisso agendado/i)).toBeInTheDocument();
+    });
+  });
+
+  test('deve exibir o botão Gerar Cobrança para agendamento com status CONCLUIDO', async () => {
+    api.get.mockImplementation((url) => {
+      if (url === '/agendamentos') {
+        return Promise.resolve({
+          data: {
+            sucesso: true,
+            dados: [
+              {
+                id: 503,
+                cliente_id: 1,
+                cliente_nome: 'Carlos Drummond',
+                servico_id: 10,
+                data_hora: '2026-10-12T15:00:00',
+                status: 'CONCLUIDO',
+                orcamento_id: 301,
+              },
+            ],
+          },
+        });
+      }
+      if (url === '/clientes') return Promise.resolve({ data: { sucesso: true, dados: mockClientes } });
+      if (url === '/servicos') return Promise.resolve({ data: { sucesso: true, dados: mockServicos } });
+      if (url === '/orcamentos') return Promise.resolve({ data: { sucesso: true, dados: mockOrcamentos } });
+      return Promise.resolve({ data: { sucesso: true, dados: [] } });
+    });
+
+    renderAgenda();
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /gerar cobrança/i })).toBeInTheDocument();
     });
   });
 });

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   FileText,
   Plus,
@@ -61,6 +62,7 @@ const INITIAL_ITEM = () => ({
 });
 
 export default function Orcamentos() {
+  const navigate = useNavigate();
   const [orcamentos, setOrcamentos] = useState([]);
   const [clientes, setClientes] = useState([]);
   const [servicos, setServicos] = useState([]);
@@ -586,7 +588,24 @@ export default function Orcamentos() {
 
                       {/* Status */}
                       <td className="px-5 py-4 whitespace-nowrap text-center">
-                        <StatusBadge status={orc.status || 'RASCUNHO'} />
+                        <div className="flex flex-col items-center gap-1">
+                          <StatusBadge status={orc.status || 'RASCUNHO'} />
+                          {orc.status === 'APROVADO' && (
+                            orc.fluxo?.cobranca ? (
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200">
+                                {orc.fluxo.cobranca.status === 'PAGO' ? 'Pago' : 'Cobrado'}
+                              </span>
+                            ) : orc.fluxo?.agendamento ? (
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                                Agendado
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                Aprovado
+                              </span>
+                            )
+                          )}
+                        </div>
                       </td>
 
                       {/* Ações */}
@@ -602,6 +621,19 @@ export default function Orcamentos() {
                           >
                             <Eye className="w-4 h-4" />
                           </button>
+
+                          {/* Ação do Fluxo Integrado: Agendar Atendimento */}
+                          {orc.status === 'APROVADO' && !orc.fluxo?.agendamento && (
+                            <button
+                              type="button"
+                              onClick={() => navigate(`/agenda?orcamento_id=${orc.id}&cliente_id=${orc.cliente_id}`)}
+                              className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-indigo-50 text-indigo-700 hover:bg-indigo-100 transition inline-flex items-center gap-1"
+                              title="Agendar Atendimento para este Orçamento"
+                            >
+                              <Calendar className="w-3.5 h-3.5" />
+                              Agendar
+                            </button>
+                          )}
 
                           {/* Ações de Status Rápido */}
                           {orc.status === 'RASCUNHO' && (
@@ -945,6 +977,21 @@ export default function Orcamentos() {
               </button>
 
               <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+                {selectedOrcamento.status === 'APROVADO' && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setModalPropostaOpen(false);
+                      navigate(`/agenda?orcamento_id=${selectedOrcamento.id}&cliente_id=${selectedOrcamento.cliente_id}`);
+                    }}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 text-sm font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-xl transition"
+                    title="Agendar Atendimento"
+                  >
+                    <Calendar className="w-4 h-4" />
+                    Agendar Atendimento
+                  </button>
+                )}
+
                 <button
                   type="button"
                   onClick={handleCopyProposal}

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Calendar as CalendarIcon,
   Clock,
@@ -17,11 +18,21 @@ import {
   CalendarCheck,
   CalendarX,
   Check,
+  DollarSign,
 } from 'lucide-react';
 import api from '../services/api';
 import Modal from '../components/Modal';
 import FormField from '../components/FormField';
 import StatusBadge from '../components/StatusBadge';
+
+// Helper de formatação BRL
+export const formatBRL = (value) => {
+  const num = Number(value) || 0;
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+  }).format(num);
+};
 
 // Helper de formatação de data e hora
 export const formatDateTime = (dataHoraStr) => {
@@ -55,9 +66,13 @@ const getDefaultDateTimeLocal = () => {
 };
 
 export default function Agenda() {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
   const [agendamentos, setAgendamentos] = useState([]);
   const [clientes, setClientes] = useState([]);
   const [servicos, setServicos] = useState([]);
+  const [orcamentos, setOrcamentos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [statusUpdatingId, setStatusUpdatingId] = useState(null);
@@ -73,6 +88,7 @@ export default function Agenda() {
 
   // Modal Novo Agendamento
   const [modalNovoOpen, setModalNovoOpen] = useState(false);
+  const [formOrcamentoId, setFormOrcamentoId] = useState('');
   const [formClienteId, setFormClienteId] = useState('');
   const [formServicoId, setFormServicoId] = useState('');
   const [formDataHora, setFormDataHora] = useState(getDefaultDateTimeLocal());
@@ -88,12 +104,12 @@ export default function Agenda() {
     }
   };
 
-  // Carrega agendamentos, clientes e serviços
+  // Carrega agendamentos, clientes, serviços e orçamentos
   const loadData = useCallback(async () => {
     setLoading(true);
     setFeedback({ type: null, message: '' });
     try {
-      const [agRes, cliRes, servRes] = await Promise.all([
+      const [agRes, cliRes, servRes, orcRes] = await Promise.all([
         api.get('/agendamentos').catch((err) => {
           console.error('Erro ao carregar agendamentos:', err);
           return { data: { dados: [] } };
@@ -104,6 +120,10 @@ export default function Agenda() {
         }),
         api.get('/servicos').catch((err) => {
           console.error('Erro ao carregar servicos:', err);
+          return { data: { dados: [] } };
+        }),
+        api.get('/orcamentos').catch((err) => {
+          console.error('Erro ao carregar orçamentos:', err);
           return { data: { dados: [] } };
         }),
       ]);
@@ -118,6 +138,7 @@ export default function Agenda() {
       setAgendamentos(extrairLista(agRes));
       setClientes(extrairLista(cliRes));
       setServicos(extrairLista(servRes));
+      setOrcamentos(extrairLista(orcRes));
     } catch (err) {
       console.error('Erro geral ao carregar agenda:', err);
       showFeedback('error', 'Não foi possível carregar a agenda de atendimentos.');
@@ -130,6 +151,17 @@ export default function Agenda() {
     loadData();
   }, [loadData]);
 
+  // Pré-preenche ao navegar de orçamentos via query params (?orcamento_id=...&cliente_id=...)
+  useEffect(() => {
+    const qOrcamentoId = searchParams.get('orcamento_id');
+    const qClienteId = searchParams.get('cliente_id');
+    if (qOrcamentoId) {
+      setFormOrcamentoId(qOrcamentoId);
+      if (qClienteId) setFormClienteId(qClienteId);
+      setModalNovoOpen(true);
+    }
+  }, [searchParams]);
+
   // Helpers para encontrar dados do cliente e serviço
   const getCliente = (clienteId) => {
     return clientes.find((c) => String(c.id) === String(clienteId));
@@ -139,10 +171,35 @@ export default function Agenda() {
     return servicos.find((s) => String(s.id) === String(servicoId));
   };
 
+  // Lista de orçamentos aprovados disponíveis para atendimento
+  const orcamentosAprovados = orcamentos.filter((o) => o.status === 'APROVADO');
+
+  const handleSelectOrcamento = (orcId) => {
+    setFormOrcamentoId(orcId);
+    if (!orcId) return;
+    const orc = orcamentos.find((o) => String(o.id) === String(orcId));
+    if (orc) {
+      if (orc.cliente_id) setFormClienteId(String(orc.cliente_id));
+      if (orc.itens && orc.itens.length > 0) {
+        const itemServico = orc.itens.find((i) => i.servico_id);
+        if (itemServico) setFormServicoId(String(itemServico.servico_id));
+      }
+    }
+  };
+
   // Abrir Modal de Novo Agendamento
   const handleOpenCreateModal = () => {
-    setFormClienteId(clientes.length > 0 ? String(clientes[0].id) : '');
-    setFormServicoId(servicos.length > 0 ? String(servicos[0].id) : '');
+    const defaultOrc = orcamentosAprovados.length > 0 ? String(orcamentosAprovados[0].id) : '';
+    setFormOrcamentoId(defaultOrc);
+    if (defaultOrc) {
+      const orc = orcamentosAprovados[0];
+      setFormClienteId(String(orc.cliente_id));
+      const itemServico = orc.itens?.find((i) => i.servico_id);
+      setFormServicoId(itemServico ? String(itemServico.servico_id) : '');
+    } else {
+      setFormClienteId(clientes.length > 0 ? String(clientes[0].id) : '');
+      setFormServicoId(servicos.length > 0 ? String(servicos[0].id) : '');
+    }
     setFormDataHora(getDefaultDateTimeLocal());
     setFormObservacoes('');
     setFormErrors({});
@@ -153,6 +210,9 @@ export default function Agenda() {
   // Validação do Form
   const validateForm = () => {
     const errors = {};
+    if (!formOrcamentoId && orcamentosAprovados.length > 0) {
+      errors.orcamento_id = 'Selecione o orçamento aprovado.';
+    }
     if (!formClienteId) {
       errors.cliente_id = 'Selecione o cliente a ser atendido.';
     }
@@ -173,6 +233,7 @@ export default function Agenda() {
 
     try {
       const payload = {
+        orcamento_id: formOrcamentoId ? Number(formOrcamentoId) : null,
         cliente_id: Number(formClienteId),
         servico_id: formServicoId ? Number(formServicoId) : null,
         data_hora: formDataHora,
@@ -520,7 +581,14 @@ export default function Agenda() {
 
                 {/* Ações Rápidas no Card */}
                 <div className="pt-4 mt-4 border-t border-gray-100 flex items-center justify-between gap-2">
-                  <span className="text-xs font-mono text-gray-400">#{ag.id}</span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs font-mono text-gray-400">#{ag.id}</span>
+                    {ag.orcamento_id && (
+                      <span className="text-[10px] font-mono font-medium text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-100">
+                        Orc #{ag.orcamento_id}
+                      </span>
+                    )}
+                  </div>
 
                   <div className="flex items-center gap-1.5">
                     {/* Se Pendente: Confirmar e Cancelar */}
@@ -571,6 +639,19 @@ export default function Agenda() {
                           Cancelar
                         </button>
                       </>
+                    )}
+
+                    {/* Se Concluído: Gerar Cobrança */}
+                    {statusAtual === 'CONCLUIDO' && (
+                      <button
+                        type="button"
+                        onClick={() => navigate(`/cobrancas?agendamento_id=${ag.id}&cliente_id=${ag.cliente_id}`)}
+                        className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition inline-flex items-center gap-1"
+                        title="Gerar Cobrança para este atendimento"
+                      >
+                        <DollarSign className="w-3.5 h-3.5" />
+                        Gerar Cobrança
+                      </button>
                     )}
 
                     {/* Se Concluído ou Cancelado: Opção de reabrir */}
@@ -651,6 +732,35 @@ export default function Agenda() {
               <span>{formErrors.geral}</span>
             </div>
           )}
+
+          {/* Seleção do Orçamento Aprovado */}
+          <div>
+            <label htmlFor="ag_orcamento_id" className="block text-sm font-semibold text-gray-700 mb-1">
+              Orçamento Aprovado {orcamentosAprovados.length > 0 && <span className="text-rose-500">*</span>}
+            </label>
+            <select
+              id="ag_orcamento_id"
+              name="orcamento_id"
+              value={formOrcamentoId}
+              onChange={(e) => handleSelectOrcamento(e.target.value)}
+              className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-gray-200 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            >
+              <option value="">Selecione o orçamento aprovado...</option>
+              {orcamentosAprovados.map((orc) => (
+                <option key={orc.id} value={orc.id}>
+                  #{String(orc.id).padStart(4, '0')} - {orc.cliente_nome || `Cliente #${orc.cliente_id}`} ({formatBRL(orc.total)})
+                </option>
+              ))}
+            </select>
+            {formErrors.orcamento_id && (
+              <p className="text-xs text-rose-600 mt-1">{formErrors.orcamento_id}</p>
+            )}
+            {orcamentosAprovados.length === 0 && (
+              <p className="text-xs text-amber-600 mt-1">
+                Nenhum orçamento com status APROVADO disponível.
+              </p>
+            )}
+          </div>
 
           {/* Seleção do Cliente */}
           <div>
