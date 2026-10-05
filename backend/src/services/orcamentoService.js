@@ -1,3 +1,4 @@
+const pool = require('../config/database');
 const orcamentoRepository = require('../repositories/orcamentoRepository');
 const clienteRepository = require('../repositories/clienteRepository');
 const servicoRepository = require('../repositories/servicoRepository');
@@ -24,6 +25,80 @@ function formatarData(valor) {
     }
   }
   return null;
+}
+
+/**
+ * Carrega a árvore de rastreabilidade do fluxo integrado:
+ * Orçamento -> Agendamento -> Cobrança -> Caixa
+ * @param {number} orcamentoId
+ * @param {number} usuarioId
+ * @returns {Promise<Object>}
+ */
+async function carregarFluxo(orcamentoId, usuarioId) {
+  // Busca agendamento vinculado
+  const [agRows] = await pool.execute(
+    `SELECT id, data_hora, status, observacoes 
+     FROM agendamentos 
+     WHERE orcamento_id = ? AND usuario_id = ? 
+     ORDER BY id DESC LIMIT 1`,
+    [orcamentoId, usuarioId]
+  );
+  const agendamento = agRows[0] || null;
+
+  let cobranca = null;
+  let caixa = null;
+
+  const paramsCob = [orcamentoId];
+  let sqlCob = `SELECT id, agendamento_id, orcamento_id, valor, DATE_FORMAT(vencimento, '%Y-%m-%d') AS vencimento, status, DATE_FORMAT(data_pagamento, '%Y-%m-%d') AS data_pagamento FROM cobrancas WHERE (orcamento_id = ?`;
+  if (agendamento) {
+    sqlCob += ' OR agendamento_id = ?';
+    paramsCob.push(agendamento.id);
+  }
+  sqlCob += ') AND usuario_id = ? ORDER BY id DESC LIMIT 1';
+  paramsCob.push(usuarioId);
+
+  const [cobRows] = await pool.execute(sqlCob, paramsCob);
+  cobranca = cobRows[0] || null;
+
+  if (cobranca) {
+    const [caixaRows] = await pool.execute(
+      `SELECT id, cobranca_id, tipo, valor, DATE_FORMAT(data_movimentacao, '%Y-%m-%d') AS data_movimentacao, descricao 
+       FROM movimentacoes 
+       WHERE cobranca_id = ? AND usuario_id = ? 
+       LIMIT 1`,
+      [cobranca.id, usuarioId]
+    );
+    if (caixaRows.length > 0) {
+      caixa = {
+        movimentacao_id: caixaRows[0].id,
+        id: caixaRows[0].id,
+        cobranca_id: caixaRows[0].cobranca_id,
+        tipo: caixaRows[0].tipo,
+        valor: Number(caixaRows[0].valor),
+        data_movimentacao: caixaRows[0].data_movimentacao,
+        descricao: caixaRows[0].descricao
+      };
+    }
+  }
+
+  return {
+    agendamento: agendamento ? {
+      id: agendamento.id,
+      status: agendamento.status,
+      data_hora: agendamento.data_hora,
+      observacoes: agendamento.observacoes
+    } : null,
+    cobranca: cobranca ? {
+      id: cobranca.id,
+      agendamento_id: cobranca.agendamento_id,
+      orcamento_id: cobranca.orcamento_id,
+      valor: Number(cobranca.valor),
+      status: cobranca.status,
+      vencimento: cobranca.vencimento,
+      data_pagamento: cobranca.data_pagamento
+    } : null,
+    caixa
+  };
 }
 
 const orcamentoService = {
@@ -175,17 +250,23 @@ const orcamentoService = {
   },
 
   /**
-   * Lista orçamentos do usuário com filtros opcionais.
+   * Lista orçamentos do usuário com filtros opcionais e rastreabilidade de fluxo.
    * @param {number} usuario_id
    * @param {Object} filtros
    * @returns {Promise<Array>}
    */
   async listar(usuario_id, filtros = {}) {
-    return await orcamentoRepository.listar(usuario_id, filtros);
+    const orcamentos = await orcamentoRepository.listar(usuario_id, filtros);
+    return await Promise.all(
+      orcamentos.map(async (orc) => {
+        const fluxo = await carregarFluxo(orc.id, usuario_id);
+        return { ...orc, fluxo };
+      })
+    );
   },
 
   /**
-   * Busca um orçamento específico com seus itens.
+   * Busca um orçamento específico com seus itens e rastreabilidade de fluxo.
    * @param {number|string} id
    * @param {number} usuario_id
    * @returns {Promise<Object>}
@@ -197,7 +278,18 @@ const orcamentoService = {
       erro.statusCode = 404;
       throw erro;
     }
-    return orcamento;
+    const fluxo = await carregarFluxo(orcamento.id, usuario_id);
+    return { ...orcamento, fluxo };
+  },
+
+  /**
+   * Alias de compatibilidade para buscarPorId.
+   * @param {number|string} id
+   * @param {number} usuario_id
+   * @returns {Promise<Object>}
+   */
+  async obterPorId(id, usuario_id) {
+    return await this.buscarPorId(id, usuario_id);
   },
 
   /**
@@ -232,7 +324,7 @@ const orcamentoService = {
   },
 
   /**
-   * Exclui um orçamento existente.
+   * Exclui um orçamento existente, bloqueando se houver agendamentos ou cobranças associados.
    * @param {number|string} id
    * @param {number} usuario_id
    * @returns {Promise<boolean>}
@@ -242,6 +334,22 @@ const orcamentoService = {
     if (!existente) {
       const erro = new Error('Orçamento não encontrado');
       erro.statusCode = 404;
+      throw erro;
+    }
+
+    // Impede exclusão se houver agendamentos ou cobranças associados
+    const [agRows] = await pool.execute(
+      'SELECT id FROM agendamentos WHERE orcamento_id = ? AND usuario_id = ? LIMIT 1',
+      [id, usuario_id]
+    );
+    const [cobRows] = await pool.execute(
+      'SELECT id FROM cobrancas WHERE orcamento_id = ? AND usuario_id = ? LIMIT 1',
+      [id, usuario_id]
+    );
+
+    if (agRows.length > 0 || cobRows.length > 0) {
+      const erro = new Error('Não é possível excluir orçamento com agendamentos ou cobranças associados.');
+      erro.statusCode = 400;
       throw erro;
     }
 

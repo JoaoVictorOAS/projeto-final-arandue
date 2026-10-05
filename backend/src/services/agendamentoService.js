@@ -1,5 +1,6 @@
 const pool = require('../config/database');
 const agendamentoRepository = require('../repositories/agendamentoRepository');
+const orcamentoRepository = require('../repositories/orcamentoRepository');
 const clienteRepository = require('../repositories/clienteRepository');
 const servicoRepository = require('../repositories/servicoRepository');
 
@@ -37,12 +38,14 @@ function normalizarDataHora(valor) {
 const agendamentoService = {
   /**
    * Cria um novo agendamento com validação de multi-tenant e anti-choque de horários.
+   * Exige vínculo obrigatório com um orçamento aprovado (fluxo integrado).
    * @param {Object} dados
    * @returns {Promise<Object>}
    */
   async criar({
     usuario_id,
     cliente_id,
+    orcamento_id,
     servico_id,
     data_hora,
     status = 'PENDENTE',
@@ -54,24 +57,68 @@ const agendamentoService = {
       throw erro;
     }
 
-    if (!cliente_id || isNaN(Number(cliente_id))) {
+    // Regra Estrita: Todo agendamento deve ser vinculado a um orçamento aprovado
+    if (!orcamento_id) {
+      const erro = new Error('Todo agendamento deve ser vinculado a um orçamento aprovado.');
+      erro.statusCode = 400;
+      throw erro;
+    }
+
+    // Valida se o orçamento existe e pertence ao usuário (multi-tenant)
+    const orcamento = await orcamentoRepository.buscarPorId(Number(orcamento_id), usuario_id);
+    if (!orcamento) {
+      const erro = new Error('Orçamento não encontrado.');
+      erro.statusCode = 404;
+      throw erro;
+    }
+
+    // Valida se status é APROVADO
+    if (orcamento.status !== 'APROVADO') {
+      const erro = new Error('Apenas orçamentos com status APROVADO podem ser agendados.');
+      erro.statusCode = 400;
+      throw erro;
+    }
+
+    // Prevenção de duplicidade: não permite múltiplos agendamentos ativos para o mesmo orçamento
+    const [agExistente] = await pool.execute(
+      'SELECT id FROM agendamentos WHERE orcamento_id = ? AND usuario_id = ? AND status != ?',
+      [Number(orcamento_id), usuario_id, 'CANCELADO']
+    );
+    if (agExistente.length > 0) {
+      const erro = new Error('Já existe um agendamento ativo para este orçamento.');
+      erro.statusCode = 409;
+      throw erro;
+    }
+
+    // Herança automática do cliente do orçamento se não fornecido
+    const clienteIdFinal = cliente_id ? Number(cliente_id) : orcamento.cliente_id;
+    if (!clienteIdFinal || isNaN(Number(clienteIdFinal))) {
       const erro = new Error('O cliente é obrigatório para agendamento');
       erro.statusCode = 400;
       throw erro;
     }
 
     // Valida se cliente pertence ao usuário
-    const cliente = await clienteRepository.buscarPorId(Number(cliente_id), usuario_id);
+    const cliente = await clienteRepository.buscarPorId(Number(clienteIdFinal), usuario_id);
     if (!cliente) {
       const erro = new Error('Cliente não encontrado ou não pertence a este usuário');
       erro.statusCode = 404;
       throw erro;
     }
 
+    // Herança automática do primeiro serviço do orçamento se não fornecido
+    let servicoIdFinal = servico_id;
+    if (!servicoIdFinal && orcamento.itens && orcamento.itens.length > 0) {
+      const itemServico = orcamento.itens.find(i => i.servico_id);
+      if (itemServico) {
+        servicoIdFinal = itemServico.servico_id;
+      }
+    }
+
     // Se fornecido serviço, valida se pertence ao usuário
     let servicoIdValido = null;
-    if (servico_id !== undefined && servico_id !== null && servico_id !== '') {
-      const servico = await servicoRepository.buscarPorId(Number(servico_id), usuario_id);
+    if (servicoIdFinal !== undefined && servicoIdFinal !== null && servicoIdFinal !== '') {
+      const servico = await servicoRepository.buscarPorId(Number(servicoIdFinal), usuario_id);
       if (!servico) {
         const erro = new Error('Serviço não encontrado ou não pertence a este usuário');
         erro.statusCode = 404;
@@ -106,7 +153,8 @@ const agendamentoService = {
 
     return await agendamentoRepository.criar({
       usuario_id,
-      cliente_id: Number(cliente_id),
+      cliente_id: clienteIdFinal,
+      orcamento_id: Number(orcamento_id),
       servico_id: servicoIdValido,
       data_hora: dataHoraFormatada,
       status: statusLimpo,

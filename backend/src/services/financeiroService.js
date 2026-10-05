@@ -292,7 +292,7 @@ const financeiroService = {
             categoria: 'Recebimento de Cobrança',
             valor: Number(cobranca.valor),
             data_movimentacao: dataPag,
-            descricao: `Recebimento ref. cobrança #${id} (${clienteNome})`
+            descricao: `Recebimento referente à Cobrança #${id} (${clienteNome})`
           },
           connection
         );
