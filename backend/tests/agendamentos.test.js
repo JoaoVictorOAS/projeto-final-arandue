@@ -25,12 +25,37 @@ describe('Módulo de Agendamentos API (/api/agendamentos) - Anti-Choque & Multi-
     senha: 'SenhaForte123@'
   };
 
-  beforeAll(async () => {
-    // Limpeza prévia
+  async function limparBanco() {
+    await pool.execute("DELETE FROM movimentacoes WHERE usuario_id IN (SELECT id FROM usuarios WHERE email IN ('agenda.user1@mei.com', 'agenda.user2@mei.com'))");
+    await pool.execute("DELETE FROM cobrancas WHERE usuario_id IN (SELECT id FROM usuarios WHERE email IN ('agenda.user1@mei.com', 'agenda.user2@mei.com'))");
     await pool.execute("DELETE FROM agendamentos WHERE usuario_id IN (SELECT id FROM usuarios WHERE email IN ('agenda.user1@mei.com', 'agenda.user2@mei.com'))");
+    await pool.execute("DELETE FROM orcamento_itens WHERE orcamento_id IN (SELECT id FROM orcamentos WHERE usuario_id IN (SELECT id FROM usuarios WHERE email IN ('agenda.user1@mei.com', 'agenda.user2@mei.com')))");
+    await pool.execute("DELETE FROM orcamentos WHERE usuario_id IN (SELECT id FROM usuarios WHERE email IN ('agenda.user1@mei.com', 'agenda.user2@mei.com'))");
     await pool.execute("DELETE FROM servicos WHERE usuario_id IN (SELECT id FROM usuarios WHERE email IN ('agenda.user1@mei.com', 'agenda.user2@mei.com'))");
     await pool.execute("DELETE FROM clientes WHERE usuario_id IN (SELECT id FROM usuarios WHERE email IN ('agenda.user1@mei.com', 'agenda.user2@mei.com'))");
     await pool.execute("DELETE FROM usuarios WHERE email IN ('agenda.user1@mei.com', 'agenda.user2@mei.com')");
+  }
+
+  async function criarOrcamentoAprovado(token, clienteId, servicoId) {
+    const resOrc = await request(app)
+      .post('/api/orcamentos')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        cliente_id: clienteId,
+        data_emissao: '2026-11-01',
+        itens: [{ servico_id: servicoId, quantidade: 1, preco_unitario: 180.00 }]
+      });
+    const orcId = resOrc.body.dados.id;
+    await request(app)
+      .patch(`/api/orcamentos/${orcId}/status`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ status: 'APROVADO' });
+    return orcId;
+  }
+
+  beforeAll(async () => {
+    // Limpeza prévia
+    await limparBanco();
 
     // Registro User 1
     const res1 = await request(app).post('/api/auth/register').send(user1);
@@ -73,10 +98,7 @@ describe('Módulo de Agendamentos API (/api/agendamentos) - Anti-Choque & Multi-
 
   afterAll(async () => {
     // Limpeza final
-    await pool.execute("DELETE FROM agendamentos WHERE usuario_id IN (SELECT id FROM usuarios WHERE email IN ('agenda.user1@mei.com', 'agenda.user2@mei.com'))");
-    await pool.execute("DELETE FROM servicos WHERE usuario_id IN (SELECT id FROM usuarios WHERE email IN ('agenda.user1@mei.com', 'agenda.user2@mei.com'))");
-    await pool.execute("DELETE FROM clientes WHERE usuario_id IN (SELECT id FROM usuarios WHERE email IN ('agenda.user1@mei.com', 'agenda.user2@mei.com'))");
-    await pool.execute("DELETE FROM usuarios WHERE email IN ('agenda.user1@mei.com', 'agenda.user2@mei.com')");
+    await limparBanco();
     await pool.end();
   });
 
@@ -97,7 +119,7 @@ describe('Módulo de Agendamentos API (/api/agendamentos) - Anti-Choque & Multi-
   });
 
   describe('Validações de Regra de Negócio (POST /api/agendamentos)', () => {
-    test('deve rejeitar agendamento sem cliente_id (400)', async () => {
+    test('deve rejeitar agendamento sem orcamento_id (400)', async () => {
       const res = await request(app)
         .post('/api/agendamentos')
         .set('Authorization', `Bearer ${tokenUser1}`)
@@ -107,28 +129,32 @@ describe('Módulo de Agendamentos API (/api/agendamentos) - Anti-Choque & Multi-
 
       expect(res.statusCode).toBe(400);
       expect(res.body.sucesso).toBe(false);
-      expect(res.body.mensagem).toMatch(/cliente/i);
+      expect(res.body.mensagem).toMatch(/orçamento/i);
     });
 
-    test('deve rejeitar cliente pertencente a outro MEI (404/400)', async () => {
+    test('deve rejeitar orçamento pertencente a outro MEI (404/400)', async () => {
+      const orcOutroMEI = await criarOrcamentoAprovado(tokenUser2, clienteUser2Id, servicoUser2Id);
       const res = await request(app)
         .post('/api/agendamentos')
         .set('Authorization', `Bearer ${tokenUser1}`)
         .send({
+          orcamento_id: orcOutroMEI,
           cliente_id: clienteUser2Id,
           data_hora: '2026-11-05 14:00:00'
         });
 
       expect([400, 404]).toContain(res.statusCode);
       expect(res.body.sucesso).toBe(false);
-      expect(res.body.mensagem).toMatch(/cliente.*não encontrado/i);
+      expect(res.body.mensagem).toMatch(/orçamento.*não encontrado/i);
     });
 
     test('deve rejeitar data_hora vazia ou inválida (400)', async () => {
+      const orcValido = await criarOrcamentoAprovado(tokenUser1, clienteUser1Id, servicoUser1Id);
       const res = await request(app)
         .post('/api/agendamentos')
         .set('Authorization', `Bearer ${tokenUser1}`)
         .send({
+          orcamento_id: orcValido,
           cliente_id: clienteUser1Id,
           data_hora: 'data-invalida-xyz'
         });
@@ -139,10 +165,12 @@ describe('Módulo de Agendamentos API (/api/agendamentos) - Anti-Choque & Multi-
     });
 
     test('deve rejeitar servico_id pertencente a outro MEI (404/400)', async () => {
+      const orcValido = await criarOrcamentoAprovado(tokenUser1, clienteUser1Id, servicoUser1Id);
       const res = await request(app)
         .post('/api/agendamentos')
         .set('Authorization', `Bearer ${tokenUser1}`)
         .send({
+          orcamento_id: orcValido,
           cliente_id: clienteUser1Id,
           servico_id: servicoUser2Id,
           data_hora: '2026-11-05 14:00:00'
@@ -156,10 +184,16 @@ describe('Módulo de Agendamentos API (/api/agendamentos) - Anti-Choque & Multi-
 
   describe('Criação de Agendamento Válido (POST /api/agendamentos)', () => {
     let agendamentoCriado = null;
+    let orcamentoCriadoId = null;
     const horarioAtendimento = '2026-11-10 09:30:00';
+
+    beforeAll(async () => {
+      orcamentoCriadoId = await criarOrcamentoAprovado(tokenUser1, clienteUser1Id, servicoUser1Id);
+    });
 
     test('deve criar agendamento válido com sucesso (201)', async () => {
       const payload = {
+        orcamento_id: orcamentoCriadoId,
         cliente_id: clienteUser1Id,
         servico_id: servicoUser1Id,
         data_hora: horarioAtendimento,
@@ -175,7 +209,7 @@ describe('Módulo de Agendamentos API (/api/agendamentos) - Anti-Choque & Multi-
       expect(res.body.sucesso).toBe(true);
       expect(res.body.dados).toHaveProperty('id');
       expect(res.body.dados.cliente_id).toBe(clienteUser1Id);
-      expect(res.body.dados.servico_id).toBe(servicoUser1Id);
+      expect(res.body.dados.orcamento_id).toBe(orcamentoCriadoId);
       expect(res.body.dados.status).toBe('PENDENTE');
       expect(res.body.dados.cliente_nome).toBe('Cliente Agenda 1');
       expect(res.body.dados.servico_nome).toBe('Conserto Elétrico');
@@ -184,7 +218,9 @@ describe('Módulo de Agendamentos API (/api/agendamentos) - Anti-Choque & Multi-
     });
 
     test('deve bloquear com erro 409 ao tentar agendar no mesmo horário para o mesmo MEI', async () => {
+      const orcOutro = await criarOrcamentoAprovado(tokenUser1, clienteUser1Id, servicoUser1Id);
       const payloadDuplicado = {
+        orcamento_id: orcOutro,
         cliente_id: clienteUser1Id,
         servico_id: servicoUser1Id,
         data_hora: horarioAtendimento,
@@ -202,7 +238,9 @@ describe('Módulo de Agendamentos API (/api/agendamentos) - Anti-Choque & Multi-
     });
 
     test('deve permitir agendamento no MESMO horário para MEIs DIFERENTES (multi-tenant)', async () => {
+      const orcUser2 = await criarOrcamentoAprovado(tokenUser2, clienteUser2Id, servicoUser2Id);
       const payloadOutroMEI = {
+        orcamento_id: orcUser2,
         cliente_id: clienteUser2Id,
         servico_id: servicoUser2Id,
         data_hora: horarioAtendimento,
@@ -226,20 +264,24 @@ describe('Módulo de Agendamentos API (/api/agendamentos) - Anti-Choque & Multi-
     let agendamento2 = null;
 
     beforeAll(async () => {
+      const orc1 = await criarOrcamentoAprovado(tokenUser1, clienteUser1Id, servicoUser1Id);
       const res1 = await request(app)
         .post('/api/agendamentos')
         .set('Authorization', `Bearer ${tokenUser1}`)
         .send({
+          orcamento_id: orc1,
           cliente_id: clienteUser1Id,
           data_hora: '2026-11-12 10:00:00',
           observacoes: 'Primeiro atendimento'
         });
       agendamento1 = res1.body.dados;
 
+      const orc2 = await criarOrcamentoAprovado(tokenUser1, clienteUser1Id, servicoUser1Id);
       const res2 = await request(app)
         .post('/api/agendamentos')
         .set('Authorization', `Bearer ${tokenUser1}`)
         .send({
+          orcamento_id: orc2,
           cliente_id: clienteUser1Id,
           data_hora: '2026-11-12 14:00:00',
           observacoes: 'Segundo atendimento'
@@ -309,10 +351,12 @@ describe('Módulo de Agendamentos API (/api/agendamentos) - Anti-Choque & Multi-
     let agendamentoParaStatus = null;
 
     beforeAll(async () => {
+      const orc = await criarOrcamentoAprovado(tokenUser1, clienteUser1Id, servicoUser1Id);
       const res = await request(app)
         .post('/api/agendamentos')
         .set('Authorization', `Bearer ${tokenUser1}`)
         .send({
+          orcamento_id: orc,
           cliente_id: clienteUser1Id,
           data_hora: '2026-11-15 08:00:00'
         });
@@ -378,11 +422,13 @@ describe('Módulo de Agendamentos API (/api/agendamentos) - Anti-Choque & Multi-
     });
 
     test('deve bloquear reagendamento com 409 caso novo horário colida com outro agendamento ativo', async () => {
+      const orcOutro = await criarOrcamentoAprovado(tokenUser1, clienteUser1Id, servicoUser1Id);
       // Cria outro agendamento ativo às 16:00
       const outro = await request(app)
         .post('/api/agendamentos')
         .set('Authorization', `Bearer ${tokenUser1}`)
         .send({
+          orcamento_id: orcOutro,
           cliente_id: clienteUser1Id,
           data_hora: '2026-11-15 16:00:00'
         });
@@ -405,10 +451,12 @@ describe('Módulo de Agendamentos API (/api/agendamentos) - Anti-Choque & Multi-
     let agendamentoUser1 = null;
 
     beforeAll(async () => {
+      const orc = await criarOrcamentoAprovado(tokenUser1, clienteUser1Id, servicoUser1Id);
       const res = await request(app)
         .post('/api/agendamentos')
         .set('Authorization', `Bearer ${tokenUser1}`)
         .send({
+          orcamento_id: orc,
           cliente_id: clienteUser1Id,
           data_hora: '2026-11-20 15:00:00',
           observacoes: 'Atendimento sigiloso MEI 1'

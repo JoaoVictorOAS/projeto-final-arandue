@@ -129,11 +129,12 @@ describe('Jornada de Ponta a Ponta do Microempreendedor (E2E)', () => {
     expect(orcAprov.statusCode).toBe(200);
     expect(orcAprov.body.dados.status).toBe('APROVADO');
 
-    // 6. Cria Agendamento
+    // 6. Cria Agendamento vinculado ao orçamento aprovado
     const agd = await request(app)
       .post('/api/agendamentos')
       .set('Authorization', `Bearer ${token}`)
       .send({
+        orcamento_id: orcamentoId,
         cliente_id: clienteId,
         servico_id: servicoId,
         data_hora: '2026-10-05T15:00:00',
@@ -141,26 +142,47 @@ describe('Jornada de Ponta a Ponta do Microempreendedor (E2E)', () => {
       });
     expect(agd.statusCode).toBe(201);
     expect(agd.body.sucesso).toBe(true);
+    const agendamentoId = agd.body.dados.id;
 
     // 7. Verifica prevenção anti-choque de horário (409 Conflict)
+    // Para testar anti-choque com outro agendamento, cria outro orçamento aprovado
+    const orc2 = await request(app)
+      .post('/api/orcamentos')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        cliente_id: clienteId,
+        data_emissao: '2026-10-02',
+        itens: [{ servico_id: servicoId, quantidade: 1, preco_unitario: 100 }]
+      });
+    await request(app)
+      .patch(`/api/orcamentos/${orc2.body.dados.id}/status`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ status: 'APROVADO' });
+
     const conflito = await request(app)
       .post('/api/agendamentos')
       .set('Authorization', `Bearer ${token}`)
       .send({
+        orcamento_id: orc2.body.dados.id,
         cliente_id: clienteId,
         data_hora: '2026-10-05T15:00:00',
         observacoes: 'Horário duplicado'
       });
     expect(conflito.statusCode).toBe(409);
 
-    // 8. Emite Cobrança a partir do orçamento aprovado
+    // 7.1. Conclui o agendamento para permitir emissão de cobrança
+    const agdConcluido = await request(app)
+      .patch(`/api/agendamentos/${agendamentoId}/status`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ status: 'CONCLUIDO' });
+    expect(agdConcluido.statusCode).toBe(200);
+
+    // 8. Emite Cobrança a partir do agendamento concluído
     const cob = await request(app)
       .post('/api/cobrancas')
       .set('Authorization', `Bearer ${token}`)
       .send({
-        cliente_id: clienteId,
-        orcamento_id: orcamentoId,
-        valor: 250.00,
+        agendamento_id: agendamentoId,
         vencimento: '2026-10-15',
         observacoes: 'Fatura ref. orçamento aprovado'
       });

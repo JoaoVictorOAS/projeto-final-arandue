@@ -61,11 +61,12 @@ const agendamentoController = {
   async criar(req, res) {
     try {
       const usuario_id = req.usuario.id;
-      const { cliente_id, servico_id, data_hora, status, observacoes } = req.body;
+      const { cliente_id, orcamento_id, servico_id, data_hora, status, observacoes } = req.body;
 
       const novoAgendamento = await agendamentoService.criar({
         usuario_id,
         cliente_id,
+        orcamento_id,
         servico_id,
         data_hora,
         status,
@@ -94,10 +95,11 @@ const agendamentoController = {
     try {
       const usuario_id = req.usuario.id;
       const { id } = req.params;
-      const { cliente_id, servico_id, data_hora, status, observacoes } = req.body;
+      const { cliente_id, orcamento_id, servico_id, data_hora, status, observacoes } = req.body;
 
       const agendamentoAtualizado = await agendamentoService.atualizar(id, usuario_id, {
         cliente_id,
+        orcamento_id,
         servico_id,
         data_hora,
         status,

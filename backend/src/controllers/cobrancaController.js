@@ -1,3 +1,4 @@
+const cobrancaService = require('../services/cobrancaService');
 const financeiroService = require('../services/financeiroService');
 
 /**
@@ -59,7 +60,7 @@ const cobrancaController = {
 
   /**
    * POST /api/cobrancas
-   * Registra uma nova cobrança vinculada a um cliente.
+   * Registra uma nova cobrança vinculada a um agendamento concluído ou cliente.
    */
   async criar(req, res) {
     try {
@@ -67,21 +68,33 @@ const cobrancaController = {
       const {
         cliente_id,
         orcamento_id,
+        agendamento_id,
         valor,
         vencimento,
         status,
         observacoes
       } = req.body;
 
-      const novaCobranca = await financeiroService.criarCobranca({
-        usuario_id,
-        cliente_id,
-        orcamento_id,
-        valor,
-        vencimento,
-        status,
-        observacoes
-      });
+      let novaCobranca;
+      if (agendamento_id) {
+        novaCobranca = await cobrancaService.criar({
+          usuario_id,
+          agendamento_id,
+          vencimento,
+          observacoes
+        });
+      } else {
+        novaCobranca = await financeiroService.criarCobranca({
+          usuario_id,
+          cliente_id,
+          orcamento_id,
+          agendamento_id,
+          valor,
+          vencimento,
+          status,
+          observacoes
+        });
+      }
 
       return res.status(201).json({
         sucesso: true,
