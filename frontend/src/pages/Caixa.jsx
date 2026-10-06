@@ -225,7 +225,7 @@ export default function Caixa() {
   }, [movimentacoes, filtroTipo, filtroMes, termoBusca]);
 
   // Open modal with pre-selected type
-  const handleAbrirModal = (tipoPredefinido = 'ENTRADA') => {
+  const handleAbrirModal = (tipoPredefinido = 'SAIDA') => {
     setFormNovo({
       tipo: tipoPredefinido,
       categoria: tipoPredefinido === 'ENTRADA' ? 'Recebimento de Cliente' : 'DAS-MEI (Imposto Mensal)',
@@ -343,15 +343,6 @@ export default function Caixa() {
             aria-label="Atualizar lançamentos"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-          </button>
-
-          <button
-            type="button"
-            onClick={() => handleAbrirModal('ENTRADA')}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-xl shadow-sm transition"
-          >
-            <ArrowDownLeft className="w-4 h-4" />
-            Nova Entrada
           </button>
 
           <button
@@ -516,19 +507,11 @@ export default function Caixa() {
           </h3>
           <p className="text-sm text-gray-500 max-w-md mx-auto mt-1 mb-6">
             {movimentacoes.length === 0
-              ? 'Ao marcar cobranças como pagas, os valores entram automaticamente aqui. Você também pode registrar entradas e despesas operacionais manuais.'
+              ? 'Ao marcar cobranças de atendimentos como pagas, as receitas entram automaticamente aqui. Você pode registrar despesas operacionais manuais (DAS-MEI, materiais, etc.).'
               : 'Nenhuma movimentação corresponde aos filtros informados. Tente selecionar outro mês ou limpar a busca.'}
           </p>
           {movimentacoes.length === 0 && (
             <div className="flex justify-center gap-3">
-              <button
-                type="button"
-                onClick={() => handleAbrirModal('ENTRADA')}
-                className="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-xl shadow-sm transition"
-              >
-                <ArrowDownLeft className="w-4 h-4" />
-                Lançar Entrada
-              </button>
               <button
                 type="button"
                 onClick={() => handleAbrirModal('SAIDA')}
@@ -587,8 +570,10 @@ export default function Caixa() {
                         <div className="flex flex-col">
                           <span>{item.descricao}</span>
                           {item.cobranca_id && (
-                            <span className="text-xs text-indigo-600 font-medium">
-                              Vinculado à Cobrança #{String(item.cobranca_id).padStart(4, '0')}
+                            <span className="text-xs text-indigo-600 font-medium inline-flex items-center gap-1 mt-0.5">
+                              Origem: Cobrança #{String(item.cobranca_id).padStart(4, '0')}
+                              {item.agendamento_id && ` (Agendamento #${item.agendamento_id})`}
+                              {item.orcamento_id && ` [Orçamento #${item.orcamento_id}]`}
                             </span>
                           )}
                         </div>

@@ -57,6 +57,8 @@ export default function Cobrancas() {
   // Data state
   const [cobrancas, setCobrancas] = useState([]);
   const [clientes, setClientes] = useState([]);
+  const [agendamentos, setAgendamentos] = useState([]);
+  const [orcamentos, setOrcamentos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [feedback, setFeedback] = useState({ type: null, message: '' });
 
@@ -67,6 +69,7 @@ export default function Cobrancas() {
   // Modal: Nova Cobrança
   const [modalNovaAberta, setModalNovaAberta] = useState(false);
   const [formNova, setFormNova] = useState({
+    agendamento_id: '',
     cliente_id: '',
     valor: '',
     vencimento: '',
@@ -96,13 +99,15 @@ export default function Cobrancas() {
     }
   };
 
-  // Fetch cobrancas and clientes
+  // Fetch cobrancas, clientes, agendamentos and orcamentos
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const [resCobrancas, resClientes] = await Promise.all([
+      const [resCobrancas, resClientes, resAgendamentos, resOrcamentos] = await Promise.all([
         api.get('/cobrancas'),
         api.get('/clientes').catch(() => ({ data: { dados: [] } })),
+        api.get('/agendamentos').catch(() => ({ data: { dados: [] } })),
+        api.get('/orcamentos').catch(() => ({ data: { dados: [] } })),
       ]);
 
       const listaCobrancas = Array.isArray(resCobrancas?.data?.dados)
@@ -117,8 +122,22 @@ export default function Cobrancas() {
         ? resClientes.data
         : [];
 
+      const listaAgendamentos = Array.isArray(resAgendamentos?.data?.dados)
+        ? resAgendamentos.data.dados
+        : Array.isArray(resAgendamentos?.data)
+        ? resAgendamentos.data
+        : [];
+
+      const listaOrcamentos = Array.isArray(resOrcamentos?.data?.dados)
+        ? resOrcamentos.data.dados
+        : Array.isArray(resOrcamentos?.data)
+        ? resOrcamentos.data
+        : [];
+
       setCobrancas(listaCobrancas);
       setClientes(listaClientes);
+      setAgendamentos(listaAgendamentos);
+      setOrcamentos(listaOrcamentos);
     } catch (err) {
       console.error('Erro ao buscar cobranças/clientes:', err);
       showFeedback('error', 'Falha ao carregar as cobranças. Tente novamente.');
@@ -131,12 +150,21 @@ export default function Cobrancas() {
     fetchData();
   }, [fetchData]);
 
-  // Open modal if URL has ?novo=true
+  // Open modal if URL has ?novo=true or ?agendamento_id=...
   useEffect(() => {
-    if (searchParams.get('novo') === 'true') {
+    const agendamentoIdParam = searchParams.get('agendamento_id');
+    const isNovo = searchParams.get('novo') === 'true';
+
+    if (agendamentoIdParam || isNovo) {
+      setFormNova((prev) => ({
+        ...prev,
+        agendamento_id: agendamentoIdParam || '',
+        vencimento: prev.vencimento || getTodayDateString(),
+      }));
       setModalNovaAberta(true);
-      // Clean query parameter
-      searchParams.delete('novo');
+
+      if (agendamentoIdParam) searchParams.delete('agendamento_id');
+      if (isNovo) searchParams.delete('novo');
       setSearchParams(searchParams, { replace: true });
     }
   }, [searchParams, setSearchParams]);
@@ -332,6 +360,59 @@ export default function Cobrancas() {
     window.open(url, '_blank');
   };
 
+  // Filter completed appointments
+  const agendamentosConcluidos = useMemo(() => {
+    return agendamentos.filter((a) => a.status === 'CONCLUIDO');
+  }, [agendamentos]);
+
+  const handleAgendamentoChange = useCallback(
+    (agId) => {
+      if (!agId) {
+        setFormNova((prev) => ({
+          ...prev,
+          agendamento_id: '',
+          valor: '',
+        }));
+        return;
+      }
+
+      const ag = agendamentos.find((a) => String(a.id) === String(agId));
+      if (ag) {
+        const orc = orcamentos.find((o) => String(o.id) === String(ag.orcamento_id));
+        const valorCalculado = orc
+          ? Number(orc.total)
+          : ag.servico_preco
+          ? Number(ag.servico_preco)
+          : 0;
+
+        setFormNova((prev) => ({
+          ...prev,
+          agendamento_id: ag.id,
+          cliente_id: String(ag.cliente_id),
+          valor: valorCalculado > 0 ? String(valorCalculado) : prev.valor,
+          observacoes:
+            prev.observacoes ||
+            (orc
+              ? `Cobrança referente ao Orçamento #${orc.id}`
+              : `Cobrança referente ao Atendimento #${ag.id}`),
+        }));
+        setErrosFormNova((prev) => ({
+          ...prev,
+          agendamento_id: null,
+          cliente_id: null,
+          valor: null,
+        }));
+      }
+    },
+    [agendamentos, orcamentos]
+  );
+
+  useEffect(() => {
+    if (formNova.agendamento_id && agendamentos.length > 0 && (!formNova.cliente_id || !formNova.valor)) {
+      handleAgendamentoChange(formNova.agendamento_id);
+    }
+  }, [formNova.agendamento_id, agendamentos, formNova.cliente_id, formNova.valor, handleAgendamentoChange]);
+
   // Submit "Nova Cobrança"
   const handleSalvarNova = async (e) => {
     e.preventDefault();
@@ -355,17 +436,23 @@ export default function Cobrancas() {
     setSalvandoNova(true);
     setErrosFormNova({});
     try {
-      await api.post('/cobrancas', {
+      const payload = {
         cliente_id: Number(formNova.cliente_id),
         valor: Number(formNova.valor),
         vencimento: formNova.vencimento,
         data_vencimento: formNova.vencimento,
         observacoes: formNova.observacoes || null,
-      });
+      };
+      if (formNova.agendamento_id) {
+        payload.agendamento_id = Number(formNova.agendamento_id);
+      }
+
+      await api.post('/cobrancas', payload);
 
       showFeedback('success', 'Nova cobrança emitida com sucesso!');
       setModalNovaAberta(false);
       setFormNova({
+        agendamento_id: '',
         cliente_id: '',
         valor: '',
         vencimento: '',
@@ -441,6 +528,7 @@ export default function Cobrancas() {
             type="button"
             onClick={() => {
               setFormNova({
+                agendamento_id: '',
                 cliente_id: '',
                 valor: '',
                 vencimento: getTodayDateString(),
@@ -571,6 +659,7 @@ export default function Cobrancas() {
               type="button"
               onClick={() => {
                 setFormNova({
+                  agendamento_id: '',
                   cliente_id: '',
                   valor: '',
                   vencimento: getTodayDateString(),
@@ -628,6 +717,20 @@ export default function Cobrancas() {
                             <span className="text-xs text-gray-400 font-normal">
                               {cliInfo.telefone}
                             </span>
+                          )}
+                          {(item.agendamento_id || item.orcamento_id) && (
+                            <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                              {item.agendamento_id && (
+                                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                                  Atendimento #{item.agendamento_id}
+                                </span>
+                              )}
+                              {item.orcamento_id && (
+                                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                  Orçamento #{item.orcamento_id}
+                                </span>
+                              )}
+                            </div>
                           )}
                         </div>
                       </td>
@@ -928,6 +1031,24 @@ export default function Cobrancas() {
       >
         <form id="form-nova-cobranca" onSubmit={handleSalvarNova} className="space-y-4">
           <FormField
+            label="Atendimento Concluído"
+            id="agendamento_id"
+            name="agendamento_id"
+            as="select"
+            value={formNova.agendamento_id}
+            onChange={(e) => handleAgendamentoChange(e.target.value)}
+            error={errosFormNova.agendamento_id}
+            helpText="Selecione o atendimento concluído para vincular automaticamente o cliente e o valor do orçamento."
+          >
+            <option value="">Selecione o atendimento...</option>
+            {agendamentosConcluidos.map((ag) => (
+              <option key={ag.id} value={ag.id}>
+                Atendimento #{ag.id} - {ag.cliente_nome || `Cliente #${ag.cliente_id}`} ({ag.servico_nome || 'Serviço'})
+              </option>
+            ))}
+          </FormField>
+
+          <FormField
             label="Cliente"
             id="cliente_id"
             name="cliente_id"
@@ -955,9 +1076,11 @@ export default function Cobrancas() {
               min="0.01"
               required
               placeholder="0,00"
+              readOnly={Boolean(formNova.agendamento_id)}
               value={formNova.valor}
               onChange={(e) => setFormNova({ ...formNova, valor: e.target.value })}
               error={errosFormNova.valor}
+              helpText={formNova.agendamento_id ? 'Valor travado ao total do orçamento aprovado.' : undefined}
             />
 
             <FormField

@@ -72,7 +72,9 @@ const movimentacaoRepository = {
         m.descricao,
         m.criado_em,
         c.cliente_id,
-        cl.nome AS cliente_nome
+        cl.nome AS cliente_nome,
+        c.agendamento_id,
+        c.orcamento_id
       FROM movimentacoes m
       LEFT JOIN cobrancas c ON m.cobranca_id = c.id
       LEFT JOIN clientes cl ON c.cliente_id = cl.id
@@ -128,7 +130,9 @@ const movimentacaoRepository = {
         m.descricao,
         m.criado_em,
         c.cliente_id,
-        cl.nome AS cliente_nome
+        cl.nome AS cliente_nome,
+        c.agendamento_id,
+        c.orcamento_id
       FROM movimentacoes m
       LEFT JOIN cobrancas c ON m.cobranca_id = c.id
       LEFT JOIN clientes cl ON c.cliente_id = cl.id

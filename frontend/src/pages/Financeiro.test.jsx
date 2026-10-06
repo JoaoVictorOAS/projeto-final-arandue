@@ -34,6 +34,28 @@ describe('Módulo Financeiro - Cobranças e Livro Caixa', () => {
     },
   ];
 
+  const mockAgendamentos = [
+    {
+      id: 50,
+      cliente_id: 1,
+      cliente_nome: 'Mariana Lima',
+      orcamento_id: 200,
+      servico_nome: 'Identidade Visual',
+      servico_preco: 1200.0,
+      status: 'CONCLUIDO',
+      data_hora: '2026-10-05 10:00:00',
+    },
+  ];
+
+  const mockOrcamentos = [
+    {
+      id: 200,
+      cliente_id: 1,
+      total: 1200.0,
+      status: 'APROVADO',
+    },
+  ];
+
   const mockCobrancas = [
     {
       id: 101,
@@ -45,6 +67,8 @@ describe('Módulo Financeiro - Cobranças e Livro Caixa', () => {
       data_pagamento: null,
       status: 'PENDENTE',
       observacoes: 'Serviço de identidade visual e logomarca.',
+      agendamento_id: 50,
+      orcamento_id: 200,
     },
     {
       id: 102,
@@ -56,6 +80,8 @@ describe('Módulo Financeiro - Cobranças e Livro Caixa', () => {
       data_pagamento: '2026-10-01',
       status: 'PAGO',
       observacoes: 'Consultoria rápida de gestão.',
+      agendamento_id: 51,
+      orcamento_id: 201,
     },
   ];
 
@@ -68,6 +94,8 @@ describe('Módulo Financeiro - Cobranças e Livro Caixa', () => {
       data_movimentacao: '2026-10-01',
       descricao: 'Baixa recebimento Cobrança #0102 - Roberto Dias',
       cobranca_id: 102,
+      agendamento_id: 50,
+      orcamento_id: 200,
     },
     {
       id: 2,
@@ -89,6 +117,12 @@ describe('Módulo Financeiro - Cobranças e Livro Caixa', () => {
       }
       if (url === '/clientes') {
         return Promise.resolve({ data: { sucesso: true, dados: mockClientes } });
+      }
+      if (url === '/agendamentos') {
+        return Promise.resolve({ data: { sucesso: true, dados: mockAgendamentos } });
+      }
+      if (url === '/orcamentos') {
+        return Promise.resolve({ data: { sucesso: true, dados: mockOrcamentos } });
       }
       if (url === '/movimentacoes') {
         return Promise.resolve({ data: { sucesso: true, dados: mockMovimentacoes } });
@@ -212,10 +246,65 @@ describe('Módulo Financeiro - Cobranças e Livro Caixa', () => {
       fireEvent.click(screen.getByRole('button', { name: /nova cobrança/i }));
 
       expect(screen.getByRole('heading', { name: /emitir nova cobrança/i })).toBeInTheDocument();
+      expect(screen.getByLabelText(/atendimento concluído/i)).toBeInTheDocument();
       expect(screen.getByLabelText(/cliente/i)).toBeInTheDocument();
       expect(screen.getByLabelText(/valor \(r\$\)/i)).toBeInTheDocument();
       expect(screen.getByLabelText(/data de vencimento/i)).toBeInTheDocument();
       expect(screen.getByLabelText(/observações/i)).toBeInTheDocument();
+    });
+
+    test('deve vincular cobrança a atendimento concluído travando o valor do orçamento', async () => {
+      render(
+        <MemoryRouter>
+          <Cobrancas />
+        </MemoryRouter>
+      );
+
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /nova cobrança/i })).toBeInTheDocument();
+      });
+
+      fireEvent.click(screen.getByRole('button', { name: /nova cobrança/i }));
+
+      // Seleciona o atendimento concluído
+      const selectAgendamento = screen.getByLabelText(/atendimento concluído/i);
+      fireEvent.change(selectAgendamento, { target: { value: '50' } });
+
+      // Valor deve ser preenchido e marcado como readOnly
+      const inputValor = screen.getByLabelText(/valor \(r\$\)/i);
+      expect(inputValor.value).toBe('1200');
+      expect(inputValor).toHaveAttribute('readonly');
+
+      // Preenche vencimento e envia
+      const inputVencimento = screen.getByLabelText(/data de vencimento/i);
+      fireEvent.change(inputVencimento, { target: { value: '2026-10-20' } });
+
+      const btnEmitir = screen.getByRole('button', { name: /emitir cobrança/i });
+      fireEvent.click(btnEmitir);
+
+      await waitFor(() => {
+        expect(api.post).toHaveBeenCalledWith(
+          '/cobrancas',
+          expect.objectContaining({
+            agendamento_id: 50,
+            cliente_id: 1,
+            valor: 1200,
+          })
+        );
+      });
+    });
+
+    test('deve exibir badges de rastreabilidade (Atendimento e Orçamento) na listagem de cobranças', async () => {
+      render(
+        <MemoryRouter>
+          <Cobrancas />
+        </MemoryRouter>
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText('Atendimento #50')).toBeInTheDocument();
+        expect(screen.getByText('Orçamento #200')).toBeInTheDocument();
+      });
     });
   });
 
@@ -249,7 +338,33 @@ describe('Módulo Financeiro - Cobranças e Livro Caixa', () => {
       expect(screen.getByText(/DAS-MEI/i)).toBeInTheDocument();
     });
 
-    test('deve abrir o modal de novo lançamento manual ao clicar em Nova Entrada ou Nova Saída', async () => {
+    test('deve exibir tag de rastreabilidade completa de origem no livro caixa', async () => {
+      render(
+        <MemoryRouter>
+          <Caixa />
+        </MemoryRouter>
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText(/origem: cobrança #0102/i)).toBeInTheDocument();
+        expect(screen.getByText(/\(agendamento #50\)/i)).toBeInTheDocument();
+      });
+    });
+
+    test('não deve permitir lançamento direto manual de receita no cabeçalho do caixa', async () => {
+      render(
+        <MemoryRouter>
+          <Caixa />
+        </MemoryRouter>
+      );
+
+      await waitFor(() => {
+        expect(screen.queryByRole('button', { name: /^nova entrada$/i })).not.toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /nova saída/i })).toBeInTheDocument();
+      });
+    });
+
+    test('deve abrir o modal de novo lançamento manual ao clicar em Nova Saída', async () => {
       render(
         <MemoryRouter>
           <Caixa />
