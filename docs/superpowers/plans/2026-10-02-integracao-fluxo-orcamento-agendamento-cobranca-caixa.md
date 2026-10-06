@@ -31,7 +31,7 @@
 - Consumes: Definições DDL do MySQL InnoDB.
 - Produces: Tabelas `agendamentos` com `orcamento_id INT NOT NULL` e `cobrancas` com `agendamento_id INT NOT NULL` e `orcamento_id INT NOT NULL`.
 
-- [ ] **Step 1: Criar o script de migração SQL**
+- [x] **Step 1: Criar o script de migração SQL**
 
 Crie o arquivo `backend/src/database/migrations/002_fluxo_integrado.sql`:
 ```sql
@@ -57,11 +57,11 @@ ALTER TABLE cobrancas
     ADD INDEX idx_cobrancas_agendamento (usuario_id, agendamento_id);
 ```
 
-- [ ] **Step 2: Atualizar `backend/src/database/schema.sql` para novas instalações**
+- [x] **Step 2: Atualizar `backend/src/database/schema.sql` para novas instalações**
 
 Em `backend/src/database/schema.sql`, ajuste as tabelas `agendamentos` e `cobrancas` para incluírem as novas colunas e constraints no DDL inicial.
 
-- [ ] **Step 3: Atualizar `backend/src/database/seed.js` com a cadeia estrita**
+- [x] **Step 3: Atualizar `backend/src/database/seed.js` com a cadeia estrita**
 
 Atualize `seed.js` para garantir que o fluxo de demonstração de `admin@mei.com` popule:
 1. Orçamentos (Rascunho, Enviado, Aprovado)
@@ -69,7 +69,7 @@ Atualize `seed.js` para garantir que o fluxo de demonstração de `admin@mei.com
 3. Cobranças vinculadas aos agendamentos concluídos (`agendamento_id` e `orcamento_id`)
 4. Movimentações geradas a partir das cobranças pagas (`cobranca_id`).
 
-- [ ] **Step 4: Executar a migração e rodar o seed**
+- [x] **Step 4: Executar a migração e rodar o seed**
 
 ```bash
 node -e "
@@ -95,7 +95,7 @@ run();
 npm run db:seed
 ```
 
-- [ ] **Step 5: Testar e commitar a migração**
+- [x] **Step 5: Testar e commitar a migração**
 
 ```bash
 npm run test:backend
@@ -117,7 +117,7 @@ git commit -m "feat(db): adiciona foreign keys para fluxo orcamento -> agendamen
 - Consumes: Pool MySQL, tabelas `orcamentos`, `agendamentos`, `cobrancas`, `movimentacoes`.
 - Produces: Métodos `agendamentoService.criar`, `cobrancaService.criar`, `orcamentoService.obterPorId` com rastreabilidade ponta a ponta e travas de integridade.
 
-- [ ] **Step 1: Escrever teste de integração de ponta a ponta (`tests/pipeline-financeiro.test.js`)**
+- [x] **Step 1: Escrever teste de integração de ponta a ponta (`tests/pipeline-financeiro.test.js`)**
 
 Crie `backend/tests/pipeline-financeiro.test.js` cobrindo:
 1. Criação do Orçamento ➔ Mudança de status para `APROVADO`.
@@ -128,14 +128,14 @@ Crie `backend/tests/pipeline-financeiro.test.js` cobrindo:
 6. Liquidação (`darBaixa`) gerando lançamento no Livro Caixa com vínculo.
 7. Consulta do orçamento retornando a árvore de rastreabilidade completa.
 
-- [ ] **Step 2: Executar o teste e verificar que falha**
+- [x] **Step 2: Executar o teste e verificar que falha**
 
 ```bash
 npm --prefix backend test tests/pipeline-financeiro.test.js
 ```
 Esperado: Fails com validação de `orcamento_id` e `agendamento_id`.
 
-- [ ] **Step 3: Atualizar `agendamentoService.js`**
+- [x] **Step 3: Atualizar `agendamentoService.js`**
 
 Implementar validações no método `criar`:
 ```javascript
@@ -163,7 +163,7 @@ if (orcRows[0].status !== 'APROVADO') {
 }
 ```
 
-- [ ] **Step 4: Atualizar `cobrancaService.js`**
+- [x] **Step 4: Atualizar `cobrancaService.js`**
 
 Implementar validações no método `criar`:
 ```javascript
@@ -198,7 +198,7 @@ const [orcRows] = await pool.execute(
 const valorFinal = Number(orcRows[0]?.total || 0);
 ```
 
-- [ ] **Step 5: Atualizar `orcamentoService.js` para retornar a trilha de auditoria**
+- [x] **Step 5: Atualizar `orcamentoService.js` para retornar a trilha de auditoria**
 
 No método `obterPorId` e `listar`, incluir subconsultas/joins para retornar:
 ```json
@@ -209,14 +209,14 @@ No método `obterPorId` e `listar`, incluir subconsultas/joins para retornar:
 }
 ```
 
-- [ ] **Step 6: Executar `tests/pipeline-financeiro.test.js` e verificar aprovação**
+- [x] **Step 6: Executar `tests/pipeline-financeiro.test.js` e verificar aprovação**
 
 ```bash
 npm --prefix backend test tests/pipeline-financeiro.test.js
 ```
 Esperado: 100% PASS.
 
-- [ ] **Step 7: Commitar a camada de serviços**
+- [x] **Step 7: Commitar a camada de serviços**
 
 ```bash
 git add backend/src/services/ backend/tests/pipeline-financeiro.test.js
@@ -238,22 +238,22 @@ git commit -m "feat(backend): implementa regras estritas de orcamento -> agendam
 - Consumes: Requisições HTTP da API REST.
 - Produces: Respostas HTTP padronizadas com validação de payload estrito.
 
-- [ ] **Step 1: Ajustar `agendamentoController.js` e `cobrancaController.js`**
+- [x] **Step 1: Ajustar `agendamentoController.js` e `cobrancaController.js`**
 
 Validar parâmetros recebidos no `req.body` repassando `orcamento_id` e `agendamento_id`.
 
-- [ ] **Step 2: Atualizar as fixtures dos testes legados**
+- [x] **Step 2: Atualizar as fixtures dos testes legados**
 
 Atualizar `tests/agendamentos.test.js` e `tests/cobrancas.test.js` para que os dados de teste criem previamente o Orçamento Aprovado e o Agendamento Concluído correspondentes.
 
-- [ ] **Step 3: Rodar todos os testes de backend**
+- [x] **Step 3: Rodar todos os testes de backend**
 
 ```bash
 npm run test:backend
 ```
 Esperado: Todas as suítes passam (100%).
 
-- [ ] **Step 4: Commitar ajustes de controllers e testes**
+- [x] **Step 4: Commitar ajustes de controllers e testes**
 
 ```bash
 git add backend/src/controllers/ backend/tests/
@@ -274,13 +274,13 @@ git commit -m "test(backend): atualiza suites de teste para o pipeline financeir
 - Consumes: `/api/orcamentos`, `/api/agendamentos`.
 - Produces: Ações "Agendar Atendimento" e "Gerar Cobrança" na interface.
 
-- [ ] **Step 1: Adicionar ação "Agendar Atendimento" em `Orcamentos.jsx`**
+- [x] **Step 1: Adicionar ação "Agendar Atendimento" em `Orcamentos.jsx`**
 
 Quando o orçamento estiver com `status === 'APROVADO'`, renderizar o botão:
 - Botão "Agendar Atendimento" (navega para `/agenda?orcamento_id=${orcamento.id}&cliente_id=${orcamento.cliente_id}` ou abre modal de agendamento rápido).
 - Exibir badge com a etapa do fluxo (`Aprovado`, `Agendado`, `Cobrado`).
 
-- [ ] **Step 2: Atualizar modal de criação em `Agenda.jsx`**
+- [x] **Step 2: Atualizar modal de criação em `Agenda.jsx`**
 
 - Na tela de Agenda, ao criar um novo agendamento, adicionar campo seletor:
   - Dropdown **"Orçamento Aprovado"** exibindo orçamentos disponíveis do cliente.
@@ -288,18 +288,18 @@ Quando o orçamento estiver com `status === 'APROVADO'`, renderizar o botão:
 - Na listagem de agendamentos:
   - Quando `status === 'CONCLUIDO'`: exibir botão em verde **"Gerar Cobrança"** (redirecionando para `/cobrancas?agendamento_id=${agendamento.id}`).
 
-- [ ] **Step 3: Atualizar testes de frontend (`Orcamentos.test.jsx` e `Agenda.test.jsx`)**
+- [x] **Step 3: Atualizar testes de frontend (`Orcamentos.test.jsx` e `Agenda.test.jsx`)**
 
 Garantir que os mocks de teste forneçam os campos `orcamento_id` e verifiquem a exibição dos botões do fluxo.
 
-- [ ] **Step 4: Executar testes de frontend**
+- [x] **Step 4: Executar testes de frontend**
 
 ```bash
 npm --prefix frontend test src/pages/Orcamentos.test.jsx src/pages/Agenda.test.jsx
 ```
 Esperado: PASS.
 
-- [ ] **Step 5: Commitar mudanças em Orçamentos e Agenda**
+- [x] **Step 5: Commitar mudanças em Orçamentos e Agenda**
 
 ```bash
 git add frontend/src/pages/Orcamentos.jsx frontend/src/pages/Agenda.jsx frontend/src/pages/Orcamentos.test.jsx frontend/src/pages/Agenda.test.jsx
@@ -319,29 +319,29 @@ git commit -m "feat(frontend): integra acoes de agendamento em orcamentos e cobr
 - Consumes: `/api/cobrancas`, `/api/movimentacoes`.
 - Produces: Emissão de cobrança travada ao atendimento e extrato com rastreabilidade total no caixa.
 
-- [ ] **Step 1: Atualizar criação de cobrança em `Cobrancas.jsx`**
+- [x] **Step 1: Atualizar criação de cobrança em `Cobrancas.jsx`**
 
 - Ao emitir nova cobrança, selecionar o **Atendimento Concluído**.
 - O valor da proposta é travado (somente leitura), prevenindo discrepâncias entre o orçamento e a cobrança.
 - Na listagem, exibir badges com link para o Agendamento e para o Orçamento.
 
-- [ ] **Step 2: Atualizar exibição do Livro Caixa em `Caixa.jsx`**
+- [x] **Step 2: Atualizar exibição do Livro Caixa em `Caixa.jsx`**
 
 - As movimentações de `ENTRADA` exibem a tag `Origem: Cobrança #X (Agendamento #Y)`.
 - Remover botão de entrada manual de cliente (entradas ocorrem pela liquidação da cobrança).
 
-- [ ] **Step 3: Atualizar testes em `Financeiro.test.jsx`**
+- [x] **Step 3: Atualizar testes em `Financeiro.test.jsx`**
 
 Garantir que os testes de cobrança e caixa validem o fluxo integrado com sucesso.
 
-- [ ] **Step 4: Executar testes**
+- [x] **Step 4: Executar testes**
 
 ```bash
 npm --prefix frontend test src/pages/Financeiro.test.jsx
 ```
 Esperado: PASS.
 
-- [ ] **Step 5: Commitar camada financeira do frontend**
+- [x] **Step 5: Commitar camada financeira do frontend**
 
 ```bash
 git add frontend/src/pages/Cobrancas.jsx frontend/src/pages/Caixa.jsx frontend/src/pages/Financeiro.test.jsx
@@ -356,27 +356,27 @@ git commit -m "feat(frontend): vincula emissao de cobrancas a atendimentos e ras
 - Modify: `package.json`
 - Update: `graphify-out/`
 
-- [ ] **Step 1: Rodar a suíte completa de testes automatizados**
+- [x] **Step 1: Rodar a suíte completa de testes automatizados**
 
 ```bash
 npm run test
 ```
 Esperado: 100% de aprovação (todos os testes de backend e frontend passando).
 
-- [ ] **Step 2: Executar build de produção do frontend**
+- [x] **Step 2: Executar build de produção do frontend**
 
 ```bash
 npm run build:frontend
 ```
 Esperado: Compilação Vite bem-sucedida sem erros.
 
-- [ ] **Step 3: Atualizar o grafo de conhecimento com Graphify**
+- [x] **Step 3: Atualizar o grafo de conhecimento com Graphify**
 
 ```bash
 npm run graphify:update
 ```
 
-- [ ] **Step 4: Commitar e enviar para o repositório remoto**
+- [x] **Step 4: Commitar e enviar para o repositório remoto**
 
 ```bash
 git add .
