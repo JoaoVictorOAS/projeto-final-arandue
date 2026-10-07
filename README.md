@@ -45,17 +45,17 @@ flowchart TD
         Browser["Interface Web (SPA React)"]
     end
 
-    subgraph FrontendServer["Frontend • Porta 3000"]
-        Vite["Vite Dev Server / Nginx Estático"]
+    subgraph FrontendServer["Frontend (Porta 3000)"]
+        Vite["Vite Dev Server / Nginx Estatico"]
     end
 
-    subgraph BackendGateway["Backend Gateway • Porta 3001"]
+    subgraph BackendGateway["Backend Gateway (Porta 3001)"]
         Express["API Node.js / Express"]
-        AuthMid["JWT Auth & Scoped Token Issuer"]
+        AuthMid["JWT Auth e Scoped Token Issuer"]
         DBPool["MySQL Pool (mysql2)"]
     end
 
-    subgraph AIService["AI Microservice • Porta 8001"]
+    subgraph AIService["AI Microservice (Porta 8001)"]
         FastAPI["FastAPI / Uvicorn Server"]
         Orchestrator["LLM Orchestrator (Gemini)"]
         Retriever["FallbackRetriever + Circuit Breaker"]
@@ -66,25 +66,25 @@ flowchart TD
         TenantMCP["MCP Server Instance (Python)"]
     end
 
-    subgraph Storage["Armazenamento & Vetores"]
-        MySQL[("MySQL 8.x • Porta 3306\nmei_db")]
-        Chroma[("ChromaDB (Local)\ndata/chroma_db")]
-        Firestore[("Firestore Vector Search\n(Cloud/Prod)")]
+    subgraph Storage["Armazenamento e Vetores"]
+        MySQL[("MySQL 8.x - Porta 3306")]
+        Chroma[("ChromaDB Local")]
+        Firestore[("Firestore Vector Search")]
     end
 
-    Browser <-->|HTTP / WebSocket| Vite
-    Vite <-->|Proxy /api| Express
-    Express <-->|SQL Parametrizado| MySQL
-    Express <-->|HTTP POST /chat\n(X-Internal-Secret)| FastAPI
+    Browser <-->|"HTTP / WebSocket"| Vite
+    Vite <-->|"Proxy /api"| Express
+    Express <-->|"SQL Parametrizado"| MySQL
+    Express <-->|"HTTP POST /chat (Secret)"| FastAPI
 
-    FastAPI <-->|RAG Query| Retriever
-    Retriever <-->|Primary / Dev| Chroma
-    Retriever <-->|Fallback / Prod| Firestore
+    FastAPI <-->|"RAG Query"| Retriever
+    Retriever <-->|"Primary / Dev"| Chroma
+    Retriever <-->|"Fallback / Prod"| Firestore
 
-    FastAPI <-->|Adquire Sessão| McpPool
-    McpPool -.->|Spawns stdio| TenantMCP
-    TenantMCP <-->|REST API\n(Scoped JWT: assistente:access)| Express
-    Orchestrator <-->|Function Calling| TenantMCP
+    FastAPI <-->|"Adquire Sessao"| McpPool
+    McpPool -.->|"Spawns stdio"| TenantMCP
+    TenantMCP <-->|"REST API (Scoped JWT)"| Express
+    Orchestrator <-->|"Function Calling"| TenantMCP
 ```
 
 ---
