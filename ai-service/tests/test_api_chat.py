@@ -76,6 +76,7 @@ async def test_chat_success_with_mocked_llm():
         assert data["rag_backend"] == "chroma"
         assert len(data["fontes"]) == 1
         assert data["fontes"][0]["pagina"] == 4
+        assert data["fontes"][0]["score"] == 0.9
         assert data["tools_usadas"] == ["obter_resumo_caixa"]
         assert data["modelo"] == "gemini-3.5-flash-lite"
         assert data["latencia_ms"] >= 0

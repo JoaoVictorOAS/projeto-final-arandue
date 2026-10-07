@@ -25,9 +25,12 @@ Diretrizes obrigatórias de governança:
 
 def build_context_prompt(pergunta: str, trechos: List[Trecho], rag_backend: str) -> str:
     """Monta a mensagem de contexto integrando os trechos do RAG e a pergunta do usuário."""
-    if not trechos or rag_backend == "none":
+    if rag_backend == "none":
         aviso_rag = "[Aviso: Base oficial de legislação temporariamente indisponível para esta consulta.]\n\n"
         return f"{aviso_rag}Pergunta do MEI: {pergunta}"
+
+    if not trechos:
+        return f"Pergunta do MEI: {pergunta}"
 
     docs_formatados = []
     for t in trechos:

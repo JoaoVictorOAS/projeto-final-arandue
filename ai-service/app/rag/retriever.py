@@ -18,7 +18,8 @@ class FallbackRetriever:
         breaker_failures: int = 3,
         breaker_reset_s: float = 60.0,
         top_k: int = 4,
-        max_distance: float = 0.35
+        max_distance: float = 0.35,
+        min_score: Optional[float] = None
     ):
         self.embedder = embedder
         self.primary_store = primary_store
@@ -30,6 +31,7 @@ class FallbackRetriever:
         self.breaker_reset_s = breaker_reset_s
         self.top_k = top_k
         self.max_distance = max_distance
+        self.min_score = min_score
 
         # Circuit breaker state
         self._consecutive_failures = 0
@@ -67,7 +69,7 @@ class FallbackRetriever:
         if self.primary_store and not self._is_breaker_open():
             try:
                 trechos = await asyncio.wait_for(
-                    asyncio.to_thread(self.primary_store.search, query_vec, self.top_k, self.max_distance),
+                    asyncio.to_thread(self.primary_store.search, query_vec, self.top_k, self.max_distance, self.min_score),
                     timeout=self.primary_timeout_s
                 )
                 self._record_success()
@@ -80,7 +82,7 @@ class FallbackRetriever:
         if self.fallback_store:
             try:
                 trechos = await asyncio.to_thread(
-                    self.fallback_store.search, query_vec, self.top_k, self.max_distance
+                    self.fallback_store.search, query_vec, self.top_k, self.max_distance, self.min_score
                 )
                 return trechos, self.fallback_name
             except Exception as e:

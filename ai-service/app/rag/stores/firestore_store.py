@@ -22,7 +22,13 @@ class FirestoreStore:
         self._db = firestore.Client(project=self.project_id)
         self._collection = self._db.collection(self.collection_name)
 
-    def search(self, vector: List[float], k: int = 4, max_distance: float = 0.35) -> List[Trecho]:
+    def search(
+        self,
+        vector: List[float],
+        k: int = 4,
+        max_distance: float = 0.35,
+        min_score: Optional[float] = None
+    ) -> List[Trecho]:
         query = self._collection
         if self.corpus_version:
             query = query.where("corpus_version", "==", self.corpus_version)
@@ -40,11 +46,16 @@ class FirestoreStore:
         trechos: List[Trecho] = []
         for doc in results:
             d = doc.to_dict()
+            dist = float(d.get("distancia", 0.0))
+            score = round(max(0.0, 1.0 - dist), 4)
+            if min_score is not None and score < min_score:
+                continue
             trechos.append(Trecho(
                 id=doc.id,
                 texto=d.get("texto", ""),
                 pagina=d.get("pagina", 1),
-                distancia=float(d.get("distancia", 0.0))
+                distancia=dist,
+                score=score
             ))
         return trechos
 

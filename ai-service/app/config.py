@@ -27,7 +27,8 @@ class Settings(BaseSettings):
 
     # RAG
     RAG_TOP_K: int = Field(default=4)
-    RAG_MAX_DISTANCE: float = Field(default=0.35)
+    RAG_MAX_DISTANCE: float = Field(default=0.135)
+    RAG_MIN_SCORE: float = Field(default=0.865)
     RAG_PRIMARY_TIMEOUT_S: float = Field(default=1.5)
     RAG_BREAKER_FAILURES: int = Field(default=3)
     RAG_BREAKER_RESET_S: int = Field(default=60)

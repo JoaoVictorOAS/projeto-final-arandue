@@ -1,6 +1,6 @@
 import pytest
 import asyncio
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from app.rag.stores.base import Trecho, VectorStore
 from app.rag.retriever import FallbackRetriever
 
@@ -12,13 +12,15 @@ class MockStore:
         self.results = results or []
         self.calls = 0
 
-    def search(self, vector: List[float], k: int = 4, max_distance: float = 0.35) -> List[Trecho]:
+    def search(self, vector: List[float], k: int = 4, max_distance: float = 0.35, min_score: Optional[float] = None) -> List[Trecho]:
         self.calls += 1
         if self.delay > 0:
             import time
             time.sleep(self.delay)
         if self.should_fail:
             raise ConnectionError(f"Falha simulada no {self.name}")
+        if min_score is not None:
+            return [t for t in self.results if t.score >= min_score]
         return self.results
 
     def info(self) -> Dict[str, Any]:
@@ -161,3 +163,24 @@ async def test_retriever_circuit_breaker():
     trechos, backend = await retriever.retrieve("q3")
     assert backend == "chroma"
     assert primary.calls == 2  # Não incrementou, o breaker evitou a chamada
+
+@pytest.mark.asyncio
+async def test_retriever_applies_min_score():
+    t_relevante = Trecho(id="t1", texto="Relevante", pagina=1, distancia=0.1, score=0.90)
+    t_irrelevante = Trecho(id="t2", texto="Irrelevante", pagina=2, distancia=0.2, score=0.80)
+    primary = MockStore("chroma", results=[t_relevante, t_irrelevante])
+    embedder = MockEmbedder()
+
+    retriever = FallbackRetriever(
+        embedder=embedder,
+        primary_store=primary,
+        primary_name="chroma",
+        min_score=0.865
+    )
+
+    trechos, backend = await retriever.retrieve("qualquer pergunta")
+    assert backend == "chroma"
+    assert len(trechos) == 1
+    assert trechos[0].id == "t1"
+    assert trechos[0].score >= 0.865
+

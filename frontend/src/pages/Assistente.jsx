@@ -326,7 +326,7 @@ export default function Assistente() {
                                   onClick={() => alternarFonte(msg.id || idx, fIdx)}
                                   className="inline-flex items-center gap-1 px-2 py-1 bg-white hover:bg-slate-50 border border-slate-300 rounded text-[11px] font-medium text-slate-700 transition-colors shadow-2xs"
                                 >
-                                  <span>pág. {fonte.pagina}</span>
+                                  <span>pág. {fonte.pagina}{fonte.score ? ` (${Math.round(fonte.score * 100)}%)` : ''}</span>
                                   {aberta ? <ChevronUp className="w-3 h-3 text-slate-400" /> : <ChevronDown className="w-3 h-3 text-slate-400" />}
                                 </button>
                                 {aberta && fonte.trecho && (

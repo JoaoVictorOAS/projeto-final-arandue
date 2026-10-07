@@ -22,7 +22,13 @@ class ChromaStore:
         self._client = chromadb.PersistentClient(path=str(self.db_path))
         self._collection = self._client.get_collection(name=self.collection_name)
 
-    def search(self, vector: List[float], k: int = 4, max_distance: float = 0.35) -> List[Trecho]:
+    def search(
+        self,
+        vector: List[float],
+        k: int = 4,
+        max_distance: float = 0.35,
+        min_score: Optional[float] = None
+    ) -> List[Trecho]:
         results = self._collection.query(
             query_embeddings=[vector],
             n_results=k
@@ -36,12 +42,15 @@ class ChromaStore:
             ids = results["ids"][0] if "ids" in results else [""] * len(docs)
 
             for doc_id, doc, meta, dist in zip(ids, docs, metadatas, distances):
-                if dist <= max_distance:
+                dist_val = float(dist)
+                score_val = round(max(0.0, 1.0 - dist_val), 4)
+                if dist_val <= max_distance and (min_score is None or score_val >= min_score):
                     trechos.append(Trecho(
                         id=doc_id,
                         texto=doc,
                         pagina=meta.get("page", 1),
-                        distancia=float(dist)
+                        distancia=dist_val,
+                        score=score_val
                     ))
 
         return trechos

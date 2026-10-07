@@ -80,7 +80,8 @@ async def lifespan(app: FastAPI):
         breaker_failures=settings.RAG_BREAKER_FAILURES,
         breaker_reset_s=settings.RAG_BREAKER_RESET_S,
         top_k=settings.RAG_TOP_K,
-        max_distance=settings.RAG_MAX_DISTANCE
+        max_distance=settings.RAG_MAX_DISTANCE,
+        min_score=settings.RAG_MIN_SCORE
     )
     state["retriever"] = retriever
 
@@ -124,6 +125,7 @@ class FonteItem(BaseModel):
     pagina: int
     trecho: str
     distancia: float
+    score: float = 0.0
 
 class ChatResponse(BaseModel):
     resposta: str
@@ -184,7 +186,12 @@ async def chat_endpoint(payload: ChatRequest):
     latencia_ms = int((time.time() - inicio) * 1000)
 
     fontes = [
-        FonteItem(pagina=t.pagina, trecho=t.texto[:180] + "...", distancia=t.distancia)
+        FonteItem(
+            pagina=t.pagina,
+            trecho=t.texto[:180] + "...",
+            distancia=t.distancia,
+            score=t.score
+        )
         for t in trechos
     ]
 
