@@ -87,4 +87,50 @@ describe('authMiddleware - Scoped Token Tests', () => {
     expect(res.status).toHaveBeenCalledWith(403);
     expect(next).not.toHaveBeenCalled();
   });
+
+  test('deve permitir POST em rotas de negocio com scope assistente:operator (cadastro via MCP)', () => {
+    const token = jwt.sign({ id: 1, scope: 'assistente:operator' }, JWT_SECRET);
+    req = {
+      method: 'POST',
+      baseUrl: '/api/clientes',
+      path: '/',
+      headers: { authorization: `Bearer ${token}` }
+    };
+
+    authMiddleware(req, res, next);
+    expect(next).toHaveBeenCalled();
+    expect(req.usuario.scope).toBe('assistente:operator');
+  });
+
+  test('deve bloquear DELETE com status 403 quando token tem scope assistente:operator (protecao contra exclusao acidental)', () => {
+    const token = jwt.sign({ id: 1, scope: 'assistente:operator' }, JWT_SECRET);
+    req = {
+      method: 'DELETE',
+      baseUrl: '/api/clientes',
+      path: '/10',
+      headers: { authorization: `Bearer ${token}` }
+    };
+
+    authMiddleware(req, res, next);
+    expect(res.status).toHaveBeenCalledWith(403);
+    expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
+      sucesso: false,
+      mensagem: expect.stringMatching(/operador do assistente/i)
+    }));
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  test('deve bloquear acesso a /api/assistente quando token tem scope assistente:operator (evita recursao)', () => {
+    const token = jwt.sign({ id: 1, scope: 'assistente:operator' }, JWT_SECRET);
+    req = {
+      method: 'POST',
+      baseUrl: '/api/assistente',
+      path: '/mensagens',
+      headers: { authorization: `Bearer ${token}` }
+    };
+
+    authMiddleware(req, res, next);
+    expect(res.status).toHaveBeenCalledWith(403);
+    expect(next).not.toHaveBeenCalled();
+  });
 });

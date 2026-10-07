@@ -34,11 +34,24 @@ function authMiddleware(req, res, next) {
       const path = req.path || '';
       const isAssistenteRoute = baseUrl.startsWith('/api/assistente') || path.startsWith('/api/assistente') || baseUrl === '/api/assistente';
 
-      // Scoped tokens do assistente só têm permissão para leitura (GET) e não podem acessar rotas do próprio assistente
+      // Scoped tokens de leitura só têm permissão para leitura (GET) e não podem acessar rotas do próprio assistente
       if (req.method !== 'GET' || isAssistenteRoute) {
         return res.status(403).json({
           sucesso: false,
           mensagem: 'Acesso negado: token de leitura restrito do assistente'
+        });
+      }
+    } else if (decodificado.scope === 'assistente:operator') {
+      const baseUrl = req.baseUrl || '';
+      const path = req.path || '';
+      const isAssistenteRoute = baseUrl.startsWith('/api/assistente') || path.startsWith('/api/assistente') || baseUrl === '/api/assistente';
+      const isAuthMutation = (baseUrl.startsWith('/api/auth') || path.startsWith('/api/auth')) && req.method !== 'GET';
+
+      // Scoped tokens de operador do assistente podem ler e cadastrar (GET e POST), mas não podem excluir (DELETE) nem mutar auth ou chat
+      if (req.method === 'DELETE' || isAssistenteRoute || isAuthMutation) {
+        return res.status(403).json({
+          sucesso: false,
+          mensagem: 'Acesso negado: operação não permitida para o operador do assistente'
         });
       }
     }

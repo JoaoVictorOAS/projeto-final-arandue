@@ -9,6 +9,11 @@ from mcp_server.server import (
     listar_movimentacoes,
     listar_cobrancas,
     listar_servicos,
+    cadastrar_cliente,
+    listar_clientes,
+    cadastrar_cobranca,
+    cadastrar_servico,
+    cadastrar_agendamento,
     mcp_server_app,
 )
 
@@ -74,9 +79,29 @@ def test_mcp_security_no_tenant_parameters_in_schemas():
         obter_resumo_caixa,
         listar_movimentacoes,
         listar_cobrancas,
-        listar_servicos
+        listar_servicos,
+        cadastrar_cliente,
+        listar_clientes,
+        cadastrar_cobranca,
+        cadastrar_servico,
+        cadastrar_agendamento
     ]:
         import inspect
         params = inspect.signature(tool_func).parameters.keys()
         for forbidden in ["tenant", "tenant_id", "usuario", "usuario_id", "user_id"]:
             assert forbidden not in params, f"Tool {tool_func.__name__} expõe parâmetro proibido '{forbidden}'"
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_cadastrar_cliente():
+    from mcp_server.server import cadastrar_cliente
+    respx.post("http://test-node:3001/api/clientes").mock(
+        return_value=httpx.Response(201, json={"sucesso": True, "dados": {"id": 99, "nome": "Jefferson"}})
+    )
+
+    resultado = await cadastrar_cliente(nome="Jefferson", telefone="11988887777")
+    assert resultado["cliente_id"] == 99
+    assert resultado["nome"] == "Jefferson"
+    assert "cadastrado com sucesso" in resultado["mensagem"]
+    # Verifica header
+    assert respx.calls.last.request.headers["authorization"] == "Bearer fake_jwt_token_for_tenant_42"

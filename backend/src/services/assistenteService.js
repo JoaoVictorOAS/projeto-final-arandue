@@ -86,11 +86,11 @@ const assistenteService = {
     // 4. Salva a pergunta do usuário
     await conversaRepository.salvarMensagem(idConversaAtiva, 'usuario', mensagemLimpa);
 
-    // 5. Gera token restrito de leitura (scoped token) de 15 minutos para as tools do MCP
+    // 5. Gera token restrito de operação (scoped token) de 15 minutos para as tools do MCP
     const tenantToken = jwt.sign(
       {
         id: usuario_id,
-        scope: 'assistente:read'
+        scope: 'assistente:operator'
       },
       JWT_SECRET,
       { expiresIn: '15m' }

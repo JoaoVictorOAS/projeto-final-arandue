@@ -135,16 +135,22 @@ describe('E2E: Isolamento Multi-tenant do Assistente IA', () => {
       const decoded = jwt.verify(capturedTenantToken, JWT_SECRET);
       expect(decoded.id).toBe(tenant1Id);
       expect(decoded.id).not.toBe(tenant2Id);
-      expect(decoded.scope).toBe('assistente:read');
+      expect(decoded.scope).toBe('assistente:operator');
 
-      // O token efêmero com scope assistente:read NÃO pode ser usado para mutações nem acessar o chat
-      const resMutacao = await request(app)
-        .post('/api/cobrancas')
-        .set('Authorization', `Bearer ${capturedTenantToken}`)
-        .send({ cliente_id: 1, valor: 100, vencimento: '2026-12-01' });
+      // O token com scope assistente:operator NÃO pode ser usado para deletar nem acessar o chat
+      const resDelete = await request(app)
+        .delete('/api/cobrancas/1')
+        .set('Authorization', `Bearer ${capturedTenantToken}`);
 
-      expect(resMutacao.statusCode).toBe(403);
-      expect(resMutacao.body.mensagem).toMatch(/restrito|acesso negado/i);
+      expect(resDelete.statusCode).toBe(403);
+      expect(resDelete.body.mensagem).toMatch(/operador do assistente/i);
+
+      // E também NÃO pode acessar o próprio chat diretamente
+      const resChat = await request(app)
+        .get('/api/assistente/conversas')
+        .set('Authorization', `Bearer ${capturedTenantToken}`);
+
+      expect(resChat.statusCode).toBe(403);
     });
 
     test('O token scoped assistente:read só consegue ler dados do próprio Tenant 1 quando usado nas rotas de negócio', async () => {
