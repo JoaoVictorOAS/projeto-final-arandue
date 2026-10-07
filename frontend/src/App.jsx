@@ -13,6 +13,7 @@ import Agenda from './pages/Agenda';
 import Orcamentos from './pages/Orcamentos';
 import Cobrancas from './pages/Cobrancas';
 import Caixa from './pages/Caixa';
+import Assistente from './pages/Assistente';
 
 export default function App() {
   return (
@@ -33,6 +34,7 @@ export default function App() {
               <Route path="/orcamentos" element={<Orcamentos />} />
               <Route path="/cobrancas" element={<Cobrancas />} />
               <Route path="/caixa" element={<Caixa />} />
+              <Route path="/assistente" element={<Assistente />} />
             </Route>
           </Route>
 
