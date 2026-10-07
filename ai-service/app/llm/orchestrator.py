@@ -31,7 +31,14 @@ class Orchestrator:
         tools_list = await session.list_tools()
         declarations = []
         for t in tools_list.tools:
-            schema = t.inputSchema or {}
+            raw_schema = getattr(t, "input_schema", None) or getattr(t, "inputSchema", None) or {}
+            if hasattr(raw_schema, "model_dump"):
+                schema = raw_schema.model_dump()
+            elif isinstance(raw_schema, dict):
+                schema = raw_schema
+            else:
+                schema = {}
+
             # Converte tipos JSON Schema para maiúsculas compatíveis com o Gemini
             properties = {}
             for prop_name, prop_val in schema.get("properties", {}).items():

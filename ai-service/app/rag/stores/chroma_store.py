@@ -4,8 +4,20 @@ import chromadb
 from app.rag.stores.base import Trecho, VectorStore
 
 class ChromaStore:
-    def __init__(self, db_path: str = "../data/chroma_db", collection_name: str = "regras_mei_e5"):
-        self.db_path = Path(db_path).resolve()
+    def __init__(self, db_path: str = "data/chroma_db", collection_name: str = "regras_mei_e5"):
+        repo_root = Path(__file__).resolve().parent.parent.parent.parent.parent
+        repo_data_db = repo_root / "data" / "chroma_db"
+        cwd_candidate = Path(db_path)
+
+        if cwd_candidate.is_absolute() and cwd_candidate.exists():
+            self.db_path = cwd_candidate
+        elif repo_data_db.exists():
+            self.db_path = repo_data_db
+        elif cwd_candidate.exists():
+            self.db_path = cwd_candidate.resolve()
+        else:
+            self.db_path = (repo_root / db_path).resolve()
+
         self.collection_name = collection_name
         self._client = chromadb.PersistentClient(path=str(self.db_path))
         self._collection = self._client.get_collection(name=self.collection_name)
