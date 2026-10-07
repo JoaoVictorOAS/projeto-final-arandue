@@ -9,6 +9,8 @@ build/
 data/chroma_db/
 tmp/
 *.log
+__pycache__/
+*.pyc
 
 # Graphify caches internos (mantém graph.html, GRAPH_REPORT.md e graph.json)
 graphify-out/.graphify_*

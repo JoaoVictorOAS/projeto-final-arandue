@@ -11,6 +11,7 @@ import {
   LogOut,
   X,
   Building2,
+  MessageCircle,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import Logo from './Logo';
@@ -23,6 +24,7 @@ const NAV_ITEMS = [
   { to: '/orcamentos', label: 'Orçamentos', icon: FileText },
   { to: '/cobrancas', label: 'Cobranças', icon: CreditCard },
   { to: '/caixa', label: 'Livro Caixa', icon: Wallet },
+  { to: '/assistente', label: 'Assistente IA', icon: MessageCircle },
 ];
 
 export default function Sidebar({ isOpen, setIsOpen }) {

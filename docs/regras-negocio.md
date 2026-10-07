@@ -105,3 +105,28 @@ Os dados exibidos na tela inicial são calculados em tempo real ou agregados pel
 4. **Valores a Receber (Pendências):** Soma de todas as cobranças com status `PENDENTE` ou `ATRASADO`.
 5. **Agenda de Hoje:** Quantidade e lista dos agendamentos marcados para a data atual.
 6. **Orçamentos em Aberto:** Total de orçamentos com status `RASCUNHO` ou `ENVIADO`.
+
+---
+
+## 8. Assistente Virtual com Inteligência Artificial e MCP Multi-Tenancy
+
+1. **Escopo e Limites de Acesso (Scoped Tokens):**
+   - Ao encaminhar uma mensagem para o microserviço de IA, o backend Node.js emite um JWT efêmero (validade máxima de 15 minutos) assinado com o `tenant_id` e contendo o claim estrito `scope: 'assistente:read'`.
+   - Este token **só permite operações de leitura (GET)** e é expressamente bloqueado em rotas de mutação (`POST`, `PUT`, `DELETE`) e nos endpoints do próprio chat (`/api/assistente/*`).
+   - Tentativa de mutação com o token do assistente resulta em `403 Forbidden`.
+
+2. **Isolamento de Processos MCP (Model Context Protocol):**
+   - Cada tenant opera em um subprocesso Python dedicado gerenciado pelo pool (`TenantMcpPool`).
+   - O processo do MCP herda exclusivamente a variável de ambiente `TENANT_TOKEN`. Nenhuma tool expõe ou aceita parâmetros como `tenant_id`, `usuario_id` ou `cnpj`, eliminando qualquer vulnerabilidade de IDOR ou injeção de parâmetros por parte do LLM.
+   - O pool impõe desalocação automática por inatividade (LRU / TTL de 600 segundos).
+
+3. **Privacidade e Conformidade com LGPD:**
+   - As tools expostas pelo MCP (`obter_resumo_financeiro_ano`, `listar_cobrancas_status`, `consultar_limite_mei_atual`, etc.) omitem dados pessoais de clientes (telefones, endereços e e-mails).
+   - O prompt de sistema do LLM proíbe expressamente alucinações e orienta o modelo a citar a página exata do manual oficial do MEI sempre que utilizar trechos do RAG.
+
+4. **Taxa de Uso e Rate Limiting:**
+   - O endpoint `/api/assistente/mensagens` limita as requisições a **20 mensagens por usuário a cada 10 minutos**. Requisições excedentes recebem `429 Too Many Requests`.
+   - O tamanho máximo de cada mensagem enviada pelo usuário é de **2000 caracteres**.
+
+5. **Aviso Legal Obrigatório:**
+   - Toda resposta gerada pela interface do assistente deve conter o disclaimer: *"Orientação informativa baseada no documento oficial do MEI. Não substitui assessoria contábil."*
