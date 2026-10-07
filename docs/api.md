@@ -308,3 +308,105 @@ Esta documentação detalha os padrões arquiteturais, cabeçalhos, autenticaç�
   }
 }
 ```
+
+---
+
+## 10. Módulo do Assistente IA (`/api/assistente`)
+*Todas as rotas requerem autenticação Bearer com token padrão de usuário.*
+*Tokens restritos (`scope: 'assistente:read'`) são bloqueados nestas rotas.*
+
+### 10.1 Listar Conversas do Usuário
+- **Método:** `GET`
+- **Rota:** `/api/assistente/conversas`
+- **Resposta Sucesso (`200 OK`):**
+```json
+{
+  "sucesso": true,
+  "mensagem": "Conversas listadas com sucesso",
+  "dados": [
+    {
+      "id": 1,
+      "titulo": "Dúvida sobre DAS e boleto",
+      "criado_em": "2026-10-07T14:00:00.000Z",
+      "atualizado_em": "2026-10-07T14:05:00.000Z"
+    }
+  ]
+}
+```
+
+### 10.2 Enviar Mensagem no Chat
+- **Método:** `POST`
+- **Rota:** `/api/assistente/mensagens`
+- **Rate Limit:** Máximo de 20 mensagens a cada 10 minutos por usuário.
+- **Payload:**
+```json
+{
+  "conversa_id": 1,
+  "mensagem": "Qual o limite de faturamento anual do MEI?"
+}
+```
+*Nota: Se `conversa_id` for omitido ou nulo, uma nova conversa é criada automaticamente com título baseado na mensagem.*
+- **Resposta Sucesso (`200 OK`):**
+```json
+{
+  "sucesso": true,
+  "mensagem": "Resposta do assistente processada com sucesso",
+  "dados": {
+    "conversa_id": 1,
+    "mensagem": {
+      "id": 42,
+      "papel": "assistente",
+      "conteudo": "O limite anual de faturamento do MEI é de R$ 81.000,00...",
+      "fontes": [
+        {
+          "pagina": 4,
+          "arquivo": "perguntaomei.pdf",
+          "trecho": "limite de receita bruta previsto no § 1º do artigo 18-A..."
+        }
+      ],
+      "criado_em": "2026-10-07T14:05:02.000Z"
+    }
+  }
+}
+```
+
+### 10.3 Listar Mensagens de uma Conversa
+- **Método:** `GET`
+- **Rota:** `/api/assistente/conversas/:id/mensagens`
+- **Isolamento:** Retorna `404 Not Found` se a conversa pertencer a outro usuário.
+- **Resposta Sucesso (`200 OK`):**
+```json
+{
+  "sucesso": true,
+  "mensagem": "Mensagens listadas com sucesso",
+  "dados": [
+    {
+      "id": 41,
+      "papel": "usuario",
+      "conteudo": "Qual o limite de faturamento anual do MEI?",
+      "fontes": [],
+      "criado_em": "2026-10-07T14:05:00.000Z"
+    },
+    {
+      "id": 42,
+      "papel": "assistente",
+      "conteudo": "O limite anual de faturamento do MEI é de R$ 81.000,00...",
+      "fontes": [
+        {
+          "pagina": 4,
+          "arquivo": "perguntaomei.pdf",
+          "trecho": "limite de receita bruta..."
+        }
+      ],
+      "criado_em": "2026-10-07T14:05:02.000Z"
+    }
+  ]
+}
+```
+
+### 10.4 Excluir Conversa
+- **Método:** `DELETE`
+- **Rota:** `/api/assistente/conversas/:id`
+- **Isolamento:** Retorna `404 Not Found` se a conversa pertencer a outro usuário.
+- **Resposta Sucesso (`204 No Content`):** Vazio.
+```

@@ -6,9 +6,11 @@
   "scripts": {
     "dev:backend": "npm --prefix backend run dev",
     "dev:frontend": "npm --prefix frontend run dev",
-    "test": "npm run test:backend && npm run test:frontend",
+    "dev:ai": "uvicorn app.main:app --app-dir ai-service --reload --port 8001",
+    "test": "npm run test:backend && npm run test:frontend && npm run test:ai",
     "test:backend": "npm --prefix backend test",
     "test:frontend": "npm --prefix frontend test",
+    "test:ai": ".venv/bin/pytest ai-service/tests",
     "build:frontend": "npm --prefix frontend run build",
     "db:seed": "node backend/src/database/seed.js",
     "rag:query": ".venv/bin/python scripts/rag/query_mei.py",

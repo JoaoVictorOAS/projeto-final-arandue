@@ -316,30 +316,34 @@ Para apresentações e bancas avaliadoras da formação:
 
 ---
 
-## 16. Banco Vetorial RAG com ChromaDB (Regras Oficiais do MEI)
+## 16. Assistente IA com RAG Oficial e MCP Multi-Tenancy
 
-Para assegurar conformidade tributária e operacional com as regras reais da Receita Federal e do Comitê Gestor do Simples Nacional, o projeto disponibiliza uma base de conhecimento RAG (*Retrieval-Augmented Generation*) baseada no documento oficial:
-- **Arquivo Fonte:** [`docs/perguntaomei.pdf`](file:///home/JoaoVictor/projetos/projeto-final-arandue/docs/perguntaomei.pdf) (24 páginas com perguntas e respostas sobre limites de receita, emissão de notas fiscais, recolhimento DAS, parcelamento de débitos e vedações).
-- **Banco Vetorial:** Implementado com **ChromaDB** persistente em `data/chroma_db` utilizando *embeddings* ONNX locais.
+O sistema conta com um **Assistente Virtual com Inteligência Artificial** que orienta o MEI sobre regras tributárias/legais e consulta informações do seu próprio negócio em tempo real.
 
-> [!NOTE]
-> Este banco vetorial é de teste e **foi projetado para ser deletado e recriado com facilidade diversas vezes** ao longo do desenvolvimento, servindo de consulta rápida para desenvolvedores e agentes não perderem o contexto legal do negócio.
+### 16.1 Arquitetura da Solução de IA
+- **Microserviço Python FastAPI (`ai-service/` na porta 8001):** Orquestra o LLM (`gemini-3.5-flash-lite`), o RAG semântico e as chamadas a tools do MCP.
+- **Embeddings:** `intfloat/multilingual-e5-small` (384 dimensões com normalização L2 e prefixos estritos `query: ` / `passage: `).
+- **Armazenamento Vetorial Híbrido:**
+  - *Desenvolvimento:* ChromaDB persistente em `data/chroma_db` (coleção `regras_mei_e5`).
+  - *Produção:* Google Cloud Firestore Vector Search remoto com fallback transparente para ChromaDB via `FallbackRetriever` e circuit breaker.
+- **Model Context Protocol (MCP) Multi-Tenant:** Cada MEI autenticado executa em um subprocesso Python dedicado e restrito sob o pool `TenantMcpPool`, recebendo um scoped token JWT efêmero (`scope: 'assistente:read'`) sem expor identificadores nas ferramentas e blindado contra prompt injection e vazamento de dados entre empresas.
+- **Interface Web:** Aba `/assistente` no React com histórico de conversas, badges de páginas citadas do documento oficial (`docs/perguntaomei.pdf`) e aviso legal obrigatório.
 
-### Como Consultar o Banco Vetorial:
+### 16.2 Comandos Úteis do Microserviço de IA:
 ```bash
-# Consulta semântica direta via terminal
+# Iniciar o microserviço FastAPI em desenvolvimento
+npm run dev:ai
+
+# Executar a suíte de testes do microserviço Python (pytest)
+npm run test:ai
+
+# Reindexar o corpus oficial do MEI com e5-small
+.venv/bin/python ai-service/scripts/index_corpus.py
+
+# Consultar o banco vetorial semântico via terminal
 .venv/bin/python scripts/rag/query_mei.py "qual o limite de faturamento anual do MEI?"
-.venv/bin/python scripts/rag/query_mei.py "como funciona a emissão de nota fiscal?"
 ```
 
-### Como Deletar e Recriar o Banco Vetorial:
-```bash
-# Opção 1: Via script shell automatizado
-./scripts/rag/recreate_rag.sh
-
-# Opção 2: Diretamente via Python com a flag --recreate
-.venv/bin/python scripts/rag/index_mei.py --recreate
-```
 
 ---
 

@@ -14,6 +14,9 @@ erDiagram
     usuarios ||--o{ orcamentos : "emite"
     usuarios ||--o{ cobrancas : "gerencia"
     usuarios ||--o{ movimentacoes : "registra"
+    usuarios ||--o{ conversas : "mantem"
+
+    conversas ||--|{ mensagens : "contem"
 
     clientes ||--o{ agendamentos : "possui"
     clientes ||--o{ orcamentos : "recebe"
@@ -534,5 +537,32 @@ CREATE TABLE IF NOT EXISTS movimentacoes (
     INDEX idx_movimentacoes_usuario_data (usuario_id, data_movimentacao),
     INDEX idx_movimentacoes_usuario_tipo_data (usuario_id, tipo, data_movimentacao)
 ) ENGINE=InnoDB;
+
+-- 9. Tabela de Conversas (Assistente IA)
+CREATE TABLE IF NOT EXISTS conversas (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    usuario_id INT NOT NULL,
+    titulo VARCHAR(255) NOT NULL,
+    criado_em DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    atualizado_em DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_conversas_usuario FOREIGN KEY (usuario_id)
+        REFERENCES usuarios(id) ON DELETE CASCADE,
+    INDEX idx_conversas_usuario (usuario_id)
+) ENGINE=InnoDB;
+
+-- 10. Tabela de Mensagens (Assistente IA)
+CREATE TABLE IF NOT EXISTS mensagens (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    conversa_id INT NOT NULL,
+    papel ENUM('usuario', 'assistente') NOT NULL,
+    conteudo TEXT NOT NULL,
+    fontes JSON NULL,
+    tools_usadas JSON NULL,
+    rag_backend VARCHAR(20) NULL,
+    criado_em DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_mensagens_conversa FOREIGN KEY (conversa_id)
+        REFERENCES conversas(id) ON DELETE CASCADE,
+    INDEX idx_mensagens_conversa (conversa_id)
+) ENGINE=InnoDB;
 ```
-```
+
