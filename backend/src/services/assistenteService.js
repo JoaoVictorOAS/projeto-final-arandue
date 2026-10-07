@@ -64,7 +64,16 @@ const assistenteService = {
       }
     } else {
       const titulo = mensagemLimpa.length > 60 ? mensagemLimpa.slice(0, 57) + '...' : mensagemLimpa;
-      idConversaAtiva = await conversaRepository.criarConversa(usuario_id, titulo);
+      try {
+        idConversaAtiva = await conversaRepository.criarConversa(usuario_id, titulo);
+      } catch (err) {
+        if (err.code === 'ER_NO_REFERENCED_ROW_2' || err.message?.includes('foreign key constraint fails')) {
+          const erroAuth = new Error('Sessão expirada ou usuário não encontrado no banco de dados. Por favor, saia e faça login novamente.');
+          erroAuth.statusCode = 401;
+          throw erroAuth;
+        }
+        throw err;
+      }
     }
 
     // 3. Monta histórico recente para contexto (até 10 mensagens anteriores)
