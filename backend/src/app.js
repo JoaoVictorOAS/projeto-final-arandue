@@ -8,6 +8,7 @@ const agendamentoRoutes = require('./routes/agendamentoRoutes');
 const cobrancaRoutes = require('./routes/cobrancaRoutes');
 const movimentacaoRoutes = require('./routes/movimentacaoRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes');
+const assistenteRoutes = require('./routes/assistenteRoutes');
 const authMiddleware = require('./middlewares/authMiddleware');
 
 const app = express();
@@ -35,5 +36,6 @@ app.use('/api/agendamentos', authMiddleware, agendamentoRoutes);
 app.use('/api/cobrancas', authMiddleware, cobrancaRoutes);
 app.use('/api/movimentacoes', authMiddleware, movimentacaoRoutes);
 app.use('/api/dashboard', authMiddleware, dashboardRoutes);
+app.use('/api/assistente', authMiddleware, assistenteRoutes);
 
 module.exports = app;
