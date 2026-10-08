@@ -112,6 +112,9 @@ O sistema adota o padrão **Fallback com Circuit Breaker** (`FallbackRetriever`)
 - **Circuit Breaker:** Abre após 3 falhas consecutivas, direcionando imediatamente as requisições ao store secundário por 60 segundos antes de tentar reestabelecer o primário.
 
 ### 3.4 MCP Multi-Tenant (Leitura e Ações Operacionais)
+> **Regra Arquitetural do Projeto (Paridade API ↔ MCP):**  
+> Toda capacidade de negócio ou endpoint disponibilizado na API REST (Backend Express) **deve obrigatoriamente** possuir uma ferramenta correspondente espelhada no servidor MCP (`ai-service/mcp_server`). A API REST centraliza as regras de negócio e validações, garantindo que o Web, o futuro Mobile e o Agente de IA (via MCP) consumam a mesma camada com paridade funcional total (`Clientes -> REST API` e `IA -> MCP -> REST API`).
+
 A ponte de integração entre o assistente e as regras do sistema utiliza o **Model Context Protocol (MCP)**:
 - **Isolamento de Processos:** Para cada tenant ativo, o `TenantMcpPool` gerencia instâncias dedicadas do processo MCP Server via `stdio`, reutilizando-as em pool com TTL de inatividade de 600 segundos (`MCP_IDLE_TTL_S`).
 - **Ferramentas de Leitura:**
