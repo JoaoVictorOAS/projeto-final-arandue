@@ -2,6 +2,7 @@ const pool = require('../config/database');
 const orcamentoRepository = require('../repositories/orcamentoRepository');
 const clienteRepository = require('../repositories/clienteRepository');
 const servicoRepository = require('../repositories/servicoRepository');
+const estoqueService = require('./estoqueService');
 
 const STATUS_PERMITIDOS = ['RASCUNHO', 'ENVIADO', 'APROVADO', 'RECUSADO', 'CANCELADO'];
 
@@ -320,7 +321,16 @@ const orcamentoService = {
       throw erro;
     }
 
-    return await orcamentoRepository.atualizarStatus(id, usuario_id, statusLimpo);
+    const statusAnterior = existente.status;
+    const resultado = await orcamentoRepository.atualizarStatus(id, usuario_id, statusLimpo);
+
+    if (statusAnterior !== 'APROVADO' && statusLimpo === 'APROVADO') {
+      await estoqueService.processarAprovacaoOrcamento(id, usuario_id);
+    } else if (statusAnterior === 'APROVADO' && statusLimpo === 'CANCELADO') {
+      await estoqueService.estornarOrcamento(id, usuario_id);
+    }
+
+    return resultado;
   },
 
   /**
