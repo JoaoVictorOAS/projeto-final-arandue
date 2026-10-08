@@ -41,7 +41,7 @@ function authMiddleware(req, res, next) {
           mensagem: 'Acesso negado: token de leitura restrito do assistente'
         });
       }
-    } else if (decodificado.scope === 'assistente:operator') {
+    } else if (decodificado.scope === 'assistente:operator' || decodificado.scope === 'assistente:access') {
       const baseUrl = req.baseUrl || '';
       const path = req.path || '';
       const isAssistenteRoute = baseUrl.startsWith('/api/assistente') || path.startsWith('/api/assistente') || baseUrl === '/api/assistente';
@@ -71,5 +71,16 @@ function authMiddleware(req, res, next) {
     });
   }
 }
+
+/**
+ * Utilitário para emissão de Scoped Tokens JWT para o Assistente e MCP.
+ * @param {number} usuarioId
+ * @param {string} [scope='assistente:operator']
+ * @param {string} [expiresIn='15m']
+ * @returns {string}
+ */
+authMiddleware.generateScopedToken = function(usuarioId, scope = 'assistente:operator', expiresIn = '15m') {
+  return jwt.sign({ id: usuarioId, scope }, JWT_SECRET, { expiresIn });
+};
 
 module.exports = authMiddleware;

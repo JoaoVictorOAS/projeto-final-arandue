@@ -9,6 +9,7 @@ const cobrancaRoutes = require('./routes/cobrancaRoutes');
 const movimentacaoRoutes = require('./routes/movimentacaoRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes');
 const assistenteRoutes = require('./routes/assistenteRoutes');
+const notaFiscalRoutes = require('./routes/notaFiscalRoutes');
 const authMiddleware = require('./middlewares/authMiddleware');
 
 const app = express();
@@ -37,5 +38,6 @@ app.use('/api/cobrancas', authMiddleware, cobrancaRoutes);
 app.use('/api/movimentacoes', authMiddleware, movimentacaoRoutes);
 app.use('/api/dashboard', authMiddleware, dashboardRoutes);
 app.use('/api/assistente', authMiddleware, assistenteRoutes);
+app.use('/api/notas-fiscais', authMiddleware, notaFiscalRoutes);
 
 module.exports = app;
