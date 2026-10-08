@@ -18,6 +18,11 @@ const estoqueService = {
     custo_total = null,
     lancar_no_caixa = true
   }) {
+    const qtdNum = Number(quantidade);
+    if (isNaN(qtdNum) || qtdNum <= 0) {
+      throw new Error('A quantidade de entrada deve ser maior que zero.');
+    }
+
     const conn = await pool.getConnection();
     try {
       await conn.beginTransaction();
@@ -176,6 +181,16 @@ const estoqueService = {
 
     try {
       if (shouldManageTransaction) await conn.beginTransaction();
+
+      // Checagem de idempotência: se o orçamento já foi estornado, não duplica créditos ou movimentações
+      const [estornoExistente] = await conn.query(
+        'SELECT id FROM estoque_movimentacoes WHERE orcamento_id = ? AND usuario_id = ? AND tipo = "AJUSTE_INVENTARIO" LIMIT 1',
+        [orcamentoId, usuario_id]
+      );
+      if (estornoExistente.length > 0) {
+        if (shouldManageTransaction) await conn.commit();
+        return true;
+      }
 
       const [movs] = await conn.query(
         'SELECT * FROM estoque_movimentacoes WHERE orcamento_id = ? AND usuario_id = ? AND tipo = "SAIDA_VENDA"',

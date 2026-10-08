@@ -117,6 +117,24 @@ describe('estoqueService - Integrador de Estoque, Produção e Compras', () => {
         })
       ).rejects.toThrow('Insumo não encontrado');
     });
+
+    it('deve falhar ao registrar entrada com quantidade menor ou igual a zero', async () => {
+      await expect(
+        estoqueService.registrarEntradaInsumo(usuarioId, {
+          insumo_id: insumoId,
+          quantidade: 0,
+          unidade: 'g'
+        })
+      ).rejects.toThrow('A quantidade de entrada deve ser maior que zero.');
+
+      await expect(
+        estoqueService.registrarEntradaInsumo(usuarioId, {
+          insumo_id: insumoId,
+          quantidade: -5,
+          unidade: 'kg'
+        })
+      ).rejects.toThrow('A quantidade de entrada deve ser maior que zero.');
+    });
   });
 
   describe('registrarLoteProducao', () => {
@@ -246,6 +264,34 @@ describe('estoqueService - Integrador de Estoque, Produção e Compras', () => {
       expect(Number(insumoDepois.quantidade_atual)).toBe(saldoInsumoAntes + 600);
 
       // Ledger deve conter movimentações de AJUSTE_INVENTARIO referentes ao estorno
+      const [movsAjuste] = await pool.query(
+        'SELECT * FROM estoque_movimentacoes WHERE orcamento_id = ? AND tipo = "AJUSTE_INVENTARIO"',
+        [orcamentoId]
+      );
+      expect(movsAjuste.length).toBe(2);
+    });
+
+    it('deve ser idempotente ao estornar orçamento múltiplas vezes', async () => {
+      // Saldo antes da segunda chamada
+      const insumoAntes = await insumoRepository.buscarPorId(insumoId, usuarioId);
+      const saldoInsumoAntes = Number(insumoAntes.quantidade_atual);
+
+      const [prontoAntes] = await pool.query('SELECT estoque_pronto_atual FROM servicos WHERE id = ?', [servicoProntoId]);
+      const saldoProntoAntes = prontoAntes[0].estoque_pronto_atual;
+
+      // Segunda chamada do estorno para o mesmo orçamento
+      const segundoEstornoOk = await estoqueService.estornarOrcamento(orcamentoId, usuarioId);
+      expect(segundoEstornoOk).toBe(true);
+
+      // Saldo de produto pronto NÃO pode ter aumentado novamente
+      const [prontoDepois] = await pool.query('SELECT estoque_pronto_atual FROM servicos WHERE id = ?', [servicoProntoId]);
+      expect(prontoDepois[0].estoque_pronto_atual).toBe(saldoProntoAntes);
+
+      // Saldo do insumo NÃO pode ter aumentado novamente
+      const insumoDepois = await insumoRepository.buscarPorId(insumoId, usuarioId);
+      expect(Number(insumoDepois.quantidade_atual)).toBe(saldoInsumoAntes);
+
+      // Quantidade de registros de AJUSTE_INVENTARIO no ledger deve continuar exatamente 2
       const [movsAjuste] = await pool.query(
         'SELECT * FROM estoque_movimentacoes WHERE orcamento_id = ? AND tipo = "AJUSTE_INVENTARIO"',
         [orcamentoId]
