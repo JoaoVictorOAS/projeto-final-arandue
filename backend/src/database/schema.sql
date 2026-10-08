@@ -42,6 +42,9 @@ CREATE TABLE IF NOT EXISTS servicos (
     preco DECIMAL(10,2) NOT NULL DEFAULT 0.00,
     categoria VARCHAR(50) DEFAULT 'Geral',
     ativo TINYINT(1) NOT NULL DEFAULT 1,
+    controla_estoque_pronto TINYINT(1) NOT NULL DEFAULT 0,
+    estoque_pronto_atual INT NOT NULL DEFAULT 0,
+    estoque_pronto_minimo INT NOT NULL DEFAULT 0,
     criado_em DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     atualizado_em DATETIME NULL ON UPDATE CURRENT_TIMESTAMP,
     deletado_em DATETIME NULL,
@@ -197,6 +200,80 @@ CREATE TABLE IF NOT EXISTS mensagens (
     CONSTRAINT fk_mensagens_conversa FOREIGN KEY (conversa_id) 
         REFERENCES conversas(id) ON DELETE CASCADE ON UPDATE CASCADE,
     INDEX idx_mensagens_conversa_criado (conversa_id, criado_em)
+) ENGINE=InnoDB;
+
+-- 11. Tabela de Insumos (Módulo de Estoque)
+CREATE TABLE IF NOT EXISTS insumos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    usuario_id INT NOT NULL,
+    nome VARCHAR(150) NOT NULL,
+    unidade_base ENUM('g', 'ml', 'un') NOT NULL,
+    quantidade_atual DECIMAL(12, 3) NOT NULL DEFAULT 0.000,
+    estoque_minimo DECIMAL(12, 3) NOT NULL DEFAULT 0.000,
+    custo_unitario DECIMAL(10, 4) NOT NULL DEFAULT 0.0000,
+    ativo TINYINT(1) NOT NULL DEFAULT 1,
+    criado_em DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    atualizado_em DATETIME NULL ON UPDATE CURRENT_TIMESTAMP,
+    deletado_em DATETIME NULL,
+    CONSTRAINT fk_insumos_usuario FOREIGN KEY (usuario_id) 
+        REFERENCES usuarios(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    INDEX idx_insumos_usuario (usuario_id),
+    INDEX idx_insumos_ativo (usuario_id, ativo)
+) ENGINE=InnoDB;
+
+-- 12. Tabela de Fichas Técnicas
+CREATE TABLE IF NOT EXISTS fichas_tecnicas (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    usuario_id INT NOT NULL,
+    servico_id INT NOT NULL,
+    insumo_id INT NOT NULL,
+    quantidade_necessaria DECIMAL(12, 3) NOT NULL,
+    criado_em DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    atualizado_em DATETIME NULL ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_ft_usuario FOREIGN KEY (usuario_id) 
+        REFERENCES usuarios(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT fk_ft_servico FOREIGN KEY (servico_id) 
+        REFERENCES servicos(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT fk_ft_insumo FOREIGN KEY (insumo_id) 
+        REFERENCES insumos(id) ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT uk_ft_servico_insumo UNIQUE (servico_id, insumo_id),
+    INDEX idx_ft_servico (servico_id),
+    INDEX idx_ft_insumo (insumo_id)
+) ENGINE=InnoDB;
+
+-- 13. Tabela de Movimentações de Estoque
+CREATE TABLE IF NOT EXISTS estoque_movimentacoes (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    usuario_id INT NOT NULL,
+    insumo_id INT NULL,
+    servico_id INT NULL,
+    tipo ENUM(
+        'ENTRADA_COMPRA', 
+        'SAIDA_PRODUCAO', 
+        'ENTRADA_PRODUCAO', 
+        'SAIDA_VENDA', 
+        'AJUSTE_PERDA', 
+        'AJUSTE_INVENTARIO'
+    ) NOT NULL,
+    quantidade DECIMAL(12, 3) NOT NULL,
+    custo_total DECIMAL(10, 2) NULL,
+    movimentacao_financeira_id INT NULL,
+    orcamento_id INT NULL,
+    motivo VARCHAR(255) NULL,
+    data_movimentacao DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_em_usuario FOREIGN KEY (usuario_id) 
+        REFERENCES usuarios(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT fk_em_insumo FOREIGN KEY (insumo_id) 
+        REFERENCES insumos(id) ON DELETE SET NULL ON UPDATE CASCADE,
+    CONSTRAINT fk_em_servico FOREIGN KEY (servico_id) 
+        REFERENCES servicos(id) ON DELETE SET NULL ON UPDATE CASCADE,
+    CONSTRAINT fk_em_mov_fin FOREIGN KEY (movimentacao_financeira_id) 
+        REFERENCES movimentacoes(id) ON DELETE SET NULL ON UPDATE CASCADE,
+    CONSTRAINT fk_em_orcamento FOREIGN KEY (orcamento_id) 
+        REFERENCES orcamentos(id) ON DELETE SET NULL ON UPDATE CASCADE,
+    INDEX idx_em_usuario_data (usuario_id, data_movimentacao),
+    INDEX idx_em_insumo (insumo_id),
+    INDEX idx_em_servico (servico_id)
 ) ENGINE=InnoDB;
 
 SET FOREIGN_KEY_CHECKS = 1;
