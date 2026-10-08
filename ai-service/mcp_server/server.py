@@ -26,6 +26,12 @@ async def _fetch(endpoint: str, params: Optional[Dict[str, Any]] = None) -> Dict
                 # Token expirado ou sem permissão
                 return {"erro": "Acesso não autorizado ou sessão expirada no backend"}
             if resp.status_code != 200:
+                try:
+                    err_data = resp.json()
+                    if isinstance(err_data, dict) and err_data.get("mensagem"):
+                        return {"erro": err_data.get("mensagem")}
+                except Exception:
+                    pass
                 return {"erro": f"Erro do servidor (status {resp.status_code})"}
             data = resp.json()
             return data.get("dados", {})
@@ -278,6 +284,193 @@ async def cadastrar_agendamento(
         "agendamento_id": agendamento.get("id"),
         "data_hora": agendamento.get("data_hora"),
         "status": agendamento.get("status")
+    }
+
+@mcp_server_app.tool()
+async def emitir_nfse_nacional(
+    destinatario_nome: str,
+    destinatario_documento: str,
+    discriminacao_servico: str,
+    valor: float,
+    codigo_tributacao_nacional: str = "01.07.01",
+    destinatario_email: str = "",
+    gerar_caixa: bool = True
+) -> Dict[str, Any]:
+    """Emite uma Nota Fiscal de Serviços Eletrônica (NFS-e Padrão Nacional) e opcionalmente registra no livro caixa."""
+    payload = {
+        "destinatario_nome": destinatario_nome.strip(),
+        "destinatario_documento": destinatario_documento.strip(),
+        "discriminacao_servico": discriminacao_servico.strip(),
+        "valor": float(valor),
+        "codigo_tributacao_nacional": (codigo_tributacao_nacional or "01.07.01").strip(),
+        "destinatario_email": (destinatario_email or "").strip(),
+        "gerar_caixa": bool(gerar_caixa)
+    }
+    res = await _post("/notas-fiscais/nfse", payload)
+    if not res.get("sucesso"):
+        return {"erro": res.get("erro", "Erro ao emitir NFS-e")}
+    dados = res.get("dados", {})
+    return {
+        "mensagem": f"NFS-e emitida com sucesso! (Número: {dados.get('numero')}, Série: {dados.get('serie')})",
+        "nota_id": dados.get("id"),
+        "tipo": "NFSE",
+        "numero": dados.get("numero"),
+        "serie": dados.get("serie"),
+        "chave_acesso": dados.get("chave_acesso"),
+        "protocolo": dados.get("protocolo_autorizacao"),
+        "valor": float(dados.get("valor_liquido", dados.get("valor_total", valor)) or valor),
+        "status": dados.get("status", "EMITIDA")
+    }
+
+@mcp_server_app.tool()
+async def emitir_nfe_produtos(
+    destinatario_nome: str,
+    destinatario_documento: str,
+    itens: List[Dict[str, Any]],
+    natureza_operacao: str = "Venda de mercadorias",
+    gerar_caixa: bool = True
+) -> Dict[str, Any]:
+    """Emite uma Nota Fiscal Eletrônica de Produtos (NF-e Modelo 55) com detalhamento de itens."""
+    payload = {
+        "destinatario_nome": destinatario_nome.strip(),
+        "destinatario_documento": destinatario_documento.strip(),
+        "itens": itens if isinstance(itens, list) else [],
+        "natureza_operacao": (natureza_operacao or "Venda de mercadorias").strip(),
+        "gerar_caixa": bool(gerar_caixa)
+    }
+    res = await _post("/notas-fiscais/nfe", payload)
+    if not res.get("sucesso"):
+        return {"erro": res.get("erro", "Erro ao emitir NF-e")}
+    dados = res.get("dados", {})
+    return {
+        "mensagem": f"NF-e emitida com sucesso! (Número: {dados.get('numero')}, Série: {dados.get('serie')})",
+        "nota_id": dados.get("id"),
+        "tipo": "NFE",
+        "numero": dados.get("numero"),
+        "serie": dados.get("serie"),
+        "chave_acesso": dados.get("chave_acesso"),
+        "protocolo": dados.get("protocolo_autorizacao"),
+        "valor_total": float(dados.get("valor_total", 0) or 0),
+        "status": dados.get("status", "EMITIDA")
+    }
+
+@mcp_server_app.tool()
+async def emitir_nfce_consumidor(
+    itens: List[Dict[str, Any]],
+    forma_pagamento: str = "DINHEIRO",
+    destinatario_cpf: str = "",
+    gerar_caixa: bool = True
+) -> Dict[str, Any]:
+    """Emite uma Nota Fiscal de Consumidor Eletrônica (NFC-e Modelo 65) no varejo."""
+    payload = {
+        "itens": itens if isinstance(itens, list) else [],
+        "forma_pagamento": (forma_pagamento or "DINHEIRO").strip(),
+        "destinatario_cpf": (destinatario_cpf or "").strip(),
+        "destinatario_documento": (destinatario_cpf or "").strip(),
+        "gerar_caixa": bool(gerar_caixa)
+    }
+    res = await _post("/notas-fiscais/nfce", payload)
+    if not res.get("sucesso"):
+        return {"erro": res.get("erro", "Erro ao emitir NFC-e")}
+    dados = res.get("dados", {})
+    return {
+        "mensagem": f"NFC-e emitida com sucesso! (Número: {dados.get('numero')}, Série: {dados.get('serie')})",
+        "nota_id": dados.get("id"),
+        "tipo": "NFCE",
+        "numero": dados.get("numero"),
+        "serie": dados.get("serie"),
+        "chave_acesso": dados.get("chave_acesso"),
+        "protocolo": dados.get("protocolo_autorizacao"),
+        "valor_total": float(dados.get("valor_total", 0) or 0),
+        "forma_pagamento": dados.get("forma_pagamento", forma_pagamento),
+        "status": dados.get("status", "EMITIDA")
+    }
+
+@mcp_server_app.tool()
+async def listar_notas_fiscais(
+    tipo: Optional[str] = None,
+    status: Optional[str] = None,
+    limite: int = 20
+) -> Dict[str, Any]:
+    """Lista histórico de notas fiscais emitidas pelo MEI com filtros opcionais por tipo (NFSE, NFE, NFCE) e status."""
+    limite = min(max(1, limite), 50)
+    params = {"limite": limite}
+    if tipo:
+        params["tipo"] = tipo.strip().upper()
+    if status:
+        params["status"] = status.strip().upper()
+
+    dados = await _fetch("/notas-fiscais", params=params)
+    if isinstance(dados, dict) and "erro" in dados:
+        return dados
+
+    lista = dados if isinstance(dados, list) else []
+    notas_resumidas = []
+    for n in lista[:limite]:
+        notas_resumidas.append({
+            "id": n.get("id"),
+            "tipo": n.get("tipo"),
+            "numero": n.get("numero"),
+            "serie": n.get("serie"),
+            "status": n.get("status"),
+            "destinatario": n.get("destinatario_nome"),
+            "valor": float(n.get("valor_liquido", n.get("valor_total", 0)) or 0),
+            "data_emissao": str(n.get("data_emissao", "")),
+            "chave_acesso": n.get("chave_acesso")
+        })
+    return {
+        "total": len(lista),
+        "notas": notas_resumidas
+    }
+
+@mcp_server_app.tool()
+async def consultar_nota_fiscal(
+    nota_id: Optional[Any] = None,
+    chave_acesso: Optional[str] = None
+) -> Dict[str, Any]:
+    """Consulta os dados detalhados de uma nota fiscal por ID ou chave de acesso, incluindo itens e DANFE."""
+    identificador = str(nota_id).strip() if nota_id is not None and str(nota_id).strip() else (chave_acesso or "").strip()
+    if not identificador:
+        return {"erro": "É necessário informar nota_id ou chave_acesso para consulta"}
+
+    dados = await _fetch(f"/notas-fiscais/{identificador}")
+    if isinstance(dados, dict) and "erro" in dados:
+        return dados
+
+    return {
+        "nota_id": dados.get("id"),
+        "tipo": dados.get("tipo"),
+        "status": dados.get("status"),
+        "numero": dados.get("numero"),
+        "serie": dados.get("serie"),
+        "chave_acesso": dados.get("chave_acesso"),
+        "protocolo": dados.get("protocolo_autorizacao"),
+        "destinatario_nome": dados.get("destinatario_nome"),
+        "destinatario_documento": dados.get("destinatario_documento"),
+        "valor_total": float(dados.get("valor_total", 0) or 0),
+        "valor_liquido": float(dados.get("valor_liquido", 0) or 0),
+        "data_emissao": str(dados.get("data_emissao", "")),
+        "itens": dados.get("itens", []),
+        "danfe_simplificado": dados.get("danfe")
+    }
+
+@mcp_server_app.tool()
+async def cancelar_nota_fiscal(nota_id: Any, motivo: str) -> Dict[str, Any]:
+    """Cancela uma nota fiscal autorizada informando a justificativa legal (mínimo de 15 caracteres)."""
+    if not nota_id:
+        return {"erro": "Identificador da nota fiscal é obrigatório para cancelamento"}
+
+    payload = {"motivo": (motivo or "").strip()}
+    res = await _post(f"/notas-fiscais/{nota_id}/cancelar", payload)
+    if not res.get("sucesso"):
+        return {"erro": res.get("erro", "Erro ao cancelar nota fiscal")}
+    dados = res.get("dados", {})
+    return {
+        "mensagem": f"Nota fiscal #{dados.get('numero', nota_id)} cancelada com sucesso!",
+        "nota_id": dados.get("id", nota_id),
+        "status": dados.get("status", "CANCELADA"),
+        "motivo": dados.get("motivo_cancelamento", motivo),
+        "data_cancelamento": str(dados.get("data_cancelamento", ""))
     }
 
 if __name__ == "__main__":
