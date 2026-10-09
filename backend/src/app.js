@@ -11,6 +11,7 @@ const dashboardRoutes = require('./routes/dashboardRoutes');
 const assistenteRoutes = require('./routes/assistenteRoutes');
 const notaFiscalRoutes = require('./routes/notaFiscalRoutes');
 const estoqueRoutes = require('./routes/estoqueRoutes');
+const configuracoesRoutes = require('./routes/configuracoesRoutes');
 const authMiddleware = require('./middlewares/authMiddleware');
 
 const app = express();
@@ -49,5 +50,6 @@ app.use('/api/dashboard', authMiddleware, dashboardRoutes);
 app.use('/api/assistente', authMiddleware, assistenteRoutes);
 app.use('/api/notas-fiscais', authMiddleware, notaFiscalRoutes);
 app.use('/api/estoque', authMiddleware, estoqueRoutes);
+app.use('/api/configuracoes', authMiddleware, configuracoesRoutes);
 
 module.exports = app;
