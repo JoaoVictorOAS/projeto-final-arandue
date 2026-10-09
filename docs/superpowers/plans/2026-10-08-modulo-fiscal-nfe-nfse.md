@@ -29,7 +29,7 @@
 **Interfaces:**
 - Produz: Tabelas `notas_fiscais` e `nota_fiscal_itens` no banco MySQL com chaves estrangeiras, índices e constraints.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 Criar `backend/tests/integration/migrationFiscal.test.js` verificando que a migração 005 cria com sucesso as tabelas `notas_fiscais` e `nota_fiscal_itens` com todas as colunas mandatórias.
 
 ```javascript
@@ -90,18 +90,18 @@ describe('Migração 005: Módulo Fiscal', () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 Executar: `npm --prefix backend test tests/integration/migrationFiscal.test.js`
 Esperado: FAIL (arquivo de migração inexistente).
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 Criar `backend/src/database/migrations/005_modulo_fiscal.sql` com DDL completo e atualizar `backend/src/database/schema.sql`.
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 Executar: `npm --prefix backend test tests/integration/migrationFiscal.test.js`
 Esperado: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 ```bash
 git add backend/src/database/migrations/005_modulo_fiscal.sql backend/src/database/schema.sql backend/tests/integration/migrationFiscal.test.js
 git commit -m "feat(database): adicionar migracao e schema do modulo fiscal"
@@ -119,7 +119,7 @@ git commit -m "feat(database): adicionar migracao e schema do modulo fiscal"
 - Produz: `function calcularDigitoVerificadorModulo11(chave43)` -> `string (1 digito)`
 - Produz: `function gerarChaveAcesso({ cUF, anoMes, cnpj, modelo, serie, numero, tpEmis, codigoNumerico })` -> `string (44 digitos)`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 Criar `backend/tests/unit/geradorChaveAcesso.test.js` validando o cálculo do Módulo 11 (pesos de 2 a 9) e geração da chave de 44 dígitos com padding exato.
 
 ```javascript
@@ -154,18 +154,18 @@ describe('Gerador de Chave de Acesso SEFAZ (Módulo 11)', () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 Executar: `npm --prefix backend test tests/unit/geradorChaveAcesso.test.js`
 Esperado: FAIL (módulo inexistente).
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 Implementar `backend/src/services/fiscal/geradorChaveAcesso.js` com limpeza de caracteres e ponderação Módulo 11 conforme manual SEFAZ.
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 Executar: `npm --prefix backend test tests/unit/geradorChaveAcesso.test.js`
 Esperado: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 ```bash
 git add backend/src/services/fiscal/geradorChaveAcesso.js backend/tests/unit/geradorChaveAcesso.test.js
 git commit -m "feat(fiscal): implementar gerador de chave de acesso SEFAZ modulo 11"
@@ -185,21 +185,21 @@ git commit -m "feat(fiscal): implementar gerador de chave de acesso SEFAZ modulo
 - Produz: `function gerarXmlNfe({ chave, dadosEmitente, dadosDestinatario, itens, totais, protocolo, modelo, serie, numero })` -> `string (XML NFe)`
 - Produz: `function gerarDanfeSimplificado({ nota, itens, emitente })` -> `string (HTML formatado e estruturado)`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 Criar `backend/tests/unit/geradorXmlEDanfe.test.js` validando que os XMLs contêm tags mandatórias e as legendas de MEI/Simples Nacional, e que o DANFE gera dados legíveis com protocolo e chave.
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 Executar: `npm --prefix backend test tests/unit/geradorXmlEDanfe.test.js`
 Esperado: FAIL.
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 Criar `backend/src/services/fiscal/geradorXmlFiscal.js` e `backend/src/services/fiscal/geradorDanfeSimplificado.js`.
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 Executar: `npm --prefix backend test tests/unit/geradorXmlEDanfe.test.js`
 Esperado: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 ```bash
 git add backend/src/services/fiscal/geradorXmlFiscal.js backend/src/services/fiscal/geradorDanfeSimplificado.js backend/tests/unit/geradorXmlEDanfe.test.js
 git commit -m "feat(fiscal): implementar gerador de XML padrao nacional e DANFE simplificado"
@@ -220,21 +220,21 @@ git commit -m "feat(fiscal): implementar gerador de XML padrao nacional e DANFE 
 - Produz: `async function cancelarNotaFiscal(usuarioId, notaId, motivo)` -> `{ sucesso, nota }`
 - Produz: `async function consultarNotaFiscal(usuarioId, notaId)` -> `{ sucesso, nota, itens, danfe }`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 Criar `backend/tests/unit/fiscalEngine.test.js` testando emissão de NFS-e, emissão de NF-e com itens, lançamento financeiro em `movimentacoes` quando `gerar_caixa: true`, cancelamento com validação de motivo (>= 15 caracteres) e incremento sequencial atômico de numeração.
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 Executar: `npm --prefix backend test tests/unit/fiscalEngine.test.js`
 Esperado: FAIL.
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 Implementar `backend/src/services/fiscal/fiscalEngine.js` com controle transacional e integração com o livro caixa.
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 Executar: `npm --prefix backend test tests/unit/fiscalEngine.test.js`
 Esperado: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 ```bash
 git add backend/src/services/fiscal/fiscalEngine.js backend/tests/unit/fiscalEngine.test.js
 git commit -m "feat(fiscal): implementar motor fiscal transacional e integracao de caixa"
@@ -259,7 +259,7 @@ git commit -m "feat(fiscal): implementar motor fiscal transacional e integracao 
 - Rota: `GET /api/notas-fiscais/:id/danfe`
 - Rota: `POST /api/notas-fiscais/:id/cancelar`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 Criar `backend/tests/integration/notasFiscais.test.js` com testes de integração via Supertest:
   - Autenticação JWT exigida em todas as rotas
   - Emissão bem-sucedida de NFS-e, NF-e e NFC-e
@@ -268,18 +268,18 @@ Criar `backend/tests/integration/notasFiscais.test.js` com testes de integraçã
   - Cancelamento com motivo válido e rejeição se motivo < 15 caracteres
   - Isolamento multi-tenant: garantir que usuário A não consulta nem cancela nota do usuário B.
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 Executar: `npm --prefix backend test tests/integration/notasFiscais.test.js`
 Esperado: FAIL.
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 Implementar `backend/src/controllers/notaFiscalController.js`, `backend/src/routes/notaFiscalRoutes.js` e registrar `app.use('/api/notas-fiscais', authMiddleware, notaFiscalRoutes)` em `backend/src/app.js`.
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 Executar: `npm --prefix backend test tests/integration/notasFiscais.test.js`
 Esperado: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 ```bash
 git add backend/src/controllers/notaFiscalController.js backend/src/routes/notaFiscalRoutes.js backend/src/app.js backend/tests/integration/notasFiscais.test.js
 git commit -m "feat(api): adicionar rotas REST e controller do modulo fiscal"
@@ -302,24 +302,24 @@ git commit -m "feat(api): adicionar rotas REST e controller do modulo fiscal"
   - `consultar_nota_fiscal(nota_id=None, chave_acesso=None)`
   - `cancelar_nota_fiscal(nota_id, motivo)`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 Criar `ai-service/tests/test_mcp_fiscal.py` testando:
   - Verificação de segurança de schema: nenhuma das novas ferramentas expõe `usuario_id` ou `tenant_id`.
   - Simulação de emissão de NFS-e, NF-e, NFC-e, listagem e cancelamento via mock HTTP (`respx`).
   - Tratamento de erro adequado quando a API REST retorna falha.
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 Executar: `.venv/bin/pytest ai-service/tests/test_mcp_fiscal.py`
 Esperado: FAIL (ferramentas não registradas).
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 Adicionar as 6 ferramentas decoradas com `@mcp_server_app.tool()` em `ai-service/mcp_server/server.py`.
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 Executar: `.venv/bin/pytest ai-service/tests/test_mcp_fiscal.py`
 Esperado: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 ```bash
 git add ai-service/mcp_server/server.py ai-service/tests/test_mcp_fiscal.py
 git commit -m "feat(mcp): adicionar ferramentas MCP para emissao e gestao fiscal"
@@ -336,23 +336,23 @@ git commit -m "feat(mcp): adicionar ferramentas MCP para emissao e gestao fiscal
 **Interfaces:**
 - Atualiza: `SYSTEM_PROMPT` para instruir o Gemini a acionar ferramentas de emissão fiscal quando o MEI solicitar emissão de NFS-e, NF-e ou NFC-e.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 Criar `backend/tests/e2e-fiscal-assistente.test.js` validando o fluxo ponta a ponta: emissão fiscal via token com escopo `assistente:access`, garantindo que o assistente consegue emitir e consultar notas respeitando a segregação de tenants.
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 Executar: `npm --prefix backend test tests/e2e-fiscal-assistente.test.js`
 Esperado: FAIL.
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 Atualizar `SYSTEM_PROMPT` em `ai-service/app/llm/prompts.py` adicionando diretrizes fiscais e exemplos práticos para o MEI.
 
-- [ ] **Step 4: Run all test suites to verify full pass**
+- [x] **Step 4: Run all test suites to verify full pass**
 Executar:
   - `npm run test:backend`
   - `npm run test:ai`
 Esperado: Todos os testes passando com 100% de sucesso.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 ```bash
 git add ai-service/app/llm/prompts.py backend/tests/e2e-fiscal-assistente.test.js
 git commit -m "feat(llm): atualizar prompt do assistente e adicionar testes e2e fiscais"

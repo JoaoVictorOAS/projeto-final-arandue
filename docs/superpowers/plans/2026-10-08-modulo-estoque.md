@@ -28,7 +28,7 @@
 **Interfaces:**
 - Produces: Tabelas `insumos`, `fichas_tecnicas`, `estoque_movimentacoes` e colunas `controla_estoque_pronto`, `estoque_pronto_atual`, `estoque_pronto_minimo` em `servicos`.
 
-- [ ] **Step 1: Escrever teste de integração para validar existência das tabelas após migração**
+- [x] **Step 1: Escrever teste de integração para validar existência das tabelas após migração**
 
 Criar arquivo `backend/tests/integration/migrationEstoque.test.js`:
 ```javascript
@@ -72,7 +72,7 @@ describe('Migração 004 - Módulo de Estoque', () => {
 });
 ```
 
-- [ ] **Step 2: Executar teste para verificar que falha antes da criação da migration**
+- [x] **Step 2: Executar teste para verificar que falha antes da criação da migration**
 
 Executar:
 ```bash
@@ -80,7 +80,7 @@ npm --prefix backend test -- backend/tests/integration/migrationEstoque.test.js
 ```
 Resultado esperado: FALHA (arquivo `004_estoque.sql` inexistente).
 
-- [ ] **Step 3: Criar script de migração `004_estoque.sql` e atualizar `schema.sql`**
+- [x] **Step 3: Criar script de migração `004_estoque.sql` e atualizar `schema.sql`**
 
 Criar `backend/src/database/migrations/004_estoque.sql`:
 ```sql
@@ -176,7 +176,7 @@ DEALLOCATE PREPARE stmt;
 
 Atualizar também `backend/src/database/schema.sql` anexando o DDL completo das tabelas de estoque no final do arquivo.
 
-- [ ] **Step 4: Executar teste e validar que passa**
+- [x] **Step 4: Executar teste e validar que passa**
 
 Executar:
 ```bash
@@ -184,7 +184,7 @@ npm --prefix backend test -- backend/tests/integration/migrationEstoque.test.js
 ```
 Resultado esperado: PASS.
 
-- [ ] **Step 5: Commit da Task 1**
+- [x] **Step 5: Commit da Task 1**
 
 ```bash
 git add backend/src/database/migrations/004_estoque.sql backend/src/database/schema.sql backend/tests/integration/migrationEstoque.test.js
@@ -205,7 +205,7 @@ git commit -m "feat(database): adicionar migracao e schema do modulo de estoque 
   - `calcularCustoMedioPonderado(qtdAtual, custoAtual, qtdNova, custoNovo)` -> `number`
   - `formatarGrandezaAmigavel(quantidadeBase, unidadeBase)` -> `string`
 
-- [ ] **Step 1: Escrever teste unitário para conversão de unidades e CMP**
+- [x] **Step 1: Escrever teste unitário para conversão de unidades e CMP**
 
 Criar `backend/tests/unit/conversorUnidades.test.js`:
 ```javascript
@@ -265,7 +265,7 @@ describe('conversorUnidades', () => {
 });
 ```
 
-- [ ] **Step 2: Executar teste para verificar falha**
+- [x] **Step 2: Executar teste para verificar falha**
 
 Executar:
 ```bash
@@ -273,7 +273,7 @@ npm --prefix backend test -- backend/tests/unit/conversorUnidades.test.js
 ```
 Resultado esperado: FALHA (módulo `conversorUnidades` não existe).
 
-- [ ] **Step 3: Implementar `backend/src/utils/conversorUnidades.js`**
+- [x] **Step 3: Implementar `backend/src/utils/conversorUnidades.js`**
 
 Criar `backend/src/utils/conversorUnidades.js`:
 ```javascript
@@ -387,7 +387,7 @@ module.exports = {
 };
 ```
 
-- [ ] **Step 4: Executar teste e validar aprovação**
+- [x] **Step 4: Executar teste e validar aprovação**
 
 Executar:
 ```bash
@@ -395,7 +395,7 @@ npm --prefix backend test -- backend/tests/unit/conversorUnidades.test.js
 ```
 Resultado esperado: PASS.
 
-- [ ] **Step 5: Commit da Task 2**
+- [x] **Step 5: Commit da Task 2**
 
 ```bash
 git add backend/src/utils/conversorUnidades.js backend/tests/unit/conversorUnidades.test.js
@@ -416,7 +416,7 @@ git commit -m "feat(estoque): adicionar utilitario de conversao de unidades e cu
   - `insumoRepository`: `criar`, `listar`, `buscarPorId`, `atualizar`, `atualizarSaldoECusto`, `remover`
   - `fichaTecnicaRepository`: `substituirFicha`, `obterFichaPorServico`, `obterInsumosPorServicos`
 
-- [ ] **Step 1: Escrever teste de integração para os repositórios**
+- [x] **Step 1: Escrever teste de integração para os repositórios**
 
 Criar `backend/tests/integration/repositoriosEstoque.test.js`:
 ```javascript
@@ -489,7 +489,7 @@ describe('Repositórios de Estoque e Ficha Técnica', () => {
 });
 ```
 
-- [ ] **Step 2: Executar teste para verificar falha**
+- [x] **Step 2: Executar teste para verificar falha**
 
 Executar:
 ```bash
@@ -497,7 +497,7 @@ npm --prefix backend test -- backend/tests/integration/repositoriosEstoque.test.
 ```
 Resultado esperado: FALHA (repositórios não existem).
 
-- [ ] **Step 3: Implementar `backend/src/repositories/insumoRepository.js` e `fichaTecnicaRepository.js`**
+- [x] **Step 3: Implementar `backend/src/repositories/insumoRepository.js` e `fichaTecnicaRepository.js`**
 
 Criar `backend/src/repositories/insumoRepository.js`:
 ```javascript
@@ -662,7 +662,7 @@ const fichaTecnicaRepository = {
 module.exports = fichaTecnicaRepository;
 ```
 
-- [ ] **Step 4: Executar teste e validar que passa**
+- [x] **Step 4: Executar teste e validar que passa**
 
 Executar:
 ```bash
@@ -670,7 +670,7 @@ npm --prefix backend test -- backend/tests/integration/repositoriosEstoque.test.
 ```
 Resultado esperado: PASS.
 
-- [ ] **Step 5: Commit da Task 3**
+- [x] **Step 5: Commit da Task 3**
 
 ```bash
 git add backend/src/repositories/insumoRepository.js backend/src/repositories/fichaTecnicaRepository.js backend/tests/integration/repositoriosEstoque.test.js
@@ -690,7 +690,7 @@ git commit -m "feat(estoque): implementar repositorios de insumos e fichas tecni
   - `registrarMovimentacao({ usuario_id, insumo_id, servico_id, tipo, quantidade, custo_total, movimentacao_financeira_id, orcamento_id, motivo }, connection)`
   - `listarMovimentacoes(usuario_id, filtros, connection)`
 
-- [ ] **Step 1: Escrever teste de integração para o ledger de movimentações**
+- [x] **Step 1: Escrever teste de integração para o ledger de movimentações**
 
 Criar `backend/tests/integration/estoqueMovimentacaoRepository.test.js`:
 ```javascript
@@ -731,7 +731,7 @@ describe('estoqueMovimentacaoRepository', () => {
 });
 ```
 
-- [ ] **Step 2: Executar teste para verificar falha**
+- [x] **Step 2: Executar teste para verificar falha**
 
 Executar:
 ```bash
@@ -739,7 +739,7 @@ npm --prefix backend test -- backend/tests/integration/estoqueMovimentacaoReposi
 ```
 Resultado esperado: FALHA.
 
-- [ ] **Step 3: Implementar `backend/src/repositories/estoqueMovimentacaoRepository.js`**
+- [x] **Step 3: Implementar `backend/src/repositories/estoqueMovimentacaoRepository.js`**
 
 Criar `backend/src/repositories/estoqueMovimentacaoRepository.js`:
 ```javascript
@@ -817,7 +817,7 @@ const estoqueMovimentacaoRepository = {
 module.exports = estoqueMovimentacaoRepository;
 ```
 
-- [ ] **Step 4: Executar teste e validar que passa**
+- [x] **Step 4: Executar teste e validar que passa**
 
 Executar:
 ```bash
@@ -825,7 +825,7 @@ npm --prefix backend test -- backend/tests/integration/estoqueMovimentacaoReposi
 ```
 Resultado esperado: PASS.
 
-- [ ] **Step 5: Commit da Task 4**
+- [x] **Step 5: Commit da Task 4**
 
 ```bash
 git add backend/src/repositories/estoqueMovimentacaoRepository.js backend/tests/integration/estoqueMovimentacaoRepository.test.js
@@ -844,7 +844,7 @@ git commit -m "feat(estoque): implementar repositorio de historico e ledger de m
 - Produces:
   - `simularCapacidade({ ingredientesFicha, insumosDisponiveis })` -> `{ rendimentoMaximo, insumoLimitante, sobras, custoUnitario, custoTotalProducao }`
 
-- [ ] **Step 1: Escrever teste unitário para o motor de simulação**
+- [x] **Step 1: Escrever teste unitário para o motor de simulação**
 
 Criar `backend/tests/unit/simuladorProducaoService.test.js`:
 ```javascript
@@ -891,7 +891,7 @@ describe('simuladorProducaoService', () => {
 });
 ```
 
-- [ ] **Step 2: Executar teste para verificar falha**
+- [x] **Step 2: Executar teste para verificar falha**
 
 Executar:
 ```bash
@@ -899,7 +899,7 @@ npm --prefix backend test -- backend/tests/unit/simuladorProducaoService.test.js
 ```
 Resultado esperado: FALHA.
 
-- [ ] **Step 3: Implementar `backend/src/services/simuladorProducaoService.js`**
+- [x] **Step 3: Implementar `backend/src/services/simuladorProducaoService.js`**
 
 Criar `backend/src/services/simuladorProducaoService.js`:
 ```javascript
@@ -994,7 +994,7 @@ module.exports = {
 };
 ```
 
-- [ ] **Step 4: Executar teste e validar que passa**
+- [x] **Step 4: Executar teste e validar que passa**
 
 Executar:
 ```bash
@@ -1002,7 +1002,7 @@ npm --prefix backend test -- backend/tests/unit/simuladorProducaoService.test.js
 ```
 Resultado esperado: PASS.
 
-- [ ] **Step 5: Commit da Task 5**
+- [x] **Step 5: Commit da Task 5**
 
 ```bash
 git add backend/src/services/simuladorProducaoService.js backend/tests/unit/simuladorProducaoService.test.js
@@ -1025,7 +1025,7 @@ git commit -m "feat(estoque): implementar motor de simulacao de producao e calcu
   - `estornarOrcamento(orcamentoId, usuario_id, connection)` -> Devolve insumos/produtos prontos.
   - `simularProducao(usuario_id, params)` -> Conecta com `simuladorProducaoService`.
 
-- [ ] **Step 1: Escrever teste de integração para o `estoqueService`**
+- [x] **Step 1: Escrever teste de integração para o `estoqueService`**
 
 Criar `backend/tests/integration/estoqueService.test.js`:
 ```javascript
@@ -1083,7 +1083,7 @@ describe('estoqueService', () => {
 });
 ```
 
-- [ ] **Step 2: Executar teste para verificar falha**
+- [x] **Step 2: Executar teste para verificar falha**
 
 Executar:
 ```bash
@@ -1091,7 +1091,7 @@ npm --prefix backend test -- backend/tests/integration/estoqueService.test.js
 ```
 Resultado esperado: FALHA.
 
-- [ ] **Step 3: Implementar `backend/src/services/estoqueService.js`**
+- [x] **Step 3: Implementar `backend/src/services/estoqueService.js`**
 
 Criar `backend/src/services/estoqueService.js`:
 ```javascript
@@ -1423,7 +1423,7 @@ const estoqueService = {
 module.exports = estoqueService;
 ```
 
-- [ ] **Step 4: Executar teste e validar que passa**
+- [x] **Step 4: Executar teste e validar que passa**
 
 Executar:
 ```bash
@@ -1431,7 +1431,7 @@ npm --prefix backend test -- backend/tests/integration/estoqueService.test.js
 ```
 Resultado esperado: PASS.
 
-- [ ] **Step 5: Commit da Task 6**
+- [x] **Step 5: Commit da Task 6**
 
 ```bash
 git add backend/src/services/estoqueService.js backend/tests/integration/estoqueService.test.js
@@ -1450,7 +1450,7 @@ git commit -m "feat(estoque): implementar servico integrador de estoque, produca
 - Consumes: `estoqueService.processarAprovacaoOrcamento`, `estoqueService.estornarOrcamento`
 - Modifies: `atualizarStatus` em `orcamentoService.js`
 
-- [ ] **Step 1: Escrever teste de integração validando baixa de estoque ao aprovar orçamento**
+- [x] **Step 1: Escrever teste de integração validando baixa de estoque ao aprovar orçamento**
 
 Criar `backend/tests/integration/fluxoOrcamentoEstoque.test.js`:
 ```javascript
@@ -1522,7 +1522,7 @@ describe('Integração Orçamento ↔ Estoque', () => {
 });
 ```
 
-- [ ] **Step 2: Executar teste para verificar falha (pois `orcamentoService` ainda não chama `estoqueService`)**
+- [x] **Step 2: Executar teste para verificar falha (pois `orcamentoService` ainda não chama `estoqueService`)**
 
 Executar:
 ```bash
@@ -1530,7 +1530,7 @@ npm --prefix backend test -- backend/tests/integration/fluxoOrcamentoEstoque.tes
 ```
 Resultado esperado: FALHA (saldo permanece 5000).
 
-- [ ] **Step 3: Conectar chamada do `estoqueService` em `backend/src/services/orcamentoService.js`**
+- [x] **Step 3: Conectar chamada do `estoqueService` em `backend/src/services/orcamentoService.js`**
 
 Em `backend/src/services/orcamentoService.js`:
 1. Importar `const estoqueService = require('./estoqueService');`.
@@ -1548,7 +1548,7 @@ Em `backend/src/services/orcamentoService.js`:
     return resultado;
 ```
 
-- [ ] **Step 4: Executar teste e validar que passa**
+- [x] **Step 4: Executar teste e validar que passa**
 
 Executar:
 ```bash
@@ -1556,7 +1556,7 @@ npm --prefix backend test -- backend/tests/integration/fluxoOrcamentoEstoque.tes
 ```
 Resultado esperado: PASS.
 
-- [ ] **Step 5: Commit da Task 7**
+- [x] **Step 5: Commit da Task 7**
 
 ```bash
 git add backend/src/services/orcamentoService.js backend/tests/integration/fluxoOrcamentoEstoque.test.js
@@ -1576,7 +1576,7 @@ git commit -m "feat(estoque): conectar baixa e estorno automatico de estoque ao 
 **Interfaces:**
 - Produces: Rotas `/api/estoque/*` autenticadas via `authMiddleware`.
 
-- [ ] **Step 1: Escrever teste de API REST com Supertest**
+- [x] **Step 1: Escrever teste de API REST com Supertest**
 
 Criar `backend/tests/integration/estoqueApi.test.js`:
 ```javascript
@@ -1627,7 +1627,7 @@ describe('API REST /api/estoque', () => {
 });
 ```
 
-- [ ] **Step 2: Executar teste para verificar falha**
+- [x] **Step 2: Executar teste para verificar falha**
 
 Executar:
 ```bash
@@ -1635,7 +1635,7 @@ npm --prefix backend test -- backend/tests/integration/estoqueApi.test.js
 ```
 Resultado esperado: FALHA (rota inexistente 404).
 
-- [ ] **Step 3: Implementar `estoqueController.js`, `estoqueRoutes.js` e registrar em `app.js`**
+- [x] **Step 3: Implementar `estoqueController.js`, `estoqueRoutes.js` e registrar em `app.js`**
 
 Criar `backend/src/controllers/estoqueController.js`:
 ```javascript
@@ -1786,7 +1786,7 @@ const estoqueRoutes = require('./routes/estoqueRoutes');
 app.use('/api/estoque', authMiddleware, estoqueRoutes);
 ```
 
-- [ ] **Step 4: Executar teste e validar que passa**
+- [x] **Step 4: Executar teste e validar que passa**
 
 Executar:
 ```bash
@@ -1794,7 +1794,7 @@ npm --prefix backend test -- backend/tests/integration/estoqueApi.test.js
 ```
 Resultado esperado: PASS.
 
-- [ ] **Step 5: Commit da Task 8**
+- [x] **Step 5: Commit da Task 8**
 
 ```bash
 git add backend/src/controllers/estoqueController.js backend/src/routes/estoqueRoutes.js backend/src/app.js backend/tests/integration/estoqueApi.test.js
@@ -1811,7 +1811,7 @@ git commit -m "feat(estoque): expor endpoints REST do modulo de estoque e produc
 
 **Constraints:** Não modificar arquivos em `ai-service/app/llm/` nem a lógica de seleção de modelos.
 
-- [ ] **Step 1: Escrever teste pytest para as ferramentas MCP de estoque**
+- [x] **Step 1: Escrever teste pytest para as ferramentas MCP de estoque**
 
 Criar `ai-service/tests/test_mcp_estoque.py`:
 ```python
@@ -1849,7 +1849,7 @@ async def test_simular_producao_mcp():
         assert res["dados"]["rendimentoMaximo"] == 2
 ```
 
-- [ ] **Step 2: Executar teste para verificar falha**
+- [x] **Step 2: Executar teste para verificar falha**
 
 Executar:
 ```bash
@@ -1857,7 +1857,7 @@ Executar:
 ```
 Resultado esperado: FALHA (ferramentas não definidas no `server.py`).
 
-- [ ] **Step 3: Adicionar as ferramentas de estoque em `ai-service/mcp_server/server.py`**
+- [x] **Step 3: Adicionar as ferramentas de estoque em `ai-service/mcp_server/server.py`**
 
 Adicionar ao final de `ai-service/mcp_server/server.py`:
 ```python
@@ -1963,7 +1963,7 @@ async def consultar_historico_estoque(limite: int = 20) -> Dict[str, Any]:
     return await _fetch("/estoque/movimentacoes", params={"limite": min(max(1, limite), 50)})
 ```
 
-- [ ] **Step 4: Executar testes pytest e validar aprovação**
+- [x] **Step 4: Executar testes pytest e validar aprovação**
 
 Executar:
 ```bash
@@ -1971,7 +1971,7 @@ Executar:
 ```
 Resultado esperado: PASS.
 
-- [ ] **Step 5: Commit da Task 9**
+- [x] **Step 5: Commit da Task 9**
 
 ```bash
 git add ai-service/mcp_server/server.py ai-service/tests/test_mcp_estoque.py
@@ -1985,7 +1985,7 @@ git commit -m "feat(mcp): adicionar ferramentas mcp de estoque, simulacao e rece
 **Files:**
 - Test: `tests/e2e-estoque-completo.test.js`
 
-- [ ] **Step 1: Escrever teste ponta a ponta do ciclo completo do MEI produtor**
+- [x] **Step 1: Escrever teste ponta a ponta do ciclo completo do MEI produtor**
 
 Criar `tests/e2e-estoque-completo.test.js`:
 ```javascript
@@ -2122,7 +2122,7 @@ describe('E2E - Ciclo Completo do Empreendedor Produtor (Estoque, Receita, Caixa
 });
 ```
 
-- [ ] **Step 2: Executar toda a suíte de testes do projeto para garantir zero regressões**
+- [x] **Step 2: Executar toda a suíte de testes do projeto para garantir zero regressões**
 
 Executar:
 ```bash
@@ -2131,7 +2131,7 @@ npm run test:backend
 ```
 Resultado esperado: Todos os testes passam com sucesso.
 
-- [ ] **Step 3: Commit final da verificação**
+- [x] **Step 3: Commit final da verificação**
 
 ```bash
 git add tests/e2e-estoque-completo.test.js
