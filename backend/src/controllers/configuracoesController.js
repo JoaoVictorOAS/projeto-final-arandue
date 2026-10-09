@@ -306,39 +306,88 @@ const configuracoesController = {
         });
       }
 
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000);
+      const userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 ArandueMEI/1.0';
+      let data = null;
+      let status404 = false;
 
-      let response;
+      // 1. Tenta BrasilAPI
+      const controller1 = new AbortController();
+      const timeout1 = setTimeout(() => controller1.abort(), 6000);
       try {
-        response = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${cnpjLimpo}`, {
-          signal: controller.signal,
-          headers: { 'Accept': 'application/json' }
+        const response1 = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${cnpjLimpo}`, {
+          signal: controller1.signal,
+          headers: {
+            'Accept': 'application/json',
+            'User-Agent': userAgent
+          }
         });
-      } catch (err) {
-        return res.status(502).json({
-          sucesso: false,
-          mensagem: 'Serviço de consulta de CNPJ temporariamente indisponível'
-        });
+        if (response1.status === 404) {
+          status404 = true;
+        } else if (response1.ok) {
+          data = await response1.json();
+        }
+      } catch {
+        // Fallback para próxima fonte
       } finally {
-        clearTimeout(timeoutId);
+        clearTimeout(timeout1);
       }
 
-      if (response.status === 404) {
+      // 2. Fallback: ReceitaWS (se BrasilAPI falhar ou rate limit)
+      if (!data && !status404) {
+        const controller2 = new AbortController();
+        const timeout2 = setTimeout(() => controller2.abort(), 6000);
+        try {
+          const response2 = await fetch(`https://receitaws.com.br/v1/cnpj/${cnpjLimpo}`, {
+            signal: controller2.signal,
+            headers: {
+              'Accept': 'application/json',
+              'User-Agent': userAgent
+            }
+          });
+          if (response2.status === 404) {
+            status404 = true;
+          } else if (response2.ok) {
+            const raw2 = await response2.json();
+            if (raw2.status === 'ERROR') {
+              status404 = true;
+            } else {
+              data = {
+                cnpj: raw2.cnpj,
+                razao_social: raw2.nome,
+                nome_fantasia: raw2.fantasia,
+                cep: raw2.cep,
+                logradouro: raw2.logradouro,
+                numero: raw2.numero,
+                complemento: raw2.complemento,
+                bairro: raw2.bairro,
+                municipio: raw2.municipio,
+                uf: raw2.uf,
+                codigo_municipio_ibge: raw2.municipio_ibge || '',
+                telefone: raw2.telefone,
+                email: raw2.email
+              };
+            }
+          }
+        } catch {
+          // Ambos falharam
+        } finally {
+          clearTimeout(timeout2);
+        }
+      }
+
+      if (status404) {
         return res.status(404).json({
           sucesso: false,
           mensagem: 'CNPJ não encontrado na base da Receita Federal'
         });
       }
 
-      if (!response.ok) {
+      if (!data) {
         return res.status(502).json({
           sucesso: false,
           mensagem: 'Serviço de consulta de CNPJ temporariamente indisponível'
         });
       }
-
-      const data = await response.json();
 
       let logradouro = data.logradouro || '';
       if (
