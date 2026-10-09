@@ -6,7 +6,11 @@
  */
 
 const pool = require('../../config/database');
-const { gerarChaveAcesso } = require('./geradorChaveAcesso');
+const {
+  gerarChaveAcesso,
+  gerarChaveAcessoNfseNacional,
+  obterCodigoUfPorSiglaOuIbge
+} = require('./geradorChaveAcesso');
 const { gerarXmlNfse, gerarXmlNfe } = require('./geradorXmlFiscal');
 const { gerarDanfeSimplificado } = require('./geradorDanfeSimplificado');
 
@@ -112,8 +116,24 @@ async function emitirNfse(usuarioId, payload = {}, connection = null) {
     );
     const numero = Number(numRows[0]?.proximo_numero || 1);
 
-    const protocolo = `NFSE${new Date().getFullYear()}${String(numero).padStart(9, '0')}`;
-    const chaveAcesso = `DPS${String(dadosEmitente.codigoMunicipioIbge).padStart(7, '0')}${String(serie).padStart(3, '0')}${String(numero).padStart(9, '0')}`;
+    const agora = new Date();
+    const anoMes = String(agora.getFullYear()).slice(-2) + String(agora.getMonth() + 1).padStart(2, '0');
+    const codigoNumerico = Math.floor(100000000 + Math.random() * 900000000);
+    const ambienteNota = payload.ambiente || 'HOMOLOGACAO';
+    const ambienteCod = ambienteNota === 'PRODUCAO' ? 1 : 2;
+    const docEmitLimpo = String(dadosEmitente.cnpj || dadosEmitente.documento || '').replace(/\D/g, '');
+    const tipoInscricao = docEmitLimpo.length <= 11 ? 1 : 2;
+
+    const protocolo = payload.protocolo_autorizacao || `NFSE${agora.getFullYear()}${String(numero).padStart(9, '0')}`;
+    const chaveAcesso = gerarChaveAcessoNfseNacional({
+      codigoMunicipioIbge: payload.codigo_municipio_ibge || dadosEmitente.codigoMunicipioIbge || '3550308',
+      ambiente: ambienteCod,
+      tipoInscricao,
+      inscricaoFederal: docEmitLimpo || '00000000000191',
+      numero,
+      anoMes,
+      codigoNumerico
+    });
 
     const dadosTomador = {
       nome: destNome,
@@ -365,8 +385,9 @@ async function emitirNfe(usuarioId, payload = {}, connection = null) {
     const anoMes = String(agora.getFullYear()).slice(-2) + String(agora.getMonth() + 1).padStart(2, '0');
     const codigoNumerico = Math.floor(10000000 + Math.random() * 90000000);
 
+    const cUF = obterCodigoUfPorSiglaOuIbge(dadosEmitente.uf || dadosEmitente.codigoMunicipioIbge);
     const chaveAcesso = gerarChaveAcesso({
-      cUF: 35,
+      cUF,
       anoMes,
       cnpj: dadosEmitente.cnpj,
       modelo: '55',
@@ -612,8 +633,9 @@ async function emitirNfce(usuarioId, payload = {}, connection = null) {
     const anoMes = String(agora.getFullYear()).slice(-2) + String(agora.getMonth() + 1).padStart(2, '0');
     const codigoNumerico = Math.floor(10000000 + Math.random() * 90000000);
 
+    const cUF = obterCodigoUfPorSiglaOuIbge(dadosEmitente.uf || dadosEmitente.codigoMunicipioIbge);
     const chaveAcesso = gerarChaveAcesso({
-      cUF: 35,
+      cUF,
       anoMes,
       cnpj: dadosEmitente.cnpj,
       modelo: '65',

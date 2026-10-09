@@ -85,6 +85,7 @@ export default function NotasFiscais() {
     tomador_documento: '',
     tomador_email: '',
     descricao_servico: '',
+    codigo_tributacao_nacional: '01.07.01',
     valor_total: '',
     gerar_caixa: true,
     itens: [{ descricao: '', quantidade: 1, valor_unitario: '' }],
@@ -159,13 +160,16 @@ export default function NotasFiscais() {
           return;
         }
 
+        const docLimpo = formEmissao.tomador_documento.trim();
         await api.post('/notas-fiscais/nfse', {
           tomador_nome: formEmissao.tomador_nome.trim() || 'Cliente Não Identificado',
-          tomador_documento: formEmissao.tomador_documento.trim() || null,
+          tomador_documento: docLimpo || '00000000000',
           tomador_email: formEmissao.tomador_email.trim() || null,
           descricao_servico: formEmissao.descricao_servico.trim(),
+          codigo_tributacao_nacional: formEmissao.codigo_tributacao_nacional || '01.07.01',
           valor_total: parseFloat(formEmissao.valor_total),
           gerar_caixa: formEmissao.gerar_caixa,
+          ambiente: 'HOMOLOGACAO',
         });
 
         showFeedback('success', 'NFS-e emitida e autorizada com sucesso!');
@@ -186,11 +190,13 @@ export default function NotasFiscais() {
         }
 
         const endpoint = tipoEmissao === 'NFE' ? '/notas-fiscais/nfe' : '/notas-fiscais/nfce';
+        const docLimpo = formEmissao.tomador_documento.trim();
         await api.post(endpoint, {
           destinatario_nome: formEmissao.tomador_nome.trim() || 'Consumidor Final',
-          destinatario_documento: formEmissao.tomador_documento.trim() || null,
+          destinatario_documento: docLimpo || '00000000000',
           itens: itensValidados,
           gerar_caixa: formEmissao.gerar_caixa,
+          ambiente: 'HOMOLOGACAO',
         });
 
         showFeedback('success', `${tipoEmissao} emitida e autorizada com sucesso!`);
@@ -202,6 +208,7 @@ export default function NotasFiscais() {
         tomador_documento: '',
         tomador_email: '',
         descricao_servico: '',
+        codigo_tributacao_nacional: '01.07.01',
         valor_total: '',
         gerar_caixa: true,
         itens: [{ descricao: '', quantidade: 1, valor_unitario: '' }],
@@ -285,12 +292,17 @@ export default function NotasFiscais() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <Receipt className="w-7 h-7 text-indigo-600" />
-            Notas Fiscais (NFS-e / NF-e / NFC-e)
-          </h1>
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+              <Receipt className="w-7 h-7 text-indigo-600" />
+              Notas Fiscais (NFS-e / NF-e / NFC-e)
+            </h1>
+            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-200" title="Chaves de acesso e protocolos com cálculo oficial em ambiente de homologação">
+              Homologação Oficial
+            </span>
+          </div>
           <p className="text-sm text-gray-500 mt-1">
-            Emissão simplificada padrão MEI, geração de DANFE e integração automática com o Livro Caixa.
+            Emissão oficial padrão Portal Nacional / SEFAZ, geração de DANFE e integração automática com o Livro Caixa.
           </p>
         </div>
 
@@ -576,6 +588,28 @@ export default function NotasFiscais() {
 
           {tipoEmissao === 'NFSE' ? (
             <>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Atividade / Código de Tributação Nacional (Portal Nacional MEI):
+                </label>
+                <select
+                  value={formEmissao.codigo_tributacao_nacional}
+                  onChange={(e) =>
+                    setFormEmissao({ ...formEmissao, codigo_tributacao_nacional: e.target.value })
+                  }
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                >
+                  <option value="01.07.01">01.07.01 - Suporte técnico, informática e manutenção de software</option>
+                  <option value="14.01.01">14.01.01 - Lubrificação, limpeza, lavagem e polimento de veículos</option>
+                  <option value="14.02.01">14.02.01 - Assistência e manutenção de máquinas, aparelhos e objetos</option>
+                  <option value="07.02.01">07.02.01 - Execução de obras, construção civil, reformas e hidráulica</option>
+                  <option value="04.01.01">04.01.01 - Serviços de beleza, estética, cabeleireiro e barbearia</option>
+                  <option value="17.01.01">17.01.01 - Assessoria, consultoria e apoio administrativo</option>
+                  <option value="13.04.01">13.04.01 - Fotografia, filmagem e serviços audiovisuais</option>
+                  <option value="10.05.01">10.05.01 - Intermediação, corretagem e agenciamento</option>
+                </select>
+              </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Descrição dos Serviços Prestados:

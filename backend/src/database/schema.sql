@@ -287,7 +287,7 @@ CREATE TABLE IF NOT EXISTS notas_fiscais (
     status ENUM('RASCUNHO', 'EMITIDA', 'CANCELADA', 'REJEITADA') NOT NULL DEFAULT 'EMITIDA',
     serie INT NOT NULL DEFAULT 1,
     numero INT NOT NULL,
-    chave_acesso VARCHAR(44) NULL,
+    chave_acesso VARCHAR(60) NULL,
     protocolo_autorizacao VARCHAR(50) NULL,
     ambiente ENUM('HOMOLOGACAO', 'PRODUCAO') NOT NULL DEFAULT 'HOMOLOGACAO',
     

@@ -226,6 +226,11 @@ function gerarDanfeSimplificado({ nota = {}, itens = [], emitente = {} }) {
       </div>
     </header>
 
+    ${nota.ambiente !== 'PRODUCAO' ? `
+    <div style="background: #fef3c7; color: #92400e; border: 1px solid #fde68a; padding: 6px 12px; font-size: 11px; font-weight: 700; text-align: center; border-radius: 4px; margin-bottom: 12px;">
+      EMISSÃO EM AMBIENTE DE HOMOLOGAÇÃO — SEM VALOR FISCAL
+    </div>` : ''}
+
     ${nota.chave_acesso ? `
     <div class="chave-box">
       <div class="chave-titulo">Chave de Acesso para Consulta SEFAZ / Portal Nacional</div>
@@ -238,6 +243,7 @@ function gerarDanfeSimplificado({ nota = {}, itens = [], emitente = {} }) {
         <div><strong>Protocolo:</strong> ${escapeHtml(protocolo)}</div>
         <div><strong>Data/Hora de Emissão:</strong> ${escapeHtml(dataEmissao)}</div>
         <div><strong>Status:</strong> <span style="font-weight: 700; color: #047857;">${escapeHtml(nota.status || 'EMITIDA')}</span></div>
+        <div><strong>Ambiente:</strong> ${escapeHtml(nota.ambiente === 'PRODUCAO' ? 'Produção' : 'Homologação (Testes)')}</div>
       </div>
     </div>
 
