@@ -3,6 +3,8 @@
  * Gera representação HTML semântica e estilizada para NFS-e, NF-e (Mod 55) e NFC-e (Mod 65).
  */
 
+const sefazRegistry = require('./sefazRegistry');
+
 /**
  * Escapa caracteres HTML para exibição segura.
  * @param {string|number|null|undefined} value
@@ -85,18 +87,28 @@ function gerarDanfeSimplificado({ nota = {}, itens = [], emitente = {} }) {
   const valorDesconto = formatarMoeda(nota.valor_desconto || 0);
   const valorLiquido = formatarMoeda(nota.valor_liquido || (Number(nota.valor_total || 0) - Number(nota.valor_desconto || 0)));
 
+  const ufEmitente = (emitente.uf || emitente.estado || (typeof emitente.endereco === 'object' ? emitente.endereco?.uf : '') || nota.uf || '').trim().toUpperCase();
+  const sefazInfo = sefazRegistry.obterDadosSefazPorUf(ufEmitente);
+
   let tituloDoc = 'DANFE — Documento Auxiliar da Nota Fiscal Eletrônica';
   let modeloDesc = 'Modelo 55';
-  let portalUrl = 'https://www.nfe.fazenda.gov.br/portal/consultaRecaptcha.aspx';
+  let portalUrl = sefazInfo ? sefazInfo.portalConsulta : 'https://www.nfe.fazenda.gov.br/portal/consultaRecaptcha.aspx';
+  let autorizadorDesc = sefazInfo
+    ? (sefazInfo.autorizador.includes('(Próprio)') ? `SEFAZ ${sefazInfo.uf}` : sefazInfo.autorizador)
+    : 'SEFAZ Nacional';
 
   if (tipo === 'NFSE') {
     tituloDoc = 'DANFSE — Documento Auxiliar da Nota Fiscal de Serviços Eletrônica';
     modeloDesc = 'Padrão Nacional (DPS)';
     portalUrl = 'https://www.nfse.gov.br/consulta';
+    autorizadorDesc = 'Portal Nacional NFS-e';
   } else if (tipo === 'NFCE') {
     tituloDoc = 'DANFE NFC-e — Documento Auxiliar da Nota Fiscal de Consumidor Eletrônica';
     modeloDesc = 'Modelo 65 (Varejo)';
-    portalUrl = 'https://www.nfce.fazenda.gov.br/consulta';
+    portalUrl = sefazInfo ? sefazInfo.portalConsulta : 'https://www.nfce.fazenda.gov.br/consulta';
+    autorizadorDesc = sefazInfo
+      ? (sefazInfo.autorizador.includes('(Próprio)') ? `SEFAZ ${sefazInfo.uf}` : sefazInfo.autorizador)
+      : 'SEFAZ Estadual';
   }
 
   // Seção de Itens / Serviços
@@ -244,6 +256,8 @@ function gerarDanfeSimplificado({ nota = {}, itens = [], emitente = {} }) {
         <div><strong>Data/Hora de Emissão:</strong> ${escapeHtml(dataEmissao)}</div>
         <div><strong>Status:</strong> <span style="font-weight: 700; color: #047857;">${escapeHtml(nota.status || 'EMITIDA')}</span></div>
         <div><strong>Ambiente:</strong> ${escapeHtml(nota.ambiente === 'PRODUCAO' ? 'Produção' : 'Homologação (Testes)')}</div>
+        <div><strong>Autorizador:</strong> ${escapeHtml(autorizadorDesc)}</div>
+        <div><strong>Portal Consulta:</strong> <a href="${escapeHtml(portalUrl)}" target="_blank" rel="noopener noreferrer">${escapeHtml(portalUrl)}</a></div>
       </div>
     </div>
 
@@ -285,10 +299,11 @@ function gerarDanfeSimplificado({ nota = {}, itens = [], emitente = {} }) {
         <p><strong>INFORMAÇÕES COMPLEMENTARES / SIMPLES NACIONAL:</strong></p>
         <p>DOCUMENTO EMITIDO POR ME OU EPP OPTANTE PELO SIMPLES NACIONAL / SIMEI.</p>
         <p>NÃO GERA DIREITO A CRÉDITO FISCAL DE IPI / ICMS / ISS CONFORME LEGISLAÇÃO VIGENTE.</p>
+        <p><strong>Autorizador Fiscal:</strong> ${escapeHtml(autorizadorDesc)} | <strong>Portal Oficial:</strong> <a href="${escapeHtml(portalUrl)}" target="_blank" rel="noopener noreferrer">${escapeHtml(portalUrl)}</a></p>
       </div>
       <div class="qr-container">
         <img src="${escapeHtml(qrCodeUrl)}" alt="QR Code Consulta" />
-        <a href="${escapeHtml(portalUrl)}" target="_blank" rel="noopener noreferrer">Consultar autenticidade</a>
+        <a href="${escapeHtml(portalUrl)}" target="_blank" rel="noopener noreferrer">Consultar autenticidade (${escapeHtml(autorizadorDesc)})</a>
       </div>
     </footer>
   </div>

@@ -11,11 +11,13 @@ const {
   gerarChaveAcessoNfseNacional,
   obterCodigoUfPorSiglaOuIbge
 } = require('./geradorChaveAcesso');
+const sefazRegistry = require('./sefazRegistry');
 const { gerarXmlNfse, gerarXmlNfe } = require('./geradorXmlFiscal');
 const { gerarDanfeSimplificado } = require('./geradorDanfeSimplificado');
 
 /**
- * Obtém dados cadastrais do emitente (MEI) a partir do usuário e payload.
+ * Obtém dados cadastrais do emitente (MEI) a partir do usuário, configurações e payload.
+ * Consulta prioritariamente a tabela mei_configuracoes para o usuarioId.
  * @param {number} usuarioId
  * @param {Object} [payloadEmitente={}]
  * @param {Object} [conn=null]
@@ -23,27 +25,49 @@ const { gerarDanfeSimplificado } = require('./geradorDanfeSimplificado');
  */
 async function obterDadosEmitente(usuarioId, payloadEmitente = {}, conn = null) {
   const exec = conn || pool;
+
+  // 1. Consulta prioritária na tabela mei_configuracoes
+  let configMei = null;
+  try {
+    const [configRows] = await exec.query(
+      'SELECT * FROM mei_configuracoes WHERE usuario_id = ?',
+      [usuarioId]
+    );
+    if (configRows && configRows.length > 0) {
+      configMei = configRows[0];
+    }
+  } catch (err) {
+    // Caso a tabela não exista ou haja erro temporário, segue com fallback de usuarios
+  }
+
+  // 2. Consulta dados cadastrais base da tabela usuarios (para fallbacks)
   const [rows] = await exec.query(
     'SELECT id, nome, email FROM usuarios WHERE id = ?',
     [usuarioId]
   );
   const usuario = rows[0] || {};
 
+  const uf = (payloadEmitente.uf || configMei?.uf || 'SP').trim().toUpperCase();
+  const sefazInfo = sefazRegistry.obterDadosSefazPorUf(uf);
+  const defaultIbge = uf === 'SP' ? '3550308' : (sefazInfo ? `${sefazInfo.cUf}00000` : '3550308');
+
   return {
-    cnpj: payloadEmitente.cnpj || payloadEmitente.documento || '12345678000195',
-    razaoSocial: payloadEmitente.razaoSocial || payloadEmitente.nome || usuario.nome || 'MEI Prestador de Serviços',
-    nomeFantasia: payloadEmitente.nomeFantasia || usuario.nome || '',
-    email: payloadEmitente.email || usuario.email || '',
-    telefone: payloadEmitente.telefone || '',
-    inscricaoMunicipal: payloadEmitente.inscricaoMunicipal || payloadEmitente.im || '',
-    inscricaoEstadual: payloadEmitente.inscricaoEstadual || payloadEmitente.ie || 'ISENTO',
-    logradouro: payloadEmitente.logradouro || 'Endereço Comercial MEI',
-    numero: payloadEmitente.numero || 'S/N',
-    bairro: payloadEmitente.bairro || 'Centro',
-    municipio: payloadEmitente.municipio || 'São Paulo',
-    uf: payloadEmitente.uf || 'SP',
-    codigoMunicipioIbge: payloadEmitente.codigoMunicipioIbge || payloadEmitente.codigoMunicipio || '3550308',
-    cep: payloadEmitente.cep || '01001000'
+    cnpj: payloadEmitente.cnpj || payloadEmitente.documento || configMei?.cnpj || '12345678000195',
+    razaoSocial: payloadEmitente.razaoSocial || payloadEmitente.razao_social || payloadEmitente.nome || configMei?.razao_social || usuario.nome || 'MEI Prestador de Serviços',
+    nomeFantasia: payloadEmitente.nomeFantasia || payloadEmitente.nome_fantasia || configMei?.nome_fantasia || usuario.nome || '',
+    email: payloadEmitente.email || payloadEmitente.email_comercial || configMei?.email_comercial || usuario.email || '',
+    telefone: payloadEmitente.telefone || payloadEmitente.telefone_comercial || configMei?.telefone_comercial || '',
+    inscricaoMunicipal: payloadEmitente.inscricaoMunicipal || payloadEmitente.inscricao_municipal || payloadEmitente.im || configMei?.inscricao_municipal || '',
+    inscricaoEstadual: payloadEmitente.inscricaoEstadual || payloadEmitente.inscricao_estadual || payloadEmitente.ie || configMei?.inscricao_estadual || 'ISENTO',
+    logradouro: payloadEmitente.logradouro || configMei?.logradouro || 'Endereço Comercial MEI',
+    numero: payloadEmitente.numero || configMei?.numero || 'S/N',
+    complemento: payloadEmitente.complemento || configMei?.complemento || '',
+    bairro: payloadEmitente.bairro || configMei?.bairro || 'Centro',
+    municipio: payloadEmitente.municipio || configMei?.municipio || 'São Paulo',
+    uf,
+    codigoMunicipioIbge: payloadEmitente.codigoMunicipioIbge || payloadEmitente.codigo_municipio_ibge || payloadEmitente.codigoMunicipio || configMei?.codigo_municipio_ibge || defaultIbge,
+    cep: payloadEmitente.cep || configMei?.cep || '01001000',
+    ambienteFiscal: payloadEmitente.ambiente || configMei?.ambiente_fiscal || 'HOMOLOGACAO'
   };
 }
 
@@ -119,14 +143,15 @@ async function emitirNfse(usuarioId, payload = {}, connection = null) {
     const agora = new Date();
     const anoMes = String(agora.getFullYear()).slice(-2) + String(agora.getMonth() + 1).padStart(2, '0');
     const codigoNumerico = Math.floor(100000000 + Math.random() * 900000000);
-    const ambienteNota = payload.ambiente || 'HOMOLOGACAO';
+    const ambienteNota = payload.ambiente || dadosEmitente.ambienteFiscal || 'HOMOLOGACAO';
     const ambienteCod = ambienteNota === 'PRODUCAO' ? 1 : 2;
     const docEmitLimpo = String(dadosEmitente.cnpj || dadosEmitente.documento || '').replace(/\D/g, '');
     const tipoInscricao = docEmitLimpo.length <= 11 ? 1 : 2;
 
     const protocolo = payload.protocolo_autorizacao || `NFSE${agora.getFullYear()}${String(numero).padStart(9, '0')}`;
+    const codIbgeNfse = payload.codigo_municipio_ibge || dadosEmitente.codigoMunicipioIbge || '3550308';
     const chaveAcesso = gerarChaveAcessoNfseNacional({
-      codigoMunicipioIbge: payload.codigo_municipio_ibge || dadosEmitente.codigoMunicipioIbge || '3550308',
+      codigoMunicipioIbge: codIbgeNfse,
       ambiente: ambienteCod,
       tipoInscricao,
       inscricaoFederal: docEmitLimpo || '00000000000191',
@@ -149,7 +174,7 @@ async function emitirNfse(usuarioId, payload = {}, connection = null) {
       servico: {
         discriminacao: descServico,
         codigoTributacaoNacional: codTribNac,
-        codigoMunicipioIbge: payload.codigo_municipio_ibge || dadosEmitente.codigoMunicipioIbge
+        codigoMunicipioIbge: codIbgeNfse
       },
       valores: {
         valorServico,
@@ -176,7 +201,7 @@ async function emitirNfse(usuarioId, payload = {}, connection = null) {
       destinatario_endereco: payload.destinatario_endereco || null,
       codigo_tributacao_nacional: codTribNac,
       discriminacao_servico: descServico,
-      codigo_municipio_ibge: payload.codigo_municipio_ibge || dadosEmitente.codigoMunicipioIbge,
+      codigo_municipio_ibge: codIbgeNfse,
       natureza_operacao: 'Prestação de serviços',
       consumidor_final: 1,
       presenca_comprador: 1,
@@ -385,7 +410,8 @@ async function emitirNfe(usuarioId, payload = {}, connection = null) {
     const anoMes = String(agora.getFullYear()).slice(-2) + String(agora.getMonth() + 1).padStart(2, '0');
     const codigoNumerico = Math.floor(10000000 + Math.random() * 90000000);
 
-    const cUF = obterCodigoUfPorSiglaOuIbge(dadosEmitente.uf || dadosEmitente.codigoMunicipioIbge);
+    const sefazInfo = sefazRegistry.obterDadosSefazPorUf(dadosEmitente.uf);
+    const cUF = sefazInfo ? sefazInfo.cUf : obterCodigoUfPorSiglaOuIbge(dadosEmitente.uf || dadosEmitente.codigoMunicipioIbge);
     const chaveAcesso = gerarChaveAcesso({
       cUF,
       anoMes,
@@ -397,7 +423,7 @@ async function emitirNfe(usuarioId, payload = {}, connection = null) {
       codigoNumerico
     });
 
-    const protocolo = `135${anoMes}${String(numero).padStart(9, '0')}`;
+    const protocolo = payload.protocolo_autorizacao || `1${cUF}${anoMes}${String(numero).padStart(9, '0')}`;
 
     const dadosDestinatario = {
       nome: destNome,
@@ -633,7 +659,8 @@ async function emitirNfce(usuarioId, payload = {}, connection = null) {
     const anoMes = String(agora.getFullYear()).slice(-2) + String(agora.getMonth() + 1).padStart(2, '0');
     const codigoNumerico = Math.floor(10000000 + Math.random() * 90000000);
 
-    const cUF = obterCodigoUfPorSiglaOuIbge(dadosEmitente.uf || dadosEmitente.codigoMunicipioIbge);
+    const sefazInfo = sefazRegistry.obterDadosSefazPorUf(dadosEmitente.uf);
+    const cUF = sefazInfo ? sefazInfo.cUf : obterCodigoUfPorSiglaOuIbge(dadosEmitente.uf || dadosEmitente.codigoMunicipioIbge);
     const chaveAcesso = gerarChaveAcesso({
       cUF,
       anoMes,
@@ -645,7 +672,7 @@ async function emitirNfce(usuarioId, payload = {}, connection = null) {
       codigoNumerico
     });
 
-    const protocolo = `135${anoMes}${String(numero).padStart(9, '0')}`;
+    const protocolo = payload.protocolo_autorizacao || `1${cUF}${anoMes}${String(numero).padStart(9, '0')}`;
 
     const dadosDestinatario = destDoc || destNome !== 'Consumidor Final' ? {
       nome: destNome,
