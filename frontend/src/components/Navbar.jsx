@@ -32,15 +32,6 @@ export default function Navbar({ onToggleSidebar }) {
         </div>
 
         <div className="flex items-center gap-4">
-          <button
-            type="button"
-            className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors relative"
-            title="Notificações"
-            aria-label="Notificações"
-          >
-            <Bell className="w-5 h-5" />
-            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-indigo-600 rounded-full"></span>
-          </button>
 
           <div className="flex items-center gap-3 pl-2 border-l border-gray-200">
             <div className="w-9 h-9 rounded-full bg-indigo-100 text-indigo-700 font-semibold flex items-center justify-center text-sm shadow-inner">

@@ -264,7 +264,7 @@ export default function Configuracoes() {
   }
 
   return (
-    <div className="space-y-6 max-w-6xl mx-auto pb-12">
+    <div className="space-y-6 mx-auto pb-12">
       {/* Toast Feedback */}
       {feedback.message && (
         <div
