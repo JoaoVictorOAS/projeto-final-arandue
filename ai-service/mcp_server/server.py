@@ -57,6 +57,86 @@ async def _post(endpoint: str, payload: Dict[str, Any]) -> Dict[str, Any]:
         except Exception as e:
             return {"sucesso": False, "erro": f"Falha de conexão com a API: {str(e)}"}
 
+async def _put(endpoint: str, payload: Dict[str, Any]) -> Dict[str, Any]:
+    node_url, token, _ = _get_env_config()
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json"
+    }
+    url = f"{node_url}{endpoint}"
+    async with httpx.AsyncClient(timeout=10.0) as client:
+        try:
+            resp = await client.put(url, headers=headers, json=payload)
+            if resp.status_code == 401 or resp.status_code == 403:
+                return {"sucesso": False, "erro": "Acesso não autorizado ou sessão expirada no backend"}
+            data = resp.json()
+            if resp.status_code not in (200, 201):
+                return {"sucesso": False, "erro": data.get("mensagem") or f"Erro do servidor (status {resp.status_code})"}
+            return {"sucesso": True, "dados": data.get("dados", {})}
+        except Exception as e:
+            return {"sucesso": False, "erro": f"Falha de conexão com a API: {str(e)}"}
+
+@mcp_server_app.tool()
+async def obter_configuracoes_mei() -> Dict[str, Any]:
+    """Obtém os dados cadastrais e fiscais do MEI (razão social, nome fantasia, CNPJ, endereço completo, UF, ambiente fiscal e séries de notas)."""
+    return await _fetch("/configuracoes")
+
+@mcp_server_app.tool()
+async def atualizar_configuracoes_mei(
+    razao_social: str,
+    cnpj: str,
+    uf: str,
+    municipio: str,
+    cep: str,
+    logradouro: str = "",
+    numero: str = "S/N",
+    complemento: str = "",
+    bairro: str = "",
+    inscricao_estadual: str = "ISENTO",
+    inscricao_municipal: str = "",
+    email_comercial: str = "",
+    telefone_comercial: str = "",
+    ambiente_fiscal: str = "HOMOLOGACAO",
+    nome_fantasia: str = ""
+) -> Dict[str, Any]:
+    """Atualiza as configurações cadastrais e fiscais do MEI (endereço, CNPJ, UF emissora da SEFAZ, ambiente fiscal)."""
+    payload = {
+        "razao_social": (razao_social or "").strip(),
+        "cnpj": (cnpj or "").strip(),
+        "uf": (uf or "").strip().upper(),
+        "municipio": (municipio or "").strip(),
+        "cep": (cep or "").strip(),
+        "logradouro": (logradouro or "").strip(),
+        "numero": (numero or "S/N").strip(),
+        "complemento": (complemento or "").strip(),
+        "bairro": (bairro or "").strip(),
+        "inscricao_estadual": (inscricao_estadual or "ISENTO").strip(),
+        "inscricao_municipal": (inscricao_municipal or "").strip(),
+        "email_comercial": (email_comercial or "").strip(),
+        "telefone_comercial": (telefone_comercial or "").strip(),
+        "ambiente_fiscal": (ambiente_fiscal or "HOMOLOGACAO").strip().upper(),
+    }
+    if nome_fantasia:
+        payload["nome_fantasia"] = nome_fantasia.strip()
+
+    res = await _put("/configuracoes", payload)
+    if not res.get("sucesso"):
+        return {"sucesso": False, "erro": res.get("erro", "Erro ao atualizar configurações do MEI")}
+    return {
+        "sucesso": True,
+        "mensagem": "Configurações do MEI atualizadas com sucesso!",
+        "dados": res.get("dados", {})
+    }
+
+@mcp_server_app.tool()
+async def consultar_dados_cnpj(cnpj: str) -> Dict[str, Any]:
+    """Consulta os dados cadastrais públicos de um CNPJ na Receita Federal / BrasilAPI (razão social, nome fantasia, endereço, etc.)."""
+    cnpj_limpo = "".join(c for c in str(cnpj) if c.isdigit())
+    if not cnpj_limpo:
+        cnpj_limpo = str(cnpj).strip()
+    return await _fetch(f"/configuracoes/cnpj/{cnpj_limpo}")
+
+
 @mcp_server_app.tool()
 async def obter_perfil_estabelecimento() -> Dict[str, Any]:
     """Obtém o nome e identificação básica do MEI logado."""
