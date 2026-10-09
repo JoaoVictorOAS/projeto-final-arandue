@@ -14,6 +14,9 @@ const {
 const sefazRegistry = require('./sefazRegistry');
 const { gerarXmlNfse, gerarXmlNfe } = require('./geradorXmlFiscal');
 const { gerarDanfeSimplificado } = require('./geradorDanfeSimplificado');
+const certificadoService = require('./certificadoService');
+const assinadorXmlFiscal = require('./assinadorXmlFiscal');
+const sefazTransmissor = require('./sefazTransmissor');
 
 /**
  * Obtém dados cadastrais do emitente (MEI) a partir do usuário, configurações e payload.
@@ -423,16 +426,28 @@ async function emitirNfe(usuarioId, payload = {}, connection = null) {
       codigoNumerico
     });
 
-    const protocolo = payload.protocolo_autorizacao || `1${cUF}${anoMes}${String(numero).padStart(9, '0')}`;
+    let protocolo = payload.protocolo_autorizacao || `1${cUF}${anoMes}${String(numero).padStart(9, '0')}`;
+    let xmlFinal = '';
+    let modo_emissao = 'SIMULACAO_LOCAL';
+
+    // Modo Híbrido: Verifica se o MEI possui Certificado Digital A1 ativo
+    const certDecifrado = await certificadoService.obterCertificadoDecifrado(usuarioId);
+    const transmissaoAtiva = certDecifrado && certDecifrado.dados && certDecifrado.dados.transmissaoSefazAtiva;
+
+    // Regra SEFAZ Homologação (Rejeição 222): Destinatário deve ter identificação padrão quando em homologação
+    const ambienteNota = payload.ambiente || dadosEmitente.ambienteFiscal || 'HOMOLOGACAO';
+    const destNomeParaXml = (transmissaoAtiva && ambienteNota === 'HOMOLOGACAO')
+      ? 'NF-E EMITIDA EM AMBIENTE DE HOMOLOGACAO - SEM VALOR FISCAL'
+      : destNome;
 
     const dadosDestinatario = {
-      nome: destNome,
+      nome: destNomeParaXml,
       documento: destDoc,
       email: payload.destinatario_email || '',
       endereco: payload.destinatario_endereco || ''
     };
 
-    const xml = gerarXmlNfe({
+    const xmlGeradoBruto = gerarXmlNfe({
       chave: chaveAcesso,
       dadosEmitente,
       dadosDestinatario,
@@ -448,6 +463,36 @@ async function emitirNfe(usuarioId, payload = {}, connection = null) {
       numero
     });
 
+    if (transmissaoAtiva) {
+      const certAnalise = certificadoService.analisarCertificadoPfx(certDecifrado.pfxBuffer, certDecifrado.senha);
+      const xmlAssinado = assinadorXmlFiscal.assinarXmlNfe(
+        xmlGeradoBruto,
+        certAnalise.privateKeyPem,
+        certAnalise.certificatePem
+      );
+
+      const respSefaz = await sefazTransmissor.transmitirNfeLote({
+        xmlAssinado,
+        uf: dadosEmitente.uf,
+        pfxBuffer: certDecifrado.pfxBuffer,
+        senha: certDecifrado.senha
+      });
+
+      if (!respSefaz.sucesso) {
+        const erro = new Error(`Rejeição na autorização da SEFAZ (${respSefaz.cStat}): ${respSefaz.xMotivo}`);
+        erro.statusCode = 422;
+        erro.cStat = respSefaz.cStat;
+        throw erro;
+      }
+
+      protocolo = respSefaz.nProt || protocolo;
+      xmlFinal = respSefaz.xmlProc || xmlAssinado;
+      modo_emissao = 'SEFAZ_HOMOLOGACAO_REAL';
+    } else {
+      xmlFinal = xmlGeradoBruto;
+      modo_emissao = 'SIMULACAO_LOCAL';
+    }
+
     const notaRegistro = {
       tipo: 'NFE',
       status: 'EMITIDA',
@@ -455,7 +500,7 @@ async function emitirNfe(usuarioId, payload = {}, connection = null) {
       numero,
       chave_acesso: chaveAcesso,
       protocolo_autorizacao: protocolo,
-      ambiente: payload.ambiente || 'HOMOLOGACAO',
+      ambiente: ambienteNota,
       destinatario_documento: destDoc,
       destinatario_nome: destNome,
       destinatario_email: payload.destinatario_email || null,
@@ -468,7 +513,7 @@ async function emitirNfe(usuarioId, payload = {}, connection = null) {
       valor_total: valorTotal,
       valor_desconto: valorDesconto,
       valor_liquido: valorLiquido,
-      xml_gerado: xml,
+      xml_gerado: xmlFinal,
       link_danfe: null,
       data_emissao: new Date()
     };
@@ -508,7 +553,7 @@ async function emitirNfe(usuarioId, payload = {}, connection = null) {
         valorTotal,
         valorDesconto,
         valorLiquido,
-        xml,
+        xmlFinal,
         null
       ]
     );
@@ -565,8 +610,9 @@ async function emitirNfe(usuarioId, payload = {}, connection = null) {
       sucesso: true,
       nota: notaRegistro,
       itens: listaItensProcessados,
-      xml,
-      danfe
+      xml: xmlFinal,
+      danfe,
+      modo_emissao
     };
   } catch (error) {
     if (!isExternalTx) {
