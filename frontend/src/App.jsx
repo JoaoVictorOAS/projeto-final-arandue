@@ -16,6 +16,7 @@ import Caixa from './pages/Caixa';
 import Estoque from './pages/Estoque';
 import NotasFiscais from './pages/NotasFiscais';
 import Assistente from './pages/Assistente';
+import Configuracoes from './pages/Configuracoes';
 
 export default function App() {
   return (
@@ -39,6 +40,7 @@ export default function App() {
               <Route path="/estoque" element={<Estoque />} />
               <Route path="/fiscal" element={<NotasFiscais />} />
               <Route path="/assistente" element={<Assistente />} />
+              <Route path="/configuracoes" element={<Configuracoes />} />
             </Route>
           </Route>
 

@@ -141,4 +141,32 @@ describe('Módulo Fiscal — Notas Fiscais', () => {
     expect(screen.getByRole('heading', { name: /cancelar nota fiscal #101/i })).toBeInTheDocument();
     expect(screen.getByLabelText(/justificativa \/ motivo do cancelamento/i)).toBeInTheDocument();
   });
+
+  test('deve exibir o banner de identificacao do emitente SEFAZ com link para configuracoes', async () => {
+    api.get.mockImplementation((url) => {
+      if (url === '/configuracoes') {
+        return Promise.resolve({
+          data: {
+            sucesso: true,
+            dados: {
+              uf: 'SP',
+              razao_social: 'Minha Empresa MEI Ltda',
+              cnpj: '12345678000190',
+            },
+          },
+        });
+      }
+      return Promise.resolve({ data: { sucesso: true, dados: [] } });
+    });
+
+    render(<NotasFiscais />);
+
+    await waitFor(() => {
+      expect(screen.getByText(/Emitente:/i)).toBeInTheDocument();
+      expect(screen.getByText(/SP \(SEFAZ SP\)/i)).toBeInTheDocument();
+      expect(screen.getByText(/Minha Empresa MEI Ltda/i)).toBeInTheDocument();
+      expect(screen.getByRole('link', { name: /configurações sefaz/i })).toBeInTheDocument();
+    });
+  });
 });
+

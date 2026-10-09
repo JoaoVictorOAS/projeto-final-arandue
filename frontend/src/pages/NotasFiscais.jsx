@@ -17,11 +17,13 @@ import {
   Building,
   UserCheck,
   ShoppingBag,
+  Settings,
 } from 'lucide-react';
 import api from '../services/api';
 import Modal from '../components/Modal';
 import FormField from '../components/FormField';
 import StatusBadge from '../components/StatusBadge';
+import { obterSefazInfo } from './Configuracoes';
 
 export const formatCurrency = (val) => {
   const num = typeof val === 'number' ? val : parseFloat(val) || 0;
@@ -123,6 +125,28 @@ export default function NotasFiscais() {
   useEffect(() => {
     carregarNotas();
   }, [carregarNotas]);
+
+  // Configuração do MEI e Sincronização SEFAZ
+  const [configuracao, setConfiguracao] = useState(null);
+
+  useEffect(() => {
+    async function carregarConfiguracao() {
+      try {
+        const res = await api.get('/configuracoes');
+        const dados = res?.data?.dados;
+        if (dados) {
+          setConfiguracao(dados);
+        }
+      } catch (err) {
+        // Ignora silenciosamente para não interromper a tela fiscal
+      }
+    }
+    carregarConfiguracao();
+  }, []);
+
+  const sefazEmitente = useMemo(() => {
+    return configuracao?.uf ? obterSefazInfo(configuracao.uf) : null;
+  }, [configuracao?.uf]);
 
   // Visualizar DANFE
   const handleVerDanfe = async (nota) => {
@@ -288,6 +312,50 @@ export default function NotasFiscais() {
           </button>
         </div>
       )}
+
+      {/* Banner / Chip Emitente SEFAZ Multi-Estado */}
+      {sefazEmitente ? (
+        <div className="bg-gradient-to-r from-indigo-50/80 to-blue-50/80 border border-indigo-200/80 rounded-xl p-3 flex flex-wrap items-center justify-between gap-3 text-xs shadow-sm">
+          <div className="flex items-center gap-2 text-indigo-950 font-medium">
+            <Building className="w-4 h-4 text-indigo-600 flex-shrink-0" />
+            <span>
+              Emitente: <strong className="font-bold">{configuracao.uf} ({sefazEmitente.autorizadorDisplay})</strong>
+            </span>
+            {configuracao.razao_social && (
+              <span className="text-indigo-700 hidden sm:inline font-normal">
+                — {configuracao.razao_social}
+              </span>
+            )}
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-indigo-100 text-indigo-800 border border-indigo-200">
+              cUF {sefazEmitente.cUf}
+            </span>
+          </div>
+          <a
+            href="/configuracoes"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-700 hover:text-indigo-900 bg-white hover:bg-indigo-50/50 px-2.5 py-1 rounded-lg border border-indigo-200 transition-colors shadow-2xs"
+            title="Alterar UF e configurações do MEI"
+          >
+            <Settings className="w-3.5 h-3.5" />
+            Configurações SEFAZ
+          </a>
+        </div>
+      ) : configuracao && !configuracao.uf ? (
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 flex flex-wrap items-center justify-between gap-3 text-xs shadow-sm">
+          <div className="flex items-center gap-2 text-amber-900 font-medium">
+            <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0" />
+            <span>
+              Dados fiscais do MEI não configurados. Defina seu estado (UF) para habilitar autorização fiscal correta.
+            </span>
+          </div>
+          <a
+            href="/configuracoes"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-800 hover:text-amber-950 bg-white hover:bg-amber-100/50 px-2.5 py-1 rounded-lg border border-amber-300 transition-colors shadow-2xs"
+          >
+            <Settings className="w-3.5 h-3.5" />
+            Configurar MEI
+          </a>
+        </div>
+      ) : null}
 
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
