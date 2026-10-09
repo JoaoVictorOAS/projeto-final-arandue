@@ -18,6 +18,7 @@ import {
   UserCheck,
   ShoppingBag,
   Settings,
+  ExternalLink,
 } from 'lucide-react';
 import api from '../services/api';
 import Modal from '../components/Modal';
@@ -838,17 +839,33 @@ export default function NotasFiscais() {
             <p className="text-sm text-gray-500 py-6 text-center">DANFE indisponível para esta nota.</p>
           )}
 
-          <div className="flex justify-between items-center pt-3 border-t border-gray-100">
+          <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2 pt-3 border-t border-gray-100">
             <span className="text-xs text-gray-400">
               Protocolo SEFAZ: {notaSelecionada?.protocolo_autorizacao || 'Autorizado'}
             </span>
-            <button
-              type="button"
-              onClick={() => window.print()}
-              className="px-3.5 py-1.5 text-xs font-semibold bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-lg transition-colors flex items-center gap-1.5"
-            >
-              <Download className="w-3.5 h-3.5" /> Imprimir / Salvar PDF
-            </button>
+            <div className="flex items-center gap-2">
+              <a
+                href={
+                  notaSelecionada?.tipo === 'NFSE'
+                    ? 'https://www.nfse.gov.br/consulta'
+                    : 'https://www.nfe.fazenda.gov.br/portal/consultaRecaptcha.aspx'
+                }
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-3 py-1.5 text-xs font-semibold bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-lg transition-colors flex items-center gap-1.5"
+                title="Consultar autenticidade oficial no Portal Nacional (Certificado SSL Válido)"
+              >
+                <ExternalLink className="w-3.5 h-3.5" />
+                Consultar Autenticidade (Portal Nacional)
+              </a>
+              <button
+                type="button"
+                onClick={() => window.print()}
+                className="px-3.5 py-1.5 text-xs font-semibold bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-lg transition-colors flex items-center gap-1.5"
+              >
+                <Download className="w-3.5 h-3.5" /> Imprimir / Salvar PDF
+              </button>
+            </div>
           </div>
         </div>
       </Modal>

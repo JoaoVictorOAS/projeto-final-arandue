@@ -41,7 +41,7 @@ describe('sefazRegistry - Registro Canônico SEFAZ das 27 UFs', () => {
         expect(typeof item.cUf).toBe('string');
         expect(/^\d{2}$/.test(item.cUf)).toBe(true);
         expect(typeof item.autorizador).toBe('string');
-        expect(item.portalConsulta).toMatch(/^https?:\/\//);
+        expect(item.portalConsulta).toMatch(/^https:\/\//);
         expect(typeof item.aliquotaPadrao).toBe('number');
         expect(item.aliquotaPadrao).toBeGreaterThan(0);
       });
@@ -67,6 +67,17 @@ describe('sefazRegistry - Registro Canônico SEFAZ das 27 UFs', () => {
       expect(dados.autorizador).toContain('SP');
       expect(dados.portalConsulta).toContain('fazenda.sp.gov.br');
       expect(dados.aliquotaPadrao).toBe(18);
+    });
+
+    it('deve retornar os dados oficiais da Bahia (BA) com portal HTTPS seguro', () => {
+      const dados = obterDadosSefazPorUf('BA');
+      expect(dados).toBeDefined();
+      expect(dados.uf).toBe('BA');
+      expect(dados.nome).toBe('Bahia');
+      expect(dados.cUf).toBe('29');
+      expect(dados.autorizador).toContain('BA');
+      expect(dados.portalConsulta).toBe('https://www.sefaz.ba.gov.br');
+      expect(dados.aliquotaPadrao).toBe(20.5);
     });
 
     it('deve retornar os dados de Santa Catarina (SC) utilizando autorizador SVRS', () => {

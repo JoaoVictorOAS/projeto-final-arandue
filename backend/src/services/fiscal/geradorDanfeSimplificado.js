@@ -90,9 +90,13 @@ function gerarDanfeSimplificado({ nota = {}, itens = [], emitente = {} }) {
   const ufEmitente = (emitente.uf || emitente.estado || (typeof emitente.endereco === 'object' ? emitente.endereco?.uf : '') || nota.uf || '').trim().toUpperCase();
   const sefazInfo = sefazRegistry.obterDadosSefazPorUf(ufEmitente);
 
+  const portalNacionalNfe = 'https://www.nfe.fazenda.gov.br/portal/consultaRecaptcha.aspx';
+  const portalNacionalNfse = 'https://www.nfse.gov.br/consulta';
+
   let tituloDoc = 'DANFE — Documento Auxiliar da Nota Fiscal Eletrônica';
   let modeloDesc = 'Modelo 55';
-  let portalUrl = sefazInfo ? sefazInfo.portalConsulta : 'https://www.nfe.fazenda.gov.br/portal/consultaRecaptcha.aspx';
+  let portalUrl = sefazInfo ? sefazInfo.portalConsulta : portalNacionalNfe;
+  let portalConsultaSegura = portalNacionalNfe;
   let autorizadorDesc = sefazInfo
     ? (sefazInfo.autorizador.includes('(Próprio)') ? `SEFAZ ${sefazInfo.uf}` : sefazInfo.autorizador)
     : 'SEFAZ Nacional';
@@ -100,12 +104,14 @@ function gerarDanfeSimplificado({ nota = {}, itens = [], emitente = {} }) {
   if (tipo === 'NFSE') {
     tituloDoc = 'DANFSE — Documento Auxiliar da Nota Fiscal de Serviços Eletrônica';
     modeloDesc = 'Padrão Nacional (DPS)';
-    portalUrl = 'https://www.nfse.gov.br/consulta';
+    portalUrl = portalNacionalNfse;
+    portalConsultaSegura = portalNacionalNfse;
     autorizadorDesc = 'Portal Nacional NFS-e';
   } else if (tipo === 'NFCE') {
     tituloDoc = 'DANFE NFC-e — Documento Auxiliar da Nota Fiscal de Consumidor Eletrônica';
     modeloDesc = 'Modelo 65 (Varejo)';
     portalUrl = sefazInfo ? sefazInfo.portalConsulta : 'https://www.nfce.fazenda.gov.br/consulta';
+    portalConsultaSegura = portalUrl;
     autorizadorDesc = sefazInfo
       ? (sefazInfo.autorizador.includes('(Próprio)') ? `SEFAZ ${sefazInfo.uf}` : sefazInfo.autorizador)
       : 'SEFAZ Estadual';
@@ -172,8 +178,8 @@ function gerarDanfeSimplificado({ nota = {}, itens = [], emitente = {} }) {
     `;
   }
 
-  // QR Code URL gerado para consulta rápida
-  const qrCodeData = chaveLimpa ? `${portalUrl}?ch=${chaveLimpa}` : portalUrl;
+  // QR Code URL gerado para consulta rápida com SSL seguro
+  const qrCodeData = chaveLimpa ? `${portalConsultaSegura}?ch=${chaveLimpa}` : portalConsultaSegura;
   const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=130x130&data=${encodeURIComponent(qrCodeData)}`;
 
   return `<!DOCTYPE html>
@@ -257,7 +263,7 @@ function gerarDanfeSimplificado({ nota = {}, itens = [], emitente = {} }) {
         <div><strong>Status:</strong> <span style="font-weight: 700; color: #047857;">${escapeHtml(nota.status || 'EMITIDA')}</span></div>
         <div><strong>Ambiente:</strong> ${escapeHtml(nota.ambiente === 'PRODUCAO' ? 'Produção' : 'Homologação (Testes)')}</div>
         <div><strong>Autorizador:</strong> ${escapeHtml(autorizadorDesc)}</div>
-        <div><strong>Portal Consulta:</strong> <a href="${escapeHtml(portalUrl)}" target="_blank" rel="noopener noreferrer">${escapeHtml(portalUrl)}</a></div>
+        <div><strong>Portal Consulta:</strong> <a href="${escapeHtml(portalConsultaSegura)}" target="_blank" rel="noopener noreferrer">${escapeHtml(portalConsultaSegura)}</a></div>
       </div>
     </div>
 
@@ -303,7 +309,8 @@ function gerarDanfeSimplificado({ nota = {}, itens = [], emitente = {} }) {
       </div>
       <div class="qr-container">
         <img src="${escapeHtml(qrCodeUrl)}" alt="QR Code Consulta" />
-        <a href="${escapeHtml(portalUrl)}" target="_blank" rel="noopener noreferrer">Consultar autenticidade (${escapeHtml(autorizadorDesc)})</a>
+        <a href="${escapeHtml(portalConsultaSegura)}" target="_blank" rel="noopener noreferrer">Consultar autenticidade (${tipo === 'NFE' ? 'Portal Nacional' : escapeHtml(autorizadorDesc)})</a>
+        ${tipo === 'NFE' && portalUrl !== portalConsultaSegura ? `<div style="font-size: 10px; margin-top: 3px;"><a href="${escapeHtml(portalUrl)}" target="_blank" rel="noopener noreferrer" style="color: #64748b; text-decoration: underline;">Portal SEFAZ ${escapeHtml(sefazInfo ? sefazInfo.uf : '')}</a></div>` : ''}
       </div>
     </footer>
   </div>

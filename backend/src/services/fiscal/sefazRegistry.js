@@ -49,7 +49,7 @@ const REGISTRO_SEFAZ = {
     nome: 'Bahia',
     cUf: '29',
     autorizador: 'BA (Próprio)',
-    portalConsulta: 'http://nfe.sefaz.ba.gov.br',
+    portalConsulta: 'https://www.sefaz.ba.gov.br',
     aliquotaPadrao: 20.5
   },
   CE: {
