@@ -31,7 +31,7 @@ describe('Módulo Fiscal — Notas Fiscais', () => {
         tomador_documento: '12.345.678/0001-90',
         data_emissao: '2026-10-08T14:30:00Z',
         valor_total: 250.0,
-        status: 'AUTORIZADA',
+        status: 'EMITIDA',
       },
       {
         id: 2,
@@ -62,7 +62,7 @@ describe('Módulo Fiscal — Notas Fiscais', () => {
     expect(screen.getAllByText(/180,50/).length).toBeGreaterThan(0);
 
     // Badges
-    expect(screen.getByText('Autorizada')).toBeInTheDocument();
+    expect(screen.getByText('Emitida')).toBeInTheDocument();
     expect(screen.getByText('Cancelada')).toBeInTheDocument();
   });
 
@@ -91,7 +91,7 @@ describe('Módulo Fiscal — Notas Fiscais', () => {
         tipo: 'NFSE',
         tomador_nome: 'Cliente Exemplo',
         valor_total: 150.0,
-        status: 'AUTORIZADA',
+        status: 'EMITIDA',
       },
     ];
 
@@ -124,7 +124,7 @@ describe('Módulo Fiscal — Notas Fiscais', () => {
         tipo: 'NFSE',
         tomador_nome: 'Cliente Para Cancelar',
         valor_total: 150.0,
-        status: 'AUTORIZADA',
+        status: 'EMITIDA',
       },
     ];
 

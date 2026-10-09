@@ -244,7 +244,7 @@ export default function NotasFiscais() {
   const totalEmitido = useMemo(
     () =>
       notas
-        .filter((n) => n.status === 'AUTORIZADA')
+        .filter((n) => n.status === 'EMITIDA')
         .reduce((acc, curr) => acc + (parseFloat(curr.valor_total) || 0), 0),
     [notas]
   );
@@ -370,7 +370,7 @@ export default function NotasFiscais() {
             className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500"
           >
             <option value="TODOS">Todos os Status</option>
-            <option value="AUTORIZADA">Autorizadas</option>
+            <option value="EMITIDA">Emitidas</option>
             <option value="CANCELADA">Canceladas</option>
           </select>
 
@@ -457,15 +457,19 @@ export default function NotasFiscais() {
                         {formatCurrency(n.valor_total)}
                       </td>
                       <td className="px-6 py-4">
-                        {n.status === 'AUTORIZADA' ? (
+                        {n.status === 'EMITIDA' ? (
                           <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
                             <CheckCircle2 className="w-3.5 h-3.5" />
-                            Autorizada
+                            Emitida
                           </span>
-                        ) : (
+                        ) : n.status === 'CANCELADA' ? (
                           <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-red-50 text-red-700 border border-red-200">
                             <Ban className="w-3.5 h-3.5" />
                             Cancelada
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-gray-50 text-gray-700 border border-gray-200">
+                            {n.status}
                           </span>
                         )}
                       </td>
@@ -480,7 +484,7 @@ export default function NotasFiscais() {
                           DANFE
                         </button>
 
-                        {n.status === 'AUTORIZADA' && (
+                        {n.status === 'EMITIDA' && (
                           <button
                             type="button"
                             onClick={() => {
