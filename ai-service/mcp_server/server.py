@@ -76,6 +76,25 @@ async def _put(endpoint: str, payload: Dict[str, Any]) -> Dict[str, Any]:
         except Exception as e:
             return {"sucesso": False, "erro": f"Falha de conexão com a API: {str(e)}"}
 
+async def _patch(endpoint: str, payload: Dict[str, Any]) -> Dict[str, Any]:
+    node_url, token, _ = _get_env_config()
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json"
+    }
+    url = f"{node_url}{endpoint}"
+    async with httpx.AsyncClient(timeout=10.0) as client:
+        try:
+            resp = await client.patch(url, headers=headers, json=payload)
+            if resp.status_code == 401 or resp.status_code == 403:
+                return {"sucesso": False, "erro": "Acesso não autorizado ou sessão expirada no backend"}
+            data = resp.json()
+            if resp.status_code not in (200, 201):
+                return {"sucesso": False, "erro": data.get("mensagem") or f"Erro do servidor (status {resp.status_code})"}
+            return {"sucesso": True, "dados": data.get("dados", {})}
+        except Exception as e:
+            return {"sucesso": False, "erro": f"Falha de conexão com a API: {str(e)}"}
+
 @mcp_server_app.tool()
 async def obter_configuracoes_mei() -> Dict[str, Any]:
     """Obtém os dados cadastrais e fiscais do MEI (razão social, nome fantasia, CNPJ, endereço completo, UF, ambiente fiscal e séries de notas)."""
@@ -135,6 +154,16 @@ async def consultar_dados_cnpj(cnpj: str) -> Dict[str, Any]:
     if not cnpj_limpo:
         cnpj_limpo = str(cnpj).strip()
     return await _fetch(f"/configuracoes/cnpj/{cnpj_limpo}")
+
+@mcp_server_app.tool()
+async def obter_status_certificado_digital() -> Dict[str, Any]:
+    """Consulta o status e validade do Certificado Digital ICP-Brasil A1 do MEI (CNPJ, Razão Social, data de expiração, dias restantes e se a transmissão oficial à SEFAZ está ativa)."""
+    return await _fetch("/configuracoes/certificado")
+
+@mcp_server_app.tool()
+async def alternar_transmissao_sefaz(ativo: bool) -> Dict[str, Any]:
+    """Ativa (True) ou desativa (False) a transmissão oficial de notas fiscais com Certificado Digital A1 aos servidores de Homologação da SEFAZ."""
+    return await _patch("/configuracoes/certificado/toggle", {"ativo": ativo})
 
 
 @mcp_server_app.tool()
