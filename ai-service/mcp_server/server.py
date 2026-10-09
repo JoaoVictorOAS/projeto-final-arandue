@@ -473,5 +473,108 @@ async def cancelar_nota_fiscal(nota_id: Any, motivo: str) -> Dict[str, Any]:
         "data_cancelamento": str(dados.get("data_cancelamento", ""))
     }
 
+@mcp_server_app.tool()
+async def listar_insumos_estoque(busca: Optional[str] = None, apenas_abaixo_minimo: bool = False) -> Dict[str, Any]:
+    """Lista matérias-primas e insumos cadastrados, seus saldos atuais e alertas de estoque mínimo."""
+    params = {}
+    if busca:
+        params["busca"] = busca
+    if apenas_abaixo_minimo:
+        params["apenas_abaixo_minimo"] = "true"
+
+    dados = await _fetch("/estoque/insumos", params=params)
+    if isinstance(dados, dict) and "erro" in dados:
+        return dados
+    lista = dados if isinstance(dados, list) else []
+    return {
+        "total": len(lista),
+        "insumos": lista
+    }
+
+@mcp_server_app.tool()
+async def cadastrar_insumo(
+    nome: str,
+    unidade_base: str,
+    estoque_minimo: float = 0.0,
+    custo_unitario: float = 0.0
+) -> Dict[str, Any]:
+    """Cadastra um novo insumo/ingrediente. Unidade base deve ser 'g' (gramas), 'ml' (mililitros) ou 'un' (unidades)."""
+    payload = {
+        "nome": nome.strip(),
+        "unidade_base": unidade_base.strip().lower(),
+        "estoque_minimo": float(estoque_minimo),
+        "custo_unitario": float(custo_unitario)
+    }
+    return await _post("/estoque/insumos", payload)
+
+@mcp_server_app.tool()
+async def registrar_compra_insumo(
+    nome_ou_id: Any,
+    quantidade: float,
+    unidade: str,
+    custo_total: Optional[float] = None,
+    lancar_no_caixa: bool = True
+) -> Dict[str, Any]:
+    """Registra uma entrada/compra de insumo com conversão automática de unidades e opção de lançar despesa no Livro Caixa."""
+    payload = {
+        "quantidade": float(quantidade),
+        "unidade": unidade,
+        "lancar_no_caixa": bool(lancar_no_caixa)
+    }
+    if custo_total is not None:
+        payload["custo_total"] = float(custo_total)
+
+    if isinstance(nome_ou_id, int) and not isinstance(nome_ou_id, bool):
+        payload["insumo_id"] = int(nome_ou_id)
+    elif isinstance(nome_ou_id, str) and nome_ou_id.strip().isdigit():
+        payload["insumo_id"] = int(nome_ou_id.strip())
+    else:
+        payload["nome"] = str(nome_ou_id).strip()
+
+    return await _post("/estoque/insumos/entrada", payload)
+
+@mcp_server_app.tool()
+async def obter_ficha_tecnica_e_custo(servico_id: int) -> Dict[str, Any]:
+    """Consulta os ingredientes e o custo total de confecção (CMV) de um produto do catálogo."""
+    return await _fetch(f"/estoque/fichas-tecnicas/{servico_id}")
+
+@mcp_server_app.tool()
+async def definir_ficha_tecnica(servico_id: int, ingredientes: List[Dict[str, Any]]) -> Dict[str, Any]:
+    """Define ou substitui a receita de um produto com os insumos necessários e suas quantidades na unidade base."""
+    payload = {
+        "servico_id": int(servico_id),
+        "ingredientes": ingredientes
+    }
+    return await _post("/estoque/fichas-tecnicas", payload)
+
+@mcp_server_app.tool()
+async def registrar_lote_producao(servico_id: int, quantidade: int) -> Dict[str, Any]:
+    """Registra a produção de um lote de produtos prontos, dando baixa automática nos insumos correspondentes."""
+    payload = {
+        "servico_id": int(servico_id),
+        "quantidade": int(quantidade)
+    }
+    return await _post("/estoque/producao", payload)
+
+@mcp_server_app.tool()
+async def simular_producao(
+    servico_id: int,
+    insumos_informados: Optional[List[Dict[str, Any]]] = None,
+    usar_estoque_atual: bool = False
+) -> Dict[str, Any]:
+    """Simula capacidade produtiva ('Com tanto de X e Y, quantos Z consigo fazer?'), identificando o ingrediente limitante e sobras."""
+    payload = {
+        "servico_id": int(servico_id),
+        "usar_estoque_atual": bool(usar_estoque_atual)
+    }
+    if insumos_informados is not None:
+        payload["insumos_informados"] = insumos_informados
+    return await _post("/estoque/simulacao", payload)
+
+@mcp_server_app.tool()
+async def consultar_historico_estoque(limite: int = 20) -> Dict[str, Any]:
+    """Consulta o histórico recente de entradas, saídas e movimentações do estoque."""
+    return await _fetch("/estoque/movimentacoes", params={"limite": min(max(1, int(limite)), 50)})
+
 if __name__ == "__main__":
     mcp_server_app.run()
