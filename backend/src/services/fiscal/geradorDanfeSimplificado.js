@@ -245,8 +245,9 @@ function gerarDanfeSimplificado({ nota = {}, itens = [], emitente = {} }) {
     </header>
 
     ${nota.ambiente !== 'PRODUCAO' ? `
-    <div style="background: #fef3c7; color: #92400e; border: 1px solid #fde68a; padding: 6px 12px; font-size: 11px; font-weight: 700; text-align: center; border-radius: 4px; margin-bottom: 12px;">
-      EMISSÃO EM AMBIENTE DE HOMOLOGAÇÃO — SEM VALOR FISCAL
+    <div style="background: #fef3c7; color: #92400e; border: 1px solid #fde68a; padding: 8px 12px; font-size: 11px; text-align: center; border-radius: 4px; margin-bottom: 12px; line-height: 1.4;">
+      <div style="font-weight: 800; text-transform: uppercase;">EMISSÃO EM AMBIENTE DE HOMOLOGAÇÃO / SIMULAÇÃO — SEM VALOR FISCAL</div>
+      <div style="font-size: 10px; color: #78350f; margin-top: 3px;">Documento gerado para testes e gestão interna do MEI. A chave possui validação matemática oficial (Módulo 11), mas não foi transmitida à base nacional da SEFAZ por não estar em ambiente de produção com Certificado Digital A1.</div>
     </div>` : ''}
 
     ${nota.chave_acesso ? `

@@ -825,6 +825,16 @@ export default function NotasFiscais() {
         title={`DANFE Simplificado — Nota #${notaSelecionada?.numero || ''}`}
       >
         <div className="space-y-4">
+          {notaSelecionada?.ambiente !== 'PRODUCAO' && (
+            <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg text-xs flex items-start gap-2.5">
+              <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+              <div className="text-amber-900 leading-relaxed">
+                <span className="font-bold">Emissão em Homologação / Simulação Local:</span>{' '}
+                Esta nota fiscal foi gerada e armazenada no Aranduê com chave e layout MOC oficiais. Por não ter transmissão com Certificado Digital A1 em Produção, a consulta direta nos servidores da Receita Federal / SEFAZ retornará que o documento não consta na base nacional.
+              </div>
+            </div>
+          )}
+
           {loadingDanfe ? (
             <div className="py-12 text-center text-gray-500 flex flex-col items-center justify-center gap-2">
               <Loader2 className="w-6 h-6 animate-spin text-indigo-600" />
