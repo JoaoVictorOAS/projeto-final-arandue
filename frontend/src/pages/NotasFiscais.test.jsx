@@ -97,7 +97,7 @@ describe('Módulo Fiscal — Notas Fiscais', () => {
 
     api.get.mockImplementation((url) => {
       if (url.includes('/danfe')) {
-        return Promise.resolve({ data: '<div>DANFE SIMPLIFICADO MEI</div>' });
+        return Promise.resolve({ data: { sucesso: true, dados: { danfe: '<div>DANFE SIMPLIFICADO MEI</div>' } } });
       }
       return Promise.resolve({ data: { sucesso: true, dados: mockNotas } });
     });

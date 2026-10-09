@@ -131,7 +131,7 @@ export default function NotasFiscais() {
     setDanfeHtml('');
     try {
       const res = await api.get(`/notas-fiscais/${nota.id}/danfe`);
-      const html = typeof res.data === 'string' ? res.data : res.data?.dados || '';
+      const html = typeof res.data === 'string' ? res.data : res.data?.dados?.danfe || '';
       setDanfeHtml(html);
     } catch (err) {
       console.error('Erro ao carregar DANFE:', err);
