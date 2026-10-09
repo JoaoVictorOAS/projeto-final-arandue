@@ -340,6 +340,126 @@ const estoqueService = {
       ingredientesFicha: ficha,
       insumosDisponiveis
     });
+  },
+
+  /**
+   * Processa arquivo XML de NF-e e retorna dados pré-formatados.
+   */
+  async processarXmlNotaFiscal(xmlString) {
+    const leitorXmlNfe = require('./fiscal/leitorXmlNfe');
+    return leitorXmlNfe.parse(xmlString);
+  },
+
+  /**
+   * Registra compra e entrada de múltiplos insumos a partir de documento fiscal (XML, Foto ou Lote).
+   */
+  async registrarEntradaLoteNotaFiscal(usuario_id, {
+    fornecedor = null,
+    numero_documento = null,
+    itens = [],
+    lancar_no_caixa = true
+  }) {
+    if (!Array.isArray(itens) || itens.length === 0) {
+      throw new Error('A lista de itens da nota fiscal não pode estar vazia.');
+    }
+
+    const conn = await pool.getConnection();
+    try {
+      await conn.beginTransaction();
+
+      let valorTotalNota = 0;
+      const itensProcessados = [];
+
+      for (const item of itens) {
+        const { nome, insumo_id, quantidade, unidade, custo_total, valor_total } = item;
+        const qtdNum = Number(quantidade);
+        if (isNaN(qtdNum) || qtdNum <= 0) continue;
+
+        let insumo = null;
+        if (insumo_id) {
+          insumo = await insumoRepository.buscarPorId(insumo_id, usuario_id, conn);
+        } else if (nome) {
+          insumo = await insumoRepository.buscarPorNome(nome, usuario_id, conn);
+        }
+
+        // Se o insumo não existe, determina unidade base apropriada e cria
+        if (!insumo && nome) {
+          const uNormalizada = (unidade || 'un').toLowerCase();
+          const unidade_base = ['kg', 'g'].includes(uNormalizada) ? 'g' : ['l', 'ml'].includes(uNormalizada) ? 'ml' : 'un';
+          insumo = await insumoRepository.criar({
+            usuario_id,
+            nome: nome.trim(),
+            unidade_base,
+            quantidade_atual: 0,
+            estoque_minimo: 0,
+            custo_unitario: 0
+          }, conn);
+        }
+
+        if (!insumo) continue;
+
+        const qtdBase = converterParaUnidadeBase(qtdNum, unidade || insumo.unidade_base, insumo.unidade_base);
+        const custoItem = Number(custo_total || valor_total || 0);
+        valorTotalNota += custoItem;
+
+        const custoNovoUnitario = (custoItem > 0 && qtdBase > 0)
+          ? custoItem / qtdBase
+          : Number(insumo.custo_unitario);
+
+        const novoCMP = (custoItem > 0)
+          ? calcularCustoMedioPonderado(insumo.quantidade_atual, insumo.custo_unitario, qtdBase, custoNovoUnitario)
+          : Number(insumo.custo_unitario);
+
+        const novaQtdTotal = Number(insumo.quantidade_atual) + qtdBase;
+
+        await insumoRepository.atualizarSaldoECusto(insumo.id, usuario_id, novaQtdTotal, novoCMP, conn);
+
+        const motivoLedger = `Entrada via NF ${numero_documento || 'S/N'}${fornecedor ? ` (${fornecedor})` : ''}`;
+        await estoqueMovimentacaoRepository.registrarMovimentacao({
+          usuario_id,
+          insumo_id: insumo.id,
+          tipo: 'ENTRADA_COMPRA',
+          quantidade: qtdBase,
+          custo_total: custoItem,
+          motivo: motivoLedger
+        }, conn);
+
+        itensProcessados.push({
+          insumo_id: insumo.id,
+          nome: insumo.nome,
+          quantidade_adicionada: qtdBase,
+          unidade_base: insumo.unidade_base,
+          novo_saldo: novaQtdTotal,
+          novo_cmp: novoCMP
+        });
+      }
+
+      // Lançamento consolidado no Livro Caixa
+      let movFinanceiraId = null;
+      if (lancar_no_caixa && valorTotalNota > 0) {
+        const descCaixa = `Compra NF ${numero_documento || 'S/N'}${fornecedor ? ` - ${fornecedor}` : ''}`;
+        const [finRes] = await conn.query(
+          `INSERT INTO movimentacoes (usuario_id, tipo, categoria, valor, data_movimentacao, descricao)
+           VALUES (?, 'SAIDA', 'Materiais & Insumos', ?, CURDATE(), ?)`,
+          [usuario_id, valorTotalNota, descCaixa]
+        );
+        movFinanceiraId = finRes.insertId;
+      }
+
+      await conn.commit();
+
+      return {
+        total_itens_processados: itensProcessados.length,
+        valor_total_nota: Number(valorTotalNota.toFixed(2)),
+        movimentacao_caixa_id: movFinanceiraId,
+        itens: itensProcessados
+      };
+    } catch (err) {
+      await conn.rollback();
+      throw err;
+    } finally {
+      conn.release();
+    }
   }
 };
 

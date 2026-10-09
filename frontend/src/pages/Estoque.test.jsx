@@ -147,4 +147,21 @@ describe('Módulo de Estoque & Produção', () => {
       expect(screen.getByText(/Sobra: 2000 g/i)).toBeInTheDocument();
     });
   });
+
+  test('deve abrir o modal de entrada por nota fiscal / foto / xml ao clicar no botao', async () => {
+    api.get.mockResolvedValue({ data: { sucesso: true, dados: [] } });
+
+    render(<Estoque />);
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /entrada por nota \/ foto \/ xml/i })).toBeInTheDocument();
+    });
+
+    const btnNota = screen.getByRole('button', { name: /entrada por nota \/ foto \/ xml/i });
+    fireEvent.click(btnNota);
+
+    expect(screen.getByRole('heading', { name: /entrada de insumos por nota fiscal \(foto ou xml\)/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /foto do cupom \/ nota/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /arquivo xml da nf-e/i })).toBeInTheDocument();
+  });
 });

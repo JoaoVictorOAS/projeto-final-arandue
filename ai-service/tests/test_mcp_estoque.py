@@ -11,6 +11,8 @@ from mcp_server.server import (
     registrar_lote_producao,
     simular_producao,
     consultar_historico_estoque,
+    processar_xml_nota_fiscal,
+    registrar_entrada_por_nota,
 )
 
 @pytest.fixture(autouse=True)
@@ -30,6 +32,8 @@ def test_mcp_estoque_security_no_tenant_parameters():
         registrar_lote_producao,
         simular_producao,
         consultar_historico_estoque,
+        processar_xml_nota_fiscal,
+        registrar_entrada_por_nota,
     ]
     for func in ferramentas:
         params = inspect.signature(func).parameters.keys()
@@ -406,3 +410,52 @@ async def test_consultar_historico_estoque():
     req = respx.calls.last.request
     query_str = req.url.query.decode()
     assert "limite=10" in query_str
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_processar_xml_nota_fiscal():
+    resposta_api = {
+        "sucesso": True,
+        "dados": {
+            "fornecedor_nome": "Fornecedor Central",
+            "numero_documento": "123",
+            "valor_total": 50.0,
+            "itens": [
+                {"nome": "Farinha", "quantidade_original": 10, "unidade_original": "KG"}
+            ]
+        }
+    }
+    respx.post("http://test-node:3001/api/estoque/insumos/parse-xml").mock(
+        return_value=httpx.Response(200, json=resposta_api)
+    )
+
+    resultado = await processar_xml_nota_fiscal("<xml>fake</xml>")
+    assert resultado["sucesso"] is True
+    assert resultado["dados"]["fornecedor_nome"] == "Fornecedor Central"
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_registrar_entrada_por_nota():
+    resposta_api = {
+        "sucesso": True,
+        "dados": {
+            "total_itens_processados": 1,
+            "valor_total_nota": 45.0,
+            "itens": [{"nome": "Farinha", "quantidade_adicionada": 10000}]
+        }
+    }
+    respx.post("http://test-node:3001/api/estoque/insumos/entrada-nota").mock(
+        return_value=httpx.Response(200, json=resposta_api)
+    )
+
+    resultado = await registrar_entrada_por_nota(
+        itens=[{"nome": "Farinha", "quantidade": 10, "unidade": "kg", "custo_total": 45.0}],
+        fornecedor="Moinho Alimentos",
+        numero_documento="777",
+        lancar_no_caixa=True
+    )
+    assert resultado["sucesso"] is True
+    assert resultado["dados"]["total_itens_processados"] == 1
+

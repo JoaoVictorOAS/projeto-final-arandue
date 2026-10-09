@@ -150,6 +150,55 @@ const estoqueController = {
     } catch (err) {
       return res.status(500).json({ sucesso: false, mensagem: err.message });
     }
+  },
+
+  /**
+   * POST /api/estoque/insumos/parse-xml
+   * Faz o parse de XML da NF-e para conferência prévia.
+   */
+  async parseXmlNota(req, res) {
+    try {
+      const { xml } = req.body;
+      if (!xml || typeof xml !== 'string' || !xml.trim()) {
+        return res.status(400).json({ sucesso: false, mensagem: 'O conteúdo XML da nota é obrigatório' });
+      }
+      const dados = await estoqueService.processarXmlNotaFiscal(xml);
+      return res.status(200).json({ sucesso: true, dados });
+    } catch (err) {
+      return res.status(400).json({ sucesso: false, mensagem: err.message });
+    }
+  },
+
+  /**
+   * POST /api/estoque/insumos/entrada-nota
+   * Registra compra e entrada de múltiplos insumos a partir de documento fiscal.
+   */
+  async registrarEntradaNota(req, res) {
+    try {
+      const usuario_id = req.usuario.id;
+      const resultado = await estoqueService.registrarEntradaLoteNotaFiscal(usuario_id, req.body);
+      return res.status(200).json({ sucesso: true, dados: resultado });
+    } catch (err) {
+      return res.status(400).json({ sucesso: false, mensagem: err.message });
+    }
+  },
+
+  /**
+   * POST /api/estoque/insumos/ocr-foto
+   * Extrai dados de produtos a partir da foto ou imagem da nota fiscal via IA multimodal.
+   */
+  async ocrFotoNota(req, res) {
+    try {
+      const { imagem_base64, mime_type } = req.body;
+      if (!imagem_base64) {
+        return res.status(400).json({ sucesso: false, mensagem: 'A imagem da nota fiscal é obrigatória' });
+      }
+      const aiServiceClient = require('../services/aiServiceClient');
+      const resultado = await aiServiceClient.extrairDadosNotaFiscal({ imagem_base64, mime_type });
+      return res.status(200).json({ sucesso: true, dados: resultado });
+    } catch (err) {
+      return res.status(500).json({ sucesso: false, mensagem: err.message });
+    }
   }
 };
 

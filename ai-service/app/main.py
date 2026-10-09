@@ -203,3 +203,118 @@ async def chat_endpoint(payload: ChatRequest):
         modelo=resposta_llm.modelo,
         latencia_ms=latencia_ms
     )
+
+
+class OcrItem(BaseModel):
+    nome: str
+    quantidade: float = 1.0
+    unidade: str = "un"
+    valor_unitario: Optional[float] = 0.0
+    valor_total: Optional[float] = 0.0
+
+
+class OcrNotaFiscalRequest(BaseModel):
+    imagem_base64: str
+    mime_type: str = "image/jpeg"
+
+
+class OcrNotaFiscalResponse(BaseModel):
+    sucesso: bool
+    fornecedor: Optional[str] = None
+    numero_documento: Optional[str] = None
+    data_emissao: Optional[str] = None
+    valor_total: float = 0.0
+    itens: List[OcrItem] = []
+    mensagem: Optional[str] = None
+
+
+@app.post("/ocr/nota-fiscal", response_model=OcrNotaFiscalResponse, dependencies=[Depends(verify_internal_secret)])
+async def ocr_nota_fiscal_endpoint(payload: OcrNotaFiscalRequest):
+    orchestrator: Orchestrator = state.get("orchestrator")
+    if not orchestrator or not orchestrator._client:
+        return OcrNotaFiscalResponse(
+            sucesso=True,
+            fornecedor="Distribuidora de Alimentos (Simulado)",
+            numero_documento="NF-Simulada",
+            valor_total=120.0,
+            itens=[
+                OcrItem(nome="Farinha de Trigo Especial", quantidade=10.0, unidade="kg", valor_total=50.0),
+                OcrItem(nome="Óleo de Soja", quantidade=10.0, unidade="un", valor_total=70.0)
+            ],
+            mensagem="Nota fiscal processada em modo de demonstração local."
+        )
+
+    try:
+        import base64
+        import json
+        img_str = payload.imagem_base64
+        if "," in img_str:
+            img_str = img_str.split(",", 1)[1]
+        image_bytes = base64.b64decode(img_str)
+
+        prompt_ocr = """Você é um especialista em OCR e documentos fiscais brasileiros (DANFE, NFC-e, Cupom Fiscal, Recibos).
+Analise com atenção a imagem desta nota fiscal de compra e extraia em JSON estrito (sem markdown extra, apenas o objeto JSON):
+{
+  "fornecedor": "Razão social ou nome fantasia do fornecedor/emitente",
+  "numero_documento": "Número da nota fiscal ou cupom",
+  "data_emissao": "AAAA-MM-DD",
+  "valor_total": 0.00,
+  "itens": [
+    {
+      "nome": "Nome claro do produto ou matéria-prima",
+      "quantidade": 1.0,
+      "unidade": "kg, g, l, ml, un ou cx",
+      "valor_unitario": 0.00,
+      "valor_total": 0.00
+    }
+  ]
+}
+Se algum dado não for visível, tente deduzir com base no contexto ou deixe null. Responda APENAS o JSON."""
+
+        from google.genai import types
+
+        response = await asyncio.to_thread(
+            orchestrator._client.models.generate_content,
+            model=orchestrator.model_name,
+            contents=[
+                types.Part.from_bytes(data=image_bytes, mime_type=payload.mime_type),
+                prompt_ocr
+            ]
+        )
+
+        texto_limpo = response.text.strip()
+        if texto_limpo.startswith("```json"):
+            texto_limpo = texto_limpo[7:]
+        if texto_limpo.startswith("```"):
+            texto_limpo = texto_limpo[3:]
+        if texto_limpo.endswith("```"):
+            texto_limpo = texto_limpo[:-3]
+        texto_limpo = texto_limpo.strip()
+
+        dados = json.loads(texto_limpo)
+        itens_obj = [
+            OcrItem(
+                nome=it.get("nome", "Item sem nome"),
+                quantidade=float(it.get("quantidade", 1.0)),
+                unidade=str(it.get("unidade", "un")),
+                valor_unitario=float(it.get("valor_unitario", 0.0)) if it.get("valor_unitario") else None,
+                valor_total=float(it.get("valor_total", 0.0)) if it.get("valor_total") else None
+            )
+            for it in dados.get("itens", [])
+        ]
+
+        return OcrNotaFiscalResponse(
+            sucesso=True,
+            fornecedor=dados.get("fornecedor"),
+            numero_documento=str(dados.get("numero_documento", "")),
+            data_emissao=dados.get("data_emissao"),
+            valor_total=float(dados.get("valor_total", 0.0)),
+            itens=itens_obj
+        )
+    except Exception as e:
+        logger.error(f"Erro ao processar OCR multimodal de nota fiscal: {e}")
+        return OcrNotaFiscalResponse(
+            sucesso=False,
+            mensagem=f"Não foi possível extrair dados da nota fiscal pela foto: {str(e)}"
+        )
+

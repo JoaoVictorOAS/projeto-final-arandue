@@ -17,6 +17,10 @@ import {
   X,
   ArrowRight,
   Boxes,
+  Camera,
+  UploadCloud,
+  FileCode,
+  Sparkles,
 } from 'lucide-react';
 import api from '../services/api';
 import Modal from '../components/Modal';
@@ -68,8 +72,18 @@ export default function Estoque() {
   // Modals
   const [modalInsumoAberto, setModalInsumoAberto] = useState(false);
   const [modalEntradaAberto, setModalEntradaAberto] = useState(false);
+  const [modalNotaFiscalAberto, setModalNotaFiscalAberto] = useState(false);
   const [modalReceitaAberto, setModalReceitaAberto] = useState(false);
   const [modalProducaoAberto, setModalProducaoAberto] = useState(false);
+
+  // Importação por Nota Fiscal (Foto ou XML)
+  const [modoImportacao, setModoImportacao] = useState('foto'); // 'foto' ou 'xml'
+  const [fotoBase64, setFotoBase64] = useState('');
+  const [fotoPreview, setFotoPreview] = useState('');
+  const [arquivoXmlNome, setArquivoXmlNome] = useState('');
+  const [processandoNota, setProcessandoNota] = useState(false);
+  const [dadosNotaImportada, setDadosNotaImportada] = useState(null);
+  const [lancarCaixaNota, setLancarCaixaNota] = useState(true);
 
   // Form: Novo Insumo
   const [formInsumo, setFormInsumo] = useState({
@@ -271,6 +285,125 @@ export default function Estoque() {
     }
   };
 
+  // Handler: Selecionar Foto de Nota Fiscal
+  const handleSelecionarFoto = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const b64 = reader.result;
+      setFotoBase64(b64);
+      setFotoPreview(b64);
+      setDadosNotaImportada(null);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  // Handler: Analisar Foto com IA
+  const handleAnalisarFoto = async () => {
+    if (!fotoBase64) {
+      showFeedback('error', 'Selecione ou tire uma foto da nota fiscal primeiro.');
+      return;
+    }
+    setProcessandoNota(true);
+    try {
+      const mime = fotoBase64.startsWith('data:') ? fotoBase64.split(';')[0].replace('data:', '') : 'image/jpeg';
+      const res = await api.post('/estoque/insumos/ocr-foto', {
+        imagem_base64: fotoBase64,
+        mime_type: mime
+      });
+      const dados = res.data?.dados;
+      if (dados && dados.sucesso !== false) {
+        setDadosNotaImportada({
+          fornecedor: dados.fornecedor || '',
+          numero_documento: dados.numero_documento || '',
+          valor_total: dados.valor_total || 0,
+          itens: (dados.itens || []).map((it) => ({
+            nome: it.nome,
+            quantidade: it.quantidade || 1,
+            unidade: it.unidade || 'un',
+            custo_total: it.valor_total || 0,
+          }))
+        });
+        showFeedback('success', 'Foto analisada com sucesso pela IA! Confira os itens abaixo.');
+      } else {
+        showFeedback('error', dados?.mensagem || 'Não foi possível extrair dados da imagem.');
+      }
+    } catch (err) {
+      const msg = err.response?.data?.mensagem || 'Erro ao processar imagem da nota.';
+      showFeedback('error', msg);
+    } finally {
+      setProcessandoNota(false);
+    }
+  };
+
+  // Handler: Selecionar XML de NF-e
+  const handleSelecionarXml = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setArquivoXmlNome(file.name);
+    const reader = new FileReader();
+    reader.onload = async () => {
+      const xmlTexto = reader.result;
+      setProcessandoNota(true);
+      try {
+        const res = await api.post('/estoque/insumos/parse-xml', { xml: xmlTexto });
+        const dados = res.data?.dados;
+        if (dados) {
+          setDadosNotaImportada({
+            fornecedor: dados.fornecedor_nome || '',
+            numero_documento: dados.numero_documento || '',
+            valor_total: dados.valor_total || 0,
+            itens: (dados.itens || []).map((it) => ({
+              nome: it.nome,
+              quantidade: it.quantidade_original || 1,
+              unidade: (it.unidade_original || 'un').toLowerCase(),
+              custo_total: it.valor_total || 0,
+            }))
+          });
+          showFeedback('success', 'XML da NF-e processado com sucesso! Confira os itens abaixo.');
+        }
+      } catch (err) {
+        const msg = err.response?.data?.mensagem || 'Erro ao ler arquivo XML da nota fiscal.';
+        showFeedback('error', msg);
+      } finally {
+        setProcessandoNota(false);
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  // Handler: Confirmar Entrada de Itens da Nota Fiscal
+  const handleConfirmarEntradaNota = async () => {
+    if (!dadosNotaImportada || !dadosNotaImportada.itens || dadosNotaImportada.itens.length === 0) {
+      showFeedback('error', 'Nenhum item válido para dar entrada.');
+      return;
+    }
+    setSalvando(true);
+    try {
+      await api.post('/estoque/insumos/entrada-nota', {
+        fornecedor: dadosNotaImportada.fornecedor,
+        numero_documento: dadosNotaImportada.numero_documento,
+        lancar_no_caixa: lancarCaixaNota,
+        itens: dadosNotaImportada.itens
+      });
+      showFeedback('success', 'Entrada de todos os insumos da nota registrada com sucesso!');
+      setModalNotaFiscalAberto(false);
+      setDadosNotaImportada(null);
+      setFotoBase64('');
+      setFotoPreview('');
+      setArquivoXmlNome('');
+      await Promise.all([carregarInsumos(), carregarMovimentacoes()]);
+    } catch (err) {
+      const msg = err.response?.data?.mensagem || 'Erro ao confirmar entrada da nota fiscal.';
+      showFeedback('error', msg);
+    } finally {
+      setSalvando(false);
+    }
+  };
+
   // Handler: Salvar Receita (Ficha Técnica)
   const handleSalvarFichaTecnica = async (e) => {
     e.preventDefault();
@@ -406,6 +539,15 @@ export default function Estoque() {
 
         {/* Ações Rápidas */}
         <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setModalNotaFiscalAberto(true)}
+            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors shadow-sm"
+          >
+            <Camera className="w-4 h-4" />
+            Entrada por Nota / Foto / XML
+          </button>
+
           <button
             type="button"
             onClick={() => setModalEntradaAberto(true)}
@@ -1280,6 +1422,239 @@ export default function Estoque() {
             </button>
           </div>
         </form>
+      </Modal>
+
+      {/* MODAL 5: Entrada por Nota Fiscal / Foto / XML */}
+      <Modal
+        isOpen={modalNotaFiscalAberto}
+        onClose={() => {
+          setModalNotaFiscalAberto(false);
+          setDadosNotaImportada(null);
+          setFotoBase64('');
+          setFotoPreview('');
+          setArquivoXmlNome('');
+        }}
+        title="Entrada de Insumos por Nota Fiscal (Foto ou XML)"
+      >
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-2 border-b border-gray-100 pb-3">
+            <button
+              type="button"
+              onClick={() => setModoImportacao('foto')}
+              className={`py-2 px-3 text-xs font-bold rounded-lg border text-center transition-all flex items-center justify-center gap-1.5 ${
+                modoImportacao === 'foto'
+                  ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
+                  : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+              }`}
+            >
+              <Camera className="w-4 h-4" /> Foto do Cupom / Nota
+            </button>
+            <button
+              type="button"
+              onClick={() => setModoImportacao('xml')}
+              className={`py-2 px-3 text-xs font-bold rounded-lg border text-center transition-all flex items-center justify-center gap-1.5 ${
+                modoImportacao === 'xml'
+                  ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
+                  : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+              }`}
+            >
+              <FileCode className="w-4 h-4" /> Arquivo XML da NF-e
+            </button>
+          </div>
+
+          {modoImportacao === 'foto' ? (
+            <div className="space-y-3">
+              <label className="block text-xs font-semibold text-gray-700">
+                Selecione ou tire a foto da nota / cupom fiscal:
+              </label>
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:bg-gray-50 transition-colors">
+                <input
+                  type="file"
+                  id="input-foto-nota"
+                  accept="image/*,application/pdf"
+                  capture="environment"
+                  onChange={handleSelecionarFoto}
+                  className="hidden"
+                />
+                <label htmlFor="input-foto-nota" className="cursor-pointer block">
+                  <UploadCloud className="w-8 h-8 text-blue-500 mx-auto mb-1" />
+                  <span className="text-xs font-semibold text-blue-600 hover:underline">
+                    Clique para selecionar imagem ou tirar foto
+                  </span>
+                  <p className="text-[11px] text-gray-400 mt-0.5">PNG, JPG, JPEG ou PDF</p>
+                </label>
+              </div>
+
+              {fotoPreview && (
+                <div className="flex items-center justify-between p-2.5 bg-gray-50 rounded-lg border border-gray-200">
+                  <div className="flex items-center gap-2">
+                    <img src={fotoPreview} alt="Preview" className="w-12 h-12 object-cover rounded border border-gray-300" />
+                    <div>
+                      <p className="text-xs font-semibold text-gray-800">Foto carregada</p>
+                      <p className="text-[10px] text-gray-500">Pronta para leitura visual inteligente</p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleAnalisarFoto}
+                    disabled={processandoNota}
+                    className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg transition-colors flex items-center gap-1.5 disabled:opacity-50"
+                  >
+                    {processandoNota ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
+                    Analisar com IA
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <label className="block text-xs font-semibold text-gray-700">
+                Anexe o arquivo XML da NF-e emitida pelo fornecedor:
+              </label>
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-5 text-center hover:bg-gray-50 transition-colors">
+                <input
+                  type="file"
+                  id="input-xml-nota"
+                  accept=".xml,text/xml"
+                  onChange={handleSelecionarXml}
+                  className="hidden"
+                />
+                <label htmlFor="input-xml-nota" className="cursor-pointer block">
+                  <FileCode className="w-8 h-8 text-indigo-500 mx-auto mb-1" />
+                  <span className="text-xs font-semibold text-indigo-600 hover:underline">
+                    {arquivoXmlNome || 'Clique para carregar o arquivo .XML'}
+                  </span>
+                  <p className="text-[11px] text-gray-400 mt-0.5">Layout oficial NF-e SEFAZ 4.00</p>
+                </label>
+              </div>
+            </div>
+          )}
+
+          {/* Prévia / Conferência dos Itens Extraídos */}
+          {dadosNotaImportada && (
+            <div className="mt-4 pt-4 border-t border-gray-200 space-y-3">
+              <div className="p-3 bg-blue-50/70 border border-blue-200 rounded-lg flex items-center justify-between text-xs">
+                <div>
+                  <p className="font-semibold text-blue-900">
+                    Fornecedor: {dadosNotaImportada.fornecedor || 'Identificado na nota'}
+                  </p>
+                  <p className="text-blue-700 mt-0.5">
+                    Doc / NF: #{dadosNotaImportada.numero_documento || 'S/N'}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="text-[11px] text-gray-500 uppercase font-semibold">Valor Total</p>
+                  <p className="text-base font-bold text-gray-900">
+                    {formatCurrency(dadosNotaImportada.valor_total)}
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+                <p className="text-xs font-semibold text-gray-700">
+                  Itens Identificados ({dadosNotaImportada.itens?.length || 0}):
+                </p>
+                {(dadosNotaImportada.itens || []).map((it, idx) => (
+                  <div key={idx} className="flex items-center gap-2 p-2 bg-gray-50 border border-gray-200 rounded-lg text-xs">
+                    <input
+                      type="text"
+                      value={it.nome}
+                      onChange={(e) => {
+                        const novo = { ...dadosNotaImportada };
+                        novo.itens[idx].nome = e.target.value;
+                        setDadosNotaImportada(novo);
+                      }}
+                      className="flex-1 px-2 py-1 border border-gray-300 rounded text-xs"
+                      placeholder="Nome do insumo"
+                    />
+                    <input
+                      type="number"
+                      step="any"
+                      value={it.quantidade}
+                      onChange={(e) => {
+                        const novo = { ...dadosNotaImportada };
+                        novo.itens[idx].quantidade = e.target.value;
+                        setDadosNotaImportada(novo);
+                      }}
+                      className="w-16 px-2 py-1 border border-gray-300 rounded text-xs"
+                      placeholder="Qtd"
+                    />
+                    <select
+                      value={it.unidade}
+                      onChange={(e) => {
+                        const novo = { ...dadosNotaImportada };
+                        novo.itens[idx].unidade = e.target.value;
+                        setDadosNotaImportada(novo);
+                      }}
+                      className="w-16 px-1 py-1 border border-gray-300 rounded text-xs"
+                    >
+                      <option value="kg">kg</option>
+                      <option value="g">g</option>
+                      <option value="l">l</option>
+                      <option value="ml">ml</option>
+                      <option value="un">un</option>
+                    </select>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={it.custo_total}
+                      onChange={(e) => {
+                        const novo = { ...dadosNotaImportada };
+                        novo.itens[idx].custo_total = e.target.value;
+                        setDadosNotaImportada(novo);
+                      }}
+                      className="w-20 px-2 py-1 border border-gray-300 rounded text-xs"
+                      placeholder="R$ Total"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const novo = { ...dadosNotaImportada };
+                        novo.itens = novo.itens.filter((_, i) => i !== idx);
+                        setDadosNotaImportada(novo);
+                      }}
+                      className="p-1 text-red-500 hover:text-red-700"
+                      title="Excluir item da entrada"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+
+              <div className="p-2.5 bg-gray-50 rounded-lg border border-gray-200">
+                <label className="flex items-center gap-2 text-xs text-gray-800 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={lancarCaixaNota}
+                    onChange={(e) => setLancarCaixaNota(e.target.checked)}
+                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  <span className="font-semibold">Lançar valor total como despesa no Livro Caixa</span>
+                </label>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-3 border-t border-gray-100">
+                <button
+                  type="button"
+                  onClick={() => setDadosNotaImportada(null)}
+                  className="px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100 rounded-lg"
+                >
+                  Limpar
+                </button>
+                <button
+                  type="button"
+                  onClick={handleConfirmarEntradaNota}
+                  disabled={salvando || (dadosNotaImportada.itens || []).length === 0}
+                  className="px-4 py-2 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg disabled:opacity-50 flex items-center gap-1.5 shadow-sm"
+                >
+                  {salvando && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                  Confirmar Entrada de Insumos
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       </Modal>
     </div>
   );

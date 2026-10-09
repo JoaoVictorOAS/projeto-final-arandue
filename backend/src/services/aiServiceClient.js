@@ -52,6 +52,53 @@ const aiServiceClient = {
       }
       throw err;
     }
+  },
+
+  /**
+   * Extrai fornecedor, número e lista de itens a partir de imagem/foto de nota fiscal.
+   * @param {Object} payload
+   * @param {string} payload.imagem_base64
+   * @param {string} [payload.mime_type='image/jpeg']
+   * @returns {Promise<Object>}
+   */
+  async extrairDadosNotaFiscal({ imagem_base64, mime_type = 'image/jpeg' }) {
+    const url = `${AI_SERVICE_URL.replace(/\/$/, '')}/ocr/nota-fiscal`;
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 45000);
+
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Internal-Secret': INTERNAL_SERVICE_SECRET
+        },
+        body: JSON.stringify({
+          imagem_base64,
+          mime_type
+        }),
+        signal: controller.signal
+      });
+
+      clearTimeout(timeout);
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        const erro = new Error(errorData.detail || `Falha no OCR de nota fiscal (status ${response.status})`);
+        erro.statusCode = response.status || 500;
+        throw erro;
+      }
+
+      return await response.json();
+    } catch (err) {
+      clearTimeout(timeout);
+      if (err.name === 'AbortError') {
+        const erroTimeout = new Error('Tempo limite excedido na análise visual da nota fiscal');
+        erroTimeout.statusCode = 504;
+        throw erroTimeout;
+      }
+      throw err;
+    }
   }
 };
 

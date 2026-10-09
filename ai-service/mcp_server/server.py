@@ -576,5 +576,28 @@ async def consultar_historico_estoque(limite: int = 20) -> Dict[str, Any]:
     """Consulta o histórico recente de entradas, saídas e movimentações do estoque."""
     return await _fetch("/estoque/movimentacoes", params={"limite": min(max(1, int(limite)), 50)})
 
+@mcp_server_app.tool()
+async def processar_xml_nota_fiscal(xml: str) -> Dict[str, Any]:
+    """Lê o XML de uma nota fiscal eletrônica (NF-e) de compra e extrai emitente, totais e itens de insumos para conferência."""
+    return await _post("/estoque/insumos/parse-xml", {"xml": xml})
+
+@mcp_server_app.tool()
+async def registrar_entrada_por_nota(
+    itens: List[Dict[str, Any]],
+    fornecedor: Optional[str] = None,
+    numero_documento: Optional[str] = None,
+    lancar_no_caixa: bool = True
+) -> Dict[str, Any]:
+    """Registra a entrada em lote de múltiplos insumos a partir de uma nota fiscal ou cupom de compra, com opção de registrar despesa no Livro Caixa."""
+    payload = {
+        "itens": itens,
+        "lancar_no_caixa": bool(lancar_no_caixa)
+    }
+    if fornecedor:
+        payload["fornecedor"] = fornecedor
+    if numero_documento:
+        payload["numero_documento"] = str(numero_documento)
+    return await _post("/estoque/insumos/entrada-nota", payload)
+
 if __name__ == "__main__":
     mcp_server_app.run()
