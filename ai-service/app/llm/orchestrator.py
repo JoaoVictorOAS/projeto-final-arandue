@@ -25,6 +25,36 @@ class Orchestrator:
         self.max_tool_calls = max_tool_calls
         self._client = genai.Client(api_key=self.api_key) if self.api_key else None
 
+    @classmethod
+    def _convert_schema(cls, prop: Any) -> Dict[str, Any]:
+        """Converte JSON Schema (MCP) para o subconjunto aceito pelo Gemini.
+
+        Preserva `items` (obrigatório em ARRAY) e `properties` aninhadas.
+        """
+        if not isinstance(prop, dict):
+            return {"type": "STRING"}
+        p_type = prop.get("type")
+        if p_type is None and isinstance(prop.get("anyOf"), list):
+            # Optional[X] => anyOf [X, null]
+            for opt in prop["anyOf"]:
+                if isinstance(opt, dict) and opt.get("type") not in (None, "null"):
+                    merged = {**opt, "description": prop.get("description", opt.get("description", ""))}
+                    return cls._convert_schema(merged)
+        if isinstance(p_type, list):
+            p_type = next((x for x in p_type if x != "null"), "string")
+        p_type = str(p_type or "string").upper()
+
+        out: Dict[str, Any] = {"type": p_type, "description": prop.get("description", "")}
+        if p_type == "ARRAY":
+            out["items"] = cls._convert_schema(prop.get("items") or {"type": "string"})
+        elif p_type == "OBJECT":
+            sub = prop.get("properties")
+            if sub:
+                out["properties"] = {k: cls._convert_schema(v) for k, v in sub.items()}
+                if prop.get("required"):
+                    out["required"] = prop["required"]
+        return out
+
     async def _mcp_tools_to_declarations(self, session: Optional[ClientSession]) -> List[types.FunctionDeclaration]:
         if not session:
             return []
@@ -39,14 +69,10 @@ class Orchestrator:
             else:
                 schema = {}
 
-            # Converte tipos JSON Schema para maiúsculas compatíveis com o Gemini
-            properties = {}
-            for prop_name, prop_val in schema.get("properties", {}).items():
-                p_type = str(prop_val.get("type", "STRING")).upper()
-                properties[prop_name] = {
-                    "type": p_type,
-                    "description": prop_val.get("description", "")
-                }
+            properties = {
+                prop_name: self._convert_schema(prop_val)
+                for prop_name, prop_val in schema.get("properties", {}).items()
+            }
             parameters = {
                 "type": "OBJECT",
                 "properties": properties,
