@@ -394,6 +394,15 @@ CREATE TABLE IF NOT EXISTS mei_configuracoes (
     serie_nfe INT NOT NULL DEFAULT 1,
     serie_nfce INT NOT NULL DEFAULT 1,
     
+    -- Certificado Digital ICP-Brasil A1 e Transmissão SEFAZ
+    certificado_pfx_encrypted LONGTEXT NULL,
+    certificado_senha_encrypted VARCHAR(500) NULL,
+    certificado_nome_arquivo VARCHAR(255) NULL,
+    certificado_cnpj VARCHAR(14) NULL,
+    certificado_razao_social VARCHAR(255) NULL,
+    certificado_valido_ate DATETIME NULL,
+    transmissao_sefaz_ativa TINYINT(1) NOT NULL DEFAULT 1,
+    
     criado_em DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     atualizado_em DATETIME NULL ON UPDATE CURRENT_TIMESTAMP,
     
