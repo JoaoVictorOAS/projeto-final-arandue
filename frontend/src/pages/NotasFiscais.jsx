@@ -814,15 +814,17 @@ export default function NotasFiscais() {
                 href={
                   notaSelecionada?.tipo === 'NFSE'
                     ? 'https://www.nfse.gov.br/consulta'
-                    : 'https://www.nfe.fazenda.gov.br/portal/consultaRecaptcha.aspx'
+                    : (notaSelecionada?.ambiente === 'PRODUCAO'
+                        ? 'https://www.nfe.fazenda.gov.br/portal/consultaRecaptcha.aspx'
+                        : 'https://hom.nfe.fazenda.gov.br/portal/consultaRecaptcha.aspx')
                 }
                 target="_blank"
                 rel="noopener noreferrer"
                 className="px-3 py-1.5 text-xs font-semibold bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-lg transition-colors flex items-center gap-1.5"
-                title="Consultar autenticidade oficial no Portal Nacional (Certificado SSL Válido)"
+                title="Consultar autenticidade oficial (Certificado SSL Válido)"
               >
                 <ExternalLink className="w-3.5 h-3.5" />
-                Consultar Autenticidade (Portal Nacional)
+                Consultar Autenticidade ({notaSelecionada?.ambiente === 'PRODUCAO' ? 'Portal Nacional' : 'SEFAZ Homologação'})
               </a>
               <button
                 type="button"

@@ -258,4 +258,59 @@ describe('Módulo de Configurações — MEI & SEFAZ Multi-Estado', () => {
       expect(screen.getByText(/cnpj não encontrado na base da receita federal/i)).toBeInTheDocument();
     });
   });
+
+  test('deve exibir secao de Certificado Digital A1 com status ou formulario de upload', async () => {
+    api.get.mockImplementation((url) => {
+      if (url === '/configuracoes') {
+        return Promise.resolve({ data: mockConfigInicial });
+      }
+      if (url === '/configuracoes/certificado') {
+        return Promise.resolve({
+          data: {
+            sucesso: true,
+            dados: { configurado: false, ativo: false },
+          },
+        });
+      }
+      return Promise.resolve({ data: { sucesso: true, dados: [] } });
+    });
+
+    render(<Configuracoes />);
+
+    expect(await screen.findByText(/certificado digital icp-brasil/i)).toBeInTheDocument();
+    expect(screen.getByText(/instalar certificado a1/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/senha do certificado/i)).toBeInTheDocument();
+  });
+
+  test('deve exibir dados do certificado quando já estiver configurado', async () => {
+    api.get.mockImplementation((url) => {
+      if (url === '/configuracoes') {
+        return Promise.resolve({ data: mockConfigInicial });
+      }
+      if (url === '/configuracoes/certificado') {
+        return Promise.resolve({
+          data: {
+            sucesso: true,
+            dados: {
+              configurado: true,
+              cnpj: '12345678000195',
+              razaoSocial: 'MEI TESTE LTDA',
+              validoAte: '2027-10-09T18:00:00Z',
+              diasRestantes: 365,
+              ativo: true,
+              nomeArquivo: 'certificado.pfx',
+            },
+          },
+        });
+      }
+      return Promise.resolve({ data: { sucesso: true, dados: [] } });
+    });
+
+    render(<Configuracoes />);
+
+    expect(await screen.findByText(/certificado ativo e válido/i)).toBeInTheDocument();
+    expect(screen.getByText(/MEI TESTE LTDA/i)).toBeInTheDocument();
+    expect(screen.getByText(/12345678000195/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /remover certificado/i })).toBeInTheDocument();
+  });
 });
