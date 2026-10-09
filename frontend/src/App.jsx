@@ -13,6 +13,8 @@ import Agenda from './pages/Agenda';
 import Orcamentos from './pages/Orcamentos';
 import Cobrancas from './pages/Cobrancas';
 import Caixa from './pages/Caixa';
+import Estoque from './pages/Estoque';
+import NotasFiscais from './pages/NotasFiscais';
 import Assistente from './pages/Assistente';
 
 export default function App() {
@@ -34,6 +36,8 @@ export default function App() {
               <Route path="/orcamentos" element={<Orcamentos />} />
               <Route path="/cobrancas" element={<Cobrancas />} />
               <Route path="/caixa" element={<Caixa />} />
+              <Route path="/estoque" element={<Estoque />} />
+              <Route path="/fiscal" element={<NotasFiscais />} />
               <Route path="/assistente" element={<Assistente />} />
             </Route>
           </Route>

@@ -8,6 +8,8 @@ import {
   FileText,
   CreditCard,
   Wallet,
+  Package,
+  Receipt,
   LogOut,
   X,
   Building2,
@@ -24,6 +26,8 @@ const NAV_ITEMS = [
   { to: '/orcamentos', label: 'Orçamentos', icon: FileText },
   { to: '/cobrancas', label: 'Cobranças', icon: CreditCard },
   { to: '/caixa', label: 'Livro Caixa', icon: Wallet },
+  { to: '/estoque', label: 'Estoque & Produção', icon: Package },
+  { to: '/fiscal', label: 'Notas Fiscais', icon: Receipt },
   { to: '/assistente', label: 'Assistente IA', icon: MessageCircle },
 ];
 
