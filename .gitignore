@@ -21,3 +21,7 @@ graphify-out/manifest.json
 
 # Subagent Development Ledger & Scratch
 .superpowers/
+
+# Git Worktrees
+.worktrees/
+worktrees/
