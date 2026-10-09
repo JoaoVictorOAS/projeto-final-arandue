@@ -1,6 +1,7 @@
 const pool = require('../config/database');
 const sefazRegistry = require('../services/fiscal/sefazRegistry');
 const usuarioRepository = require('../repositories/usuarioRepository');
+const certificadoService = require('../services/fiscal/certificadoService');
 
 /**
  * Controller responsável pelas Configurações do MEI e integração com SEFAZ / BrasilAPI.
@@ -421,6 +422,114 @@ const configuracoesController = {
       return res.status(502).json({
         sucesso: false,
         mensagem: error.message || 'Serviço de consulta de CNPJ temporariamente indisponível'
+      });
+    }
+  },
+
+  /**
+   * GET /api/configuracoes/certificado
+   * Retorna os metadados e status do certificado digital sem expor dados sigilosos.
+   */
+  async obterCertificadoStatus(req, res) {
+    try {
+      const usuarioId = req.usuario.id;
+      const status = await certificadoService.obterStatusCertificado(usuarioId);
+      return res.status(200).json({
+        sucesso: true,
+        mensagem: 'Status do certificado digital obtido com sucesso',
+        dados: status
+      });
+    } catch (error) {
+      return res.status(500).json({
+        sucesso: false,
+        mensagem: error.message || 'Erro ao consultar status do certificado digital'
+      });
+    }
+  },
+
+  /**
+   * POST /api/configuracoes/certificado
+   * Upload e registro seguro (AES-256-GCM) do arquivo PFX com validação de senha.
+   */
+  async uploadCertificado(req, res) {
+    try {
+      const usuarioId = req.usuario.id;
+      if (!req.file || !req.file.buffer) {
+        return res.status(400).json({
+          sucesso: false,
+          mensagem: 'Arquivo do certificado (.pfx ou .p12) é obrigatório.'
+        });
+      }
+
+      const senha = req.body.senha;
+      if (!senha || !String(senha).trim()) {
+        return res.status(400).json({
+          sucesso: false,
+          mensagem: 'Senha do certificado é obrigatória.'
+        });
+      }
+
+      const resultado = await certificadoService.salvarCertificado(usuarioId, {
+        buffer: req.file.buffer,
+        senha: String(senha).trim(),
+        nomeArquivo: req.file.originalname || 'certificado.pfx'
+      });
+
+      return res.status(201).json({
+        sucesso: true,
+        mensagem: 'Certificado digital ICP-Brasil instalado com sucesso.',
+        dados: resultado
+      });
+    } catch (error) {
+      return res.status(400).json({
+        sucesso: false,
+        mensagem: error.message || 'Falha ao processar e salvar o certificado digital.'
+      });
+    }
+  },
+
+  /**
+   * DELETE /api/configuracoes/certificado
+   * Remove o certificado digital do MEI.
+   */
+  async removerCertificado(req, res) {
+    try {
+      const usuarioId = req.usuario.id;
+      await certificadoService.removerCertificado(usuarioId);
+      return res.status(200).json({
+        sucesso: true,
+        mensagem: 'Certificado digital desinstalado com sucesso.'
+      });
+    } catch (error) {
+      return res.status(500).json({
+        sucesso: false,
+        mensagem: error.message || 'Erro ao remover o certificado digital.'
+      });
+    }
+  },
+
+  /**
+   * PATCH /api/configuracoes/certificado/toggle
+   * Alterna a flag de transmissão ativa à SEFAZ.
+   */
+  async toggleTransmissaoSefaz(req, res) {
+    try {
+      const usuarioId = req.usuario.id;
+      const { ativo } = req.body;
+      const novoStatus = Boolean(ativo);
+      await certificadoService.alternarTransmissao(usuarioId, novoStatus);
+
+      return res.status(200).json({
+        sucesso: true,
+        mensagem: `Transmissão SEFAZ ${novoStatus ? 'ativada' : 'desativada'} com sucesso.`,
+        dados: {
+          transmissao_sefaz_ativa: novoStatus
+        }
+      });
+    } catch (error) {
+      return res.status(500).json({
+        sucesso: false,
+        mensagem: error.message || 'Erro ao alternar status de transmissão SEFAZ.'
       });
     }
   }
