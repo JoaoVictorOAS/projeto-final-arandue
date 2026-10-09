@@ -311,11 +311,50 @@ function determinarCfopOperacao(ufEmitente, ufDestinatario) {
   return '6102';
 }
 
+const WS_HOMOLOGACAO = {
+  SVRS: 'https://nfe-homologacao.svrs.rs.gov.br/ws/NFeAutorizacao4/NFeAutorizacao4.asmx',
+  SVAN: 'https://hom.sefazvirtual.fazenda.gov.br/NFeAutorizacao4/NFeAutorizacao4.asmx',
+  AM: 'https://homnfe.sefaz.am.gov.br/services2/services/NfeAutorizacao4',
+  BA: 'https://hnfe.sefaz.ba.gov.br/ws/NFeAutorizacao4/NFeAutorizacao4.asmx',
+  GO: 'https://homolog.sefaz.go.gov.br/nfe/services/NFeAutorizacao4',
+  MG: 'https://hnfe.fazenda.mg.gov.br/1.00/NFeAutorizacao4',
+  MS: 'https://hom.nfe.fazenda.ms.gov.br/ws/NFeAutorizacao4',
+  MT: 'https://homologacao.sefaz.mt.gov.br/nfews/v2/services/NfeAutorizacao4',
+  PE: 'https://nfehomolog.sefaz.pe.gov.br/nfe-service/services/NFeAutorizacao4',
+  PR: 'https://homologacao.nfe.fazenda.pr.gov.br/nfe/NFeAutorizacao4',
+  RS: 'https://nfe-homologacao.sefaz.rs.gov.br/ws/NFeAutorizacao4/NFeAutorizacao4.asmx',
+  SP: 'https://homologacao.nfe.fazenda.sp.gov.br/ws/nfeautorizacao4.asmx',
+};
+
+/**
+ * Retorna a URL oficial do WebService de Homologação NFeAutorizacao4 da UF
+ * @param {string} uf Sigla de 2 caracteres
+ * @returns {string} URL HTTPS do WebService
+ */
+function obterUrlWsHomologacao(uf) {
+  if (!uf) return WS_HOMOLOGACAO.SVRS;
+  const sigla = String(uf).trim().toUpperCase();
+  const dados = REGISTRO_SEFAZ[sigla];
+  if (!dados) return WS_HOMOLOGACAO.SVRS;
+
+  if (WS_HOMOLOGACAO[sigla]) {
+    return WS_HOMOLOGACAO[sigla];
+  }
+
+  const autorizadorKey = dados.autorizador.includes('Próprio')
+    ? sigla
+    : dados.autorizador;
+
+  return WS_HOMOLOGACAO[autorizadorKey] || WS_HOMOLOGACAO.SVRS;
+}
+
 module.exports = {
   REGISTRO_SEFAZ,
   TODAS_UFS,
+  WS_HOMOLOGACAO,
   listarTodasUfs,
   obterDadosSefazPorUf,
   validarUf,
-  determinarCfopOperacao
+  determinarCfopOperacao,
+  obterUrlWsHomologacao
 };
