@@ -33,8 +33,9 @@
   - [8.3 Instalação de Dependências](#83-instalação-de-dependências)
   - [8.4 Configuração de Variáveis de Ambiente](#84-configuração-de-variáveis-de-ambiente)
   - [8.5 Migrações e Carga Inicial do Banco](#85-migrações-e-carga-inicial-do-banco)
-  - [8.6 Inicialização do Ambiente Integrado](#86-inicialização-do-ambiente-integrado)
-  - [8.7 Credenciais de Acesso de Demonstração](#87-credenciais-de-acesso-de-demonstração)
+  - [8.6 Vetorização do Corpus RAG (Indexação no ChromaDB)](#86-vetorização-do-corpus-rag-indexação-no-chromadb)
+  - [8.7 Inicialização do Ambiente Integrado](#87-inicialização-do-ambiente-integrado)
+  - [8.8 Credenciais de Acesso de Demonstração](#88-credenciais-de-acesso-de-demonstração)
 - [9. Suíte de Testes Automatizados (511 testes)](#9-suíte-de-testes-automatizados-511-testes)
 - [10. API RESTful — Endpoints Principais](#10-api-restful--endpoints-principais)
 - [11. Modelo de Dados Relacional (16 tabelas)](#11-modelo-de-dados-relacional-16-tabelas)
@@ -478,7 +479,27 @@ npm run db:setup
 
 *(O comando `npm run db:setup` executa `npm run db:migrate` seguido de `npm run db:seed` de forma idempotente).*
 
-### 8.6 Inicialização do Ambiente Integrado
+### 8.6 Vetorização do Corpus RAG (Indexação no ChromaDB)
+Para que o assistente virtual consulte e cite com precisão as regras oficiais do MEI e a legislação vigente, execute a indexação do corpus documental no banco vetorial ChromaDB:
+
+```bash
+# Deleta e recria a base vetorial oficial do MEI (docs/perguntaomei.pdf):
+npm run rag:recreate
+
+# Ou diretamente pelo script shell:
+./scripts/rag/recreate_rag.sh
+
+# (Opcional) Vetorizar também o texto da Constituição Federal (docs/CF88_EC139_livro.pdf):
+./scripts/rag/recreate_rag.sh docs/CF88_EC139_livro.pdf
+```
+
+> 💡 **Verificação da base vetorial (Teste Rápido):**  
+> Teste a recuperação semântica diretamente pelo terminal:
+> ```bash
+> npm run rag:query -- "qual o limite de faturamento anual do MEI?"
+> ```
+
+### 8.7 Inicialização do Ambiente Integrado
 Inicie todos os 3 serviços em paralelo com um único comando na raiz:
 
 ```bash
@@ -496,7 +517,7 @@ npm run dev:frontend  # Terminal 3 - Frontend React (Porta 3000)
 
 Acesse no navegador: **http://localhost:3000**
 
-### 8.7 Credenciais de Acesso de Demonstração
+### 8.8 Credenciais de Acesso de Demonstração
 Após executar o seed, utilize as credenciais pré-configuradas:
 - **E-mail:** `admin@mei.com`
 - **Senha:** `admin123`
