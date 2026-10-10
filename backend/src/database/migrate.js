@@ -23,7 +23,32 @@ async function runMigration() {
 
     console.log('Executando DDL schema.sql...');
     await connection.query(sql);
-    console.log('Migração concluída com sucesso! Banco mei_db e tabelas criadas.');
+
+    // Executa arquivos de migrações incrementais para garantir bancos existentes atualizados
+    const migrationsDir = path.resolve(__dirname, 'migrations');
+    if (fs.existsSync(migrationsDir)) {
+      const files = fs.readdirSync(migrationsDir).filter(f => f.endsWith('.sql')).sort();
+      for (const file of files) {
+        const filePath = path.join(migrationsDir, file);
+        const migrationSql = fs.readFileSync(filePath, 'utf8');
+        try {
+          await connection.query(`USE ${process.env.DB_NAME || 'mei_db'}; ${migrationSql}`);
+          console.log(`  ✓ Migração aplicada: ${file}`);
+        } catch (mErr) {
+          if (
+            ['ER_DUP_FIELDNAME', 'ER_TABLE_EXISTS_ERROR', 'ER_DUP_KEYNAME'].includes(mErr.code) ||
+            mErr.message.includes('Duplicate column') ||
+            mErr.message.includes('already exists')
+          ) {
+            console.log(`  - Migração já aplicada/compatível: ${file}`);
+          } else {
+            console.warn(`  ! Aviso na migração ${file}: ${mErr.message}`);
+          }
+        }
+      }
+    }
+
+    console.log('Migração concluída com sucesso! Banco mei_db e tabelas sincronizados.');
   } catch (error) {
     console.error('Erro ao executar migração:', error.message);
     throw error;

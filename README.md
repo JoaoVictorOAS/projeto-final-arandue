@@ -1,7 +1,7 @@
 # MEI — Gestão Simplificada para Microempreendedores Individuais
 
 > **Projeto Final • Formação Recode Pro AI**  
-> Plataforma integrada de gestão operacional e financeira para Microempreendedores Individuais (MEI), potencializada por um **Assistente Virtual de Inteligência Artificial** com RAG semântico e Model Context Protocol (MCP) multi-tenant.
+> Plataforma integrada de gestão operacional, produtiva, fiscal e financeira para Microempreendedores Individuais (MEI), potencializada por um **Assistente Virtual de Inteligência Artificial** com RAG semântico, transmissão oficial SEFAZ via **Certificado Digital A1** e Model Context Protocol (MCP) multi-tenant com paridade total de capacidades operacionais.
 
 ---
 
@@ -12,26 +12,63 @@
   - [3.1 Orquestração LLM & Gemini](#31-orquestração-llm--gemini)
   - [3.2 Recuperação Semântica RAG com Score Mínimo](#32-recuperação-semântica-rag-com-score-mínimo)
   - [3.3 Armazenamento Vetorial Híbrido & Resiliência](#33-armazenamento-vetorial-híbrido--resiliência)
-  - [3.4 MCP Multi-Tenant (Leitura e Ações Operacionais)](#34-mcp-multi-tenant-leitura-e-ações-operacionais)
-- [4. Segurança e Isolamento Multi-Tenancy](#4-segurança-e-isolamento-multi-tenancy)
-- [5. Serviços, Portas e Variáveis de Ambiente](#5-serviços-portas-e-variáveis-de-ambiente)
-- [6. Guia de Execução e Deploy Local](#6-guia-de-execução-e-deploy-local)
-- [7. Suíte de Testes Automatizados](#7-suíte-de-testes-automatizados)
-- [8. API RESTful — Endpoints Principais](#8-api-restful--endpoints-principais)
-- [9. Modelo de Dados Relacional](#9-modelo-de-dados-relacional)
+  - [3.4 MCP Multi-Tenant e Catálogo de Ferramentas](#34-mcp-multi-tenant-e-catálogo-de-ferramentas)
+- [4. Módulo Fiscal e Certificado Digital A1](#4-módulo-fiscal-e-certificado-digital-a1)
+  - [4.1 Tipos de Documentos Suportados](#41-tipos-de-documentos-suportados)
+  - [4.2 Certificado A1 Criptografado (AES-256-GCM)](#42-certificado-a1-criptografado-aes-256-gcm)
+  - [4.3 Assinatura Digital W3C XMLDSig e SOAP mTLS SEFAZ](#43-assinatura-digital-w3c-xmldsig-e-soap-mtls-sefaz)
+  - [4.4 Cancelamento Homologado e Estorno no Caixa](#44-cancelamento-homologado-e-estorno-no-caixa)
+- [5. Módulo de Estoque, Produção e Fichas Técnicas](#5-módulo-de-estoque-produção-e-fichas-técnicas)
+  - [5.1 Gestão de Insumos e Estoque Mínimo](#51-gestão-de-insumos-e-estoque-mínimo)
+  - [5.2 Fichas Técnicas, CMV e Margens de Lucro](#52-fichas-técnicas-cmv-e-margens-de-lucro)
+  - [5.3 Lotes de Produção e Simulação Preditiva](#53-lotes-de-produção-e-simulação-preditiva)
+  - [5.4 Importação Automática por XML de NF-e](#54-importação-automática-por-xml-de-nf-e)
+- [6. Segurança e Isolamento Multi-Tenancy](#6-segurança-e-isolamento-multi-tenancy)
+- [7. Serviços, Portas e Variáveis de Ambiente](#7-serviços-portas-e-variáveis-de-ambiente)
+- [8. Guia de Execução e Instalação Local](#8-guia-de-execução-e-instalação-local)
+  - [8.1 Pré-requisitos](#81-pré-requisitos)
+  - [8.2 Banco de Dados MySQL (Docker ou Nativo)](#82-banco-de-dados-mysql-docker-ou-nativo)
+  - [8.3 Instalação de Dependências](#83-instalação-de-dependências)
+  - [8.4 Configuração de Variáveis de Ambiente](#84-configuração-de-variáveis-de-ambiente)
+  - [8.5 Migrações e Carga Inicial do Banco](#85-migrações-e-carga-inicial-do-banco)
+  - [8.6 Inicialização do Ambiente Integrado](#86-inicialização-do-ambiente-integrado)
+  - [8.7 Credenciais de Acesso de Demonstração](#87-credenciais-de-acesso-de-demonstração)
+- [9. Suíte de Testes Automatizados (511 testes)](#9-suíte-de-testes-automatizados-511-testes)
+- [10. API RESTful — Endpoints Principais](#10-api-restful--endpoints-principais)
+- [11. Modelo de Dados Relacional (16 tabelas)](#11-modelo-de-dados-relacional-16-tabelas)
 
 ---
 
 ## 1. Visão Geral da Solução
 
-O **MEI** unifica o fluxo comercial, financeiro e operacional do microempreendedor em uma única plataforma web:
+O **MEI** unifica o fluxo comercial, produtivo, fiscal e financeiro do microempreendedor em uma única plataforma web integrada:
 
-$$\text{Cliente} \longrightarrow \text{Orçamento} \longrightarrow \text{Agendamento} \longrightarrow \text{Cobrança} \longrightarrow \text{Pagamento} \longrightarrow \text{Caixa}$$
+### Fluxo Comercial & Financeiro
+$$\text{Cliente} \longrightarrow \text{Orçamento} \longrightarrow \text{Agendamento} \longrightarrow \text{Cobrança} \longrightarrow \text{Pagamento (Pix/Dinheiro)} \longrightarrow \text{Livro Caixa}$$
 
-Além dos módulos operacionais tradicionais, o sistema incorpora um **Assistente Virtual Inteligente** capaz de:
-1. Tirar dúvidas fiscais e tributárias com base estrita na legislação oficial do MEI (citando páginas de referência oficiais);
-2. Consultar o saldo, faturamento e cobranças do estabelecimento do próprio usuário em tempo real;
-3. **Executar ações e cadastros operacionais via linguagem natural** (ex.: cadastrar clientes, registrar serviços, gerar cobranças e agendar compromissos).
+### Fluxo Produtivo & Estoque
+$$\text{Insumos} \longrightarrow \text{Ficha Técnica (CMV)} \longrightarrow \text{Lote de Produção} \longrightarrow \text{Estoque de Produtos} \longrightarrow \text{Abate Automático na Venda}$$
+
+### Fluxo Fiscal & SEFAZ
+$$\text{Venda / Serviço} \longrightarrow \text{Criptografia AES-256} \longrightarrow \text{Assinatura W3C (Certificado A1)} \longrightarrow \text{SOAP mTLS SEFAZ / Emulador} \longrightarrow \text{DANFE com QR Code}$$
+
+Além dos módulos operacionais tradicionais, o sistema incorpora:
+1. **Assistente Virtual Inteligente (IA):**
+   - Resolução de dúvidas fiscais e tributárias fundamentada estritamente na legislação oficial do MEI (`docs/perguntaomei.pdf`), citando número de páginas e percentual de relevância;
+   - Consultas em tempo real sobre saldo de caixa, faturamento mensal/anual, pendências financeiras, estoque e notas fiscais emitidas;
+   - **Execução operacional autônoma via linguagem natural** (cadastrar clientes, agendar compromissos, emitir cobranças, emitir notas fiscais, registrar compras de insumos, simular produção e controlar o certificado A1).
+2. **Módulo Fiscal Multi-Estado com Certificado Digital ICP-Brasil A1:**
+   - Emissão de NFS-e (Padrão Nacional), NF-e (produtos modelo 55) e NFC-e (consumidor modelo 65);
+   - Suporte a certificados digitais A1 (`.pfx` / `.p12`) com criptografia simétrica de alta segurança (AES-256-GCM);
+   - Assinatura digital padrão W3C XML Signature (RSA-SHA1) e comunicação com a SEFAZ em Homologação via SOAP sobre TLS Mútuo (mTLS);
+   - Emulador fiscal local integrado para desenvolvimento sem necessidade de certificado real.
+3. **Módulo de Estoque e Fichas Técnicas:**
+   - Controle de insumos (g, ml, un) com recálculo automático de custo médio ponderado e alertas de estoque mínimo;
+   - Fichas técnicas com cálculo de Custo de Mercadorias Vendidas (CMV) e sugestão de margem de lucro;
+   - Simulação preditiva de capacidade produtiva e importação automática de compras via leitura de XML de NF-e.
+4. **Módulo de Configurações Cadastrais do MEI:**
+   - Consulta automatizada de CNPJ via ReceitaWS e BrasilAPI para preenchimento com 1 clique;
+   - Configuração de domicílio fiscal, código IBGE municipal e parâmetros de séries fiscais.
 
 ---
 
@@ -42,48 +79,58 @@ A infraestrutura do sistema é distribuída em três camadas de execução desac
 ```mermaid
 flowchart TD
     subgraph Client["Cliente / Navegador"]
-        Browser["Interface Web (SPA React)"]
+        Browser["Interface Web (SPA React 18 + Tailwind CSS)"]
     end
 
     subgraph FrontendServer["Frontend (Porta 3000)"]
-        Vite["Vite Dev Server / Nginx Estatico"]
+        Vite["Vite Dev Server / Build Estático"]
     end
 
     subgraph BackendGateway["Backend Gateway (Porta 3001)"]
         Express["API Node.js / Express"]
-        AuthMid["JWT Auth e Scoped Token Issuer"]
+        AuthMid["JWT Auth & Scoped Token Issuer"]
+        CertSec["CertificadoService (AES-256-GCM)"]
+        FiscalEng["FiscalEngine + Assinador W3C + SefazTransmissor"]
+        StockEng["EstoqueService + SimuladorProducao + XML Reader"]
         DBPool["MySQL Pool (mysql2)"]
     end
 
     subgraph AIService["AI Microservice (Porta 8001)"]
         FastAPI["FastAPI / Uvicorn Server"]
-        Orchestrator["LLM Orchestrator (Gemini)"]
+        Orchestrator["LLM Orchestrator (Google Gemini 3.5 Flash)"]
         Retriever["FallbackRetriever + Circuit Breaker"]
         McpPool["TenantMcpPool (Process Manager)"]
     end
 
     subgraph MCPServer["MCP Subprocesses (Sob Demanda)"]
-        TenantMCP["MCP Server Instance (Python)"]
+        TenantMCP["MCP Server Instance (Python stdio)"]
     end
 
-    subgraph Storage["Armazenamento e Vetores"]
-        MySQL[("MySQL 8.x - Porta 3306")]
-        Chroma[("ChromaDB Local")]
-        Firestore[("Firestore Vector Search")]
+    subgraph ExternalServices["Serviços Externos & Governamentais"]
+        SEFAZ["SEFAZ Homologação (SOAP 1.2 mTLS)"]
+        ReceitaWS["ReceitaWS / BrasilAPI (Consulta CNPJ)"]
+    end
+
+    subgraph Storage["Armazenamento & Persistência"]
+        MySQL[("MySQL 8.x - Porta 3306 (mei_db)")]
+        Chroma[("ChromaDB Local Persistente")]
+        Firestore[("Firestore Vector Search (Opcional Prod)")]
     end
 
     Browser <-->|"HTTP / WebSocket"| Vite
     Vite <-->|"Proxy /api"| Express
     Express <-->|"SQL Parametrizado"| MySQL
+    Express <-->|"mTLS HTTPS"| SEFAZ
+    Express <-->|"HTTP REST"| ReceitaWS
     Express <-->|"HTTP POST /chat (Secret)"| FastAPI
 
     FastAPI <-->|"RAG Query"| Retriever
-    Retriever <-->|"Primary / Dev"| Chroma
-    Retriever <-->|"Fallback / Prod"| Firestore
+    Retriever <-->|"Embeddings (e5-small)"| Chroma
+    Retriever <-->|"Fallback Nuvem"| Firestore
 
-    FastAPI <-->|"Adquire Sessao"| McpPool
+    FastAPI <-->|"Adquire Sessão"| McpPool
     McpPool -.->|"Spawns stdio"| TenantMCP
-    TenantMCP <-->|"REST API (Scoped JWT)"| Express
+    TenantMCP <-->|"REST API (Scoped JWT assistente:access)"| Express
     Orchestrator <-->|"Function Calling"| TenantMCP
 ```
 
@@ -91,67 +138,150 @@ flowchart TD
 
 ## 3. Arquitetura do Microserviço de IA
 
-O microserviço de inteligência artificial (`ai-service/`) roda em **Python 3.12+ com FastAPI e Uvicorn**, gerenciando a integração entre modelos de linguagem (LLM), banco vetorial e execução de ferramentas corporativas.
+O microserviço de inteligência artificial (`ai-service/`) roda em **Python 3.12+ com FastAPI e Uvicorn**, gerenciando a integração entre o modelo de linguagem (LLM), o banco vetorial e a execução de ferramentas corporativas.
 
 ### 3.1 Orquestração LLM & Gemini
-- **Modelo:** Google Gemini (`gemini-3.5-flash-lite`), configurável via variável de ambiente `GEMINI_MODEL`.
+- **Modelo:** Google Gemini (`gemini-3.5-flash-lite`), configurável via `GEMINI_MODEL`.
 - **Estratégia de Execução:** Loop iterativo de *Tool Use / Function Calling* com limite máximo de 5 iterações (`LLM_MAX_TOOL_CALLS`) e timeout de 30 segundos (`LLM_TIMEOUT_S`).
-- **Prompt com Governança:** O system prompt instrui o modelo a consultar ferramentas operacionais para dados do usuário, usar estritamente o contexto documental para dúvidas de lei e ignorar instruções arbitrárias contidas em dados externos.
+- **Prompt com Governança:** O system prompt instrui o modelo a consultar ferramentas operacionais para obter dados do usuário, apoiar-se estritamente no contexto documental para dúvidas legais e sanitizar qualquer comando externo contra prompt injection.
 
 ### 3.2 Recuperação Semântica RAG com Score Mínimo
 - **Corpus Oficial:** Perguntas e Respostas oficiais do Portal do Empreendedor e Simples Nacional (`docs/perguntaomei.pdf`), segmentadas em chunks com overlap e metadados de página.
 - **Modelo de Embedding:** `intfloat/multilingual-e5-small` (384 dimensões), com normalização L2 e prefixos obrigatórios `query: ` e `passage: `.
 - **Threshold de Score Mínimo (`RAG_MIN_SCORE = 0.865` / `RAG_MAX_DISTANCE = 0.135`):**
-  - **Consultas Normativas/Fiscais:** Atingem similaridade por cosseno entre `0.875` e `0.920` (Recall@3 de 90% no Golden Set oficial), sendo injetadas no bloco `<documento>` com suas páginas de origem e expostas no frontend com badges como `pág. 4 (90%)`.
-  - **Comandos Operacionais & Diálogo:** Solicitações como *"cadastra um cliente pra mim..."* ou *"olá, bom dia"* obtêm pontuação inferior a `0.860`. O filtro semântico descarta automaticamente os trechos, impedindo a injeção de contexto legal irrelevante no prompt.
+  - **Consultas Normativas/Fiscais:** Atingem similaridade por cosseno entre `0.875` e `0.920` (Recall@3 $\ge 90\%$ no Golden Set oficial), sendo injetadas no bloco `<documento>` com suas páginas de origem e expostas no frontend com badges como `pág. 4 (90%)`.
+  - **Comandos Operacionais & Saudações:** Solicitações como *"emita uma nota fiscal..."* ou *"bom dia"* recebem pontuação inferior a `0.860`. O filtro semântico descarta automaticamente os trechos, impedindo a injeção de contexto legal irrelevante no prompt.
 
 ### 3.3 Armazenamento Vetorial Híbrido & Resiliência
 O sistema adota o padrão **Fallback com Circuit Breaker** (`FallbackRetriever`):
 - **Primário:** Google Cloud Firestore Vector Search (em produção) ou ChromaDB local persistente (em desenvolvimento em `data/chroma_db`).
-- **Fallback:** ChromaDB local como contingência transparente caso o serviço de nuvem fique inacessível ou exceda `1.5s` de timeout.
+- **Fallback:** ChromaDB local como contingência transparente caso o serviço em nuvem fique inacessível ou exceda `1.5s` de timeout.
 - **Circuit Breaker:** Abre após 3 falhas consecutivas, direcionando imediatamente as requisições ao store secundário por 60 segundos antes de tentar reestabelecer o primário.
 
-### 3.4 MCP Multi-Tenant (Leitura e Ações Operacionais)
-> **Regra Arquitetural do Projeto (Paridade API ↔ MCP):**  
-> Toda capacidade de negócio ou endpoint disponibilizado na API REST (Backend Express) **deve obrigatoriamente** possuir uma ferramenta correspondente espelhada no servidor MCP (`ai-service/mcp_server`). A API REST centraliza as regras de negócio e validações, garantindo que o Web, o futuro Mobile e o Agente de IA (via MCP) consumam a mesma camada com paridade funcional total (`Clientes -> REST API` e `IA -> MCP -> REST API`).
+### 3.4 MCP Multi-Tenant e Catálogo de Ferramentas
+> **Regra Arquitetural do Projeto (Paridade Total API REST ↔ MCP):**  
+> Toda capacidade de negócio disponibilizada na API REST possui uma ferramenta correspondente espelhada no servidor MCP (`ai-service/mcp_server/server.py`). A API REST centraliza as regras de negócio e validações, garantindo que o Web, o Mobile e a IA consumam a mesma camada com paridade funcional total.
 
-A ponte de integração entre o assistente e as regras do sistema utiliza o **Model Context Protocol (MCP)**:
-- **Isolamento de Processos:** Para cada tenant ativo, o `TenantMcpPool` gerencia instâncias dedicadas do processo MCP Server via `stdio`, reutilizando-as em pool com TTL de inatividade de 600 segundos (`MCP_IDLE_TTL_S`).
-- **Ferramentas de Leitura:**
-  - `obter_resumo_caixa`: saldo atual, total de entradas e saídas.
-  - `consultar_faturamento_atual`: receita acumulada no mês e no ano vigente.
-  - `listar_cobrancas_pendentes`: relação de valores a receber com vencimentos.
-  - `listar_clientes`: busca de clientes cadastrados por nome.
-  - `listar_servicos`: catálogo de serviços cadastrados com preços.
-  - `consultar_agendamentos`: compromissos marcados por período.
-- **Ferramentas de Mutação Operacional:**
-  - `cadastrar_cliente`: cria um novo cliente no banco (nome, telefone, email).
-  - `cadastrar_servico`: adiciona um novo serviço com descrição e preço.
-  - `cadastrar_cobranca`: emite uma cobrança vinculada a um cliente com data e valor.
-  - `cadastrar_agendamento`: agenda um atendimento para um cliente e serviço.
+O servidor MCP conta com **26 ferramentas corporativas** disponíveis para o Assistente:
+
+#### ⚙️ Configurações & Perfil do MEI
+- `obter_configuracoes_mei`: Consulta dados cadastrais, domicílio fiscal, código IBGE e séries do emissor.
+- `atualizar_configuracoes_mei`: Atualiza Razão Social, CNPJ, Inscrição Municipal, endereço e parâmetros fiscais.
+- `consultar_dados_cnpj`: Consulta dados públicos de qualquer CNPJ para autopreenchimento de cadastros.
+- `obter_perfil_estabelecimento`: Identificação do usuário logado e perfil da microempresa.
+- `obter_resumo_negocio`: Visão consolidada de caixa, clientes, faturamento e pendências.
+
+#### 💰 Financeiro & Livro Caixa
+- `obter_resumo_caixa`: Saldo apurado, total de entradas e total de saídas no mês/ano.
+- `listar_movimentacoes`: Extrato detalhado do Livro Caixa por categoria e tipo.
+- `listar_cobrancas`: Relação de valores a receber com vencimentos e status.
+- `cadastrar_cobranca`: Emissão de cobrança com cliente, valor, data de vencimento e vínculo operacional.
+
+#### 👥 Comercial, Serviços & Agenda
+- `listar_clientes`: Busca de clientes por nome ou visualização completa da carteira.
+- `cadastrar_cliente`: Criação de novo cliente (nome, telefone, email, endereço e observações).
+- `listar_servicos`: Catálogo de serviços e produtos cadastrados com preços e status.
+- `cadastrar_servico`: Inclusão de novo item no catálogo de serviços/produtos.
+- `consultar_agendamentos`: Compromissos marcados na agenda com filtros de período.
+- `cadastrar_agendamento`: Agendamento de atendimento com validação contra choque de horários.
+
+#### 🧾 Módulo Fiscal & Certificado Digital A1
+- `obter_status_certificado_digital`: Situação de validade, data de expiração e status da transmissão SEFAZ.
+- `alternar_transmissao_sefaz`: Ativa ou desativa a transmissão para a SEFAZ (alternando com o emulador local).
+- `emitir_nfse_nacional`: Emissão de Nota Fiscal de Serviços Eletrônica Padrão Nacional.
+- `emitir_nfe_produtos`: Emissão de Nota Fiscal Eletrônica de mercadorias (Modelo 55).
+- `emitir_nfce_consumidor`: Emissão de Nota Fiscal de Consumidor Eletrônica (Modelo 65).
+- `listar_notas_fiscais`: Consulta notas fiscais emitidas por tipo, status e período.
+- `consultar_nota_fiscal`: Detalhes completos, protocolo de autorização e link de DANFE de uma nota.
+- `cancelar_nota_fiscal`: Cancelamento homologado com justificativa e estorno automático no Livro Caixa.
+
+#### 📦 Estoque, Fichas Técnicas & Produção
+- `listar_insumos_estoque`: Consulta matérias-primas e insumos (com filtro de estoque abaixo do mínimo).
+- `cadastrar_insumo`: Cadastro de insumo com unidade de medida (`g`, `ml`, `un`) e estoque mínimo.
+- `registrar_compra_insumo`: Entrada de insumo com recálculo automático do custo médio ponderado.
+- `obter_ficha_tecnica_e_custo`: Composição de insumos, custo de produção (CMV) e margem sugerida.
+- `definir_ficha_tecnica`: Vinculação de ingredientes e quantidades consumidas por produto/serviço.
+- `registrar_lote_producao`: Execução de lote com baixa automática de insumos e entrada em produtos prontos.
+- `simular_producao`: Simulação preditiva para verificar se o estoque atual suporta a quantidade desejada.
+- `consultar_historico_estoque`: Trilha de auditoria das movimentações físicas e financeiras de estoque.
+- `processar_xml_nota_fiscal`: Leitura de XML de NF-e recebida de fornecedor para conferência de itens.
+- `registrar_entrada_por_nota`: Abastecimento em lote do estoque através dos itens extraídos de XML de compra.
 
 ---
 
-## 4. Segurança e Isolamento Multi-Tenancy
+## 4. Módulo Fiscal e Certificado Digital A1
 
-1. **Tokens Scoped Efêmeros (`assistente:access`):** O backend Node.js emite um JWT temporário contendo apenas `usuario_id` e o escopo restrito do assistente para cada requisição de chat.
-2. **Prevenção de Cross-Tenant Leak:** As definições de ferramentas MCP **não expõem o campo `tenant_id` nos esquemas de parâmetros**. O identificador da empresa é injetado diretamente pelo servidor local de MCP a partir do token da sessão, impedindo ataques de prompt injection para consultar dados de terceiros.
-3. **Autenticação Inter-Serviços:** A comunicação entre o Backend Express e o AI Service exige o cabeçalho `X-Internal-Secret` com validação em tempo constante.
-4. **Armazenamento Seguro de Credenciais:** Senhas com salt e hash via `bcrypt` e proteção relacional no MySQL através de Foreign Keys vinculadas ao `usuario_id`.
+O módulo fiscal oferece conformidade completa com a legislação tributária brasileira e com o padrão do SIMEI (Sistema de Recolhimento em Valores Fixos Mensais do MEI).
+
+### 4.1 Tipos de Documentos Suportados
+1. **NFS-e (Padrão Nacional):** Emissão de notas de serviços com layout unificado nacional, código de tributação nacional e código IBGE municipal.
+2. **NF-e (Modelo 55):** Venda de produtos e mercadorias com CFOP, NCM, CSOSN 102 (Tributada pelo Simples Nacional sem permissão de crédito).
+3. **NFC-e (Modelo 65):** Venda no varejo presencial ao consumidor final.
+
+### 4.2 Certificado A1 Criptografado (AES-256-GCM)
+O armazenamento de certificados digitais PKCS#12 (`.pfx` / `.p12`) obedece a rígidos critérios criptográficos (`backend/src/services/fiscal/certificadoService.js`):
+- O binário do certificado e sua respectiva senha são criptografados com **AES-256-GCM** (Galois/Counter Mode);
+- Cada gravação gera um vetor de inicialização randômico (`IV` de 12 bytes) e uma tag de autenticação (`AuthTag` de 16 bytes);
+- As credenciais nunca são persistidas em texto simples no MySQL (`certificado_pfx_encrypted`, `certificado_senha_encrypted`);
+- O sistema valida a data de validade (`notAfter`), CNPJ e Razão Social no momento do upload e emite alertas caso o certificado expire em menos de 30 dias.
+
+### 4.3 Assinatura Digital W3C XMLDSig e SOAP mTLS SEFAZ
+- **Assinatura Digital (`assinadorXmlFiscal.js`):** Implementação conforme especificação W3C XML Signature (RSA-SHA1 com Canonicalização C14N e Enveloped Signature).
+- **Transmissão SOAP com mTLS (`sefazTransmissor.js`):** O certificado A1 decriptado em memória é injetado como credencial TLS de cliente (`https.Agent` com `pfx` e `passphrase`), estabelecendo conexão segura autenticada diretamente com os autorizadores estaduais e ambientes virtuais da SEFAZ (SVRS, SVAN, SP, MG, BA, PR, RS, GO, etc.).
+- **Modo Híbrido Automático:** Se o MEI não possuir certificado A1 ou a opção de transmissão estiver desligada, a emissão ocorre em modo de **Simulação Local Homologada**, gerando chaves de 44/50 dígitos válidas para testes, XML estruturado e DANFE oficial para visualização e impressão.
+
+### 4.4 Cancelamento Homologado e Estorno no Caixa
+- O cancelamento de qualquer nota fiscal autorizada exige justificativa formal com no mínimo 15 caracteres;
+- Ao cancelar uma nota fiscal que originou receita, o sistema executa um **estorno automático correspondente no Livro Caixa**, preservando a integridade contábil do microempreendedor.
 
 ---
 
-## 5. Serviços, Portas e Variáveis de Ambiente
+## 5. Módulo de Estoque, Produção e Fichas Técnicas
+
+O módulo de estoque foi projetado para atender tanto prestadores de serviços quanto microprodutores e comerciantes:
+
+### 5.1 Gestão de Insumos e Estoque Mínimo
+- Suporte a unidades de medida padronizadas: gramas (`g`), mililitros (`ml`) e unidades (`un`);
+- Conversor de medidas integrado (`conversorUnidades.js`) para transformar compras em embalagens comerciais (kg, litros, caixas) para a unidade de consumo da produção;
+- Recálculo contínuo do **Custo Médio Ponderado** a cada nova compra;
+- Painel visual com alerta de estoque baixo para itens com saldo inferior ao estoque mínimo configurado.
+
+### 5.2 Fichas Técnicas, CMV e Margens de Lucro
+- Associação de matérias-primas e quantidades consumidas por cada serviço ou produto;
+- Cálculo em tempo real do **Custo de Mercadorias Vendidas (CMV)**;
+- Sugestão automática de preço de venda com base na margem de contribuição desejada.
+
+### 5.3 Lotes de Produção e Simulação Preditiva
+- **Lotes de Produção:** O registro de produção abate os insumos do estoque e incrementa o saldo do produto pronto (`estoque_pronto_atual`) em uma única transação ACID;
+- **Simulador de Viabilidade (`simuladorProducaoService.js`):** Permite planejar a produção antes de sua execução física, apontando exatamente quais insumos são suficientes e quais precisam de reposição para atingir a meta.
+
+### 5.4 Importação Automática por XML de NF-e
+- Leitura automatizada de arquivos XML de NF-e de fornecedores (`leitorXmlNfe.js`);
+- Extração de itens, quantidades, valores e NCM, permitindo alimentar o estoque com um único clique ou via comando de voz/chat.
+
+---
+
+## 6. Segurança e Isolamento Multi-Tenancy
+
+1. **Isolamento Absoluto por `usuario_id`:** O identificador do tenant **nunca** é recebido pelo payload do cliente ou como parâmetro das ferramentas MCP. O backend sempre extrai o ID do tenant a partir do JWT decodificado.
+2. **Ferramentas MCP Sem Vazamento de Identidade:** As assinaturas das funções MCP não expõem parâmetros como `usuario_id` ou `tenant_id`, eliminando vulnerabilidades de injeção de parâmetros cross-tenant.
+3. **Tokens Scoped Efêmeros (`assistente:access`):** Para cada chamada de chat, o backend Express emite um token JWT de curta duração com escopo restrito exclusivamente às ferramentas do assistente.
+4. **Comunicação Inter-Serviços Protegida:** A rota de chat (`POST /chat`) exige o cabeçalho `X-Internal-Secret` validado em tempo constante.
+5. **Criptografia de Certificados em Repouso:** Certificados digitais protegidos por chave AES-256-GCM com IV randômico e integridade criptográfica.
+
+---
+
+## 7. Serviços, Portas e Variáveis de Ambiente
 
 | Serviço | Tecnologia | Porta | Responsabilidade |
 | :--- | :--- | :--- | :--- |
-| **Frontend** | React 18 + Vite | `3000` | SPA do usuário, interface do assistente |
-| **Backend Gateway** | Node.js + Express | `3001` | API REST, regras de negócio e auth |
-| **AI Service** | FastAPI + Uvicorn | `8001` | Orquestração LLM, RAG e pool MCP |
+| **Frontend** | React 18 + Vite + Tailwind | `3000` | SPA do usuário, painéis de gestão, emissão fiscal e chat IA |
+| **Backend Gateway** | Node.js + Express + MySQL | `3001` | API REST, regras de negócio, motor fiscal, estoque e auth |
+| **AI Service** | FastAPI + Uvicorn | `8001` | Orquestração LLM, RAG semântico e pool de processos MCP |
 | **Banco de Dados** | MySQL 8.x | `3306` | Banco relacional multi-tenant (`mei_db`) |
-| **Vector Store** | ChromaDB / Firestore | Local / Cloud | Base vetorial da legislação do MEI |
+| **Vector Store** | ChromaDB / Firestore | Local / Cloud | Base vetorial da legislação oficial do MEI |
 
-### Variáveis de Ambiente Essenciais
+### Arquivos de Configuração (.env)
 
 #### Backend (`backend/.env`):
 ```env
@@ -161,7 +291,8 @@ DB_USER=root
 DB_PASSWORD=root
 DB_NAME=mei_db
 DB_PORT=3306
-JWT_SECRET=sua_chave_jwt_super_secreta
+JWT_SECRET=super_secreto_chave_jwt_recode_2026
+FISCAL_CERT_SECRET=chave_super_segura_para_certificados_a1_2026
 AI_SERVICE_URL=http://localhost:8001
 INTERNAL_SERVICE_SECRET=super_secreto_interno_arandue_2026
 ```
@@ -189,71 +320,122 @@ NODE_API_URL=http://localhost:3001/api
 PORT=8001
 ```
 
+#### Frontend (`frontend/.env`):
+```env
+VITE_API_URL=/api
+```
+
 ---
 
-## 6. Guia de Execução e Deploy Local
+## 8. Guia de Execução e Instalação Local
 
-### Pré-requisitos
-- **Node.js:** v18.x ou superior e **npm**
-- **Python:** v3.10 ou superior com ambiente virtual (`.venv`)
-- **MySQL:** v8.0 em execução na porta 3306 com o banco `mei_db` criado
+Siga o passo a passo abaixo para configurar e executar a aplicação completa do zero.
 
-### 1. Instalação de Dependências
+### 8.1 Pré-requisitos
+- **Node.js:** Versão 18.x ou superior e **npm**
+- **Python:** Versão 3.10, 3.11 ou 3.12 (recomendado gerenciador `uv` ou `python3-venv`)
+- **MySQL:** Versão 8.0 em execução na porta 3306 (nativo ou via Docker)
+- **Git**
+
+### 8.2 Banco de Dados MySQL (Docker ou Nativo)
+Caso não possua o MySQL 8 instalado nativamente, suba uma instância via Docker com um único comando:
+
 ```bash
-# Na raiz do repositório:
+# Inicia container MySQL 8 com a senha e banco configurados
+docker run -d --name mei-mysql -p 3306:3306 \
+  -e MYSQL_ROOT_PASSWORD=root \
+  -e MYSQL_DATABASE=mei_db \
+  mysql:8.0
+
+# Se o container já foi criado anteriormente, basta iniciá-lo:
+docker start mei-mysql
+```
+
+### 8.3 Instalação de Dependências
+
+Execute os comandos abaixo a partir da raiz do repositório:
+
+```bash
+# 1. Instala dependências do repositório raiz, backend e frontend
 npm install
 npm --prefix backend install
 npm --prefix frontend install
 
-# Ambiente virtual Python:
+# 2. Cria o ambiente virtual Python e instala as dependências de IA
+# Opção A (Usando python3-venv tradicional):
 python3 -m venv .venv
 .venv/bin/pip install -r ai-service/requirements.txt
+
+# Opção B (Usando uv - ultra rápido):
+# uv venv .venv --python 3.12
+# uv pip install -r ai-service/requirements.txt
 ```
 
-### 2. Banco de Dados e Carga Inicial
+### 8.4 Configuração de Variáveis de Ambiente
+Copie os modelos de variáveis de ambiente:
+
 ```bash
-# Executa migrações estruturais e seed de demonstração
-npm run db:seed
+cp backend/.env.example backend/.env
+cp ai-service/.env.example ai-service/.env
+cp frontend/.env.example frontend/.env
+```
+> 💡 **Nota:** Para habilitar respostas completas do LLM pelo chat, preencha sua `GEMINI_API_KEY` em `ai-service/.env`.
+
+### 8.5 Migrações e Carga Inicial do Banco
+Execute o script integrado de migração e seed demonstrativo:
+
+```bash
+# Aplica o schema DDL, migrações incrementais (001 a 008) e popula dados de demonstração
+npm run db:setup
 ```
 
-### 3. Inicialização dos Serviços
-Você pode iniciar **todos os 3 serviços em paralelo** com um único comando:
+*(O comando `npm run db:setup` executa `npm run db:migrate` seguido de `npm run db:seed` de forma idempotente).*
+
+### 8.6 Inicialização do Ambiente Integrado
+Inicie todos os 3 serviços em paralelo com um único comando na raiz:
+
 ```bash
 npm run dev
 ```
-*(O script `scripts/dev.sh` inicia o backend na porta 3001, o AI service na porta 8001 e o frontend na porta 3000 com encerramento gracioso via `Ctrl+C`).*
 
-Alternativamente, execute em terminais separados:
+*(O script `scripts/dev.sh` inicializa o Backend na porta `3001`, o Microserviço de IA na porta `8001` e o Frontend React na porta `3000`, encerrando todos graciosamente ao pressionar `Ctrl+C`).*
+
+Alternativamente, execute cada nó em terminais separados:
 ```bash
-# Terminal 1 - Backend Node.js
-npm run dev:backend
-
-# Terminal 2 - AI Service Python
-npm run dev:ai
-
-# Terminal 3 - Frontend React
-npm run dev:frontend
+npm run dev:backend   # Terminal 1 - Backend Express (Porta 3001)
+npm run dev:ai        # Terminal 2 - AI Service FastAPI (Porta 8001)
+npm run dev:frontend  # Terminal 3 - Frontend React (Porta 3000)
 ```
+
+Acesse no navegador: **http://localhost:3000**
+
+### 8.7 Credenciais de Acesso de Demonstração
+Após executar o seed, utilize as credenciais pré-configuradas:
+- **E-mail:** `admin@mei.com`
+- **Senha:** `admin123`
 
 ---
 
-## 7. Suíte de Testes Automatizados
+## 9. Suíte de Testes Automatizados (511 testes)
 
-O projeto conta com mais de **240 testes automatizados** distribuídos entre as três camadas:
+O projeto conta com mais de **510 testes automatizados** distribuídos entre as três camadas da aplicação:
 
 ```bash
-# Executar todas as suítes de teste (Backend + Frontend + IA):
+# Executa a suíte completa de testes (Backend + Frontend + IA):
 npm test
 ```
 
-### Execução Individual:
-- **Backend (Jest):** `npm run test:backend` — 180 testes cobrindo autenticação, isolamento multi-tenant, CRUDs, integridade de chaves estrangeiras e integridade de saldo no caixa.
-- **Frontend (Vitest):** `npm run test:frontend` — 37 testes cobrindo navegação, modais, formulários, chat do assistente e badges de fontes consultadas.
-- **AI Service (Pytest):** `npm run test:ai` — 23 testes validando endpoints da API, filtragem por score do RAG, Golden Set com Recall@3 $\ge 0.80$, circuit breaker e subprocessos de MCP.
+### Execução Individual por Camada:
+- **Backend (Jest):** `npm run test:backend`  
+  **400 testes** cobrindo autenticação, isolamento multi-tenant, ciclo financeiro, integridade do Livro Caixa, motor fiscal com transmissão SEFAZ homologação, assinatura digital W3C XML, criptografia de certificado A1 com AES-256-GCM, estoque e fichas técnicas.
+- **Frontend (Vitest):** `npm run test:frontend`  
+  **53 testes** cobrindo navegação, modais de cadastros, chat do assistente com badges RAG, painel de estoque, emissão de notas fiscais, consulta de CNPJ na BrasilAPI/ReceitaWS e upload do certificado A1.
+- **AI Service (Pytest):** `npm run test:ai`  
+  **58 testes** cobrindo endpoints FastAPI, pool de MCP subprocesses via stdio, as 26 ferramentas operacionais do MCP, Golden Set com Recall@3 $\ge 90\%$, filtragem semântica com threshold estrito e resiliência do Circuit Breaker.
 
 ---
 
-## 8. API RESTful — Endpoints Principais
+## 10. API RESTful — Endpoints Principais
 
 Todas as rotas de negócio exigem autenticação via cabeçalho `Authorization: Bearer <token_jwt>`.
 
@@ -261,36 +443,69 @@ Todas as rotas de negócio exigem autenticação via cabeçalho `Authorization: 
 | :--- | :--- | :--- | :--- |
 | **Auth** | `POST` | `/api/auth/register` | Cadastro de novo MEI |
 | **Auth** | `POST` | `/api/auth/login` | Login e emissão de token JWT |
-| **Clientes** | `GET`, `POST` | `/api/clientes` | Listagem e cadastro de clientes |
-| **Clientes** | `PUT`, `DELETE` | `/api/clientes/:id` | Atualização e inativação de cliente |
-| **Serviços** | `GET`, `POST` | `/api/servicos` | Listagem e inclusão de itens do catálogo |
-| **Agenda** | `GET`, `POST` | `/api/agendamentos` | Listagem e agendamento com validação de horário |
-| **Orçamentos**| `GET`, `POST` | `/api/orcamentos` | Criação e gestão de propostas comerciais |
+| **Configurações** | `GET`, `PUT` | `/api/configuracoes/mei` | Consulta e atualização do perfil cadastral e fiscal |
+| **Configurações** | `GET` | `/api/configuracoes/cnpj/:cnpj` | Busca dados públicos de CNPJ para autopreenchimento |
+| **Certificado A1** | `GET` | `/api/configuracoes/certificado` | Status de validade e titularidade do certificado A1 |
+| **Certificado A1** | `POST` | `/api/configuracoes/certificado` | Upload seguro de certificado PKCS#12 (`.pfx`) com senha |
+| **Certificado A1** | `DELETE`| `/api/configuracoes/certificado` | Remoção segura do certificado digital |
+| **Certificado A1** | `POST` | `/api/configuracoes/certificado/toggle-producao` | Alterna transmissão oficial SEFAZ vs emulador local |
+| **Clientes** | `GET`, `POST` | `/api/clientes` | Listagem com busca e cadastro de clientes |
+| **Clientes** | `PUT`, `DELETE`| `/api/clientes/:id` | Atualização e inativação de cliente |
+| **Serviços** | `GET`, `POST` | `/api/servicos` | Catálogo de serviços e produtos comercializados |
+| **Orçamentos**| `GET`, `POST` | `/api/orcamentos` | Criação e gestão de propostas com múltiplos itens |
+| **Orçamentos**| `PUT`, `PATCH`| `/api/orcamentos/:id/status` | Transição de status (Aprovado com baixa de insumos) |
+| **Agenda** | `GET`, `POST` | `/api/agendamentos` | Compromissos com validação contra choque de horário |
 | **Cobranças** | `GET`, `POST` | `/api/cobrancas` | Emissão e acompanhamento de cobranças |
-| **Cobranças** | `POST` | `/api/cobrancas/:id/baixar` | Baixa de pagamento com reflexo no livro caixa |
-| **Caixa** | `GET`, `POST` | `/api/movimentacoes` | Lançamentos manuais e extrato do livro caixa |
-| **Dashboard** | `GET` | `/api/dashboard` | Métricas de faturamento, saldo e pendências |
-| **Assistente**| `GET`, `POST` | `/api/assistente/conversas`| Gestão de threads de conversa do assistente |
+| **Cobranças** | `POST` | `/api/cobrancas/:id/baixar` | Baixa de pagamento com reflexo no Livro Caixa |
+| **Livro Caixa** | `GET`, `POST` | `/api/movimentacoes` | Lançamentos manuais de despesas e extrato do caixa |
+| **Dashboard** | `GET` | `/api/dashboard` | Métricas consolidadas de faturamento, saldo e pendências |
+| **Estoque** | `GET`, `POST` | `/api/estoque/insumos` | Listagem com filtro de estoque baixo e novo insumo |
+| **Estoque** | `POST` | `/api/estoque/compras` | Registro de compras com atualização de custo médio |
+| **Estoque** | `GET`, `PUT` | `/api/estoque/fichas-tecnicas/:servico_id` | Consulta e definição de ficha técnica (BOM / CMV) |
+| **Estoque** | `POST` | `/api/estoque/producao` | Registro de lote de produção com baixa em insumos |
+| **Estoque** | `POST` | `/api/estoque/simulacao` | Simulação preditiva de capacidade produtiva |
+| **Estoque** | `GET` | `/api/estoque/movimentacoes` | Histórico completo de movimentações físicas de estoque |
+| **Estoque** | `POST` | `/api/estoque/nfe/importar` | Importação em lote de compras via arquivo XML de NF-e |
+| **Notas Fiscais**| `POST` | `/api/notas-fiscais/emitir` | Emissão de NFS-e Nacional, NF-e ou NFC-e |
+| **Notas Fiscais**| `GET` | `/api/notas-fiscais` | Histórico e listagem de notas fiscais emitidas |
+| **Notas Fiscais**| `GET` | `/api/notas-fiscais/:id` | Detalhes da nota, protocolo e XML gerado |
+| **Notas Fiscais**| `GET` | `/api/notas-fiscais/:id/danfe` | Visualização e impressão de DANFE / DANFSE com QR Code |
+| **Notas Fiscais**| `POST` | `/api/notas-fiscais/:id/cancelar` | Cancelamento com justificativa e estorno no caixa |
+| **Notas Fiscais**| `POST` | `/api/notas-fiscais/:id/corrigir` | Emissão de Carta de Correção Eletrônica (CC-e) |
+| **Notas Fiscais**| `GET` | `/api/notas-fiscais/sefaz/status` | Consulta status do serviço da SEFAZ autorizadora |
+| **Assistente**| `GET`, `POST` | `/api/assistente/conversas`| Gestão de threads de conversa do assistente IA |
 | **Assistente**| `POST` | `/api/assistente/mensagens` | Envio de mensagem com orquestração RAG e MCP |
 
 ---
 
-## 9. Modelo de Dados Relacional
+## 11. Modelo de Dados Relacional (16 tabelas)
 
-O banco de dados relacional utiliza o MySQL 8.x com chaves estrangeiras (`ON DELETE CASCADE / RESTRICT`) garantindo integridade estrita e isolamento de tenants:
+O banco de dados relacional utiliza o MySQL 8.x com chaves estrangeiras (`ON DELETE CASCADE / RESTRICT`), índices compostos para alta performance e isolamento de tenants:
 
 ```
 [usuarios] (id, nome, email, senha, criado_em)
     │
+    ├──< [mei_configuracoes] (id, usuario_id, cnpj, razao_social, uf, certificado_pfx_encrypted, ...)
+    │
     ├──< [clientes] (id, usuario_id, nome, telefone, email, ativo)
     │       │
-    │       ├──< [agendamentos] (id, usuario_id, cliente_id, servico_id, data_hora, status)
+    │       ├──< [agendamentos] (id, usuario_id, cliente_id, orcamento_id, servico_id, data_hora, status)
     │       ├──< [orcamentos] (id, usuario_id, cliente_id, total, status, validade)
-    │       │       └──< [orcamento_itens] (id, orcamento_id, servico_id, quantidade, subtotal)
-    │       └──< [cobrancas] (id, usuario_id, cliente_id, orcamento_id, valor, vencimento, status)
-    │               └─── [movimentacoes] (id, usuario_id, cobranca_id, tipo, categoria, valor)
+    │       │       ├──< [orcamento_itens] (id, orcamento_id, servico_id, quantidade, subtotal)
+    │       │       └───< [estoque_movimentacoes] (id, usuario_id, orcamento_id, insumo_id, tipo, ...)
+    │       │
+    │       └──< [cobrancas] (id, usuario_id, cliente_id, agendamento_id, orcamento_id, valor, status)
+    │               └───< [movimentacoes] (id, usuario_id, cobranca_id, tipo, categoria, valor)
     │
-    ├──< [servicos] (id, usuario_id, nome, descricao, preco, ativo)
+    ├──< [servicos] (id, usuario_id, nome, preco, categoria, controla_estoque_pronto, estoque_pronto_atual)
+    │       │
+    │       ├──< [fichas_tecnicas] (id, usuario_id, servico_id, insumo_id, quantidade_necessaria)
+    │       │           ▲
+    │       │           │
+    ├──< [insumos] (id, usuario_id, nome, unidade_base, quantidade_atual, estoque_minimo, custo_unitario)
+    │
+    ├──< [notas_fiscais] (id, usuario_id, cliente_id, orcamento_id, tipo, status, chave_acesso, link_danfe)
+    │       └──< [nota_fiscal_itens] (id, nota_fiscal_id, servico_id, descricao, ncm, cfop, valor_total)
     │
     └──< [conversas] (id, usuario_id, titulo, criado_em, atualizado_em)
             └──< [mensagens] (id, conversa_id, papel, conteudo, fontes, tools_usadas, rag_backend)
@@ -299,5 +514,5 @@ O banco de dados relacional utiliza o MySQL 8.x com chaves estrangeiras (`ON DEL
 ---
 
 <p align="center">
-  <b>Aranduê • MEI</b> — Desenvolvido com foco em usabilidade, segurança corporativa e inteligência aplicada ao pequeno empreendedor.
+  <b>Aranduê • MEI</b> — Gestão Simplificada, Inteligência Artificial e Autonomia Fiscal para o Microempreendedor Brasileiro.
 </p>
