@@ -503,7 +503,7 @@ npm run rag:recreate
 Inicie todos os 3 serviços em paralelo com um único comando na raiz:
 
 ```bash
-npm run dev
+npm run dev (o servico de I.A demora alguns segundos apos o localhost disponivel)
 ```
 
 *(O script `scripts/dev.sh` inicializa o Backend na porta `3001`, o Microserviço de IA na porta `8001` e o Frontend React na porta `3000`, encerrando todos graciosamente ao pressionar `Ctrl+C`).*
