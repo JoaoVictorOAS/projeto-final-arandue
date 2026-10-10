@@ -8,11 +8,13 @@
 ## 📌 Sumário
 - [1. Visão Geral da Solução](#1-visão-geral-da-solução)
 - [2. Topologia de Infraestrutura](#2-topologia-de-infraestrutura)
-- [3. Arquitetura do Microserviço de IA](#3-arquitetura-do-microserviço-de-ia)
+- [3. Arquitetura do Microserviço de IA & Sistema RAG](#3-arquitetura-do-microserviço-de-ia--sistema-rag)
   - [3.1 Orquestração LLM & Gemini](#31-orquestração-llm--gemini)
-  - [3.2 Recuperação Semântica RAG com Score Mínimo](#32-recuperação-semântica-rag-com-score-mínimo)
-  - [3.3 Armazenamento Vetorial Híbrido & Resiliência](#33-armazenamento-vetorial-híbrido--resiliência)
-  - [3.4 MCP Multi-Tenant e Catálogo de Ferramentas](#34-mcp-multi-tenant-e-catálogo-de-ferramentas)
+  - [3.2 Pipeline Completo de RAG Semântico](#32-pipeline-completo-de-rag-semântico)
+  - [3.3 Corpus de Documentos Oficiais (MEI & CF88)](#33-corpus-de-documentos-oficiais-mei--cf88)
+  - [3.4 Guia de Vetorização, Indexação e Consulta via CLI](#34-guia-de-vetorização-indexação-e-consulta-via-cli)
+  - [3.5 Armazenamento Vetorial Híbrido & Resiliência](#35-armazenamento-vetorial-híbrido--resiliência)
+  - [3.6 MCP Multi-Tenant e Catálogo de Ferramentas](#36-mcp-multi-tenant-e-catálogo-de-ferramentas)
 - [4. Módulo Fiscal e Certificado Digital A1](#4-módulo-fiscal-e-certificado-digital-a1)
   - [4.1 Tipos de Documentos Suportados](#41-tipos-de-documentos-suportados)
   - [4.2 Certificado A1 Criptografado (AES-256-GCM)](#42-certificado-a1-criptografado-aes-256-gcm)
@@ -136,29 +138,114 @@ flowchart TD
 
 ---
 
-## 3. Arquitetura do Microserviço de IA
+## 3. Arquitetura do Microserviço de IA & Sistema RAG
 
-O microserviço de inteligência artificial (`ai-service/`) roda em **Python 3.12+ com FastAPI e Uvicorn**, gerenciando a integração entre o modelo de linguagem (LLM), o banco vetorial e a execução de ferramentas corporativas.
+O microserviço de inteligência artificial (`ai-service/`) roda em **Python 3.12+ com FastAPI e Uvicorn**, gerenciando a integração entre o modelo de linguagem (LLM), o pipeline de RAG vetorial e a execução de ferramentas corporativas via MCP.
 
 ### 3.1 Orquestração LLM & Gemini
 - **Modelo:** Google Gemini (`gemini-3.5-flash-lite`), configurável via `GEMINI_MODEL`.
 - **Estratégia de Execução:** Loop iterativo de *Tool Use / Function Calling* com limite máximo de 5 iterações (`LLM_MAX_TOOL_CALLS`) e timeout de 30 segundos (`LLM_TIMEOUT_S`).
 - **Prompt com Governança:** O system prompt instrui o modelo a consultar ferramentas operacionais para obter dados do usuário, apoiar-se estritamente no contexto documental para dúvidas legais e sanitizar qualquer comando externo contra prompt injection.
 
-### 3.2 Recuperação Semântica RAG com Score Mínimo
-- **Corpus Oficial:** Perguntas e Respostas oficiais do Portal do Empreendedor e Simples Nacional (`docs/perguntaomei.pdf`), segmentadas em chunks com overlap e metadados de página.
-- **Modelo de Embedding:** `intfloat/multilingual-e5-small` (384 dimensões), com normalização L2 e prefixos obrigatórios `query: ` e `passage: `.
-- **Threshold de Score Mínimo (`RAG_MIN_SCORE = 0.865` / `RAG_MAX_DISTANCE = 0.135`):**
-  - **Consultas Normativas/Fiscais:** Atingem similaridade por cosseno entre `0.875` e `0.920` (Recall@3 $\ge 90\%$ no Golden Set oficial), sendo injetadas no bloco `<documento>` com suas páginas de origem e expostas no frontend com badges como `pág. 4 (90%)`.
-  - **Comandos Operacionais & Saudações:** Solicitações como *"emita uma nota fiscal..."* ou *"bom dia"* recebem pontuação inferior a `0.860`. O filtro semântico descarta automaticamente os trechos, impedindo a injeção de contexto legal irrelevante no prompt.
+### 3.2 Pipeline Completo de RAG Semântico
+O assistente conta com uma arquitetura de **Recuperação Aumentada por Geração (RAG)** de alta fidelidade para sanar dúvidas tributárias, legais e constitucionais do microempreendedor:
 
-### 3.3 Armazenamento Vetorial Híbrido & Resiliência
+```
+[Documentos Oficiais em docs/ (.pdf)]
+                │
+                ▼ (Extração textual limpa via pypdf)
+[Chunking Semântico com Janela Deslizante (800 caracteres / 150 overlap)]
+                │
+                ▼ (Normalização L2 + Prefixo "passage: ")
+[Dense Embeddings: intfloat/multilingual-e5-small (384 dimensões)]
+                │
+                ▼ (Indexação HNSW com similaridade de cosseno)
+[ChromaDB Local (data/chroma_db) / Firestore Vector Search]
+                ▲
+                │ Consulta do Usuário com Prefixo "query: "
+[Filtro de Threshold Semântico Estrito (RAG_MIN_SCORE = 0.865 / DIST <= 0.135)]
+                │
+                ├── Distância <= 0.135 (Score >= 0.865):
+                │     Injeta trecho legal no prompt em bloco <documento>
+                │     Exibe badge no chat: "pág. 4 (89%) - perguntaomei.pdf"
+                │
+                └── Distância > 0.135 (Score < 0.865):
+                      Descarta contexto legal (evita alucinações e prompt pollution
+                      em saudações ou comandos operacionais cotidianos)
+```
+
+- **Modelo de Embedding:** `intfloat/multilingual-e5-small` (384 dimensões), especializado em recuperação multilíngue de alta precisão com normalização vetorial L2.
+- **Calibração do Limiar de Score (`RAG_MIN_SCORE = 0.865` / `RAG_MAX_DISTANCE = 0.135`):**
+  - **Consultas Normativas e Fiscais:** Atingem distâncias entre `0.080` e `0.130` (similaridade cosseno entre `0.870` e `0.920`), alcançando **Recall@3 $\ge 90\%$** no Golden Set de avaliação oficial do MEI.
+  - **Comandos Operacionais e Saudações:** Solicitações como *"emita uma nota fiscal..."*, *"cadastre um cliente"* ou *"olá, tudo bem?"* obtêm distâncias superiores a `0.150` (similaridade $< 0.850$). O filtro descarta automaticamente os trechos jurídicos, impedindo poluição do prompt.
+
+### 3.3 Corpus de Documentos Oficiais (MEI & CF88)
+O repositório inclui os arquivos canônicos em `docs/` que alimentam a base vetorial do sistema:
+
+1. 📘 **`docs/perguntaomei.pdf`** (462 KB — 81 fragmentos indexados):
+   - Manual oficial de Perguntas e Respostas da Receita Federal do Brasil e Comitê Gestor do Simples Nacional (CGSN);
+   - Cobre limites de faturamento anual (R$ 81.000 para MEI em geral / R$ 251.600 para transportador autônomo de cargas), limites proporcionais de início de atividade (R$ 6.750/mês), contratação de até 1 empregado, ocupações permitidas no Anexo XI da Resolução CGSN nº 140/2018, vedações e regras de desenquadramento.
+2. 📜 **`docs/CF88_EC139_livro.pdf`** (2.7 MB — 498 páginas):
+   - Texto integral da **Constituição da República Federativa do Brasil de 1988**, atualizado até a **Emenda Constitucional nº 139 (Reforma Tributária)**;
+   - Fornece fundamentação constitucional de base para o tratamento jurídico favorecido e simplificado assegurado aos microempreendedores (Art. 146, III, 'd' e Art. 179 da CF/88), além dos novos princípios da Reforma Tributária sobre regimes simplificados e não cumulatividade.
+
+### 3.4 Guia de Vetorização, Indexação e Consulta via CLI
+O repositório disponibiliza scripts automatizados para recriar, indexar e testar a base vetorial diretamente via terminal:
+
+#### 1. Recriação do Banco Vetorial Padrão do MEI:
+```bash
+# Deleta e recria o ChromaDB com docs/perguntaomei.pdf usando e5-small:
+npm run rag:recreate
+
+# Ou diretamente pelo script shell:
+./scripts/rag/recreate_rag.sh
+```
+
+#### 2. Vetorização da Constituição Federal (CF88) ou PDFs Customizados:
+```bash
+# Vetoriza o arquivo da Constituição Federal em docs/CF88_EC139_livro.pdf:
+./scripts/rag/recreate_rag.sh docs/CF88_EC139_livro.pdf
+
+# Ou utilizando diretamente o script Python com coleção específica:
+.venv/bin/python ai-service/scripts/index_corpus.py \
+  --pdf docs/CF88_EC139_livro.pdf \
+  --collection constituicao_e5 \
+  --targets chroma
+```
+
+#### 3. Teste e Consulta Semântica Direta no Terminal:
+```bash
+# Consulta rápida via npm:
+npm run rag:query -- "qual o limite de faturamento anual do MEI?"
+
+# Consulta direta em Python:
+.venv/bin/python scripts/rag/query_mei.py "qual o limite de faturamento anual do MEI?"
+
+# Consulta em coleção personalizada (ex.: Constituição Federal):
+.venv/bin/python scripts/rag/query_mei.py \
+  "o que diz o artigo 179 sobre tratamento diferenciado de microempresas?" \
+  --collection constituicao_e5
+```
+
+**Exemplo real de saída da consulta via terminal:**
+```text
+🔍 Consultando no banco vetorial MEI (regras_mei_e5) com e5-small: 'qual o limite de faturamento do MEI?'
+------------------------------------------------------------
+[1] 📄 Fonte: perguntaomei.pdf (Página 4) | Relevância (distância COSINE): 0.1059
+    "para o MEI em geral: de até R$ 81.000,00 (oitenta e um mil reais) – no caso de início de atividade..."
+------------------------------------------------------------
+[2] 📄 Fonte: perguntaomei.pdf (Página 5) | Relevância (distância COSINE): 0.1088
+    "4. O limite anual de R$ 81.000,00 é um só, somando receitas de mercado interno e externo..."
+------------------------------------------------------------
+```
+
+### 3.5 Armazenamento Vetorial Híbrido & Resiliência
 O sistema adota o padrão **Fallback com Circuit Breaker** (`FallbackRetriever`):
 - **Primário:** Google Cloud Firestore Vector Search (em produção) ou ChromaDB local persistente (em desenvolvimento em `data/chroma_db`).
 - **Fallback:** ChromaDB local como contingência transparente caso o serviço em nuvem fique inacessível ou exceda `1.5s` de timeout.
 - **Circuit Breaker:** Abre após 3 falhas consecutivas, direcionando imediatamente as requisições ao store secundário por 60 segundos antes de tentar reestabelecer o primário.
 
-### 3.4 MCP Multi-Tenant e Catálogo de Ferramentas
+### 3.6 MCP Multi-Tenant e Catálogo de Ferramentas
 > **Regra Arquitetural do Projeto (Paridade Total API REST ↔ MCP):**  
 > Toda capacidade de negócio disponibilizada na API REST possui uma ferramenta correspondente espelhada no servidor MCP (`ai-service/mcp_server/server.py`). A API REST centraliza as regras de negócio e validações, garantindo que o Web, o Mobile e a IA consumam a mesma camada com paridade funcional total.
 

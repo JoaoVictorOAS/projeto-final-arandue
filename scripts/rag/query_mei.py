@@ -20,7 +20,7 @@ from app.rag.embedder import Embedder
 DEFAULT_DB_PATH = Path(__file__).resolve().parent.parent.parent / "data" / "chroma_db"
 COLLECTION_NAME = "regras_mei_e5"
 
-def consultar_regras_mei(pergunta: str, n_results: int = 3, db_path: Path = DEFAULT_DB_PATH):
+def consultar_regras_mei(pergunta: str, n_results: int = 3, db_path: Path = DEFAULT_DB_PATH, collection_name: str = COLLECTION_NAME):
     if not db_path.exists():
         print(f"❌ Banco vetorial não encontrado em {db_path}.")
         print("💡 Execute primeiro: python ai-service/scripts/index_corpus.py")
@@ -28,9 +28,9 @@ def consultar_regras_mei(pergunta: str, n_results: int = 3, db_path: Path = DEFA
 
     client = chromadb.PersistentClient(path=str(db_path))
     try:
-        collection = client.get_collection(name=COLLECTION_NAME)
+        collection = client.get_collection(name=collection_name)
     except Exception as e:
-        print(f"❌ Coleção '{COLLECTION_NAME}' não encontrada: {e}")
+        print(f"❌ Coleção '{collection_name}' não encontrada: {e}")
         return []
 
     embedder = Embedder()
@@ -62,14 +62,15 @@ def main():
     parser.add_argument("pergunta", type=str, nargs="?", help="Pergunta ou termo a ser pesquisado nas regras do MEI")
     parser.add_argument("--top-k", type=int, default=3, help="Número de resultados a retornar")
     parser.add_argument("--db-path", type=str, default=str(DEFAULT_DB_PATH), help="Caminho do ChromaDB")
+    parser.add_argument("--collection", type=str, default=COLLECTION_NAME, help="Nome da coleção no ChromaDB")
     args = parser.parse_args()
 
     if not args.pergunta:
         print("Uso: python scripts/rag/query_mei.py \"qual o limite de faturamento anual do MEI?\"")
         sys.exit(1)
 
-    print(f"\n🔍 Consultando no banco vetorial MEI com e5-small: '{args.pergunta}'\n" + "-" * 60)
-    resultados = consultar_regras_mei(args.pergunta, n_results=args.top_k, db_path=Path(args.db_path))
+    print(f"\n🔍 Consultando no banco vetorial MEI ({args.collection}) com e5-small: '{args.pergunta}'\n" + "-" * 60)
+    resultados = consultar_regras_mei(args.pergunta, n_results=args.top_k, db_path=Path(args.db_path), collection_name=args.collection)
 
     if not resultados:
         print("Nenhum resultado relevante encontrado.")

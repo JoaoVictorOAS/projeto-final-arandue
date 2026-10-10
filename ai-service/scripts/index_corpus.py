@@ -51,7 +51,7 @@ def extract_chunks(pdf_path: Path, chunk_size: int = 800, overlap: int = 150):
 
     return chunks, pdf_bytes
 
-def index_chroma(chunks, embeddings, corpus_version: str, model_name: str, db_path: Path, collection_name: str):
+def index_chroma(chunks, embeddings, corpus_version: str, model_name: str, db_path: Path, collection_name: str, source_name: str = "perguntaomei.pdf"):
     db_path.parent.mkdir(parents=True, exist_ok=True)
     client = chromadb.PersistentClient(path=str(db_path))
 
@@ -77,7 +77,7 @@ def index_chroma(chunks, embeddings, corpus_version: str, model_name: str, db_pa
         "chunk": c["chunk"],
         "corpus_version": corpus_version,
         "embedding_model": model_name,
-        "source": "perguntaomei.pdf"
+        "source": source_name
     } for c in chunks]
 
     batch_size = 50
@@ -120,7 +120,7 @@ def main():
     embeddings = embedder.embed_passages(texts)
 
     if "chroma" in targets:
-        index_chroma(chunks, embeddings, corpus_version, embedder.model_name, db_path, args.collection)
+        index_chroma(chunks, embeddings, corpus_version, embedder.model_name, db_path, args.collection, source_name=pdf_path.name)
 
     if "firestore" in targets:
         print("ℹ️ Alvo Firestore especificado. No ambiente local sem credenciais GCP configuradas, o Chroma atua como store primário/fallback.")

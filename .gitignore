@@ -7,7 +7,7 @@ build/
 .env
 
 # Banco vetorial de teste e arquivos temporários
-data/chroma_db/
+data/
 tmp/
 *.log
 __pycache__/
