@@ -122,6 +122,64 @@ describe('Módulo do Assistente IA', () => {
     expect(api.post).toHaveBeenCalledWith('/assistente/mensagens', {
       conversa_id: null,
       mensagem: 'Qual o limite de faturamento do MEI?',
+      assincrono: true,
+    });
+  });
+
+  test('deve executar short-polling quando a resposta inicial vier como "processando"', async () => {
+    api.get.mockImplementation((url) => {
+      if (url === '/assistente/conversas') {
+        return Promise.resolve({ data: { sucesso: true, dados: [] } });
+      }
+      if (url === '/assistente/mensagens/777/status') {
+        return Promise.resolve({
+          data: {
+            sucesso: true,
+            dados: {
+              id: 777,
+              conversa_id: 501,
+              status: 'concluida',
+              conteudo: 'Resposta final obtida com sucesso via short-polling!',
+              fontes: [],
+            },
+          },
+        });
+      }
+      return Promise.resolve({ data: { sucesso: true, dados: [] } });
+    });
+
+    api.post.mockResolvedValueOnce({
+      data: {
+        sucesso: true,
+        dados: {
+          conversa_id: 501,
+          mensagem: {
+            id: 777,
+            papel: 'assistente',
+            status: 'processando',
+            conteudo: null,
+            fontes: [],
+          },
+        },
+      },
+    });
+
+    render(<Assistente />);
+
+    const input = screen.getByPlaceholderText(/digite sua dúvida contábil ou sobre seu negócio\.\.\./i);
+    fireEvent.change(input, { target: { value: 'Pergunta assíncrona' } });
+
+    const btnEnviar = screen.getByRole('button', { name: /enviar/i });
+    fireEvent.click(btnEnviar);
+
+    // Deve exibir indicador de processando
+    await waitFor(() => {
+      expect(screen.getByText(/consultando regras oficiais e dados do negócio\.\.\./i)).toBeInTheDocument();
+    });
+
+    // Quando o short-polling resolver status 'concluida'
+    await waitFor(() => {
+      expect(screen.getByText(/Resposta final obtida com sucesso via short-polling!/i)).toBeInTheDocument();
     });
   });
 

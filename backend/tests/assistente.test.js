@@ -225,4 +225,119 @@ describe('Rotas do Assistente IA (/api/assistente)', () => {
       expect(resGet.statusCode).toBe(404);
     });
   });
+
+  describe('Modo Assíncrono e Short-Polling (/api/assistente/mensagens)', () => {
+    test('deve aceitar mensagem assíncrona, retornar 202 Accepted imediatamente e permitir consultar status via short-polling', async () => {
+      let resolverAi;
+      const promessaAi = new Promise((resolve) => {
+        resolverAi = resolve;
+      });
+      aiServiceClient.enviarMensagem.mockImplementationOnce(() => promessaAi);
+
+      // 1. Envia mensagem assíncrona
+      const resPost = await request(app)
+        .post('/api/assistente/mensagens')
+        .set('Authorization', `Bearer ${tokenUsuario1}`)
+        .send({
+          mensagem: 'Como parcelar o débito do DAS MEI?',
+          assincrono: true
+        });
+
+      expect(resPost.statusCode).toBe(202);
+      expect(resPost.body.sucesso).toBe(true);
+      expect(resPost.body.dados).toHaveProperty('conversa_id');
+      expect(resPost.body.dados.mensagem).toBeDefined();
+      expect(resPost.body.dados.mensagem.status).toBe('processando');
+      expect(resPost.body.dados.mensagem.papel).toBe('assistente');
+
+      const msgId = resPost.body.dados.mensagem.id;
+      const conversaId = resPost.body.dados.conversa_id;
+
+      // 2. Short-polling inicial: mensagem ainda deve estar processando
+      const resStatus1 = await request(app)
+        .get(`/api/assistente/mensagens/${msgId}/status`)
+        .set('Authorization', `Bearer ${tokenUsuario1}`);
+
+      expect(resStatus1.statusCode).toBe(200);
+      expect(resStatus1.body.dados.status).toBe('processando');
+      expect(resStatus1.body.dados.conteudo).toBeNull();
+
+      // 3. Rejeita envio simultâneo na mesma conversa enquanto processa (409 Conflict)
+      const resConflito = await request(app)
+        .post('/api/assistente/mensagens')
+        .set('Authorization', `Bearer ${tokenUsuario1}`)
+        .send({
+          conversa_id: conversaId,
+          mensagem: 'Outra pergunta enquanto a primeira roda',
+          assincrono: true
+        });
+
+      expect(resConflito.statusCode).toBe(409);
+      expect(resConflito.body.sucesso).toBe(false);
+
+      // 4. Resolve a Promise do ai-service simulando término do processamento
+      resolverAi({
+        resposta: 'O parcelamento pode ser feito pelo Portal do Simples Nacional em até 60 vezes.',
+        fontes: [{ pagina: 22, arquivo: 'perguntaomei.pdf', trecho: 'Parcelamento DAS' }],
+        tools_usadas: [],
+        rag_backend: 'chroma'
+      });
+
+      // Aguarda tick para a Promise de background concluir a gravação
+      await new Promise((r) => setTimeout(r, 100));
+
+      // 5. Short-polling posterior: mensagem agora deve estar concluída
+      const resStatus2 = await request(app)
+        .get(`/api/assistente/mensagens/${msgId}/status`)
+        .set('Authorization', `Bearer ${tokenUsuario1}`);
+
+      expect(resStatus2.statusCode).toBe(200);
+      expect(resStatus2.body.dados.status).toBe('concluida');
+      expect(resStatus2.body.dados.conteudo).toContain('Portal do Simples Nacional');
+      expect(resStatus2.body.dados.fontes).toHaveLength(1);
+
+      // 6. ISOLAMENTO MULTI-TENANT: Usuário 2 não pode ver o status da mensagem do Usuário 1 (404)
+      const resStatusUser2 = await request(app)
+        .get(`/api/assistente/mensagens/${msgId}/status`)
+        .set('Authorization', `Bearer ${tokenUsuario2}`);
+
+      expect(resStatusUser2.statusCode).toBe(404);
+      expect(resStatusUser2.body.sucesso).toBe(false);
+    });
+
+    test('deve atualizar status para "erro" se o aiServiceClient falhar em background', async () => {
+      let rejeitarAi;
+      const promessaAi = new Promise((_, reject) => {
+        rejeitarAi = reject;
+      });
+      aiServiceClient.enviarMensagem.mockImplementationOnce(() => promessaAi);
+
+      const resPost = await request(app)
+        .post('/api/assistente/mensagens')
+        .set('Authorization', `Bearer ${tokenUsuario1}`)
+        .send({
+          mensagem: 'Pergunta que vai falhar em background',
+          assincrono: true
+        });
+
+      expect(resPost.statusCode).toBe(202);
+      const msgId = resPost.body.dados.mensagem.id;
+
+      // Rejeita a Promise em background
+      const erro = new Error('Falha de timeout com Gemini API');
+      erro.statusCode = 504;
+      rejeitarAi(erro);
+
+      // Aguarda gravação do erro em background
+      await new Promise((r) => setTimeout(r, 100));
+
+      const resStatus = await request(app)
+        .get(`/api/assistente/mensagens/${msgId}/status`)
+        .set('Authorization', `Bearer ${tokenUsuario1}`);
+
+      expect(resStatus.statusCode).toBe(200);
+      expect(resStatus.body.dados.status).toBe('erro');
+      expect(resStatus.body.dados.erro_mensagem).toMatch(/Falha de timeout/i);
+    });
+  });
 });

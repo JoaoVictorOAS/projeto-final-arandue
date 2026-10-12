@@ -17,6 +17,7 @@ import {
   Settings,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useChat } from '../context/ChatContext';
 import Logo from './Logo';
 
 const NAV_ITEMS = [
@@ -35,6 +36,7 @@ const NAV_ITEMS = [
 
 export default function Sidebar({ isOpen, setIsOpen }) {
   const { logout, usuario } = useAuth();
+  const { enviando, notificacao } = useChat();
 
   const navLinkClasses = ({ isActive }) =>
     `flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all ${
@@ -74,7 +76,18 @@ export default function Sidebar({ isOpen, setIsOpen }) {
               className={navLinkClasses}
             >
               <Icon className="w-5 h-5 flex-shrink-0" />
-              <span>{item.label}</span>
+              <span className="flex-1">{item.label}</span>
+              {item.to === '/assistente' && enviando && (
+                <span className="flex h-2 w-2 relative" title="Assistente processando resposta">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-600"></span>
+                </span>
+              )}
+              {item.to === '/assistente' && notificacao && !enviando && (
+                <span className="bg-emerald-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full animate-pulse">
+                  1
+                </span>
+              )}
             </NavLink>
           );
         })}
