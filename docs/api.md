@@ -342,11 +342,14 @@ Esta documentação detalha os padrões arquiteturais, cabeçalhos, autenticaç�
 ```json
 {
   "conversa_id": 1,
-  "mensagem": "Qual o limite de faturamento anual do MEI?"
+  "mensagem": "Qual o limite de faturamento anual do MEI?",
+  "assincrono": true
 }
 ```
 *Nota: Se `conversa_id` for omitido ou nulo, uma nova conversa é criada automaticamente com título baseado na mensagem.*
-- **Resposta Sucesso (`200 OK`):**
+*Nota: Se `assincrono` for `true`, a rota responde imediatamente com status `202 Accepted`, permitindo que a IA processe a resposta em segundo plano enquanto o frontend executa short-polling.*
+
+- **Resposta Sucesso Síncrona (`200 OK` - quando `assincrono: false` ou omitido):**
 ```json
 {
   "sucesso": true,
@@ -355,7 +358,9 @@ Esta documentação detalha os padrões arquiteturais, cabeçalhos, autenticaç�
     "conversa_id": 1,
     "mensagem": {
       "id": 42,
+      "conversa_id": 1,
       "papel": "assistente",
+      "status": "concluida",
       "conteudo": "O limite anual de faturamento do MEI é de R$ 81.000,00...",
       "fontes": [
         {
@@ -370,7 +375,56 @@ Esta documentação detalha os padrões arquiteturais, cabeçalhos, autenticaç�
 }
 ```
 
-### 10.3 Listar Mensagens de uma Conversa
+- **Resposta Sucesso Assíncrona (`202 Accepted` - quando `assincrono: true`):**
+```json
+{
+  "sucesso": true,
+  "mensagem": "Mensagem em processamento",
+  "dados": {
+    "conversa_id": 1,
+    "mensagem_usuario_id": 41,
+    "mensagem": {
+      "id": 42,
+      "conversa_id": 1,
+      "papel": "assistente",
+      "status": "processando",
+      "conteudo": null,
+      "fontes": [],
+      "criado_em": "2026-10-07T14:05:02.000Z"
+    }
+  }
+}
+```
+
+### 10.3 Consultar Status de Mensagem (Short-Polling)
+- **Método:** `GET`
+- **Rota:** `/api/assistente/mensagens/:id/status`
+- **Resposta Sucesso (`200 OK`):**
+```json
+{
+  "sucesso": true,
+  "mensagem": "Status da mensagem consultado com sucesso",
+  "dados": {
+    "id": 42,
+    "conversa_id": 1,
+    "papel": "assistente",
+    "status": "concluida",
+    "erro_mensagem": null,
+    "conteudo": "O limite anual de faturamento do MEI é de R$ 81.000,00...",
+    "fontes": [
+      {
+        "pagina": 4,
+        "arquivo": "perguntaomei.pdf",
+        "trecho": "limite de receita bruta previsto no § 1º do artigo 18-A..."
+      }
+    ],
+    "tools_usadas": [],
+    "criado_em": "2026-10-07T14:05:02.000Z"
+  }
+}
+```
+
+### 10.4 Listar Mensagens de uma Conversa
 - **Método:** `GET`
 - **Rota:** `/api/assistente/conversas/:id/mensagens`
 - **Isolamento:** Retorna `404 Not Found` se a conversa pertencer a outro usuário.

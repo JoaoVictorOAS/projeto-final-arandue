@@ -192,14 +192,17 @@ CREATE TABLE IF NOT EXISTS mensagens (
     id INT AUTO_INCREMENT PRIMARY KEY,
     conversa_id INT NOT NULL,
     papel ENUM('usuario', 'assistente') NOT NULL,
-    conteudo TEXT NOT NULL,
+    status ENUM('processando', 'concluida', 'erro') NOT NULL DEFAULT 'concluida',
+    erro_mensagem VARCHAR(500) NULL,
+    conteudo TEXT NULL,
     fontes JSON NULL,
     tools_usadas JSON NULL,
     rag_backend VARCHAR(20) NULL,
     criado_em DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_mensagens_conversa FOREIGN KEY (conversa_id) 
         REFERENCES conversas(id) ON DELETE CASCADE ON UPDATE CASCADE,
-    INDEX idx_mensagens_conversa_criado (conversa_id, criado_em)
+    INDEX idx_mensagens_conversa_criado (conversa_id, criado_em),
+    INDEX idx_mensagens_conversa_status (conversa_id, status)
 ) ENGINE=InnoDB;
 
 -- 11. Tabela de Insumos (Módulo de Estoque)

@@ -5,6 +5,7 @@ const router = express.Router();
 
 router.get('/conversas', assistenteController.listarConversas);
 router.post('/mensagens', assistenteController.enviarMensagem);
+router.get('/mensagens/:id/status', assistenteController.consultarStatusMensagem);
 router.get('/conversas/:id/mensagens', assistenteController.listarMensagens);
 router.delete('/conversas/:id', assistenteController.excluirConversa);
 

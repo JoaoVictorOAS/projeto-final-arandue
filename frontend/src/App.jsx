@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
+import { ChatProvider } from './context/ChatContext';
 import PrivateRoute from './components/PrivateRoute';
 import Layout from './components/Layout';
 
@@ -22,7 +23,8 @@ export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <Routes>
+        <ChatProvider>
+          <Routes>
           {/* Rotas Públicas */}
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
@@ -47,6 +49,7 @@ export default function App() {
           {/* Redirecionamento padrão para rota desconhecida */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
+        </ChatProvider>
       </AuthProvider>
     </BrowserRouter>
   );

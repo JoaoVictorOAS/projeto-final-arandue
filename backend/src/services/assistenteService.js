@@ -28,9 +28,9 @@ function checkRateLimit(usuario_id) {
 
 const assistenteService = {
   /**
-   * Envia uma mensagem no assistente e processa a resposta.
+   * Envia uma mensagem no assistente e processa a resposta (suporta síncrono ou assíncrono).
    */
-  async enviarMensagem(usuario_id, { conversa_id, mensagem }) {
+  async enviarMensagem(usuario_id, { conversa_id, mensagem, assincrono = false }) {
     if (!usuario_id) {
       const erro = new Error('Identificação do usuário é obrigatória');
       erro.statusCode = 401;
@@ -76,15 +76,35 @@ const assistenteService = {
       }
     }
 
-    // 3. Monta histórico recente para contexto (até 10 mensagens anteriores)
+    // 3. Monta histórico recente para contexto (até 10 mensagens anteriores concluídas)
     const mensagensAnteriores = await conversaRepository.listarMensagensPorConversa(idConversaAtiva, usuario_id) || [];
-    const historicoRecente = mensagensAnteriores.slice(-10).map(m => ({
-      papel: m.papel,
-      texto: m.conteudo
-    }));
+
+    // Se já houver mensagem sendo processada nesta conversa, bloqueia duplicidade simultânea
+    const temProcessando = mensagensAnteriores.some(m => m.status === 'processando');
+    if (temProcessando) {
+      const erro = new Error('Já existe uma pergunta sendo processada nesta conversa. Aguarde a resposta ser concluída.');
+      erro.statusCode = 409;
+      throw erro;
+    }
+
+    const historicoRecente = mensagensAnteriores
+      .filter(m => m.status === 'concluida' && m.conteudo)
+      .slice(-10)
+      .map(m => ({
+        papel: m.papel,
+        texto: m.conteudo
+      }));
 
     // 4. Salva a pergunta do usuário
-    await conversaRepository.salvarMensagem(idConversaAtiva, 'usuario', mensagemLimpa);
+    const msgUsuarioId = await conversaRepository.salvarMensagem(
+      idConversaAtiva,
+      'usuario',
+      mensagemLimpa,
+      null,
+      null,
+      null,
+      'concluida'
+    );
 
     // 5. Gera token restrito de operação (scoped token) de 15 minutos para as tools do MCP
     const tenantToken = jwt.sign(
@@ -96,7 +116,47 @@ const assistenteService = {
       { expiresIn: '15m' }
     );
 
-    // 6. Chama o microserviço de IA
+    // Modo Assíncrono (Short-polling)
+    if (assincrono) {
+      const msgAssistenteId = await conversaRepository.salvarMensagem(
+        idConversaAtiva,
+        'assistente',
+        null,
+        null,
+        null,
+        null,
+        'processando',
+        null
+      );
+
+      // Dispara em background sem segurar a requisição HTTP
+      this._executarProcessamentoBackground({
+        msgAssistenteId,
+        idConversaAtiva,
+        usuario_id,
+        tenantToken,
+        mensagemLimpa,
+        historicoRecente
+      }).catch(err => {
+        console.error(`[Assistente] Erro de background na mensagem ${msgAssistenteId}:`, err);
+      });
+
+      return {
+        conversa_id: idConversaAtiva,
+        mensagem_usuario_id: msgUsuarioId,
+        mensagem: {
+          id: msgAssistenteId,
+          conversa_id: idConversaAtiva,
+          papel: 'assistente',
+          status: 'processando',
+          conteudo: null,
+          fontes: [],
+          criado_em: new Date().toISOString()
+        }
+      };
+    }
+
+    // Modo Síncrono (Padrão para retrocompatibilidade)
     let respostaAi;
     try {
       respostaAi = await aiServiceClient.enviarMensagem({
@@ -112,25 +172,89 @@ const assistenteService = {
       throw erroAmigavel;
     }
 
-    // 7. Salva a resposta do assistente
+    // Salva a resposta do assistente
     const msgId = await conversaRepository.salvarMensagem(
       idConversaAtiva,
       'assistente',
       respostaAi.resposta,
       respostaAi.fontes || [],
       respostaAi.tools_usadas || [],
-      respostaAi.rag_backend || 'none'
+      respostaAi.rag_backend || 'none',
+      'concluida'
     );
 
     return {
       conversa_id: idConversaAtiva,
       mensagem: {
         id: msgId,
+        conversa_id: idConversaAtiva,
         papel: 'assistente',
+        status: 'concluida',
         conteudo: respostaAi.resposta,
         fontes: respostaAi.fontes || [],
         criado_em: new Date().toISOString()
       }
+    };
+  },
+
+  async _executarProcessamentoBackground({
+    msgAssistenteId,
+    idConversaAtiva,
+    usuario_id,
+    tenantToken,
+    mensagemLimpa,
+    historicoRecente
+  }) {
+    try {
+      const respostaAi = await aiServiceClient.enviarMensagem({
+        tenant_id: usuario_id,
+        tenant_token: tenantToken,
+        mensagem: mensagemLimpa,
+        historico: historicoRecente
+      });
+
+      await conversaRepository.atualizarMensagem(msgAssistenteId, {
+        conteudo: respostaAi.resposta,
+        fontes: respostaAi.fontes || [],
+        tools_usadas: respostaAi.tools_usadas || [],
+        rag_backend: respostaAi.rag_backend || 'none',
+        status: 'concluida'
+      });
+    } catch (err) {
+      console.error(`[Assistente] Falha no processamento em segundo plano da mensagem ${msgAssistenteId}:`, err);
+      const mensagemErro = err.message || 'Assistente IA temporariamente indisponível. Tente novamente em instantes.';
+      await conversaRepository.atualizarMensagem(msgAssistenteId, {
+        conteudo: mensagemErro,
+        status: 'erro',
+        erro_mensagem: mensagemErro
+      });
+    }
+  },
+
+  async buscarStatusMensagem(mensagem_id, usuario_id) {
+    if (!usuario_id) {
+      const erro = new Error('Identificação do usuário é obrigatória');
+      erro.statusCode = 401;
+      throw erro;
+    }
+
+    const msg = await conversaRepository.buscarMensagemPorId(mensagem_id, usuario_id);
+    if (!msg) {
+      const erro = new Error('Mensagem não encontrada');
+      erro.statusCode = 404;
+      throw erro;
+    }
+
+    return {
+      id: msg.id,
+      conversa_id: msg.conversa_id,
+      papel: msg.papel,
+      status: msg.status,
+      erro_mensagem: msg.erro_mensagem,
+      conteudo: msg.conteudo,
+      fontes: msg.fontes || [],
+      tools_usadas: msg.tools_usadas || [],
+      criado_em: msg.criado_em
     };
   },
 
