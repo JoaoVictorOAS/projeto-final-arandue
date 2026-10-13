@@ -4,16 +4,21 @@ const assistenteController = {
   async enviarMensagem(req, res) {
     try {
       const usuario_id = req.usuario.id;
-      const { conversa_id, mensagem } = req.body;
+      const { conversa_id, mensagem, assincrono } = req.body;
+      const ehAssincrono = assincrono === true || req.query.assincrono === 'true' || req.query.async === 'true';
 
       const resultado = await assistenteService.enviarMensagem(usuario_id, {
         conversa_id: conversa_id ? Number(conversa_id) : undefined,
-        mensagem
+        mensagem,
+        assincrono: ehAssincrono
       });
 
-      return res.status(200).json({
+      const statusCode = ehAssincrono ? 202 : 200;
+      const msgRetorno = ehAssincrono ? 'Mensagem em processamento' : 'Resposta do assistente processada com sucesso';
+
+      return res.status(statusCode).json({
         sucesso: true,
-        mensagem: 'Resposta do assistente processada com sucesso',
+        mensagem: msgRetorno,
         dados: resultado
       });
     } catch (error) {
@@ -21,6 +26,27 @@ const assistenteController = {
       return res.status(status).json({
         sucesso: false,
         mensagem: error.message || 'Erro ao processar mensagem com o assistente'
+      });
+    }
+  },
+
+  async consultarStatusMensagem(req, res) {
+    try {
+      const usuario_id = req.usuario.id;
+      const mensagem_id = Number(req.params.id);
+
+      const dados = await assistenteService.buscarStatusMensagem(mensagem_id, usuario_id);
+
+      return res.status(200).json({
+        sucesso: true,
+        mensagem: 'Status da mensagem consultado com sucesso',
+        dados
+      });
+    } catch (error) {
+      const status = error.statusCode || 500;
+      return res.status(status).json({
+        sucesso: false,
+        mensagem: error.message || 'Erro ao consultar status da mensagem'
       });
     }
   },

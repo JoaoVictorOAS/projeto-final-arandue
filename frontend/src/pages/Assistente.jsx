@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useContext } from 'react';
 import {
   MessageSquare,
   Send,
@@ -13,7 +13,7 @@ import {
   Sparkles,
   Loader2,
 } from 'lucide-react';
-import api from '../services/api';
+import { ChatContext, ChatProvider, useChat } from '../context/ChatContext';
 
 const SUGESTOES_PADRAO = [
   'Qual o limite de faturamento anual do MEI?',
@@ -22,16 +22,25 @@ const SUGESTOES_PADRAO = [
   'Qual a data de vencimento mensal do boleto DAS?',
 ];
 
-export default function Assistente() {
-  const [conversas, setConversas] = useState([]);
-  const [conversaAtivaId, setConversaAtivaId] = useState(null);
-  const [mensagens, setMensagens] = useState([]);
-  const [mensagemInput, setMensagemInput] = useState('');
-  const [carregandoConversas, setCarregandoConversas] = useState(true);
-  const [carregandoMensagens, setCarregandoMensagens] = useState(false);
-  const [enviando, setEnviando] = useState(false);
-  const [erro, setErro] = useState(null);
-  const [fontesAbertas, setFontesAbertas] = useState({});
+function AssistenteView() {
+  const {
+    conversas,
+    conversaAtivaId,
+    mensagens,
+    mensagemInput,
+    carregandoConversas,
+    carregandoMensagens,
+    enviando,
+    erro,
+    fontesAbertas,
+    setMensagemInput,
+    iniciarNovaConversa,
+    selecionarConversa,
+    excluirConversa,
+    alternarFonte,
+    enviarMensagemTexto,
+    limparNotificacao,
+  } = useChat();
 
   const finalDoChatRef = useRef(null);
 
@@ -43,117 +52,12 @@ export default function Assistente() {
   };
 
   useEffect(() => {
-    rolarParaOFinal();
-  }, [mensagens, enviando]);
-
-  // Carrega histórico de conversas do usuário
-  const carregarConversas = async () => {
-    try {
-      setCarregandoConversas(true);
-      const res = await api.get('/assistente/conversas');
-      if (res.data?.sucesso) {
-        setConversas(res.data.dados || []);
-      }
-    } catch (err) {
-      console.error('Erro ao carregar conversas do assistente:', err);
-    } finally {
-      setCarregandoConversas(false);
-    }
-  };
+    limparNotificacao();
+  }, [limparNotificacao]);
 
   useEffect(() => {
-    carregarConversas();
-  }, []);
-
-  // Carrega mensagens da conversa ativa selecionada
-  const selecionarConversa = async (conversaId) => {
-    setConversaAtivaId(conversaId);
-    setErro(null);
-    try {
-      setCarregandoMensagens(true);
-      const res = await api.get(`/assistente/conversas/${conversaId}/mensagens`);
-      if (res.data?.sucesso) {
-        setMensagens(res.data.dados || []);
-      }
-    } catch (err) {
-      console.error('Erro ao carregar mensagens:', err);
-      setErro('Não foi possível carregar o histórico desta conversa.');
-    } finally {
-      setCarregandoMensagens(false);
-    }
-  };
-
-  const iniciarNovaConversa = () => {
-    setConversaAtivaId(null);
-    setMensagens([]);
-    setErro(null);
-    setMensagemInput('');
-  };
-
-  const excluirConversa = async (e, conversaId) => {
-    e.stopPropagation();
-    try {
-      await api.delete(`/assistente/conversas/${conversaId}`);
-      setConversas((prev) => prev.filter((c) => c.id !== conversaId));
-      if (conversaAtivaId === conversaId) {
-        iniciarNovaConversa();
-      }
-    } catch (err) {
-      console.error('Erro ao excluir conversa:', err);
-      setErro('Não foi possível excluir a conversa.');
-    }
-  };
-
-  const alternarFonte = (msgId, index) => {
-    const chave = `${msgId}-${index}`;
-    setFontesAbertas((prev) => ({
-      ...prev,
-      [chave]: !prev[chave],
-    }));
-  };
-
-  const enviarMensagemTexto = async (textoParaEnviar) => {
-    const texto = (textoParaEnviar || mensagemInput).trim();
-    if (!texto || enviando) return;
-
-    setErro(null);
-    const msgTemporariaUsuario = {
-      id: Date.now(),
-      papel: 'usuario',
-      conteudo: texto,
-      criado_em: new Date().toISOString(),
-    };
-
-    setMensagens((prev) => [...prev, msgTemporariaUsuario]);
-    setMensagemInput('');
-    setEnviando(true);
-
-    try {
-      const res = await api.post('/assistente/mensagens', {
-        conversa_id: conversaAtivaId,
-        mensagem: texto,
-      });
-
-      if (res.data?.sucesso) {
-        const { conversa_id: novoConversaId, mensagem: msgAssistente } = res.data.dados;
-
-        if (!conversaAtivaId) {
-          setConversaAtivaId(novoConversaId);
-          carregarConversas();
-        }
-
-        setMensagens((prev) => [...prev, msgAssistente]);
-      }
-    } catch (err) {
-      console.error('Erro ao enviar mensagem:', err);
-      const mensagemErro =
-        err.response?.data?.mensagem ||
-        'Assistente IA temporariamente indisponível. Tente novamente em instantes.';
-      setErro(mensagemErro);
-    } finally {
-      setEnviando(false);
-    }
-  };
+    rolarParaOFinal();
+  }, [mensagens, enviando]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -170,7 +74,7 @@ export default function Assistente() {
   return (
     <div className="flex h-[calc(85vh)] bg-slate-50 overflow-hidden rounded-2xl shadow-lg border border-slate-200">
       {/* Sidebar de Histórico de Conversas */}
-      <aside className="w-80 bg-white border-r  border-slate-200 flex flex-col flex-shrink-0">
+      <aside className="w-80 bg-white border-r border-slate-200 flex flex-col flex-shrink-0">
         <div className="p-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-indigo-600" />
@@ -282,68 +186,70 @@ export default function Assistente() {
               </div>
             </div>
           ) : (
-            mensagens.map((msg, idx) => {
-              const ehUsuario = msg.papel === 'usuario';
-              return (
-                <div
-                  key={msg.id || idx}
-                  className={`flex gap-3 max-w-3xl ${ehUsuario ? 'ml-auto flex-row-reverse' : 'mr-auto'}`}
-                >
+            mensagens
+              .filter((m) => !(m.papel === 'assistente' && m.status === 'processando' && !m.conteudo))
+              .map((msg, idx) => {
+                const ehUsuario = msg.papel === 'usuario';
+                return (
                   <div
-                    className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                      ehUsuario ? 'bg-indigo-600 text-white' : 'bg-slate-200 text-slate-700'
-                    }`}
+                    key={msg.id || idx}
+                    className={`flex gap-3 max-w-3xl ${ehUsuario ? 'ml-auto flex-row-reverse' : 'mr-auto'}`}
                   >
-                    {ehUsuario ? <User className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
-                  </div>
-
-                  <div className={`space-y-2 max-w-2xl`}>
                     <div
-                      className={`p-4 rounded-2xl text-sm leading-relaxed ${
-                        ehUsuario
-                          ? 'bg-indigo-600 text-white rounded-br-none shadow-sm'
-                          : 'bg-white text-slate-800 rounded-bl-none border border-slate-200 shadow-sm'
+                      className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                        ehUsuario ? 'bg-indigo-600 text-white' : 'bg-slate-200 text-slate-700'
                       }`}
                     >
-                      <div className="whitespace-pre-wrap">{msg.conteudo}</div>
+                      {ehUsuario ? <User className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
                     </div>
 
-                    {/* Exibição de Fontes Citadas pelo RAG */}
-                    {!ehUsuario && msg.fontes && msg.fontes.length > 0 && (
-                      <div className="bg-slate-100/80 rounded-xl p-3 border border-slate-200/80 space-y-2">
-                        <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-700">
-                          <FileText className="w-3.5 h-3.5 text-indigo-600" />
-                          <span>Fontes Oficiais Consultadas ({msg.fontes.length}):</span>
-                        </div>
-                        <div className="flex flex-wrap gap-1.5">
-                          {msg.fontes.map((fonte, fIdx) => {
-                            const chave = `${msg.id || idx}-${fIdx}`;
-                            const aberta = !!fontesAbertas[chave];
-                            return (
-                              <div key={fIdx} className="w-full">
-                                <button
-                                  type="button"
-                                  onClick={() => alternarFonte(msg.id || idx, fIdx)}
-                                  className="inline-flex items-center gap-1 px-2 py-1 bg-white hover:bg-slate-50 border border-slate-300 rounded text-[11px] font-medium text-slate-700 transition-colors shadow-2xs"
-                                >
-                                  <span>pág. {fonte.pagina}{fonte.score ? ` (${Math.round(fonte.score * 100)}%)` : ''}</span>
-                                  {aberta ? <ChevronUp className="w-3 h-3 text-slate-400" /> : <ChevronDown className="w-3 h-3 text-slate-400" />}
-                                </button>
-                                {aberta && fonte.trecho && (
-                                  <div className="mt-1 p-2 bg-white rounded border border-slate-200 text-[11px] text-slate-600 italic leading-snug">
-                                    "{fonte.trecho}"
-                                  </div>
-                                )}
-                              </div>
-                            );
-                          })}
-                        </div>
+                    <div className={`space-y-2 max-w-2xl`}>
+                      <div
+                        className={`p-4 rounded-2xl text-sm leading-relaxed ${
+                          ehUsuario
+                            ? 'bg-indigo-600 text-white rounded-br-none shadow-sm'
+                            : 'bg-white text-slate-800 rounded-bl-none border border-slate-200 shadow-sm'
+                        }`}
+                      >
+                        <div className="whitespace-pre-wrap">{msg.conteudo}</div>
                       </div>
-                    )}
+
+                      {/* Exibição de Fontes Citadas pelo RAG */}
+                      {!ehUsuario && msg.fontes && msg.fontes.length > 0 && (
+                        <div className="bg-slate-100/80 rounded-xl p-3 border border-slate-200/80 space-y-2">
+                          <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-700">
+                            <FileText className="w-3.5 h-3.5 text-indigo-600" />
+                            <span>Fontes Oficiais Consultadas ({msg.fontes.length}):</span>
+                          </div>
+                          <div className="flex flex-wrap gap-1.5">
+                            {msg.fontes.map((fonte, fIdx) => {
+                              const chave = `${msg.id || idx}-${fIdx}`;
+                              const aberta = !!fontesAbertas[chave];
+                              return (
+                                <div key={fIdx} className="w-full">
+                                  <button
+                                    type="button"
+                                    onClick={() => alternarFonte(msg.id || idx, fIdx)}
+                                    className="inline-flex items-center gap-1 px-2 py-1 bg-white hover:bg-slate-50 border border-slate-300 rounded text-[11px] font-medium text-slate-700 transition-colors shadow-2xs"
+                                  >
+                                    <span>pág. {fonte.pagina}{fonte.score ? ` (${Math.round(fonte.score * 100)}%)` : ''}</span>
+                                    {aberta ? <ChevronUp className="w-3 h-3 text-slate-400" /> : <ChevronDown className="w-3 h-3 text-slate-400" />}
+                                  </button>
+                                  {aberta && fonte.trecho && (
+                                    <div className="mt-1 p-2 bg-white rounded border border-slate-200 text-[11px] text-slate-600 italic leading-snug">
+                                      "{fonte.trecho}"
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
-              );
-            })
+                );
+              })
           )}
 
           {/* Indicador de digitando/processando */}
@@ -405,4 +311,16 @@ export default function Assistente() {
       </main>
     </div>
   );
+}
+
+export default function Assistente() {
+  const context = useContext(ChatContext);
+  if (!context || !context._isProvider) {
+    return (
+      <ChatProvider>
+        <AssistenteView />
+      </ChatProvider>
+    );
+  }
+  return <AssistenteView />;
 }

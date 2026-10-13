@@ -55,10 +55,19 @@ const conversaRepository = {
   /**
    * Salva uma mensagem em uma conversa e atualiza o atualizado_em da conversa pai.
    */
-  async salvarMensagem(conversa_id, papel, conteudo, fontes = null, tools_usadas = null, rag_backend = null) {
+  async salvarMensagem(
+    conversa_id,
+    papel,
+    conteudo,
+    fontes = null,
+    tools_usadas = null,
+    rag_backend = null,
+    status = 'concluida',
+    erro_mensagem = null
+  ) {
     const sql = `
-      INSERT INTO mensagens (conversa_id, papel, conteudo, fontes, tools_usadas, rag_backend)
-      VALUES (?, ?, ?, ?, ?, ?)
+      INSERT INTO mensagens (conversa_id, papel, conteudo, status, erro_mensagem, fontes, tools_usadas, rag_backend)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `;
     const fontesJson = fontes ? JSON.stringify(fontes) : null;
     const toolsJson = tools_usadas ? JSON.stringify(tools_usadas) : null;
@@ -67,6 +76,8 @@ const conversaRepository = {
       conversa_id,
       papel,
       conteudo,
+      status,
+      erro_mensagem,
       fontesJson,
       toolsJson,
       rag_backend
@@ -79,6 +90,75 @@ const conversaRepository = {
   },
 
   /**
+   * Atualiza uma mensagem existente (ex: transição de 'processando' para 'concluida' ou 'erro').
+   */
+  async atualizarMensagem(
+    mensagem_id,
+    {
+      conteudo = null,
+      fontes = null,
+      tools_usadas = null,
+      rag_backend = null,
+      status = 'concluida',
+      erro_mensagem = null
+    }
+  ) {
+    const sql = `
+      UPDATE mensagens
+      SET conteudo = ?,
+          status = ?,
+          erro_mensagem = ?,
+          fontes = ?,
+          tools_usadas = ?,
+          rag_backend = ?
+      WHERE id = ?
+    `;
+    const fontesJson = fontes ? JSON.stringify(fontes) : null;
+    const toolsJson = tools_usadas ? JSON.stringify(tools_usadas) : null;
+
+    const [result] = await pool.execute(sql, [
+      conteudo,
+      status,
+      erro_mensagem,
+      fontesJson,
+      toolsJson,
+      rag_backend,
+      mensagem_id
+    ]);
+
+    // Atualiza timestamp da conversa associada
+    await pool.execute(`
+      UPDATE conversas c
+      INNER JOIN mensagens m ON m.conversa_id = c.id
+      SET c.atualizado_em = NOW()
+      WHERE m.id = ?
+    `, [mensagem_id]);
+
+    return result.affectedRows > 0;
+  },
+
+  /**
+   * Busca uma mensagem por ID garantindo isolamento por usuario_id.
+   */
+  async buscarMensagemPorId(mensagem_id, usuario_id) {
+    const sql = `
+      SELECT m.id, m.conversa_id, m.papel, m.conteudo, m.status, m.erro_mensagem, m.fontes, m.tools_usadas, m.rag_backend, m.criado_em
+      FROM mensagens m
+      INNER JOIN conversas c ON c.id = m.conversa_id
+      WHERE m.id = ? AND c.usuario_id = ?
+    `;
+    const [rows] = await pool.execute(sql, [mensagem_id, usuario_id]);
+    if (!rows[0]) return null;
+
+    const m = rows[0];
+    return {
+      ...m,
+      fontes: typeof m.fontes === 'string' ? JSON.parse(m.fontes) : m.fontes,
+      tools_usadas: typeof m.tools_usadas === 'string' ? JSON.parse(m.tools_usadas) : m.tools_usadas
+    };
+  },
+
+  /**
    * Lista todas as mensagens de uma conversa pertencente ao usuário.
    */
   async listarMensagensPorConversa(conversa_id, usuario_id) {
@@ -88,7 +168,7 @@ const conversaRepository = {
     }
 
     const sql = `
-      SELECT id, papel, conteudo, fontes, tools_usadas, rag_backend, criado_em
+      SELECT id, papel, conteudo, status, erro_mensagem, fontes, tools_usadas, rag_backend, criado_em
       FROM mensagens
       WHERE conversa_id = ?
       ORDER BY criado_em ASC
