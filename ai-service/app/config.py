@@ -12,7 +12,7 @@ class Settings(BaseSettings):
 
     # LLM
     GEMINI_API_KEY: str = Field(default="")
-    GEMINI_MODEL: str = Field(default="gemini-3.5-flash-lite")
+    GEMINI_MODEL: str = Field(default="gemini-3-flash-preview")
     EMBEDDING_MODEL: str = Field(default="intfloat/multilingual-e5-small")
 
     # Vector Stores
@@ -42,8 +42,8 @@ class Settings(BaseSettings):
     MCP_IDLE_TTL_S: int = Field(default=600)
 
     # LLM Exec limits
-    LLM_TIMEOUT_S: float = Field(default=30.0)
-    LLM_MAX_TOOL_CALLS: int = Field(default=5)
+    LLM_TIMEOUT_S: float = Field(default=120.0)
+    LLM_MAX_TOOL_CALLS: int = Field(default=15)
     PORT: int = Field(default=8001)
 
 settings = Settings()

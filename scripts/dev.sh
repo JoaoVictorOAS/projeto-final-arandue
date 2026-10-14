@@ -16,6 +16,18 @@ echo "🚀 Iniciando ambiente de desenvolvimento Aranduê..."
 echo "📦 [1/3] Iniciando Backend Node.js na porta 3001..."
 npm --prefix backend run dev &
 
+# Verifica integridade do ambiente virtual Python
+if [ ! -f ".venv/bin/uvicorn" ]; then
+  if [ -d "/home/JoaoVictor/dados/venvs/mei-arandue" ]; then
+    echo "🔗 Restaurando link simbólico do ambiente virtual .venv..."
+    ln -sfn /home/JoaoVictor/dados/venvs/mei-arandue .venv
+  else
+    echo "❌ Erro: Ambiente virtual Python (.venv) ou uvicorn não encontrado!"
+    echo "   Crie o ambiente com: python3 -m venv .venv && .venv/bin/pip install -r ai-service/requirements.txt"
+    exit 1
+  fi
+fi
+
 # 2. Microserviço de IA Python
 echo "🤖 [2/3] Iniciando AI Service FastAPI na porta 8001..."
 .venv/bin/uvicorn app.main:app --app-dir ai-service --reload --port 8001 &
