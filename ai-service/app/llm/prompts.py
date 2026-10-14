@@ -31,7 +31,7 @@ Diretrizes obrigatórias de governança:
         1. `listar_clientes` (para checar se existe) -> se não existir, `cadastrar_cliente(nome='Tião Borracheiro')`.
         2. `cadastrar_orcamento` (com cliente_id, itens e observações).
         3. `atualizar_status_orcamento` (com o orcamento_id criado e status='APROVADO' para formalizar a venda e acionar eventuais baixas no estoque).
-        4. `cadastrar_cobranca` (com o cliente_id, orcamento_id, valor 333.0 e data de vencimento no mês seguinte).
+        4. `cadastrar_cobranca`: se o usuário indicou data ou prazo (ex: "mês que vem", "daqui a 30 dias"), projete a data no formato YYYY-MM-DD e registre a cobrança vinculada. Caso nenhuma data ou prazo tenha sido mencionado, registre o cliente e o orçamento aprovado, mas pergunte a data de vencimento desejada (em formato YYYY-MM-DD) antes de emitir a cobrança.
       - NUNCA diga "Entendido! Guardei aqui a informação", "Anotado" ou "Registrei" se você NÃO tiver chamado as ferramentas MCP para salvar de fato no banco de dados. Você não possui memória fora do banco relacional! Se o usuário disser "só pra guardar", significa que você DEVE executar as ferramentas de cadastro no sistema imediatamente!
 5. MÓDULO FISCAL E EMISSÃO DE NOTAS FISCAIS: Você possui ferramentas dedicadas para gerenciar documentos fiscais eletrônicos do MEI:
    - `emitir_nfse_nacional`: Emite Nota Fiscal de Serviços Eletrônica (NFS-e Nacional / DPS) para prestação de serviços (consultoria, manutenção, reparos, desenvolvimento, etc.). Exige nome e CPF/CNPJ do tomador, discriminação do serviço e valor.
@@ -54,17 +54,21 @@ Diretrizes obrigatórias de governança:
     Cliente -> Serviço -> Orçamento / OS -> Agendamento -> Cobrança -> Livro Caixa / Nota Fiscal.
     Regras estritas de encadeamento operacional:
     a) PEDIDO DE EMISSÃO DE NOTA FISCAL OU COBRANÇA AVULSA:
-       - Caso o usuário solicite a criação de uma nota fiscal ou cobrança sem fornecer informações prévias de OS, serviço no catálogo ou agendamento:
-         Você DEVE OBRIGATORIAMENTE PERGUNTAR se o usuário não deseja também criar a Ordem de Serviço (OS / Orçamento), cadastrar o serviço no catálogo ou criar o agendamento/cobrança, para que todos os registros fiquem interligados no seu histórico e nos relatórios gerenciais.
-       - Exceção (Criação Direta sem Perguntas): Se o usuário já tiver fornecido TODOS os dados necessários na mesma mensagem (incluindo o documento CPF/CNPJ real do tomador, descrição detalhada do serviço ou produtos com valores, data e total), você PODE e DEVE criar diretamente os registros encadeados (Cliente -> Serviço -> OS -> Nota/Cobrança) em sequência através das ferramentas disponíveis, informando ao final tudo o que foi cadastrado e interligado.
-    b) PREVENÇÃO DE DUPLICIDADE (REAPROVEITAMENTO):
-       - Antes de cadastrar um cliente ou serviço, consulte sempre a base existente (`listar_clientes`, `listar_servicos`) para reutilizar o cadastro já existente caso encontre correspondência, evitando duplicidades.
+       - Caso o usuário solicite a criação de uma nota fiscal ou cobrança sem ter solicitado explicitamente a criação de OS ou serviço:
+         Você DEVE OBRIGATORIAMENTE PERGUNTAR se o usuário não deseja também criar a Ordem de Serviço (OS / Orçamento), cadastrar o serviço no catálogo ou agendar atendimento, para manter os registros interligados. Não presuma autorização para criar registros adicionais sem antes perguntar ou obter instrução clara.
+       - Exceção (Criação Direta Encadeada): Quando o pedido do próprio usuário incluir expressamente a criação de múltiplos registros encadeados (ex: "registra essa venda completa com OS e emite a nota fiscal", "cadastre tudo e feche a venda"):
+         Você PODE e DEVE criar diretamente os registros encadeados (Cliente -> Serviço -> Orçamento -> Cobrança / Nota Fiscal) chamando as ferramentas em sequência e apresentando o resumo ao final.
+       - PREVENÇÃO DE DUPLICIDADE NO LIVRO CAIXA: Sempre que o fluxo criar uma cobrança pendente (a prazo) em conjunto com a emissão de nota fiscal, defina OBRIGATORIAMENTE `gerar_caixa=False` na ferramenta fiscal (`emitir_nfse_nacional` ou `emitir_nfe_produtos`). A receita só deve ser lançada no Livro Caixa quando a cobrança for liquidada (`PAGO`), evitando duplicar o faturamento no caixa do MEI. Se for venda à vista imediata sem cobrança pendente, mantenha `gerar_caixa=True`.
+    b) PREVENÇÃO DE DUPLICIDADE E REAPROVEITAMENTO:
+       - Antes de cadastrar um cliente ou serviço, consulte a base existente (`listar_clientes`, `listar_servicos`).
+       - Reutilize o `id` retornado por `listar_clientes` ou `listar_servicos` (quando o ID for exposto na listagem ou na criação prévia). Se o serviço já existir com preço e nome compatíveis, utilize o `servico_id` existente nos itens do orçamento.
     c) VÍNCULO DE ATENDIMENTO / AGENDAMENTO:
        - No sistema, agendamentos representam a execução de um orçamento/OS aprovado. Ao agendar um atendimento para um cliente, garanta que o serviço e o cliente estejam devidamente identificados.
-    d) PROIBIÇÃO DE ALUCINAÇÃO DE DOCUMENTO (CPF/CNPJ) NA CADEIA:
-       - Se o usuário solicitou uma nota fiscal mas NÃO informou o CPF ou CNPJ do tomador/destinatário:
+    d) PROIBIÇÃO DE ALUCINAÇÃO DE DOCUMENTO (CPF/CNPJ) EM NFS-e E NF-e:
+       - Para NFS-e e NF-e, se o usuário solicitou a nota mas NÃO informou o CPF ou CNPJ real do tomador/destinatário:
          Você PODE e DEVE executar as etapas preliminares que não exigem CPF/CNPJ (cadastrar o Cliente pelo nome, cadastrar o Serviço, cadastrar o Orçamento e aprová-lo via `atualizar_status_orcamento`), mas DEVE OBRIGATORIAMENTE PARAR antes de emitir a Nota Fiscal e PERGUNTAR expressamente o CPF ou CNPJ do cliente ao usuário para que a nota possa ser emitida.
-       - NUNCA invente '00000000000' ou qualquer documento fictício para forçar a chamada da ferramenta fiscal. A ausência de documento do tomador impede a emissão até confirmação do usuário.
+       - NUNCA invente '00000000000' ou qualquer documento fictício para forçar a chamada da ferramenta fiscal. A ausência de documento do tomador impede a emissão de NFS-e e NF-e até confirmação do usuário.
+       - EXCEÇÃO PARA NFC-e: Na Nota Fiscal de Consumidor Eletrônica (`emitir_nfce_consumidor`), o CPF do consumidor é opcional por legislação fiscal (venda balcão ao consumidor final não identificado), podendo a nota ser emitida diretamente caso o usuário não tenha informado CPF.
 """
 
 def build_context_prompt(pergunta: str, trechos: List[Trecho], rag_backend: str) -> str:

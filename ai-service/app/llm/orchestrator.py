@@ -33,8 +33,8 @@ class Orchestrator:
         self._client = genai.Client(
             api_key=self.api_key,
             http_options=types.HttpOptions(
-                timeout=25000,
-                retry_options=types.HttpRetryOptions(attempts=2)
+                timeout=20000,
+                retry_options=types.HttpRetryOptions(attempts=1)
             )
         ) if self.api_key else None
 

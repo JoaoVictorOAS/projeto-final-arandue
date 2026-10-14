@@ -18,7 +18,10 @@ npm --prefix backend run dev &
 
 # Verifica integridade do ambiente virtual Python
 if [ ! -f ".venv/bin/uvicorn" ]; then
-  if [ -d "/home/JoaoVictor/dados/venvs/mei-arandue" ]; then
+  if [ -n "$ARANDUE_VENV_PATH" ] && [ -x "$ARANDUE_VENV_PATH/bin/uvicorn" ]; then
+    echo "🔗 Restaurando link simbólico do ambiente virtual .venv a partir de ARANDUE_VENV_PATH..."
+    ln -sfn "$ARANDUE_VENV_PATH" .venv
+  elif [ -x "/home/JoaoVictor/dados/venvs/mei-arandue/bin/uvicorn" ]; then
     echo "🔗 Restaurando link simbólico do ambiente virtual .venv..."
     ln -sfn /home/JoaoVictor/dados/venvs/mei-arandue .venv
   else

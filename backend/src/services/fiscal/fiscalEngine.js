@@ -97,7 +97,7 @@ async function emitirNfse(usuarioId, payload = {}, connection = null) {
   }
 
   const destDoc = (payload.destinatario_documento || payload.tomador_documento || payload.cpf || payload.cnpj || payload.documento || '').replace(/\D/g, '');
-  if (!destDoc || (destDoc.length !== 11 && destDoc.length !== 14) || /^0+$/.test(destDoc)) {
+  if (!destDoc || (destDoc.length !== 11 && destDoc.length !== 14) || /^(\d)\1+$/.test(destDoc)) {
     const erro = new Error('Documento do destinatário/tomador é obrigatório e deve ser um CPF ou CNPJ válido (documentos zerados ou fictícios não são permitidos)');
     erro.statusCode = 400;
     throw erro;
@@ -129,6 +129,36 @@ async function emitirNfse(usuarioId, payload = {}, connection = null) {
   try {
     if (!isExternalTx) {
       await conn.beginTransaction();
+    }
+
+    // Validação de vínculo de cliente e orçamento
+    if (payload.cliente_id) {
+      const [cliRows] = await conn.execute(
+        'SELECT id FROM clientes WHERE id = ? AND usuario_id = ?',
+        [payload.cliente_id, usuarioId]
+      );
+      if (cliRows.length === 0) {
+        const erro = new Error('Cliente informado não existe ou não pertence a este usuário');
+        erro.statusCode = 404;
+        throw erro;
+      }
+    }
+
+    if (payload.orcamento_id) {
+      const [orcRows] = await conn.execute(
+        'SELECT id, cliente_id FROM orcamentos WHERE id = ? AND usuario_id = ?',
+        [payload.orcamento_id, usuarioId]
+      );
+      if (orcRows.length === 0) {
+        const erro = new Error('Orçamento informado não existe ou não pertence a este usuário');
+        erro.statusCode = 404;
+        throw erro;
+      }
+      if (payload.cliente_id && Number(orcRows[0].cliente_id) !== Number(payload.cliente_id)) {
+        const erro = new Error('O orçamento informado não pertence ao cliente selecionado');
+        erro.statusCode = 400;
+        throw erro;
+      }
     }
 
     const dadosEmitente = await obterDadosEmitente(usuarioId, payload.dadosEmitente || {}, conn);
@@ -327,7 +357,7 @@ async function emitirNfe(usuarioId, payload = {}, connection = null) {
   }
 
   const destDoc = (payload.destinatario_documento || payload.cpf || payload.cnpj || payload.documento || '').replace(/\D/g, '');
-  if (!destDoc || (destDoc.length !== 11 && destDoc.length !== 14) || /^0+$/.test(destDoc)) {
+  if (!destDoc || (destDoc.length !== 11 && destDoc.length !== 14) || /^(\d)\1+$/.test(destDoc)) {
     const erro = new Error('Documento do destinatário é obrigatório e deve ser um CPF ou CNPJ válido (documentos zerados ou fictícios não são permitidos)');
     erro.statusCode = 400;
     throw erro;
@@ -394,6 +424,36 @@ async function emitirNfe(usuarioId, payload = {}, connection = null) {
   try {
     if (!isExternalTx) {
       await conn.beginTransaction();
+    }
+
+    // Validação de vínculo de cliente e orçamento
+    if (payload.cliente_id) {
+      const [cliRows] = await conn.execute(
+        'SELECT id FROM clientes WHERE id = ? AND usuario_id = ?',
+        [payload.cliente_id, usuarioId]
+      );
+      if (cliRows.length === 0) {
+        const erro = new Error('Cliente informado não existe ou não pertence a este usuário');
+        erro.statusCode = 404;
+        throw erro;
+      }
+    }
+
+    if (payload.orcamento_id) {
+      const [orcRows] = await conn.execute(
+        'SELECT id, cliente_id FROM orcamentos WHERE id = ? AND usuario_id = ?',
+        [payload.orcamento_id, usuarioId]
+      );
+      if (orcRows.length === 0) {
+        const erro = new Error('Orçamento informado não existe ou não pertence a este usuário');
+        erro.statusCode = 404;
+        throw erro;
+      }
+      if (payload.cliente_id && Number(orcRows[0].cliente_id) !== Number(payload.cliente_id)) {
+        const erro = new Error('O orçamento informado não pertence ao cliente selecionado');
+        erro.statusCode = 400;
+        throw erro;
+      }
     }
 
     const dadosEmitente = await obterDadosEmitente(usuarioId, payload.dadosEmitente || {}, conn);

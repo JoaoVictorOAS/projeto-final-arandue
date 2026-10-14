@@ -270,6 +270,7 @@ async def listar_servicos() -> Dict[str, Any]:
     servicos = []
     for item in lista:
         servicos.append({
+            "id": item.get("id"),
             "nome": item.get("nome"),
             "preco": float(item.get("preco", 0)),
             "ativo": bool(item.get("ativo", True))
@@ -511,11 +512,21 @@ async def emitir_nfse_nacional(
 ) -> Dict[str, Any]:
     """Emite uma Nota Fiscal de Serviços Eletrônica (NFS-e Padrão Nacional). ATENÇÃO: destinatario_documento deve ser um CPF ou CNPJ REAL informado pelo usuário. É EXPRESSAMENTE PROIBIDO inventar '00000000000' ou dados fictícios. Se o usuário não informou o documento, NÃO chame esta ferramenta e pergunte o CPF/CNPJ antes."""
     dest_doc_limpo = "".join(c for c in str(destinatario_documento or "") if c.isdigit())
-    if not dest_doc_limpo or set(dest_doc_limpo) == {'0'} or len(dest_doc_limpo) not in (11, 14):
+    if not dest_doc_limpo or len(set(dest_doc_limpo)) == 1 or len(dest_doc_limpo) not in (11, 14):
         return {
             "sucesso": False,
             "erro": "Documento (CPF/CNPJ) do tomador inválido, zerado ou não informado. É terminantemente proibido utilizar documentos fictícios como '00000000000'. Solicite o CPF ou CNPJ real do cliente ao usuário antes de emitir a nota fiscal."
         }
+
+    if cliente_id is not None and orcamento_id is not None:
+        orc = await _fetch(f"/orcamentos/{int(orcamento_id)}")
+        if isinstance(orc, dict) and orc.get("sucesso"):
+            orc_dados = orc.get("dados") or {}
+            if orc_dados.get("cliente_id") and int(orc_dados.get("cliente_id")) != int(cliente_id):
+                return {
+                    "sucesso": False,
+                    "erro": f"O orçamento #{orcamento_id} pertence a outro cliente e não ao cliente #{cliente_id} informado."
+                }
 
     payload = {
         "destinatario_nome": destinatario_nome.strip(),
@@ -559,11 +570,21 @@ async def emitir_nfe_produtos(
 ) -> Dict[str, Any]:
     """Emite uma Nota Fiscal Eletrônica de Produtos (NF-e Modelo 55) com detalhamento de itens. ATENÇÃO: destinatario_documento deve ser um CPF ou CNPJ REAL informado pelo usuário. É EXPRESSAMENTE PROIBIDO inventar '00000000000' ou dados fictícios. Se o usuário não informou o documento, NÃO chame esta ferramenta e pergunte o CPF/CNPJ antes."""
     dest_doc_limpo = "".join(c for c in str(destinatario_documento or "") if c.isdigit())
-    if not dest_doc_limpo or set(dest_doc_limpo) == {'0'} or len(dest_doc_limpo) not in (11, 14):
+    if not dest_doc_limpo or len(set(dest_doc_limpo)) == 1 or len(dest_doc_limpo) not in (11, 14):
         return {
             "sucesso": False,
             "erro": "Documento (CPF/CNPJ) do destinatário inválido, zerado ou não informado. É terminantemente proibido utilizar documentos fictícios como '00000000000'. Solicite o CPF ou CNPJ real do cliente ao usuário antes de emitir a nota fiscal."
         }
+
+    if cliente_id is not None and orcamento_id is not None:
+        orc = await _fetch(f"/orcamentos/{int(orcamento_id)}")
+        if isinstance(orc, dict) and orc.get("sucesso"):
+            orc_dados = orc.get("dados") or {}
+            if orc_dados.get("cliente_id") and int(orc_dados.get("cliente_id")) != int(cliente_id):
+                return {
+                    "sucesso": False,
+                    "erro": f"O orçamento #{orcamento_id} pertence a outro cliente e não ao cliente #{cliente_id} informado."
+                }
 
     payload = {
         "destinatario_nome": destinatario_nome.strip(),

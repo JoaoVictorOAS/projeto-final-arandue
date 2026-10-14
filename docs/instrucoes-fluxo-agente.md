@@ -72,7 +72,8 @@ Toda operação comercial completa no sistema segue o ciclo em 6 etapas:
 3. **Formalização da OS / Orçamento (`orcamentos`):** Criar o orçamento vinculado ao `cliente_id` e aos itens com `servico_id`. Ao fechar negócio, atualizar para `APROVADO` (dispara reserva/baixa de insumos se houver ficha técnica).
 4. **Agendamento da Execução (`agendamentos`):** Criar o agendamento vinculado obrigatoriamente ao `orcamento_id` aprovado e ao `cliente_id`.
 5. **Cobrança / Título a Receber (`cobrancas`):** Gerar a cobrança vinculada ao atendimento concluído (`agendamento_id`) ou orçamento (`orcamento_id`). Ao ser quitada (`PAGO`), liquida automaticamente no Livro Caixa (`movimentacoes`).
-6. **Emissão de Nota Fiscal (`notas_fiscais`):** Emitir a NFS-e ou NF-e vinculando `cliente_id`, `orcamento_id` e itens de catálogo (`servico_id`), sincronizando o Livro Caixa.
+   - **Regra de Unicidade Financeira (Anti-Duplicação no Caixa):** Quando uma venda gerar uma cobrança pendente (a prazo), a nota fiscal correspondente deve ser emitida com `gerar_caixa: false`. A receita entrará no Livro Caixa quando a cobrança for paga. Caso seja uma venda direta à vista sem cobrança pendente, a nota fiscal é emitida com `gerar_caixa: true`.
+6. **Emissão de Nota Fiscal (`notas_fiscais`):** Emitir a NFS-e ou NF-e vinculando `cliente_id`, `orcamento_id` e itens de catálogo (`servico_id`), sincronizando o Livro Caixa de acordo com a condição de pagamento.
 
 ---
 
@@ -84,29 +85,30 @@ Ao receber qualquer solicitação do usuário, o agente deve aplicar rigorosamen
 Quando o usuário pedir diretamente para criar uma nota fiscal ou cobrança (ex: *"Emite uma nota pro Marcos de 350 reais"* ou *"Cria uma nota de serviço de pintura"*):
 
 1. **Verificação de Dados:** Avalie se foram fornecidos todos os dados mínimos necessários para a emissão (tomador, documento CPF/CNPJ, descrição do serviço, valor).
-2. **Pergunta Obrigatória de Encadeamento (se faltar contexto):**
-   > Se o usuário **NÃO** informou se já existe uma OS/Orçamento ou serviço no catálogo, o agente **DEVE OBRIGATORIAMENTE PERGUNTAR** se ele deseja vincular ou criar esses registros primeiro:
+2. **Pergunta Obrigatória de Encadeamento (se faltar autorização/contexto):**
+   > Se o usuário **NÃO** solicitou expressamente a criação de OS/Orçamento ou serviço no catálogo, o agente **DEVE OBRIGATORIAMENTE PERGUNTAR** se ele deseja vincular ou criar esses registros primeiro:
    > 
    > *"Identifiquei o pedido de emissão da nota fiscal para [Cliente/Tomador]. Para manter todo o histórico do seu negócio organizado e integrado, você gostaria que eu também registrasse a **Ordem de Serviço / Orçamento** e cadastrasse o **serviço no catálogo**, ou prefere que eu emita apenas a nota avulsa?"*
-3. **Execução Direta sem Perguntas (quando todos os dados já foram fornecidos):**
-   > Se o usuário já tiver detalhado a operação de ponta a ponta na mesma mensagem (ex: *"Fechei uma consultoria com a empresa X, CNPJ tal, valor de R$ 1.500, criei tudo e emite a nota fiscal"*):
+3. **Execução Direta Encadeada (quando o usuário incluir ou autorizar os registros):**
+   > Quando o pedido do próprio usuário já incluir ou autorizar expressamente a criação encadeada de múltiplos registros (ex: *"Fechei uma consultoria com a empresa X, CNPJ tal, valor de R$ 1.500, crie tudo, registre a OS e emita a nota fiscal"*):
    > O agente **PODE E DEVE criar diretamente todos os registros encadeados** (Cliente $\rightarrow$ Serviço $\rightarrow$ Orçamento $\rightarrow$ Nota Fiscal) chamando as ferramentas em sequência sem interromper o usuário, e apresentar ao final um resumo claro de todos os itens cadastrados e linkados!
 
 ### Cenário 2: Consulta Prévia de Duplicidade (Reaproveitamento)
 - Antes de invocar ferramentas de cadastro (`cadastrar_cliente` ou `cadastrar_servico`), o agente deve consultar a base (`listar_clientes`, `listar_servicos`) para checar se o registro já existe pelo nome.
-- Se o registro existir, utilize o `id` existente para vinculação nas etapas seguintes.
+- Se o registro existir, utilize o `id` retornado para vinculação nas etapas seguintes (ex: `servico_id` nos itens do orçamento).
 
 ### Cenário 3: Solicitação de Agendamento
 - A regra de negócio do backend exige que todo agendamento esteja atrelado a um orçamento com status `APROVADO`.
 - Se o usuário pedir para agendar um compromisso sem mencionar orçamento, o agente deve alertar gentilmente:
   > *"Para agendar esse atendimento mantendo o fluxo integrado, precisamos de um orçamento aprovado para o cliente. Posso gerar o orçamento dessa OS para você agora?"*
 
-### Cenário 4: Proibição Estrita de Documentos Fictícios (CPF/CNPJ)
+### Cenário 4: Proibição Estrita de Documentos Fictícios (NFS-e e NF-e)
 - **NUNCA invente ou preencha documentos fictícios:** É expressamente proibido alucinar `00000000000`, `11111111111` ou qualquer CPF/CNPJ arbitrário para contornar a obrigatoriedade da ferramenta.
-- **Fluxo com Documento Faltante:**
-  - Se o usuário solicitou uma emissão de nota mas não informou o CPF ou CNPJ do tomador, o agente **pode cadastrar o Cliente, o Serviço e a OS/Orçamento**, pois esses registros não exigem documento obrigatório.
+- **Fluxo com Documento Faltante em NFS-e e NF-e:**
+  - Se o usuário solicitou uma emissão de NFS-e ou NF-e mas não informou o CPF ou CNPJ do tomador/destinatário, o agente **pode cadastrar o Cliente, o Serviço e o Orçamento (aprovando-o via atualizar_status_orcamento)**, pois esses registros não exigem documento fiscal obrigatório.
   - No entanto, o agente **deve obrigatoriamente pausar antes da emissão da nota fiscal** e solicitar o documento real ao usuário:
     > *"Cadastrei o cliente [Nome], o serviço e a Ordem de Serviço aprovada no valor de R$ [Valor]. Para emitir a Nota Fiscal oficial perante a Receita Federal / SEFAZ, preciso do CPF ou CNPJ do tomador. Poderia me informar o documento?"*
+- **Exceção para NFC-e (Venda ao Consumidor):** Na Nota Fiscal de Consumidor Eletrônica (`emitir_nfce_consumidor`), o CPF é opcional por legislação tributária. Se o usuário não informar CPF para venda balcão, a NFC-e pode ser emitida diretamente para consumidor não identificado.
 
 ### Cenário 5: Vendas e Lançamentos Internos NÃO Exigem CPF/CNPJ
 - **Diferença entre Venda Operacional e Nota Fiscal:**

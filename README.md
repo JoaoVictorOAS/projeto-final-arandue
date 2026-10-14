@@ -100,7 +100,7 @@ flowchart TD
 
     subgraph AIService["AI Microservice (Porta 8001)"]
         FastAPI["FastAPI / Uvicorn Server"]
-        Orchestrator["LLM Orchestrator (Google Gemini 3.5 Flash)"]
+        Orchestrator["LLM Orchestrator (Google Gemini 3 Flash)"]
         Retriever["FallbackRetriever + Circuit Breaker"]
         McpPool["TenantMcpPool (Process Manager)"]
     end
@@ -144,7 +144,7 @@ flowchart TD
 O microserviço de inteligência artificial (`ai-service/`) roda em **Python 3.12+ com FastAPI e Uvicorn**, gerenciando a integração entre o modelo de linguagem (LLM), o pipeline de RAG vetorial e a execução de ferramentas corporativas via MCP.
 
 ### 3.1 Orquestração LLM & Gemini
-- **Modelo:** Google Gemini (`gemini-3.5-flash-lite`), configurável via `GEMINI_MODEL`.
+- **Modelo:** Google Gemini (`gemini-3-flash-preview`), configurável via `GEMINI_MODEL`.
 - **Estratégia de Execução:** Loop iterativo de *Tool Use / Function Calling* com limite de até 15 iterações (`LLM_MAX_TOOL_CALLS`) e timeout de 120 segundos (`LLM_TIMEOUT_S`).
 - **Prompt com Governança:** O system prompt instrui o modelo a consultar ferramentas operacionais para obter dados do usuário, apoiar-se estritamente no contexto documental para dúvidas legais e sanitizar qualquer comando externo contra prompt injection.
 - **Recomendação de Tempos de Resposta para Operações Encadeadas:** Como o assistente do Aranduê executa fluxos operacionais completos em cadeia relacional (ex.: consultar cliente $\rightarrow$ cadastrar cliente $\rightarrow$ cadastrar serviços $\rightarrow$ aprovar orçamento $\rightarrow$ agendar atendimento $\rightarrow$ programar cobrança a prazo), a orquestração do Gemini realiza múltiplos ciclos sequenciais de chamadas MCP. Para assegurar que operações interdependentes não sofram aborto prematuro, recomenda-se manter `LLM_TIMEOUT_S=120` no microserviço de IA e `AI_SERVICE_TIMEOUT_MS=130000` no backend Express.
@@ -392,7 +392,7 @@ AI_SERVICE_TIMEOUT_MS=130000    # Timeout do cliente HTTP no Node.js (130s recom
 #### Microserviço de IA (`ai-service/.env`):
 ```env
 GEMINI_API_KEY=sua_chave_api_do_google_gemini
-GEMINI_MODEL=gemini-3.5-flash-lite
+GEMINI_MODEL=gemini-3-flash-preview
 EMBEDDING_MODEL=intfloat/multilingual-e5-small
 
 # Vector Store (dev: chroma | prod: firestore)
