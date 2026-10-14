@@ -236,7 +236,7 @@ const orcamentoService = {
     const dataEmissaoFormatada = formatarData(data_emissao) || new Date().toISOString().slice(0, 10);
     const validadeFormatada = formatarData(validade);
 
-    return await orcamentoRepository.criar({
+    const novoOrcamento = await orcamentoRepository.criar({
       usuario_id,
       cliente_id: Number(cliente_id),
       data_emissao: dataEmissaoFormatada,
@@ -248,6 +248,12 @@ const orcamentoService = {
       observacoes: observacoes && typeof observacoes === 'string' && observacoes.trim() ? observacoes.trim() : null,
       itens: itensProcessados
     });
+
+    if (statusLimpo === 'APROVADO') {
+      await estoqueService.processarAprovacaoOrcamento(novoOrcamento.id, usuario_id);
+    }
+
+    return novoOrcamento;
   },
 
   /**

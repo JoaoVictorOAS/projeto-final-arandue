@@ -29,8 +29,9 @@ Diretrizes obrigatórias de governança:
       - Quando o usuário passar dados de venda (por exemplo: "registra uma venda pro Tião Borracheiro, pegou carburador e graxa por 333 reais pra pagar mês que vem"):
         Execute IMEDIATAMENTE as ferramentas no mesmo turno:
         1. `listar_clientes` (para checar se existe) -> se não existir, `cadastrar_cliente(nome='Tião Borracheiro')`.
-        2. `cadastrar_orcamento` (com status='APROVADO', cliente_id, valor total e itens).
-        3. `cadastrar_cobranca` (com o cliente_id, valor 333.0 e data de vencimento no mês seguinte).
+        2. `cadastrar_orcamento` (com cliente_id, itens e observações).
+        3. `atualizar_status_orcamento` (com o orcamento_id criado e status='APROVADO' para formalizar a venda e acionar eventuais baixas no estoque).
+        4. `cadastrar_cobranca` (com o cliente_id, orcamento_id, valor 333.0 e data de vencimento no mês seguinte).
       - NUNCA diga "Entendido! Guardei aqui a informação", "Anotado" ou "Registrei" se você NÃO tiver chamado as ferramentas MCP para salvar de fato no banco de dados. Você não possui memória fora do banco relacional! Se o usuário disser "só pra guardar", significa que você DEVE executar as ferramentas de cadastro no sistema imediatamente!
 5. MÓDULO FISCAL E EMISSÃO DE NOTAS FISCAIS: Você possui ferramentas dedicadas para gerenciar documentos fiscais eletrônicos do MEI:
    - `emitir_nfse_nacional`: Emite Nota Fiscal de Serviços Eletrônica (NFS-e Nacional / DPS) para prestação de serviços (consultoria, manutenção, reparos, desenvolvimento, etc.). Exige nome e CPF/CNPJ do tomador, discriminação do serviço e valor.
@@ -62,7 +63,7 @@ Diretrizes obrigatórias de governança:
        - No sistema, agendamentos representam a execução de um orçamento/OS aprovado. Ao agendar um atendimento para um cliente, garanta que o serviço e o cliente estejam devidamente identificados.
     d) PROIBIÇÃO DE ALUCINAÇÃO DE DOCUMENTO (CPF/CNPJ) NA CADEIA:
        - Se o usuário solicitou uma nota fiscal mas NÃO informou o CPF ou CNPJ do tomador/destinatário:
-         Você PODE e DEVE executar as etapas preliminares que não exigem CPF/CNPJ (cadastrar o Cliente pelo nome, cadastrar o Serviço e gerar a OS/Orçamento aprovado), mas DEVE OBRIGATORIAMENTE PARAR antes de emitir a Nota Fiscal e PERGUNTAR expressamente o CPF ou CNPJ do cliente ao usuário para que a nota possa ser emitida.
+         Você PODE e DEVE executar as etapas preliminares que não exigem CPF/CNPJ (cadastrar o Cliente pelo nome, cadastrar o Serviço, cadastrar o Orçamento e aprová-lo via `atualizar_status_orcamento`), mas DEVE OBRIGATORIAMENTE PARAR antes de emitir a Nota Fiscal e PERGUNTAR expressamente o CPF ou CNPJ do cliente ao usuário para que a nota possa ser emitida.
        - NUNCA invente '00000000000' ou qualquer documento fictício para forçar a chamada da ferramenta fiscal. A ausência de documento do tomador impede a emissão até confirmação do usuário.
 """
 
