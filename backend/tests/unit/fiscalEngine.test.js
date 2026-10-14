@@ -107,6 +107,47 @@ describe('Motor Fiscal — Engine e Regras de Negócio (fiscalEngine)', () => {
         })
       ).rejects.toThrow('Valor do serviço deve ser maior que zero');
     });
+
+    it('deve rejeitar cliente_id e orcamento_id não positivos ou zero numérico em emitirNfse', async () => {
+      const basePayload = {
+        destinatario_nome: 'Cliente Valido',
+        destinatario_documento: '12345678901',
+        discriminacao_servico: 'Serviço teste',
+        valor: 100
+      };
+
+      try {
+        await fiscalEngine.emitirNfse(usuario1Id, { ...basePayload, cliente_id: 0 });
+        throw new Error('Deveria ter falhado');
+      } catch (err) {
+        expect(err.statusCode).toBe(400);
+        expect(err.message).toContain('Identificador de cliente inválido');
+      }
+
+      try {
+        await fiscalEngine.emitirNfse(usuario1Id, { ...basePayload, cliente_id: -1 });
+        throw new Error('Deveria ter falhado');
+      } catch (err) {
+        expect(err.statusCode).toBe(400);
+        expect(err.message).toContain('Identificador de cliente inválido');
+      }
+
+      try {
+        await fiscalEngine.emitirNfse(usuario1Id, { ...basePayload, orcamento_id: 0 });
+        throw new Error('Deveria ter falhado');
+      } catch (err) {
+        expect(err.statusCode).toBe(400);
+        expect(err.message).toContain('Identificador de orçamento inválido');
+      }
+
+      try {
+        await fiscalEngine.emitirNfse(usuario1Id, { ...basePayload, orcamento_id: -5 });
+        throw new Error('Deveria ter falhado');
+      } catch (err) {
+        expect(err.statusCode).toBe(400);
+        expect(err.message).toContain('Identificador de orçamento inválido');
+      }
+    });
   });
 
   describe('emitirNfe (NF-e Modelo 55)', () => {
@@ -173,6 +214,48 @@ describe('Motor Fiscal — Engine e Regras de Negócio (fiscalEngine)', () => {
           itens: []
         })
       ).rejects.toThrow('A NF-e requer ao menos um item');
+    });
+
+    it('deve rejeitar cliente_id e orcamento_id não positivos ou zero numérico em emitirNfe', async () => {
+      const basePayloadNfe = {
+        destinatario_nome: 'Distribuidora Beta SA',
+        destinatario_documento: '98765432000188',
+        itens: [
+          { descricao: 'Item 1', quantidade: 1, valor_unitario: 50.0 }
+        ]
+      };
+
+      try {
+        await fiscalEngine.emitirNfe(usuario1Id, { ...basePayloadNfe, cliente_id: 0 });
+        throw new Error('Deveria ter falhado');
+      } catch (err) {
+        expect(err.statusCode).toBe(400);
+        expect(err.message).toContain('Identificador de cliente inválido');
+      }
+
+      try {
+        await fiscalEngine.emitirNfe(usuario1Id, { ...basePayloadNfe, cliente_id: -1 });
+        throw new Error('Deveria ter falhado');
+      } catch (err) {
+        expect(err.statusCode).toBe(400);
+        expect(err.message).toContain('Identificador de cliente inválido');
+      }
+
+      try {
+        await fiscalEngine.emitirNfe(usuario1Id, { ...basePayloadNfe, orcamento_id: 0 });
+        throw new Error('Deveria ter falhado');
+      } catch (err) {
+        expect(err.statusCode).toBe(400);
+        expect(err.message).toContain('Identificador de orçamento inválido');
+      }
+
+      try {
+        await fiscalEngine.emitirNfe(usuario1Id, { ...basePayloadNfe, orcamento_id: -10 });
+        throw new Error('Deveria ter falhado');
+      } catch (err) {
+        expect(err.statusCode).toBe(400);
+        expect(err.message).toContain('Identificador de orçamento inválido');
+      }
     });
   });
 
