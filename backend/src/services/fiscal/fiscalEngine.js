@@ -97,8 +97,8 @@ async function emitirNfse(usuarioId, payload = {}, connection = null) {
   }
 
   const destDoc = (payload.destinatario_documento || payload.tomador_documento || payload.cpf || payload.cnpj || payload.documento || '').replace(/\D/g, '');
-  if (!destDoc || (destDoc.length !== 11 && destDoc.length !== 14)) {
-    const erro = new Error('Documento do destinatário/tomador é obrigatório e deve ser CPF ou CNPJ válido');
+  if (!destDoc || (destDoc.length !== 11 && destDoc.length !== 14) || /^(\d)\1+$/.test(destDoc)) {
+    const erro = new Error('Documento do destinatário/tomador é obrigatório e deve ser um CPF ou CNPJ válido (documentos zerados ou fictícios não são permitidos)');
     erro.statusCode = 400;
     throw erro;
   }
@@ -129,6 +129,52 @@ async function emitirNfse(usuarioId, payload = {}, connection = null) {
   try {
     if (!isExternalTx) {
       await conn.beginTransaction();
+    }
+
+    // Validação de vínculo de cliente e orçamento
+    let clienteIdValidado = null;
+    if (payload.cliente_id !== undefined && payload.cliente_id !== null && payload.cliente_id !== '') {
+      const parsedClienteId = Number(payload.cliente_id);
+      if (typeof payload.cliente_id === 'boolean' || !Number.isInteger(parsedClienteId) || parsedClienteId <= 0) {
+        const erro = new Error('Identificador de cliente inválido: deve ser um número inteiro positivo');
+        erro.statusCode = 400;
+        throw erro;
+      }
+      const [cliRows] = await conn.execute(
+        'SELECT id FROM clientes WHERE id = ? AND usuario_id = ?',
+        [parsedClienteId, usuarioId]
+      );
+      if (cliRows.length === 0) {
+        const erro = new Error('Cliente informado não existe ou não pertence a este usuário');
+        erro.statusCode = 404;
+        throw erro;
+      }
+      clienteIdValidado = parsedClienteId;
+    }
+
+    let orcamentoIdValidado = null;
+    if (payload.orcamento_id !== undefined && payload.orcamento_id !== null && payload.orcamento_id !== '') {
+      const parsedOrcamentoId = Number(payload.orcamento_id);
+      if (typeof payload.orcamento_id === 'boolean' || !Number.isInteger(parsedOrcamentoId) || parsedOrcamentoId <= 0) {
+        const erro = new Error('Identificador de orçamento inválido: deve ser um número inteiro positivo');
+        erro.statusCode = 400;
+        throw erro;
+      }
+      const [orcRows] = await conn.execute(
+        'SELECT id, cliente_id FROM orcamentos WHERE id = ? AND usuario_id = ?',
+        [parsedOrcamentoId, usuarioId]
+      );
+      if (orcRows.length === 0) {
+        const erro = new Error('Orçamento informado não existe ou não pertence a este usuário');
+        erro.statusCode = 404;
+        throw erro;
+      }
+      if (clienteIdValidado && Number(orcRows[0].cliente_id) !== clienteIdValidado) {
+        const erro = new Error('O orçamento informado não pertence ao cliente selecionado');
+        erro.statusCode = 400;
+        throw erro;
+      }
+      orcamentoIdValidado = parsedOrcamentoId;
     }
 
     const dadosEmitente = await obterDadosEmitente(usuarioId, payload.dadosEmitente || {}, conn);
@@ -197,6 +243,8 @@ async function emitirNfse(usuarioId, payload = {}, connection = null) {
       chave_acesso: chaveAcesso,
       protocolo_autorizacao: protocolo,
       ambiente: payload.ambiente || 'HOMOLOGACAO',
+      cliente_id: clienteIdValidado,
+      orcamento_id: orcamentoIdValidado,
       destinatario_documento: destDoc,
       destinatario_nome: destNome,
       destinatario_email: payload.destinatario_email || null,
@@ -234,8 +282,8 @@ async function emitirNfse(usuarioId, payload = {}, connection = null) {
       ) VALUES (?, ?, ?, NULL, 'NFSE', 'EMITIDA', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
       [
         usuarioId,
-        payload.cliente_id || null,
-        payload.orcamento_id || null,
+        clienteIdValidado,
+        orcamentoIdValidado,
         serie,
         numero,
         chaveAcesso,
@@ -327,8 +375,8 @@ async function emitirNfe(usuarioId, payload = {}, connection = null) {
   }
 
   const destDoc = (payload.destinatario_documento || payload.cpf || payload.cnpj || payload.documento || '').replace(/\D/g, '');
-  if (!destDoc || (destDoc.length !== 11 && destDoc.length !== 14)) {
-    const erro = new Error('Documento do destinatário é obrigatório e deve ser CPF ou CNPJ válido');
+  if (!destDoc || (destDoc.length !== 11 && destDoc.length !== 14) || /^(\d)\1+$/.test(destDoc)) {
+    const erro = new Error('Documento do destinatário é obrigatório e deve ser um CPF ou CNPJ válido (documentos zerados ou fictícios não são permitidos)');
     erro.statusCode = 400;
     throw erro;
   }
@@ -394,6 +442,52 @@ async function emitirNfe(usuarioId, payload = {}, connection = null) {
   try {
     if (!isExternalTx) {
       await conn.beginTransaction();
+    }
+
+    // Validação de vínculo de cliente e orçamento
+    let clienteIdValidado = null;
+    if (payload.cliente_id !== undefined && payload.cliente_id !== null && payload.cliente_id !== '') {
+      const parsedClienteId = Number(payload.cliente_id);
+      if (typeof payload.cliente_id === 'boolean' || !Number.isInteger(parsedClienteId) || parsedClienteId <= 0) {
+        const erro = new Error('Identificador de cliente inválido: deve ser um número inteiro positivo');
+        erro.statusCode = 400;
+        throw erro;
+      }
+      const [cliRows] = await conn.execute(
+        'SELECT id FROM clientes WHERE id = ? AND usuario_id = ?',
+        [parsedClienteId, usuarioId]
+      );
+      if (cliRows.length === 0) {
+        const erro = new Error('Cliente informado não existe ou não pertence a este usuário');
+        erro.statusCode = 404;
+        throw erro;
+      }
+      clienteIdValidado = parsedClienteId;
+    }
+
+    let orcamentoIdValidado = null;
+    if (payload.orcamento_id !== undefined && payload.orcamento_id !== null && payload.orcamento_id !== '') {
+      const parsedOrcamentoId = Number(payload.orcamento_id);
+      if (typeof payload.orcamento_id === 'boolean' || !Number.isInteger(parsedOrcamentoId) || parsedOrcamentoId <= 0) {
+        const erro = new Error('Identificador de orçamento inválido: deve ser um número inteiro positivo');
+        erro.statusCode = 400;
+        throw erro;
+      }
+      const [orcRows] = await conn.execute(
+        'SELECT id, cliente_id FROM orcamentos WHERE id = ? AND usuario_id = ?',
+        [parsedOrcamentoId, usuarioId]
+      );
+      if (orcRows.length === 0) {
+        const erro = new Error('Orçamento informado não existe ou não pertence a este usuário');
+        erro.statusCode = 404;
+        throw erro;
+      }
+      if (clienteIdValidado && Number(orcRows[0].cliente_id) !== clienteIdValidado) {
+        const erro = new Error('O orçamento informado não pertence ao cliente selecionado');
+        erro.statusCode = 400;
+        throw erro;
+      }
+      orcamentoIdValidado = parsedOrcamentoId;
     }
 
     const dadosEmitente = await obterDadosEmitente(usuarioId, payload.dadosEmitente || {}, conn);
@@ -501,6 +595,8 @@ async function emitirNfe(usuarioId, payload = {}, connection = null) {
       chave_acesso: chaveAcesso,
       protocolo_autorizacao: protocolo,
       ambiente: ambienteNota,
+      cliente_id: clienteIdValidado,
+      orcamento_id: orcamentoIdValidado,
       destinatario_documento: destDoc,
       destinatario_nome: destNome,
       destinatario_email: payload.destinatario_email || null,
@@ -534,8 +630,8 @@ async function emitirNfe(usuarioId, payload = {}, connection = null) {
       ) VALUES (?, ?, ?, NULL, 'NFE', 'EMITIDA', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
       [
         usuarioId,
-        payload.cliente_id || null,
-        payload.orcamento_id || null,
+        clienteIdValidado,
+        orcamentoIdValidado,
         serie,
         numero,
         chaveAcesso,

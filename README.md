@@ -100,7 +100,7 @@ flowchart TD
 
     subgraph AIService["AI Microservice (Porta 8001)"]
         FastAPI["FastAPI / Uvicorn Server"]
-        Orchestrator["LLM Orchestrator (Google Gemini 3.5 Flash)"]
+        Orchestrator["LLM Orchestrator (Google Gemini 3 Flash)"]
         Retriever["FallbackRetriever + Circuit Breaker"]
         McpPool["TenantMcpPool (Process Manager)"]
     end
@@ -144,9 +144,10 @@ flowchart TD
 O microserviço de inteligência artificial (`ai-service/`) roda em **Python 3.12+ com FastAPI e Uvicorn**, gerenciando a integração entre o modelo de linguagem (LLM), o pipeline de RAG vetorial e a execução de ferramentas corporativas via MCP.
 
 ### 3.1 Orquestração LLM & Gemini
-- **Modelo:** Google Gemini (`gemini-3.5-flash-lite`), configurável via `GEMINI_MODEL`.
-- **Estratégia de Execução:** Loop iterativo de *Tool Use / Function Calling* com limite máximo de 5 iterações (`LLM_MAX_TOOL_CALLS`) e timeout de 30 segundos (`LLM_TIMEOUT_S`).
+- **Modelo:** Google Gemini (`gemini-3-flash-preview`), configurável via `GEMINI_MODEL`.
+- **Estratégia de Execução:** Loop iterativo de *Tool Use / Function Calling* com limite de até 15 iterações (`LLM_MAX_TOOL_CALLS`) e timeout de 120 segundos (`LLM_TIMEOUT_S`).
 - **Prompt com Governança:** O system prompt instrui o modelo a consultar ferramentas operacionais para obter dados do usuário, apoiar-se estritamente no contexto documental para dúvidas legais e sanitizar qualquer comando externo contra prompt injection.
+- **Recomendação de Tempos de Resposta para Operações Encadeadas:** Como o assistente do Aranduê executa fluxos operacionais completos em cadeia relacional (ex.: consultar cliente $\rightarrow$ cadastrar cliente $\rightarrow$ cadastrar serviços $\rightarrow$ aprovar orçamento $\rightarrow$ agendar atendimento $\rightarrow$ programar cobrança a prazo), a orquestração do Gemini realiza múltiplos ciclos sequenciais de chamadas MCP. Para assegurar que operações interdependentes não sofram aborto prematuro, recomenda-se manter `LLM_TIMEOUT_S=120` no microserviço de IA e `AI_SERVICE_TIMEOUT_MS=130000` no backend Express.
 
 ### 3.2 Pipeline Completo de RAG Semântico
 O assistente conta com uma arquitetura de **Recuperação Aumentada por Geração (RAG)** de alta fidelidade para sanar dúvidas tributárias, legais e constitucionais do microempreendedor:
@@ -383,12 +384,15 @@ JWT_SECRET=super_secreto_chave_jwt_recode_2026
 FISCAL_CERT_SECRET=chave_super_segura_para_certificados_a1_2026
 AI_SERVICE_URL=http://localhost:8001
 INTERNAL_SERVICE_SECRET=super_secreto_interno_arandue_2026
+
+# Limites de Resposta do Assistente IA (Recomendado)
+AI_SERVICE_TIMEOUT_MS=130000    # Timeout do cliente HTTP no Node.js (130s recomendado para fluxos encadeados)
 ```
 
 #### Microserviço de IA (`ai-service/.env`):
 ```env
 GEMINI_API_KEY=sua_chave_api_do_google_gemini
-GEMINI_MODEL=gemini-3.5-flash-lite
+GEMINI_MODEL=gemini-3-flash-preview
 EMBEDDING_MODEL=intfloat/multilingual-e5-small
 
 # Vector Store (dev: chroma | prod: firestore)
@@ -402,11 +406,22 @@ RAG_TOP_K=4
 RAG_MAX_DISTANCE=0.135
 RAG_MIN_SCORE=0.865
 
+# Limites de Execução LLM (Recomendados para Operações Encadeadas)
+LLM_TIMEOUT_S=120               # Tempo limite global da orquestração Gemini (120s recomendado)
+LLM_MAX_TOOL_CALLS=15           # Limite de chamadas sequenciais a ferramentas MCP por turno (recomendado: 15)
+
 # Segurança e Gateway
 INTERNAL_SERVICE_SECRET=super_secreto_interno_arandue_2026
 NODE_API_URL=http://localhost:3001/api
 PORT=8001
 ```
+
+> [!TIP]
+> **Recomendação de Tempos de Resposta e Timeouts para Operações Encadeadas:**  
+> Ao solicitar ações compostas ao Assistente (ex.: *"registra uma venda pro Tião de R$ 333 cobra mês que vem"*), a IA executa uma sequência de chamadas MCP consecutivas (pesquisar cliente $\rightarrow$ cadastrar cliente $\rightarrow$ cadastrar orçamento aprovado $\rightarrow$ cadastrar cobrança a prazo).  
+> Para garantir estabilidade e evitar erros `503 Service Unavailable` ou `504 Gateway Timeout`:
+> - Mantenha **`LLM_TIMEOUT_S=120`** e **`LLM_MAX_TOOL_CALLS=15`** no `ai-service/.env`;
+> - Mantenha **`AI_SERVICE_TIMEOUT_MS=130000`** (130s) no `backend/.env`, ligeiramente acima do timeout do Python para permitir o encerramento gracioso e retorno dos dados.
 
 #### Frontend (`frontend/.env`):
 ```env

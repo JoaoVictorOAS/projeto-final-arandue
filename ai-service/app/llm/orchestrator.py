@@ -19,11 +19,24 @@ class RespostaLLM:
     modelo: str
 
 class Orchestrator:
-    def __init__(self, api_key: str, model_name: str = "gemini-3.5-flash-lite", max_tool_calls: int = 5):
+    def __init__(
+        self,
+        api_key: str,
+        model_name: str = "gemini-3-flash-preview",
+        max_tool_calls: int = 5,
+        fallback_models: Optional[List[str]] = None
+    ):
         self.api_key = api_key
         self.model_name = model_name
         self.max_tool_calls = max_tool_calls
-        self._client = genai.Client(api_key=self.api_key) if self.api_key else None
+        self.fallback_models = fallback_models if fallback_models is not None else ["gemini-3.5-flash-lite", "gemini-3.8-flash"]
+        self._client = genai.Client(
+            api_key=self.api_key,
+            http_options=types.HttpOptions(
+                timeout=20000,
+                retry_options=types.HttpRetryOptions(attempts=1)
+            )
+        ) if self.api_key else None
 
     @classmethod
     def _convert_schema(cls, prop: Any) -> Dict[str, Any]:
@@ -85,6 +98,28 @@ class Orchestrator:
             ))
         return declarations
 
+    async def _generate_content_with_fallback(
+        self,
+        contents: List[Any],
+        config: types.GenerateContentConfig
+    ) -> tuple[Any, str]:
+        candidatos = [self.model_name] + [m for m in self.fallback_models if m != self.model_name]
+        ultimo_erro = None
+        for m in candidatos:
+            try:
+                resp = await self._client.aio.models.generate_content(
+                    model=m,
+                    contents=contents,
+                    config=config
+                )
+                return resp, m
+            except Exception as e:
+                ultimo_erro = e
+                logger.warning(f"Chamada ao modelo {m} falhou ({e}). Tentando próximo modelo de fallback...")
+        if ultimo_erro:
+            raise ultimo_erro
+        raise RuntimeError("Nenhum modelo disponível para geração.")
+
     async def responder(
         self,
         mensagem: str,
@@ -125,11 +160,11 @@ class Orchestrator:
 
         tools_usadas: List[str] = []
         calls_count = 0
+        modelo_utilizado = self.model_name
 
         # Loop de Function Calling (até max_tool_calls)
         while calls_count < self.max_tool_calls:
-            response = await self._client.aio.models.generate_content(
-                model=self.model_name,
+            response, modelo_utilizado = await self._generate_content_with_fallback(
                 contents=contents,
                 config=config
             )
@@ -140,7 +175,7 @@ class Orchestrator:
                 return RespostaLLM(
                     resposta=response.text or "Não foi possível gerar uma resposta para a consulta.",
                     tools_usadas=tools_usadas,
-                    modelo=self.model_name
+                    modelo=modelo_utilizado
                 )
 
             # O modelo gerou chamadas de tool
@@ -184,8 +219,7 @@ class Orchestrator:
             ))
 
         # Se atingir o limite de chamadas, faz uma chamada final para consolidar resposta
-        final_response = await self._client.aio.models.generate_content(
-            model=self.model_name,
+        final_response, modelo_utilizado = await self._generate_content_with_fallback(
             contents=contents,
             config=types.GenerateContentConfig(
                 system_instruction=SYSTEM_PROMPT,
@@ -195,5 +229,5 @@ class Orchestrator:
         return RespostaLLM(
             resposta=final_response.text or "Consulta processada com base nos dados do estabelecimento.",
             tools_usadas=tools_usadas,
-            modelo=self.model_name
+            modelo=modelo_utilizado
         )

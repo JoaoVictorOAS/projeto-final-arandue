@@ -270,6 +270,7 @@ async def listar_servicos() -> Dict[str, Any]:
     servicos = []
     for item in lista:
         servicos.append({
+            "id": item.get("id"),
             "nome": item.get("nome"),
             "preco": float(item.get("preco", 0)),
             "ativo": bool(item.get("ativo", True))
@@ -324,15 +325,22 @@ async def cadastrar_cobranca(
     cliente_id: int,
     valor: float,
     vencimento: str,
-    observacoes: Optional[str] = ""
+    observacoes: Optional[str] = "",
+    orcamento_id: Optional[int] = None,
+    agendamento_id: Optional[int] = None
 ) -> Dict[str, Any]:
-    """Cadastra uma nova cobrança/recebimento para um cliente (formato de vencimento: YYYY-MM-DD)."""
+    """Cadastra uma nova cobrança/recebimento para um cliente (formato de vencimento: YYYY-MM-DD), podendo vincular a um atendimento (agendamento_id) ou orçamento (orcamento_id)."""
     payload = {
         "cliente_id": cliente_id,
         "valor": float(valor),
         "vencimento": vencimento,
         "observacoes": observacoes or ""
     }
+    if orcamento_id is not None:
+        payload["orcamento_id"] = int(orcamento_id)
+    if agendamento_id is not None:
+        payload["agendamento_id"] = int(agendamento_id)
+
     res = await _post("/cobrancas", payload)
     if not res.get("sucesso"):
         return {"erro": res.get("erro", "Erro ao cadastrar cobrança")}
@@ -371,19 +379,113 @@ async def cadastrar_servico(
     }
 
 @mcp_server_app.tool()
+async def cadastrar_orcamento(
+    cliente_id: int,
+    itens: List[Dict[str, Any]],
+    desconto: float = 0.0,
+    data_emissao: Optional[str] = None,
+    validade: Optional[str] = None,
+    status: str = "RASCUNHO",
+    observacoes: Optional[str] = ""
+) -> Dict[str, Any]:
+    """Cadastra uma proposta comercial / Ordem de Serviço (Orçamento) para um cliente. Itens é lista de objetos contendo: servico_id, quantidade, preco_unitario."""
+    payload = {
+        "cliente_id": int(cliente_id),
+        "itens": itens if isinstance(itens, list) else [],
+        "desconto": float(desconto or 0.0),
+        "status": (status or "RASCUNHO").strip().upper(),
+        "observacoes": (observacoes or "").strip()
+    }
+    if data_emissao:
+        payload["data_emissao"] = data_emissao.strip()
+    if validade:
+        payload["validade"] = validade.strip()
+
+    res = await _post("/orcamentos", payload)
+    if not res.get("sucesso"):
+        return {"erro": res.get("erro", "Erro ao cadastrar orçamento/OS")}
+    orcamento = res.get("dados", {})
+    return {
+        "mensagem": f"Orçamento/OS #{orcamento.get('id')} cadastrado com sucesso!",
+        "orcamento_id": orcamento.get("id"),
+        "cliente_id": orcamento.get("cliente_id"),
+        "status": orcamento.get("status"),
+        "total": float(orcamento.get("total", 0.0)),
+        "subtotal": float(orcamento.get("subtotal", 0.0)),
+        "desconto": float(orcamento.get("desconto", 0.0))
+    }
+
+@mcp_server_app.tool()
+async def listar_orcamentos(
+    status: Optional[str] = None,
+    cliente_id: Optional[int] = None,
+    limite: int = 20
+) -> Dict[str, Any]:
+    """Lista propostas comerciais e Ordens de Serviço (Orçamentos) com filtros por status (RASCUNHO, ENVIADO, APROVADO, RECUSADO, CANCELADO) ou cliente."""
+    limite = min(max(1, limite), 50)
+    params = {}
+    if status:
+        params["status"] = status.strip().upper()
+    if cliente_id:
+        params["cliente_id"] = cliente_id
+
+    dados = await _fetch("/orcamentos", params=params)
+    if isinstance(dados, dict) and "erro" in dados:
+        return dados
+
+    lista = dados if isinstance(dados, list) else []
+    orcamentos_resumidos = []
+    for o in lista[:limite]:
+        orcamentos_resumidos.append({
+            "id": o.get("id"),
+            "cliente_id": o.get("cliente_id"),
+            "cliente_nome": o.get("cliente_nome"),
+            "status": o.get("status"),
+            "total": float(o.get("total", 0.0)),
+            "data_emissao": str(o.get("data_emissao", "")),
+            "itens_count": len(o.get("itens", [])) if isinstance(o.get("itens"), list) else 0
+        })
+
+    return {
+        "total": len(lista),
+        "orcamentos": orcamentos_resumidos
+    }
+
+@mcp_server_app.tool()
+async def atualizar_status_orcamento(
+    orcamento_id: int,
+    status: str
+) -> Dict[str, Any]:
+    """Atualiza o status de uma proposta/OS (Orçamento). Use 'APROVADO' para fechar negócio e liberar agendamento, baixa de insumos e cobrança."""
+    status_limpo = status.strip().upper()
+    payload = {"status": status_limpo}
+    res = await _patch(f"/orcamentos/{orcamento_id}/status", payload)
+    if not res.get("sucesso"):
+        return {"erro": res.get("erro", "Erro ao atualizar status do orçamento")}
+    return {
+        "mensagem": f"Status do orçamento #{orcamento_id} alterado para '{status_limpo}' com sucesso!",
+        "orcamento_id": orcamento_id,
+        "status": status_limpo
+    }
+
+@mcp_server_app.tool()
 async def cadastrar_agendamento(
     cliente_id: int,
     servico_id: int,
     data_hora: str,
+    orcamento_id: Optional[int] = None,
     observacoes: Optional[str] = ""
 ) -> Dict[str, Any]:
-    """Agenda um atendimento com um cliente para um serviço cadastrado (data_hora no formato YYYY-MM-DD HH:MM)."""
+    """Agenda um atendimento com um cliente para um serviço cadastrado vinculado a um orçamento aprovado (data_hora no formato YYYY-MM-DD HH:MM)."""
     payload = {
         "cliente_id": cliente_id,
         "servico_id": servico_id,
         "data_hora": data_hora,
         "observacoes": observacoes or ""
     }
+    if orcamento_id is not None:
+        payload["orcamento_id"] = int(orcamento_id)
+
     res = await _post("/agendamentos", payload)
     if not res.get("sucesso"):
         return {"erro": res.get("erro", "Erro ao criar agendamento")}
@@ -391,6 +493,7 @@ async def cadastrar_agendamento(
     return {
         "mensagem": "Agendamento registrado com sucesso!",
         "agendamento_id": agendamento.get("id"),
+        "orcamento_id": agendamento.get("orcamento_id"),
         "data_hora": agendamento.get("data_hora"),
         "status": agendamento.get("status")
     }
@@ -403,18 +506,42 @@ async def emitir_nfse_nacional(
     valor: float,
     codigo_tributacao_nacional: str = "01.07.01",
     destinatario_email: str = "",
-    gerar_caixa: bool = True
+    gerar_caixa: bool = True,
+    cliente_id: Optional[int] = None,
+    orcamento_id: Optional[int] = None
 ) -> Dict[str, Any]:
-    """Emite uma Nota Fiscal de Serviços Eletrônica (NFS-e Padrão Nacional) e opcionalmente registra no livro caixa."""
+    """Emite uma Nota Fiscal de Serviços Eletrônica (NFS-e Padrão Nacional). ATENÇÃO: destinatario_documento deve ser um CPF ou CNPJ REAL informado pelo usuário. É EXPRESSAMENTE PROIBIDO inventar '00000000000' ou dados fictícios. Se o usuário não informou o documento, NÃO chame esta ferramenta e pergunte o CPF/CNPJ antes."""
+    dest_doc_limpo = "".join(c for c in str(destinatario_documento or "") if c.isdigit())
+    if not dest_doc_limpo or len(set(dest_doc_limpo)) == 1 or len(dest_doc_limpo) not in (11, 14):
+        return {
+            "sucesso": False,
+            "erro": "Documento (CPF/CNPJ) do tomador inválido, zerado ou não informado. É terminantemente proibido utilizar documentos fictícios como '00000000000'. Solicite o CPF ou CNPJ real do cliente ao usuário antes de emitir a nota fiscal."
+        }
+
+    if cliente_id is not None and orcamento_id is not None:
+        orc = await _fetch(f"/orcamentos/{int(orcamento_id)}")
+        if isinstance(orc, dict) and orc.get("sucesso"):
+            orc_dados = orc.get("dados") or {}
+            if orc_dados.get("cliente_id") and int(orc_dados.get("cliente_id")) != int(cliente_id):
+                return {
+                    "sucesso": False,
+                    "erro": f"O orçamento #{orcamento_id} pertence a outro cliente e não ao cliente #{cliente_id} informado."
+                }
+
     payload = {
         "destinatario_nome": destinatario_nome.strip(),
-        "destinatario_documento": destinatario_documento.strip(),
+        "destinatario_documento": dest_doc_limpo,
         "discriminacao_servico": discriminacao_servico.strip(),
         "valor": float(valor),
         "codigo_tributacao_nacional": (codigo_tributacao_nacional or "01.07.01").strip(),
         "destinatario_email": (destinatario_email or "").strip(),
         "gerar_caixa": bool(gerar_caixa)
     }
+    if cliente_id is not None:
+        payload["cliente_id"] = int(cliente_id)
+    if orcamento_id is not None:
+        payload["orcamento_id"] = int(orcamento_id)
+
     res = await _post("/notas-fiscais/nfse", payload)
     if not res.get("sucesso"):
         return {"erro": res.get("erro", "Erro ao emitir NFS-e")}
@@ -437,16 +564,40 @@ async def emitir_nfe_produtos(
     destinatario_documento: str,
     itens: List[Dict[str, Any]],
     natureza_operacao: str = "Venda de mercadorias",
-    gerar_caixa: bool = True
+    gerar_caixa: bool = True,
+    cliente_id: Optional[int] = None,
+    orcamento_id: Optional[int] = None
 ) -> Dict[str, Any]:
-    """Emite uma Nota Fiscal Eletrônica de Produtos (NF-e Modelo 55) com detalhamento de itens."""
+    """Emite uma Nota Fiscal Eletrônica de Produtos (NF-e Modelo 55) com detalhamento de itens. ATENÇÃO: destinatario_documento deve ser um CPF ou CNPJ REAL informado pelo usuário. É EXPRESSAMENTE PROIBIDO inventar '00000000000' ou dados fictícios. Se o usuário não informou o documento, NÃO chame esta ferramenta e pergunte o CPF/CNPJ antes."""
+    dest_doc_limpo = "".join(c for c in str(destinatario_documento or "") if c.isdigit())
+    if not dest_doc_limpo or len(set(dest_doc_limpo)) == 1 or len(dest_doc_limpo) not in (11, 14):
+        return {
+            "sucesso": False,
+            "erro": "Documento (CPF/CNPJ) do destinatário inválido, zerado ou não informado. É terminantemente proibido utilizar documentos fictícios como '00000000000'. Solicite o CPF ou CNPJ real do cliente ao usuário antes de emitir a nota fiscal."
+        }
+
+    if cliente_id is not None and orcamento_id is not None:
+        orc = await _fetch(f"/orcamentos/{int(orcamento_id)}")
+        if isinstance(orc, dict) and orc.get("sucesso"):
+            orc_dados = orc.get("dados") or {}
+            if orc_dados.get("cliente_id") and int(orc_dados.get("cliente_id")) != int(cliente_id):
+                return {
+                    "sucesso": False,
+                    "erro": f"O orçamento #{orcamento_id} pertence a outro cliente e não ao cliente #{cliente_id} informado."
+                }
+
     payload = {
         "destinatario_nome": destinatario_nome.strip(),
-        "destinatario_documento": destinatario_documento.strip(),
+        "destinatario_documento": dest_doc_limpo,
         "itens": itens if isinstance(itens, list) else [],
         "natureza_operacao": (natureza_operacao or "Venda de mercadorias").strip(),
         "gerar_caixa": bool(gerar_caixa)
     }
+    if cliente_id is not None:
+        payload["cliente_id"] = int(cliente_id)
+    if orcamento_id is not None:
+        payload["orcamento_id"] = int(orcamento_id)
+
     res = await _post("/notas-fiscais/nfe", payload)
     if not res.get("sucesso"):
         return {"erro": res.get("erro", "Erro ao emitir NF-e")}

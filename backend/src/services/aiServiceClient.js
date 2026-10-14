@@ -1,5 +1,6 @@
 const AI_SERVICE_URL = process.env.AI_SERVICE_URL || 'http://localhost:8001';
 const INTERNAL_SERVICE_SECRET = process.env.INTERNAL_SERVICE_SECRET || 'super_secreto_interno_arandue_2026';
+const AI_SERVICE_TIMEOUT_MS = parseInt(process.env.AI_SERVICE_TIMEOUT_MS, 10) || 130000;
 
 const aiServiceClient = {
   /**
@@ -15,7 +16,7 @@ const aiServiceClient = {
     const url = `${AI_SERVICE_URL.replace(/\/$/, '')}/chat`;
 
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 35000);
+    const timeout = setTimeout(() => controller.abort(), AI_SERVICE_TIMEOUT_MS);
 
     try {
       const response = await fetch(url, {
