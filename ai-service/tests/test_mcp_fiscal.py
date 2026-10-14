@@ -304,13 +304,25 @@ async def test_emitir_nfse_nacional_erro_backend():
 
     resultado = await emitir_nfse_nacional(
         destinatario_nome="Carlos Cliente",
-        destinatario_documento="000",
+        destinatario_documento="11122233344",
         discriminacao_servico="Serviço",
         valor=100.0
     )
 
     assert "erro" in resultado
     assert "CPF ou CNPJ válido" in resultado["erro"]
+
+@pytest.mark.asyncio
+async def test_emitir_nfse_nacional_documento_zerado_bloqueado():
+    resultado = await emitir_nfse_nacional(
+        destinatario_nome="Carlos Cliente",
+        destinatario_documento="00000000000",
+        discriminacao_servico="Serviço",
+        valor=100.0
+    )
+
+    assert "erro" in resultado
+    assert "inválido, zerado ou não informado" in resultado["erro"]
 
 @pytest.mark.asyncio
 @respx.mock

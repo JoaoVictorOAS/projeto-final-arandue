@@ -14,6 +14,9 @@ from mcp_server.server import (
     cadastrar_cobranca,
     cadastrar_servico,
     cadastrar_agendamento,
+    cadastrar_orcamento,
+    listar_orcamentos,
+    atualizar_status_orcamento,
     mcp_server_app,
 )
 
@@ -84,7 +87,10 @@ def test_mcp_security_no_tenant_parameters_in_schemas():
         listar_clientes,
         cadastrar_cobranca,
         cadastrar_servico,
-        cadastrar_agendamento
+        cadastrar_agendamento,
+        cadastrar_orcamento,
+        listar_orcamentos,
+        atualizar_status_orcamento
     ]:
         import inspect
         params = inspect.signature(tool_func).parameters.keys()
@@ -105,3 +111,78 @@ async def test_cadastrar_cliente():
     assert "cadastrado com sucesso" in resultado["mensagem"]
     # Verifica header
     assert respx.calls.last.request.headers["authorization"] == "Bearer fake_jwt_token_for_tenant_42"
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_orcamento_tools_e_fluxo_integrado():
+    from mcp_server.server import (
+        cadastrar_orcamento,
+        listar_orcamentos,
+        atualizar_status_orcamento,
+        cadastrar_agendamento,
+        cadastrar_cobranca
+    )
+
+    # 1. Cadastrar Orçamento
+    respx.post("http://test-node:3001/api/orcamentos").mock(
+        return_value=httpx.Response(201, json={
+            "sucesso": True,
+            "dados": {
+                "id": 10,
+                "cliente_id": 99,
+                "status": "RASCUNHO",
+                "subtotal": 500.0,
+                "desconto": 50.0,
+                "total": 450.0
+            }
+        })
+    )
+    res_orc = await cadastrar_orcamento(
+        cliente_id=99,
+        itens=[{"servico_id": 1, "quantidade": 1, "preco_unitario": 500.0}],
+        desconto=50.0
+    )
+    assert res_orc["orcamento_id"] == 10
+    assert res_orc["total"] == 450.0
+    assert "cadastrado com sucesso" in res_orc["mensagem"]
+
+    # 2. Aprovar Orçamento
+    respx.patch("http://test-node:3001/api/orcamentos/10/status").mock(
+        return_value=httpx.Response(200, json={"sucesso": True, "dados": {"id": 10, "status": "APROVADO"}})
+    )
+    res_status = await atualizar_status_orcamento(orcamento_id=10, status="APROVADO")
+    assert res_status["status"] == "APROVADO"
+    assert "alterado para 'APROVADO'" in res_status["mensagem"]
+
+    # 3. Listar Orçamentos
+    respx.get("http://test-node:3001/api/orcamentos").mock(
+        return_value=httpx.Response(200, json={
+            "sucesso": True,
+            "dados": [{"id": 10, "cliente_id": 99, "cliente_nome": "Jefferson", "status": "APROVADO", "total": 450.0}]
+        })
+    )
+    res_list = await listar_orcamentos(status="APROVADO")
+    assert res_list["total"] == 1
+    assert res_list["orcamentos"][0]["id"] == 10
+
+    # 4. Cadastrar Agendamento com orcamento_id
+    respx.post("http://test-node:3001/api/agendamentos").mock(
+        return_value=httpx.Response(201, json={
+            "sucesso": True,
+            "dados": {"id": 20, "orcamento_id": 10, "data_hora": "2026-11-01 10:00", "status": "PENDENTE"}
+        })
+    )
+    res_ag = await cadastrar_agendamento(cliente_id=99, servico_id=1, data_hora="2026-11-01 10:00", orcamento_id=10)
+    assert res_ag["agendamento_id"] == 20
+    assert res_ag["orcamento_id"] == 10
+
+    # 5. Cadastrar Cobrança vinculada a agendamento e orçamento
+    respx.post("http://test-node:3001/api/cobrancas").mock(
+        return_value=httpx.Response(201, json={
+            "sucesso": True,
+            "dados": {"id": 30, "valor": 450.0, "vencimento": "2026-11-10", "status": "PENDENTE"}
+        })
+    )
+    res_cob = await cadastrar_cobranca(cliente_id=99, valor=450.0, vencimento="2026-11-10", orcamento_id=10, agendamento_id=20)
+    assert res_cob["cobranca_id"] == 30
+

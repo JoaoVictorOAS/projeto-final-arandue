@@ -97,8 +97,8 @@ async function emitirNfse(usuarioId, payload = {}, connection = null) {
   }
 
   const destDoc = (payload.destinatario_documento || payload.tomador_documento || payload.cpf || payload.cnpj || payload.documento || '').replace(/\D/g, '');
-  if (!destDoc || (destDoc.length !== 11 && destDoc.length !== 14)) {
-    const erro = new Error('Documento do destinatário/tomador é obrigatório e deve ser CPF ou CNPJ válido');
+  if (!destDoc || (destDoc.length !== 11 && destDoc.length !== 14) || /^0+$/.test(destDoc)) {
+    const erro = new Error('Documento do destinatário/tomador é obrigatório e deve ser um CPF ou CNPJ válido (documentos zerados ou fictícios não são permitidos)');
     erro.statusCode = 400;
     throw erro;
   }
@@ -327,8 +327,8 @@ async function emitirNfe(usuarioId, payload = {}, connection = null) {
   }
 
   const destDoc = (payload.destinatario_documento || payload.cpf || payload.cnpj || payload.documento || '').replace(/\D/g, '');
-  if (!destDoc || (destDoc.length !== 11 && destDoc.length !== 14)) {
-    const erro = new Error('Documento do destinatário é obrigatório e deve ser CPF ou CNPJ válido');
+  if (!destDoc || (destDoc.length !== 11 && destDoc.length !== 14) || /^0+$/.test(destDoc)) {
+    const erro = new Error('Documento do destinatário é obrigatório e deve ser um CPF ou CNPJ válido (documentos zerados ou fictícios não são permitidos)');
     erro.statusCode = 400;
     throw erro;
   }
