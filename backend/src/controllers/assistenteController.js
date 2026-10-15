@@ -106,6 +106,90 @@ const assistenteController = {
         mensagem: error.message || 'Erro ao excluir conversa'
       });
     }
+  },
+
+  async obterStatusWhatsApp(req, res) {
+    try {
+      const usuarioRepository = require('../repositories/usuarioRepository');
+      const whatsappService = require('../services/whatsappService');
+      const usuario = await usuarioRepository.buscarPorId(req.usuario.id);
+      const statusBot = whatsappService.obterStatus();
+
+      return res.status(200).json({
+        sucesso: true,
+        mensagem: 'Status do WhatsApp obtido com sucesso',
+        dados: {
+          bot: statusBot,
+          usuario_whatsapp: usuario?.whatsapp || null,
+          usuario_whatsapp_verificado: !!usuario?.whatsapp_verificado
+        }
+      });
+    } catch (error) {
+      return res.status(500).json({
+        sucesso: false,
+        mensagem: error.message || 'Erro ao obter status do WhatsApp'
+      });
+    }
+  },
+
+  async vincularWhatsApp(req, res) {
+    try {
+      const usuarioRepository = require('../repositories/usuarioRepository');
+      const { normalizarNumeroWhatsApp, validarNumeroWhatsApp } = require('../utils/phoneUtils');
+      const { telefone } = req.body;
+
+      if (!telefone || !validarNumeroWhatsApp(telefone)) {
+        return res.status(400).json({
+          sucesso: false,
+          mensagem: 'Número de telefone/WhatsApp inválido. Forneça DDD + número celular com 8 ou 9 dígitos.'
+        });
+      }
+
+      const tel = normalizarNumeroWhatsApp(telefone);
+      // Verifica se já está em uso por outro usuário
+      const existente = await usuarioRepository.buscarPorTelefoneOuWhatsapp(tel.variacoes);
+      if (existente && existente.id !== req.usuario.id) {
+        return res.status(409).json({
+          sucesso: false,
+          mensagem: 'Este número de WhatsApp já está vinculado a outra conta MEI.'
+        });
+      }
+
+      await usuarioRepository.atualizarWhatsapp(req.usuario.id, tel.comDdi, 1);
+
+      return res.status(200).json({
+        sucesso: true,
+        mensagem: 'Número de WhatsApp vinculado com sucesso ao assistente!',
+        dados: {
+          whatsapp: tel.comDdi,
+          formatado: tel.formatado,
+          whatsapp_verificado: true
+        }
+      });
+    } catch (error) {
+      return res.status(500).json({
+        sucesso: false,
+        mensagem: error.message || 'Erro ao vincular WhatsApp'
+      });
+    }
+  },
+
+  async resetarSessaoWhatsApp(req, res) {
+    try {
+      const whatsappService = require('../services/whatsappService');
+      const novoStatus = await whatsappService.gerarNovoQrCode();
+
+      return res.status(200).json({
+        sucesso: true,
+        mensagem: 'Sessão do WhatsApp reiniciada com sucesso. Um novo QR Code foi gerado no terminal do servidor.',
+        dados: novoStatus
+      });
+    } catch (error) {
+      return res.status(500).json({
+        sucesso: false,
+        mensagem: error.message || 'Erro ao gerar novo QR Code do WhatsApp'
+      });
+    }
   }
 };
 
