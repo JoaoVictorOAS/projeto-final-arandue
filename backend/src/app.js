@@ -47,6 +47,7 @@ app.use('/api/agendamentos', authMiddleware, agendamentoRoutes);
 app.use('/api/cobrancas', authMiddleware, cobrancaRoutes);
 app.use('/api/movimentacoes', authMiddleware, movimentacaoRoutes);
 app.use('/api/dashboard', authMiddleware, dashboardRoutes);
+app.use('/api/dashboards', authMiddleware, dashboardRoutes);
 app.use('/api/assistente', authMiddleware, assistenteRoutes);
 app.use('/api/notas-fiscais', authMiddleware, notaFiscalRoutes);
 app.use('/api/estoque', authMiddleware, estoqueRoutes);
