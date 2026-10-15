@@ -8,10 +8,13 @@ CREATE TABLE IF NOT EXISTS usuarios (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nome VARCHAR(150) NOT NULL,
     email VARCHAR(180) NOT NULL,
+    whatsapp VARCHAR(20) NULL,
+    whatsapp_verificado TINYINT(1) NOT NULL DEFAULT 0,
     senha VARCHAR(255) NOT NULL,
     criado_em DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     atualizado_em DATETIME NULL ON UPDATE CURRENT_TIMESTAMP,
-    CONSTRAINT uk_usuarios_email UNIQUE (email)
+    CONSTRAINT uk_usuarios_email UNIQUE (email),
+    CONSTRAINT uk_usuarios_whatsapp UNIQUE (whatsapp)
 ) ENGINE=InnoDB;
 
 -- 2. Tabela de Clientes
@@ -180,11 +183,13 @@ CREATE TABLE IF NOT EXISTS conversas (
     id INT AUTO_INCREMENT PRIMARY KEY,
     usuario_id INT NOT NULL,
     titulo VARCHAR(120) NOT NULL,
+    canal ENUM('web', 'whatsapp') NOT NULL DEFAULT 'web',
     criado_em DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     atualizado_em DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT fk_conversas_usuario FOREIGN KEY (usuario_id) 
         REFERENCES usuarios(id) ON DELETE CASCADE ON UPDATE CASCADE,
-    INDEX idx_conversas_usuario_atualizado (usuario_id, atualizado_em)
+    INDEX idx_conversas_usuario_atualizado (usuario_id, atualizado_em),
+    INDEX idx_conversas_usuario_canal (usuario_id, canal, atualizado_em)
 ) ENGINE=InnoDB;
 
 -- 10. Tabela de Mensagens do Assistente IA
