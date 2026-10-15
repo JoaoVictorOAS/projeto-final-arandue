@@ -151,6 +151,70 @@ const authService = {
       email: usuario.email,
       criado_em: usuario.criado_em
     };
+  },
+
+  /**
+   * Autentica ou provisiona um usuário a partir do login Google.
+   * @param {Object} param0
+   * @param {string} param0.email
+   * @param {string} [param0.nome]
+   * @returns {Promise<{ usuario: { id: number, nome: string, email: string }, token: string }>}
+   */
+  async loginComGoogle({ email, nome }) {
+    if (!email || typeof email !== 'string' || !email.trim()) {
+      const erro = new Error('E-mail é obrigatório');
+      erro.statusCode = 400;
+      throw erro;
+    }
+
+    const emailLimpo = email.trim().toLowerCase();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(emailLimpo)) {
+      const erro = new Error('Formato de e-mail inválido');
+      erro.statusCode = 400;
+      throw erro;
+    }
+
+    let usuario = await usuarioRepository.buscarPorEmail(emailLimpo);
+    if (!usuario) {
+      const nomeFinal = (nome && typeof nome === 'string' && nome.trim())
+        ? nome.trim()
+        : emailLimpo.split('@')[0];
+
+      const senhaAleatoria = `oauth_google_${Date.now()}_${Math.random().toString(36).substring(2, 10)}`;
+      const senhaHash = await bcrypt.hash(senhaAleatoria, 10);
+
+      const novoUsuario = await usuarioRepository.criar({
+        nome: nomeFinal,
+        email: emailLimpo,
+        senhaHash
+      });
+
+      usuario = {
+        id: novoUsuario.id,
+        nome: novoUsuario.nome,
+        email: novoUsuario.email
+      };
+    }
+
+    const token = jwt.sign(
+      {
+        id: usuario.id,
+        nome: usuario.nome,
+        email: usuario.email
+      },
+      JWT_SECRET,
+      { expiresIn: JWT_EXPIRES_IN }
+    );
+
+    return {
+      usuario: {
+        id: usuario.id,
+        nome: usuario.nome,
+        email: usuario.email
+      },
+      token
+    };
   }
 };
 

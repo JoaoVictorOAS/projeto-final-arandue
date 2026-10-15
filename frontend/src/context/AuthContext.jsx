@@ -93,6 +93,33 @@ export function AuthProvider({ children }) {
     return response.data;
   };
 
+  const loginComGoogle = async (googleUser) => {
+    const payload = {
+      email: googleUser.email,
+      nome: googleUser.displayName || googleUser.nome || googleUser.email.split('@')[0],
+      foto: googleUser.photoURL || googleUser.foto || null,
+      googleId: googleUser.uid || null,
+    };
+
+    const response = await api.post('/auth/google', payload);
+    const dados = response.data?.dados;
+    const tokenRecebido = dados?.token;
+    const usuarioRecebido = dados?.usuario || {
+      id: dados?.id,
+      nome: dados?.nome || payload.nome,
+      email: dados?.email || payload.email,
+    };
+
+    if (tokenRecebido && usuarioRecebido) {
+      storage.setItem('token', tokenRecebido);
+      storage.setItem('usuario', JSON.stringify(usuarioRecebido));
+      setToken(tokenRecebido);
+      setUsuario(usuarioRecebido);
+    }
+
+    return response.data;
+  };
+
   const logout = () => {
     storage.removeItem('token');
     storage.removeItem('usuario');
@@ -110,6 +137,7 @@ export function AuthProvider({ children }) {
         estaAutenticado,
         carregando,
         login,
+        loginComGoogle,
         register,
         logout,
       }}

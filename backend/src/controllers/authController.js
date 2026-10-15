@@ -90,6 +90,36 @@ const authController = {
         mensagem: err.message || 'Erro ao buscar perfil do usuário'
       });
     }
+  },
+
+  /**
+   * POST /api/auth/google
+   * Autentica ou provisiona usuário a partir do login Google (Firebase Auth).
+   */
+  async loginGoogle(req, res) {
+    try {
+      const { email, nome } = req.body;
+      const { usuario, token } = await authService.loginComGoogle({ email, nome });
+
+      return res.status(200).json({
+        sucesso: true,
+        mensagem: 'Autenticado com sucesso via Google',
+        dados: {
+          token,
+          usuario: {
+            id: usuario.id,
+            nome: usuario.nome,
+            email: usuario.email
+          }
+        }
+      });
+    } catch (err) {
+      const status = err.statusCode || 500;
+      return res.status(status).json({
+        sucesso: false,
+        mensagem: err.message || 'Erro ao realizar login com o Google'
+      });
+    }
   }
 };
 
