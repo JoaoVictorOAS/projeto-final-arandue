@@ -767,29 +767,31 @@ const dashboardService = {
       [dashboard.id, usuario_id]
     );
 
-    for (const widget of widgets) {
-      if (typeof widget.configuracoes === 'string') {
-        try {
-          widget.configuracoes = JSON.parse(widget.configuracoes);
-        } catch {
-          widget.configuracoes = null;
+    await Promise.all(
+      widgets.map(async widget => {
+        if (typeof widget.configuracoes === 'string') {
+          try {
+            widget.configuracoes = JSON.parse(widget.configuracoes);
+          } catch {
+            widget.configuracoes = null;
+          }
         }
-      }
 
-      if (calcularDados) {
-        try {
-          widget.dados = await this.executarMetrica(
-            usuario_id,
-            widget.metrica,
-            widget.periodo,
-            widget.configuracoes
-          );
-        } catch (err) {
-          widget.dados = null;
-          widget.erro = err.message;
+        if (calcularDados) {
+          try {
+            widget.dados = await this.executarMetrica(
+              usuario_id,
+              widget.metrica,
+              widget.periodo,
+              widget.configuracoes
+            );
+          } catch (err) {
+            widget.dados = null;
+            widget.erro = err.message;
+          }
         }
-      }
-    }
+      })
+    );
 
     return {
       ...dashboard,
@@ -858,6 +860,12 @@ const dashboardService = {
     if (!usuario_id) {
       const erro = new Error('Identificação do usuário é obrigatória');
       erro.statusCode = 401;
+      throw erro;
+    }
+
+    if (nome !== undefined && (!nome || !nome.trim())) {
+      const erro = new Error('O nome do dashboard é obrigatório');
+      erro.statusCode = 400;
       throw erro;
     }
 
@@ -1012,6 +1020,12 @@ const dashboardService = {
       throw erro;
     }
 
+    if (largura !== undefined && ![1, 2].includes(Number(largura))) {
+      const erro = new Error('A largura do widget deve ser 1 ou 2');
+      erro.statusCode = 400;
+      throw erro;
+    }
+
     let finalOrdem = ordem;
     if (finalOrdem === null || finalOrdem === undefined) {
       const [maxRows] = await pool.execute(
@@ -1089,6 +1103,36 @@ const dashboardService = {
       ordem,
       configuracoes
     } = dadosWidget || {};
+
+    if (titulo !== undefined && (!titulo || !titulo.trim())) {
+      const erro = new Error('O título do widget é obrigatório');
+      erro.statusCode = 400;
+      throw erro;
+    }
+
+    if (metrica !== undefined) {
+      const metricasValidas = this.obterMetricasDisponiveis().metricas.map(m => m.chave);
+      if (!metricasValidas.includes(metrica)) {
+        const erro = new Error(`Métrica não suportada: ${metrica}`);
+        erro.statusCode = 400;
+        throw erro;
+      }
+    }
+
+    if (tipo_grafico !== undefined) {
+      const tiposValidos = ['bar', 'line', 'area', 'donut', 'pie', 'radial_gauge', 'kpi'];
+      if (!tiposValidos.includes(tipo_grafico)) {
+        const erro = new Error(`Tipo de gráfico inválido: ${tipo_grafico}`);
+        erro.statusCode = 400;
+        throw erro;
+      }
+    }
+
+    if (largura !== undefined && ![1, 2].includes(Number(largura))) {
+      const erro = new Error('A largura do widget deve ser 1 ou 2');
+      erro.statusCode = 400;
+      throw erro;
+    }
 
     const novoTitulo = titulo !== undefined ? titulo.trim() : widget.titulo;
     const novoTipo = tipo_grafico !== undefined ? tipo_grafico : widget.tipo_grafico;

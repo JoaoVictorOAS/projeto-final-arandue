@@ -187,4 +187,48 @@ describe('dashboardService - Métricas Analíticas e Dashboards Customizados', (
       dashboardService.excluirDashboard(otherUserId, dashboards[0].id)
     ).rejects.toThrow('Não é possível excluir o único painel ativo');
   });
+
+  test('deve aplicar validações estritas ao atualizar dashboard e widgets', async () => {
+    const dashboards = await dashboardService.listarDashboards(userId);
+    const dashId = dashboards[0].id;
+    const widgetId = dashboards[0].widgets[0].id;
+
+    // Atualizar dashboard com nome vazio ou somente espaços
+    await expect(
+      dashboardService.atualizarDashboard(userId, dashId, { nome: '' })
+    ).rejects.toThrow('O nome do dashboard é obrigatório');
+
+    await expect(
+      dashboardService.atualizarDashboard(userId, dashId, { nome: '   ' })
+    ).rejects.toThrow('O nome do dashboard é obrigatório');
+
+    // Atualizar widget com título vazio
+    await expect(
+      dashboardService.atualizarWidget(userId, dashId, widgetId, { titulo: '' })
+    ).rejects.toThrow('O título do widget é obrigatório');
+
+    // Atualizar widget com métrica inválida
+    await expect(
+      dashboardService.atualizarWidget(userId, dashId, widgetId, { metrica: 'metrica_inexistente' })
+    ).rejects.toThrow('Métrica não suportada');
+
+    // Atualizar widget com tipo de gráfico inválido
+    await expect(
+      dashboardService.atualizarWidget(userId, dashId, widgetId, { tipo_grafico: 'grafico_inexistente' })
+    ).rejects.toThrow('Tipo de gráfico inválido');
+
+    // Atualizar widget com largura inválida
+    await expect(
+      dashboardService.atualizarWidget(userId, dashId, widgetId, { largura: 3 })
+    ).rejects.toThrow('A largura do widget deve ser 1 ou 2');
+
+    // Adicionar widget com largura inválida
+    await expect(
+      dashboardService.adicionarWidget(userId, dashId, {
+        titulo: 'Teste Largura',
+        metrica: 'limite_mei',
+        largura: 4
+      })
+    ).rejects.toThrow('A largura do widget deve ser 1 ou 2');
+  });
 });
