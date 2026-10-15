@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Users,
@@ -22,11 +22,14 @@ import {
   BarChart3,
   LayoutDashboard,
 } from 'lucide-react';
+import { Responsive, WidthProvider } from 'react-grid-layout/legacy';
 import api from '../services/api';
 import StatusBadge from '../components/StatusBadge';
 import DynamicWidgetCard from '../components/dashboard/DynamicWidgetCard';
 import ModalNovoDashboard from '../components/dashboard/ModalNovoDashboard';
 import ModalNovoWidget from '../components/dashboard/ModalNovoWidget';
+
+const ResponsiveGridLayout = WidthProvider(Responsive);
 
 const formatMoney = (val) => {
   const num = Number(val) || 0;
@@ -245,20 +248,121 @@ export default function Dashboard() {
     await fetchDashboardDetalhes(activeDashboardId, dashboards);
   };
 
+  const layouts = useMemo(() => {
+    let curX = 0;
+    let curY = 0;
+
+    return (activeDashboard?.widgets || []).map((w) => {
+      const cfg = w.configuracoes || {};
+      const width =
+        cfg.w !== undefined
+          ? Number(cfg.w)
+          : Number(w.largura) === 2
+          ? 12
+          : 6;
+      const height = cfg.h !== undefined ? Number(cfg.h) : 3;
+
+      let x = cfg.x !== undefined ? Number(cfg.x) : curX;
+      let y = cfg.y !== undefined ? Number(cfg.y) : curY;
+
+      if (cfg.x === undefined) {
+        if (curX + width > 12) {
+          curX = 0;
+          curY += height;
+          x = curX;
+          y = curY;
+        }
+        curX += width;
+      }
+
+      return {
+        i: String(w.id),
+        x: isNaN(x) ? 0 : x,
+        y: isNaN(y) ? 0 : y,
+        w: isNaN(width) ? 6 : width,
+        h: isNaN(height) ? 3 : height,
+        minW: 4,
+        maxW: 12,
+        minH: 2,
+        maxH: 8,
+      };
+    });
+  }, [activeDashboard?.widgets]);
+
+  const handleDragOrResizeStop = async (layout) => {
+    if (!layout || !activeDashboardId) return;
+
+    setActiveDashboard((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        widgets: (prev.widgets || []).map((w) => {
+          const item = layout.find((l) => l.i === String(w.id));
+          if (!item) return w;
+          const novaLargura = item.w >= 9 ? 2 : 1;
+          return {
+            ...w,
+            largura: novaLargura,
+            configuracoes: {
+              ...(w.configuracoes || {}),
+              x: item.x,
+              y: item.y,
+              w: item.w,
+              h: item.h,
+            },
+          };
+        }),
+      };
+    });
+
+    try {
+      await Promise.all(
+        layout.map(async (item) => {
+          const widgetId = Number(item.i);
+          const targetWidget = (activeDashboard?.widgets || []).find((w) => w.id === widgetId);
+          if (!targetWidget) return;
+          const novaLargura = item.w >= 9 ? 2 : 1;
+          const novoConfig = {
+            ...(targetWidget.configuracoes || {}),
+            x: item.x,
+            y: item.y,
+            w: item.w,
+            h: item.h,
+          };
+          return api.put(`/dashboards/${activeDashboardId}/widgets/${widgetId}`, {
+            largura: novaLargura,
+            configuracoes: novoConfig,
+          });
+        })
+      );
+    } catch (err) {
+      console.error('Erro ao salvar layout ajustado dos widgets:', err);
+    }
+  };
+
   const handleToggleWidth = async (widget) => {
     const novaLargura = Number(widget.largura) === 2 ? 1 : 2;
+    const novoW = novaLargura === 2 ? 12 : 6;
+    const novoConfig = {
+      ...(widget.configuracoes || {}),
+      w: novoW,
+    };
+
     setActiveDashboard((prev) => {
       if (!prev) return prev;
       return {
         ...prev,
         widgets: (prev.widgets || []).map((w) =>
-          w.id === widget.id ? { ...w, largura: novaLargura } : w
+          w.id === widget.id
+            ? { ...w, largura: novaLargura, configuracoes: novoConfig }
+            : w
         ),
       };
     });
     try {
       await api.put(`/dashboards/${activeDashboardId}/widgets/${widget.id}`, {
         largura: novaLargura,
+        configuracoes: novoConfig,
       });
     } catch (err) {
       console.error('Erro ao atualizar largura do widget:', err);
@@ -531,18 +635,32 @@ export default function Dashboard() {
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <ResponsiveGridLayout
+            className="layout"
+            layouts={{ lg: layouts, md: layouts, sm: layouts }}
+            breakpoints={{ lg: 1024, md: 768, sm: 640, xs: 480, xxs: 0 }}
+            cols={{ lg: 12, md: 12, sm: 6, xs: 4, xxs: 2 }}
+            rowHeight={110}
+            draggableHandle=".widget-drag-handle"
+            isResizable={true}
+            isDraggable={true}
+            compactType="vertical"
+            onDragStop={handleDragOrResizeStop}
+            onResizeStop={handleDragOrResizeStop}
+          >
             {activeDashboard.widgets.map((widget) => (
-              <DynamicWidgetCard
-                key={widget.id}
-                widget={widget}
-                onToggleWidth={handleToggleWidth}
-                onChangePeriod={handleChangePeriod}
-                onDelete={handleDeleteWidget}
-              />
+              <div key={String(widget.id)} className="h-full relative">
+                <DynamicWidgetCard
+                  widget={widget}
+                  onToggleWidth={handleToggleWidth}
+                  onChangePeriod={handleChangePeriod}
+                  onDelete={handleDeleteWidget}
+                />
+              </div>
             ))}
-          </div>
+          </ResponsiveGridLayout>
         )}
+
       </div>
 
       {/* Seção Próximos Atendimentos */}

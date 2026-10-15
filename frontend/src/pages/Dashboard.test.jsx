@@ -463,4 +463,20 @@ describe('Módulo Dashboard - Visão Consolidada com Indicadores', () => {
       expect(api.delete).toHaveBeenCalledWith('/dashboards/1/widgets/102');
     });
   });
+
+  test('deve exibir a alça de arraste (drag handle) para reposicionamento dos gráficos', async () => {
+    render(
+      <MemoryRouter>
+        <Dashboard />
+      </MemoryRouter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId('widget-card-101')).toBeInTheDocument();
+    });
+
+    const dragHandles = screen.getAllByTitle(/clique e arraste para reposicionar o gráfico/i);
+    expect(dragHandles.length).toBeGreaterThan(0);
+  });
 });
+
