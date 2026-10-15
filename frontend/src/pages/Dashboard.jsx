@@ -12,15 +12,21 @@ import {
   ArrowRight,
   ArrowUpRight,
   ArrowDownLeft,
+  Plus,
   PlusCircle,
   CheckCircle2,
   AlertCircle,
   Loader2,
   Activity,
   UserPlus,
+  BarChart3,
+  LayoutDashboard,
 } from 'lucide-react';
 import api from '../services/api';
 import StatusBadge from '../components/StatusBadge';
+import DynamicWidgetCard from '../components/dashboard/DynamicWidgetCard';
+import ModalNovoDashboard from '../components/dashboard/ModalNovoDashboard';
+import ModalNovoWidget from '../components/dashboard/ModalNovoWidget';
 
 const formatMoney = (val) => {
   const num = Number(val) || 0;
@@ -62,6 +68,58 @@ export default function Dashboard() {
     agendamentos_hoje: 0,
     proximos_agendamentos: [],
   });
+
+  const [dashboards, setDashboards] = useState([]);
+  const [activeDashboardId, setActiveDashboardId] = useState(null);
+  const [activeDashboard, setActiveDashboard] = useState(null);
+  const [loadingWidgets, setLoadingWidgets] = useState(false);
+  const [modalNovoDashboardAberto, setModalNovoDashboardAberto] = useState(false);
+  const [modalNovoWidgetAberto, setModalNovoWidgetAberto] = useState(false);
+  const [metricasCatalogo, setMetricasCatalogo] = useState([]);
+
+  const fetchDashboardDetalhes = useCallback(async (id, currentList = []) => {
+    const listToSearch = currentList.length > 0 ? currentList : dashboards;
+    const dashFromList = listToSearch.find((d) => d.id === id);
+    if (dashFromList) {
+      setActiveDashboard(dashFromList);
+    }
+    setLoadingWidgets(true);
+    try {
+      const res = await api.get(`/dashboards/${id}`);
+      const dados = res?.data?.dados || res?.data;
+      if (dados && dados.id) {
+        setActiveDashboard(dados);
+        setDashboards((prev) =>
+          prev.map((d) => (d.id === dados.id ? { ...d, ...dados } : d))
+        );
+      }
+    } catch (err) {
+      if (!dashFromList) {
+        console.error('Erro ao carregar detalhes do dashboard:', err);
+      }
+    } finally {
+      setLoadingWidgets(false);
+    }
+  }, [dashboards]);
+
+  const fetchDashboards = useCallback(async (preferredId = null) => {
+    try {
+      const res = await api.get('/dashboards');
+      const lista = res?.data?.dados || (Array.isArray(res?.data) ? res?.data : []);
+      setDashboards(lista);
+
+      if (lista.length > 0) {
+        const targetId =
+          preferredId ||
+          activeDashboardId ||
+          (lista.find((d) => d.eh_padrao)?.id || lista[0].id);
+        setActiveDashboardId(targetId);
+        await fetchDashboardDetalhes(targetId, lista);
+      }
+    } catch (err) {
+      console.error('Erro ao listar dashboards:', err);
+    }
+  }, [activeDashboardId, fetchDashboardDetalhes]);
 
   const fetchDashboard = useCallback(async () => {
     setLoading(true);
@@ -156,7 +214,84 @@ export default function Dashboard() {
 
   useEffect(() => {
     fetchDashboard();
-  }, [fetchDashboard]);
+    fetchDashboards();
+
+    api
+      .get('/dashboards/metricas/catalogo')
+      .then((res) => {
+        const cats = res?.data?.dados?.metricas || res?.data?.metricas;
+        if (Array.isArray(cats) && cats.length > 0) {
+          setMetricasCatalogo(cats);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const handleSelectDashboard = async (id) => {
+    setActiveDashboardId(id);
+    await fetchDashboardDetalhes(id, dashboards);
+  };
+
+  const handleCriarDashboard = async ({ nome, descricao }) => {
+    const res = await api.post('/dashboards', { nome, descricao });
+    const novo = res?.data?.dados || res?.data;
+    const novoId = novo?.id;
+    await fetchDashboards(novoId);
+  };
+
+  const handleAdicionarWidget = async (dadosWidget) => {
+    if (!activeDashboardId) return;
+    await api.post(`/dashboards/${activeDashboardId}/widgets`, dadosWidget);
+    await fetchDashboardDetalhes(activeDashboardId, dashboards);
+  };
+
+  const handleToggleWidth = async (widget) => {
+    const novaLargura = Number(widget.largura) === 2 ? 1 : 2;
+    setActiveDashboard((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        widgets: (prev.widgets || []).map((w) =>
+          w.id === widget.id ? { ...w, largura: novaLargura } : w
+        ),
+      };
+    });
+    try {
+      await api.put(`/dashboards/${activeDashboardId}/widgets/${widget.id}`, {
+        largura: novaLargura,
+      });
+    } catch (err) {
+      console.error('Erro ao atualizar largura do widget:', err);
+      await fetchDashboardDetalhes(activeDashboardId, dashboards);
+    }
+  };
+
+  const handleChangePeriod = async (widget, novoPeriodo) => {
+    try {
+      await api.put(`/dashboards/${activeDashboardId}/widgets/${widget.id}`, {
+        periodo: novoPeriodo,
+      });
+      await fetchDashboardDetalhes(activeDashboardId, dashboards);
+    } catch (err) {
+      console.error('Erro ao atualizar período do widget:', err);
+    }
+  };
+
+  const handleDeleteWidget = async (widget) => {
+    setActiveDashboard((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        widgets: (prev.widgets || []).filter((w) => w.id !== widget.id),
+      };
+    });
+    try {
+      await api.delete(`/dashboards/${activeDashboardId}/widgets/${widget.id}`);
+    } catch (err) {
+      console.error('Erro ao excluir widget:', err);
+      await fetchDashboardDetalhes(activeDashboardId, dashboards);
+    }
+  };
 
   const kpis = [
     {
@@ -320,6 +455,96 @@ export default function Dashboard() {
         })}
       </div>
 
+      {/* Seção de Painéis Analíticos & Gráficos Dinâmicos */}
+      <div className="space-y-4">
+        {/* Barra de Abas e Ações do Painel */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-3 sm:px-5 sm:py-3.5 rounded-2xl border border-gray-200/80 shadow-sm">
+          {/* Abas */}
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
+            <div className="flex items-center gap-1.5 p-1 bg-gray-100/80 rounded-xl">
+              {dashboards.map((dash) => {
+                const isActive = dash.id === activeDashboardId;
+                return (
+                  <button
+                    key={dash.id}
+                    type="button"
+                    onClick={() => handleSelectDashboard(dash.id)}
+                    className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap ${
+                      isActive
+                        ? 'bg-white text-indigo-700 shadow-xs border border-gray-200/70'
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-200/60'
+                    }`}
+                  >
+                    <span>{dash.nome}</span>
+                  </button>
+                );
+              })}
+              <button
+                type="button"
+                onClick={() => setModalNovoDashboardAberto(true)}
+                className="px-2.5 py-1.5 rounded-lg text-xs font-semibold text-gray-500 hover:text-indigo-600 hover:bg-white/80 transition flex items-center gap-1 whitespace-nowrap"
+                title="Criar novo painel"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Novo Painel</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Ações da Aba Ativa */}
+          <div className="flex items-center gap-2 self-end sm:self-center">
+            <button
+              type="button"
+              onClick={() => setModalNovoWidgetAberto(true)}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-xs transition"
+            >
+              <PlusCircle className="w-4 h-4" />
+              <span>Adicionar Gráfico</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Grid de Widgets do Painel Ativo */}
+        {loadingWidgets ? (
+          <div className="p-12 bg-white rounded-2xl border border-gray-200/80 text-center">
+            <Loader2 className="w-6 h-6 text-indigo-600 animate-spin mx-auto mb-2" />
+            <p className="text-xs text-gray-500">Atualizando gráficos...</p>
+          </div>
+        ) : !activeDashboard?.widgets || activeDashboard.widgets.length === 0 ? (
+          <div className="bg-white rounded-2xl p-8 border border-gray-200/80 text-center">
+            <div className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center mx-auto mb-3">
+              <BarChart3 className="w-6 h-6" />
+            </div>
+            <p className="text-sm font-bold text-gray-800">
+              Nenhum gráfico cadastrado neste painel
+            </p>
+            <p className="text-xs text-gray-500 max-w-sm mx-auto mt-1 mb-4">
+              Adicione gráficos e indicadores customizados para acompanhar o desempenho do seu MEI.
+            </p>
+            <button
+              type="button"
+              onClick={() => setModalNovoWidgetAberto(true)}
+              className="inline-flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl shadow-xs transition"
+            >
+              <PlusCircle className="w-3.5 h-3.5" />
+              Adicionar Gráfico
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {activeDashboard.widgets.map((widget) => (
+              <DynamicWidgetCard
+                key={widget.id}
+                widget={widget}
+                onToggleWidth={handleToggleWidth}
+                onChangePeriod={handleChangePeriod}
+                onDelete={handleDeleteWidget}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+
       {/* Seção Próximos Atendimentos */}
       <div className="bg-white rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between flex-wrap gap-2">
@@ -423,6 +648,22 @@ export default function Dashboard() {
           </div>
         )}
       </div>
+
+      {/* Modal Novo Dashboard */}
+      <ModalNovoDashboard
+        isOpen={modalNovoDashboardAberto}
+        onClose={() => setModalNovoDashboardAberto(false)}
+        onSalvar={handleCriarDashboard}
+      />
+
+      {/* Modal Novo Widget */}
+      <ModalNovoWidget
+        isOpen={modalNovoWidgetAberto}
+        onClose={() => setModalNovoWidgetAberto(false)}
+        onSalvar={handleAdicionarWidget}
+        dashboardId={activeDashboardId}
+        metricasDisponiveis={metricasCatalogo}
+      />
     </div>
   );
 }
