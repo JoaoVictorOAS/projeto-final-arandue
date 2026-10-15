@@ -532,10 +532,24 @@ npm run dev:frontend  # Terminal 3 - Frontend React (Porta 3000)
 
 Acesse no navegador: **http://localhost:3000**
 
-### 8.8 Credenciais de Acesso de Demonstração
-Após executar o seed, utilize as credenciais pré-configuradas:
-- **E-mail:** `admin@mei.com`
-- **Senha:** `admin123`
+### 8.8 Credenciais de Acesso de Demonstração (Multi-Tenant)
+
+O sistema possui **5 perfis distintos de MEI** pré-configurados com dados operacionais realistas, catálogos de serviços, estoque com fichas técnicas, movimentações do Livro Caixa e dashboards analíticos.
+
+> 🔒 **Senha padrão para todos os perfis:** `admin123`
+
+| # | MEI / Razão Social | E-mail de Login | Senha | Cidade/UF | Faturamento Anual (Alerta MEI) | Perfil e Recursos de Teste |
+|---|---|---|---|---|---|---|
+| **1** | **João Victor Eletricidade MEI**<br>*(JV Soluções Elétricas)* | `admin@mei.com` | `admin123` | São Paulo / SP | **R$ 48.836,00**<br>*(Margem Segura: ~60%)* | • Prestador de serviços pura<br>• 6 clientes, 6 serviços cadastrados<br>• Dashboards: *Principal* e *Projeções e Futuro* (6 meses) |
+| **2** | **Mariana Silva Santos Confeitaria MEI**<br>*(Mari Bolos & Confeitaria Gourmet)* | `confeitaria@mei.com` | `admin123` | Curitiba / PR | **R$ 39.951,91**<br>*(Margem Segura: ~49%)* | • Produção alimentícia + Ficha técnica<br>• Insumos com controle em gramas e unidades<br>• Dashboards: *Principal* e *Custos e Despesas* |
+| **3** | **Lucas Oliveira Barbearia MEI**<br>*(Navalha de Ouro Barber Shop)* | `barbearia@mei.com` | `admin123` | Belo Horizonte / MG | **R$ 70.082,76**<br>*(Atenção ao Teto: ~86% - Âmbar)* | • Alto volume de agendamentos diários<br>• Ideal para testar alertas de proximidade do teto MEI<br>• Previsões para os próximos 30 dias |
+| **4** | **Rodrigo Pires Manutenção MEI**<br>*(RP Moto Garage & Oficina)* | `mecanica@mei.com` | `admin123` | Rio de Janeiro / RJ | **R$ 34.306,34**<br>*(Margem Segura: ~42%)* | • Serviços mecânicos + peças de reposição<br>• Cobranças em atraso (inadimplência)<br>• Projeções a 60 dias |
+| **5** | **Camila Fernandes Tecnologia MEI**<br>*(ByteSeg Soluções em TI & Cloud)* | `suporte.ti@mei.com` | `admin123` | Florianópolis / SC | **R$ 78.063,06**<br>*(Risco de Desenquadramento: ~96% - Vermelho)* | • Contratos corporativos recorrentes de TI<br>• Medidor radial (`radial_gauge`) em alerta vermelho<br>• Projeção futura de contratos em 12 meses |
+
+Para resetar ou regenerar a base de teste a qualquer momento:
+```bash
+npm run db:seed
+```
 
 ---
 
