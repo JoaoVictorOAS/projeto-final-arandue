@@ -92,6 +92,30 @@ async def test_adicionar_widget_dashboard_mcp():
         )
 
 @pytest.mark.asyncio
+async def test_adicionar_widget_dashboard_projecao_futura():
+    with patch("mcp_server.server._post", new_callable=AsyncMock) as mock_post:
+        mock_post.return_value = {"sucesso": True, "dados": {"id": 8, "titulo": "Previsão de Receita"}}
+        res = await adicionar_widget_dashboard(
+            dashboard_id=1,
+            titulo="Previsão de Receita",
+            tipo_grafico="bar",
+            metrica="projecao_financeira",
+            periodo="proximos_6_meses",
+            largura=2
+        )
+        assert res.get("sucesso") is True
+        mock_post.assert_called_once_with(
+            "/dashboards/1/widgets",
+            {
+                "titulo": "Previsão de Receita",
+                "tipo_grafico": "bar",
+                "metrica": "projecao_financeira",
+                "periodo": "proximos_6_meses",
+                "largura": 2
+            }
+        )
+
+@pytest.mark.asyncio
 async def test_excluir_widget_dashboard_mcp():
     with patch("mcp_server.server._delete", new_callable=AsyncMock) as mock_delete:
         mock_delete.return_value = {"sucesso": True, "mensagem": "Widget excluído com sucesso"}

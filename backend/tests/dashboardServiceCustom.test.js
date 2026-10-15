@@ -102,6 +102,43 @@ describe('dashboardService - Métricas Analíticas e Dashboards Customizados', (
     ).rejects.toThrow('Métrica não suportada');
   });
 
+  test('deve suportar períodos paramétricos e métrica projecao_financeira', async () => {
+    // 1. Catálogo deve incluir projecao_financeira
+    const catalogo = dashboardService.obterMetricasDisponiveis();
+    expect(catalogo.metricas.some(m => m.chave === 'projecao_financeira')).toBe(true);
+    expect(catalogo.periodos.some(p => p.chave === 'proximos_3_meses')).toBe(true);
+
+    // 2. Parser paramétrico
+    const parsed3m = dashboardService._parsePeriodo('proximos_3_meses');
+    expect(parsed3m.direcao).toBe('proximos');
+    expect(parsed3m.quantidade).toBe(3);
+    expect(parsed3m.unidade).toBe('meses');
+
+    const parsed30d = dashboardService._parsePeriodo('proximos_30_dias');
+    expect(parsed30d.direcao).toBe('proximos');
+    expect(parsed30d.quantidade).toBe(30);
+    expect(parsed30d.unidade).toBe('dias');
+
+    const parsed1a = dashboardService._parsePeriodo('proximos_1_ano');
+    expect(parsed1a.direcao).toBe('proximos');
+    expect(parsed1a.quantidade).toBe(1);
+    expect(parsed1a.unidade).toBe('anos');
+
+    const parsed12m = dashboardService._parsePeriodo('ultimos_12_meses');
+    expect(parsed12m.direcao).toBe('ultimos');
+    expect(parsed12m.quantidade).toBe(12);
+    expect(parsed12m.unidade).toBe('meses');
+
+    // 3. Execução da métrica projecao_financeira
+    const projecao = await dashboardService.executarMetrica(userId, 'projecao_financeira', 'proximos_3_meses');
+    expect(Array.isArray(projecao)).toBe(true);
+    expect(projecao.length).toBe(3);
+    expect(projecao[0]).toHaveProperty('periodo');
+    expect(projecao[0]).toHaveProperty('cobrancas_previstas');
+    expect(projecao[0]).toHaveProperty('agendamentos_previstos');
+    expect(projecao[0]).toHaveProperty('total_projetado');
+  });
+
   test('deve obter dashboard com dados computados em cada widget', async () => {
     const dashboards = await dashboardService.listarDashboards(userId);
     const dashboardId = dashboards[0].id;

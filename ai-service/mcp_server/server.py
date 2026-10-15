@@ -915,7 +915,14 @@ async def adicionar_widget_dashboard(
     periodo: str = "ultimos_6_meses",
     largura: int = 1
 ) -> Dict[str, Any]:
-    """Adiciona um widget gráfico a um painel de dashboard existente."""
+    """Adiciona um widget gráfico a um painel de dashboard existente.
+    
+    Parâmetros:
+    - metrica: 'projecao_financeira' (previsão de entradas futuras por cobranças a vencer e serviços agendados), 'fluxo_caixa', 'limite_mei', 'despesas_categoria', 'top_servicos', 'cobrancas_status', 'funil_orcamentos', 'novos_clientes'.
+    - periodo: aceita períodos paramétricos futuros ou passados como 'proximos_30_dias', 'proximos_3_meses', 'proximos_6_meses', 'proximos_1_ano', 'ultimos_12_meses', além dos legados 'mes_atual', 'ultimos_3_meses', 'ultimos_6_meses', 'ano_atual', 'historico_total'.
+    - tipo_grafico: 'bar', 'line', 'area', 'donut', 'pie', 'radial_gauge', 'kpi'.
+    - largura: 1 (metade da grade) ou 2 (largura total).
+    """
     payload = {
         "titulo": str(titulo).strip(),
         "tipo_grafico": str(tipo_grafico).strip(),

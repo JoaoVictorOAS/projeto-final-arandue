@@ -52,6 +52,20 @@ const CATALOGO_PADRAO = [
     tipos_grafico_compativeis: ['line', 'bar', 'area'],
     periodos_compativeis: ['mes_atual', 'ultimos_3_meses', 'ultimos_6_meses', 'ano_atual', 'historico_total'],
   },
+  {
+    chave: 'projecao_financeira',
+    nome: 'Projeção Financeira e Recebimentos Futuros',
+    descricao: 'Previsão de entradas futuras com base em cobranças a vencer e atendimentos agendados.',
+    tipos_grafico_compativeis: ['bar', 'area', 'line', 'kpi'],
+    periodos_compativeis: [
+      'proximos_30_dias',
+      'proximos_60_dias',
+      'proximos_3_meses',
+      'proximos_6_meses',
+      'proximos_12_meses',
+      'proximos_1_ano',
+    ],
+  },
 ];
 
 const NOMES_TIPOS = {
@@ -68,8 +82,15 @@ const NOMES_PERIODOS = {
   mes_atual: 'Mês Atual',
   ultimos_3_meses: 'Últimos 3 Meses',
   ultimos_6_meses: 'Últimos 6 Meses',
+  ultimos_12_meses: 'Últimos 12 Meses',
   ano_atual: 'Ano Atual',
   historico_total: 'Histórico Total',
+  proximos_30_dias: 'Próximos 30 Dias',
+  proximos_60_dias: 'Próximos 60 Dias',
+  proximos_3_meses: 'Próximos 3 Meses',
+  proximos_6_meses: 'Próximos 6 Meses',
+  proximos_12_meses: 'Próximos 12 Meses',
+  proximos_1_ano: 'Próximo 1 Ano',
 };
 
 /**

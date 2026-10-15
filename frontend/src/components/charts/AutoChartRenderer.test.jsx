@@ -93,6 +93,22 @@ describe('AutoChartRenderer Component', () => {
     expect(c2).toBeDefined();
   });
 
+  it('deve renderizar dados de projecao financeira futura em grafico de barras, linha e area', () => {
+    const projecaoData = [
+      { periodo: 'Nov/26', cobrancas_previstas: 1500, agendamentos_previstos: 2200, total_projetado: 3700 },
+      { periodo: 'Dez/26', cobrancas_previstas: 2000, agendamentos_previstos: 3100, total_projetado: 5100 },
+    ];
+
+    const { container: barContainer } = render(<AutoChartRenderer type="bar" data={projecaoData} />);
+    expect(barContainer).toBeDefined();
+
+    const { container: lineContainer } = render(<AutoChartRenderer type="line" data={projecaoData} />);
+    expect(lineContainer).toBeDefined();
+
+    const { container: areaContainer } = render(<AutoChartRenderer type="area" data={projecaoData} />);
+    expect(areaContainer).toBeDefined();
+  });
+
   it('deve renderizar fallback amigável para tipo de gráfico desconhecido', () => {
     render(<AutoChartRenderer type="tipo_inexistente" data={[{ a: 1 }]} />);
     expect(screen.getByText(/Tipo de gráfico não suportado/i)).toBeInTheDocument();

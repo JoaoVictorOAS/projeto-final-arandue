@@ -205,14 +205,35 @@ const dashboardService = {
           descricao: 'Evolução do volume de novos clientes cadastrados no período',
           tipos_grafico_compativeis: ['line', 'bar', 'area'],
           periodos_compativeis: ['mes_atual', 'ultimos_3_meses', 'ultimos_6_meses', 'ano_atual', 'historico_total']
+        },
+        {
+          chave: 'projecao_financeira',
+          nome: 'Projeção Financeira e Recebimentos Futuros',
+          descricao: 'Previsão de entradas futuras com base em cobranças a vencer e atendimentos agendados',
+          tipos_grafico_compativeis: ['bar', 'area', 'line', 'kpi'],
+          periodos_compativeis: [
+            'proximos_30_dias',
+            'proximos_60_dias',
+            'proximos_3_meses',
+            'proximos_6_meses',
+            'proximos_12_meses',
+            'proximos_1_ano'
+          ]
         }
       ],
       periodos: [
         { chave: 'mes_atual', nome: 'Mês Atual' },
         { chave: 'ultimos_3_meses', nome: 'Últimos 3 Meses' },
         { chave: 'ultimos_6_meses', nome: 'Últimos 6 Meses' },
+        { chave: 'ultimos_12_meses', nome: 'Últimos 12 Meses' },
         { chave: 'ano_atual', nome: 'Ano Atual' },
-        { chave: 'historico_total', nome: 'Histórico Total' }
+        { chave: 'historico_total', nome: 'Histórico Total' },
+        { chave: 'proximos_30_dias', nome: 'Próximos 30 Dias' },
+        { chave: 'proximos_60_dias', nome: 'Próximos 60 Dias' },
+        { chave: 'proximos_3_meses', nome: 'Próximos 3 Meses' },
+        { chave: 'proximos_6_meses', nome: 'Próximos 6 Meses' },
+        { chave: 'proximos_12_meses', nome: 'Próximos 12 Meses' },
+        { chave: 'proximos_1_ano', nome: 'Próximo 1 Ano' }
       ],
       tipos_grafico: [
         { chave: 'bar', nome: 'Barras' },
@@ -227,15 +248,63 @@ const dashboardService = {
   },
 
   /**
+   * Helper para interpretar strings de período paramétricas no formato {direcao}_{quantidade}_{unidade}
+   * ou períodos legados (mes_atual, ano_atual, historico_total).
+   * @param {string} periodoStr
+   * @returns {{ direcao: string, quantidade: number, unidade: string, modo?: string, raw: string }}
+   */
+  _parsePeriodo(periodoStr) {
+    if (!periodoStr || typeof periodoStr !== 'string') {
+      return { direcao: 'ultimos', quantidade: 6, unidade: 'meses', raw: 'ultimos_6_meses' };
+    }
+
+    const p = periodoStr.trim().toLowerCase();
+
+    // Mapeamentos legados estáticos
+    if (p === 'mes_atual') {
+      return { direcao: 'atual', quantidade: 1, unidade: 'meses', modo: 'mes_atual', raw: p };
+    }
+    if (p === 'ano_atual') {
+      return { direcao: 'atual', quantidade: 1, unidade: 'anos', modo: 'ano_atual', raw: p };
+    }
+    if (p === 'historico_total') {
+      return { direcao: 'total', quantidade: 12, unidade: 'meses', modo: 'historico_total', raw: p };
+    }
+
+    // Padrão parametrizado: (ultimos|proximos)_(\d+)_(dia|dias|mes|meses|ano|anos)
+    const match = p.match(/^(ultimos|proximos)_(\d+)_(dias?|mes(?:es)?|anos?)$/);
+    if (match) {
+      const direcao = match[1];
+      const quantidade = Math.max(1, parseInt(match[2], 10));
+      let unidade = 'meses';
+      if (match[3].startsWith('dia')) unidade = 'dias';
+      else if (match[3].startsWith('ano')) unidade = 'anos';
+
+      return {
+        direcao,
+        quantidade,
+        unidade,
+        raw: p
+      };
+    }
+
+    // Fallback seguro
+    return { direcao: 'ultimos', quantidade: 6, unidade: 'meses', raw: 'ultimos_6_meses' };
+  },
+
+  /**
    * Helper para resolução de intervalo de datas a partir da chave do período.
+   * Suporta intervalos futuros (proximos_*) e passados (ultimos_*).
    * @private
    */
   _obterIntervalo(periodo) {
+    const parsed = this._parsePeriodo(periodo);
     const agora = new Date();
     const ano = agora.getFullYear();
     const mes = agora.getMonth(); // 0 a 11
+    const dia = agora.getDate();
 
-    if (periodo === 'mes_atual') {
+    if (parsed.modo === 'mes_atual') {
       const dataInicio = `${ano}-${String(mes + 1).padStart(2, '0')}-01`;
       const ultimoDia = new Date(ano, mes + 1, 0).getDate();
       const dataFim = `${ano}-${String(mes + 1).padStart(2, '0')}-${String(ultimoDia).padStart(2, '0')}`;
@@ -247,33 +316,7 @@ const dashboardService = {
       };
     }
 
-    if (periodo === 'ultimos_3_meses') {
-      const dInicio = new Date(ano, mes - 2, 1);
-      const dataInicio = `${dInicio.getFullYear()}-${String(dInicio.getMonth() + 1).padStart(2, '0')}-01`;
-      const ultimoDia = new Date(ano, mes + 1, 0).getDate();
-      const dataFim = `${ano}-${String(mes + 1).padStart(2, '0')}-${String(ultimoDia).padStart(2, '0')}`;
-      return {
-        dataInicio,
-        dataFim,
-        inicioDateTime: `${dataInicio} 00:00:00`,
-        fimDateTime: `${dataFim} 23:59:59`
-      };
-    }
-
-    if (periodo === 'ultimos_6_meses') {
-      const dInicio = new Date(ano, mes - 5, 1);
-      const dataInicio = `${dInicio.getFullYear()}-${String(dInicio.getMonth() + 1).padStart(2, '0')}-01`;
-      const ultimoDia = new Date(ano, mes + 1, 0).getDate();
-      const dataFim = `${ano}-${String(mes + 1).padStart(2, '0')}-${String(ultimoDia).padStart(2, '0')}`;
-      return {
-        dataInicio,
-        dataFim,
-        inicioDateTime: `${dataInicio} 00:00:00`,
-        fimDateTime: `${dataFim} 23:59:59`
-      };
-    }
-
-    if (periodo === 'ano_atual') {
+    if (parsed.modo === 'ano_atual') {
       const dataInicio = `${ano}-01-01`;
       const dataFim = `${ano}-12-31`;
       return {
@@ -284,17 +327,73 @@ const dashboardService = {
       };
     }
 
-    // historico_total
+    if (parsed.modo === 'historico_total') {
+      return {
+        dataInicio: '1970-01-01',
+        dataFim: '2099-12-31',
+        inicioDateTime: '1970-01-01 00:00:00',
+        fimDateTime: '2099-12-31 23:59:59'
+      };
+    }
+
+    const formatYMD = (d) =>
+      `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
+    if (parsed.direcao === 'proximos') {
+      const dInicio = new Date(ano, mes, dia);
+      const dFim = new Date(ano, mes, dia);
+
+      if (parsed.unidade === 'dias') {
+        dFim.setDate(dFim.getDate() + parsed.quantidade);
+      } else if (parsed.unidade === 'meses') {
+        dFim.setMonth(dFim.getMonth() + parsed.quantidade);
+      } else if (parsed.unidade === 'anos') {
+        dFim.setFullYear(dFim.getFullYear() + parsed.quantidade);
+      }
+
+      const dataInicio = formatYMD(dInicio);
+      const dataFim = formatYMD(dFim);
+      return {
+        dataInicio,
+        dataFim,
+        inicioDateTime: `${dataInicio} 00:00:00`,
+        fimDateTime: `${dataFim} 23:59:59`
+      };
+    }
+
+    // parsed.direcao === 'ultimos'
+    let dInicio = new Date(ano, mes, dia);
+    const dFim = new Date(ano, mes, dia);
+
+    if (parsed.unidade === 'dias') {
+      dInicio.setDate(dInicio.getDate() - parsed.quantidade);
+    } else if (parsed.unidade === 'meses') {
+      const dInicioMes = new Date(ano, mes - (parsed.quantidade - 1), 1);
+      const dataInicio = `${dInicioMes.getFullYear()}-${String(dInicioMes.getMonth() + 1).padStart(2, '0')}-01`;
+      const ultimoDiaMes = new Date(ano, mes + 1, 0).getDate();
+      const dataFim = `${ano}-${String(mes + 1).padStart(2, '0')}-${String(ultimoDiaMes).padStart(2, '0')}`;
+      return {
+        dataInicio,
+        dataFim,
+        inicioDateTime: `${dataInicio} 00:00:00`,
+        fimDateTime: `${dataFim} 23:59:59`
+      };
+    } else if (parsed.unidade === 'anos') {
+      dInicio.setFullYear(dInicio.getFullYear() - parsed.quantidade);
+    }
+
+    const dataInicio = formatYMD(dInicio);
+    const dataFim = formatYMD(dFim);
     return {
-      dataInicio: '1970-01-01',
-      dataFim: '2099-12-31',
-      inicioDateTime: '1970-01-01 00:00:00',
-      fimDateTime: '2099-12-31 23:59:59'
+      dataInicio,
+      dataFim,
+      inicioDateTime: `${dataInicio} 00:00:00`,
+      fimDateTime: `${dataFim} 23:59:59`
     };
   },
 
   /**
-   * Helper para gerar a lista cronológica de meses para preenchimento de séries temporais.
+   * Helper para gerar séries temporais cronológicas (passadas ou futuras).
    * @private
    */
   _gerarMeses(periodo) {
@@ -303,12 +402,56 @@ const dashboardService = {
     const ano = agora.getFullYear();
     const mes = agora.getMonth();
 
+    const parsed = this._parsePeriodo(periodo);
+
+    // Série temporal futura
+    if (parsed.direcao === 'proximos') {
+      let qtdMeses = parsed.quantidade;
+      if (parsed.unidade === 'anos') qtdMeses = parsed.quantidade * 12;
+      else if (parsed.unidade === 'dias') {
+        if (parsed.quantidade <= 60) {
+          const listaDias = [];
+          for (let i = 0; i < parsed.quantidade; i++) {
+            const d = new Date(ano, mes, agora.getDate() + i);
+            const chave = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+            const rotulo = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
+            listaDias.push({ chave, rotulo });
+          }
+          return listaDias;
+        }
+        qtdMeses = Math.ceil(parsed.quantidade / 30);
+      }
+
+      const lista = [];
+      for (let i = 0; i < qtdMeses; i++) {
+        const d = new Date(ano, mes + i, 1);
+        const chave = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+        const rotulo = `${NOMES_MESES[d.getMonth()]}/${String(d.getFullYear()).slice(-2)}`;
+        lista.push({ chave, rotulo });
+      }
+      return lista;
+    }
+
+    // Série temporal passada
     let quantidade = 6;
-    if (periodo === 'mes_atual') quantidade = 1;
-    else if (periodo === 'ultimos_3_meses') quantidade = 3;
-    else if (periodo === 'ultimos_6_meses') quantidade = 6;
-    else if (periodo === 'ano_atual') quantidade = mes + 1;
-    else if (periodo === 'historico_total') quantidade = 12;
+    if (parsed.modo === 'mes_atual') quantidade = 1;
+    else if (parsed.modo === 'ano_atual') quantidade = mes + 1;
+    else if (parsed.modo === 'historico_total') quantidade = 12;
+    else if (parsed.unidade === 'anos') quantidade = parsed.quantidade * 12;
+    else if (parsed.unidade === 'meses') quantidade = parsed.quantidade;
+    else if (parsed.unidade === 'dias') {
+      if (parsed.quantidade <= 60) {
+        const listaDias = [];
+        for (let i = parsed.quantidade - 1; i >= 0; i--) {
+          const d = new Date(ano, mes, agora.getDate() - i);
+          const chave = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+          const rotulo = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
+          listaDias.push({ chave, rotulo });
+        }
+        return listaDias;
+      }
+      quantidade = Math.ceil(parsed.quantidade / 30);
+    }
 
     const lista = [];
     for (let i = quantidade - 1; i >= 0; i--) {
@@ -350,6 +493,8 @@ const dashboardService = {
         return this.calcularFunilOrcamentos(usuario_id, periodo);
       case 'novos_clientes':
         return this.calcularNovosClientes(usuario_id, periodo);
+      case 'projecao_financeira':
+        return this.calcularProjecaoFinanceira(usuario_id, periodo);
       default: {
         const erro = new Error(`Métrica não suportada: ${metrica}`);
         erro.statusCode = 400;
@@ -592,6 +737,75 @@ const dashboardService = {
       item.total = Number(r.total);
       item.novos_clientes = Number(r.total);
       mapa.set(r.mes_ano, item);
+    }
+
+    return Array.from(mapa.values());
+  },
+
+  /**
+   * Calcula a projeção financeira futura combinando cobranças a vencer e atendimentos agendados.
+   * @param {number} usuario_id
+   * @param {string} periodo
+   */
+  async calcularProjecaoFinanceira(usuario_id, periodo = 'proximos_3_meses') {
+    const parsed = this._parsePeriodo(periodo);
+    const series = this._gerarMeses(periodo);
+    const isDias = parsed.unidade === 'dias' && parsed.quantidade <= 60;
+    const formatSql = isDias ? '%Y-%m-%d' : '%Y-%m';
+
+    const mapa = new Map();
+    for (const s of series) {
+      mapa.set(s.chave, {
+        periodo: s.rotulo,
+        cobrancas_previstas: 0,
+        agendamentos_previstos: 0,
+        total_projetado: 0
+      });
+    }
+
+    const { inicioDateTime, fimDateTime, dataInicio, dataFim } = this._obterIntervalo(periodo);
+
+    // 1. Cobranças futuras a vencer
+    const [cobrancasRows] = await pool.execute(
+      `SELECT 
+         DATE_FORMAT(vencimento, '${formatSql}') AS chave_tempo,
+         COALESCE(SUM(valor), 0) AS total_cobrancas
+       FROM cobrancas
+       WHERE usuario_id = ?
+         AND vencimento >= ? AND vencimento <= ?
+         AND status IN ('PENDENTE', 'ATRASADO')
+       GROUP BY DATE_FORMAT(vencimento, '${formatSql}')`,
+      [usuario_id, dataInicio, dataFim]
+    );
+
+    for (const r of cobrancasRows) {
+      if (mapa.has(r.chave_tempo)) {
+        const item = mapa.get(r.chave_tempo);
+        item.cobrancas_previstas = Number(Number(r.total_cobrancas || 0).toFixed(2));
+        item.total_projetado = Number((item.total_projetado + item.cobrancas_previstas).toFixed(2));
+      }
+    }
+
+    // 2. Agendamentos futuros com preço de serviço
+    const [agendamentosRows] = await pool.execute(
+      `SELECT 
+         DATE_FORMAT(a.data_hora, '${formatSql}') AS chave_tempo,
+         COALESCE(SUM(s.preco), 0) AS total_agendamentos
+       FROM agendamentos a
+       LEFT JOIN servicos s ON a.servico_id = s.id
+       WHERE a.usuario_id = ?
+         AND a.data_hora >= ? AND a.data_hora <= ?
+         AND a.status != 'CANCELADO'
+       GROUP BY DATE_FORMAT(a.data_hora, '${formatSql}')`,
+      [usuario_id, inicioDateTime, fimDateTime]
+    );
+
+    for (const r of agendamentosRows) {
+      if (mapa.has(r.chave_tempo)) {
+        const item = mapa.get(r.chave_tempo);
+        item.agendamentos_previstos = Number(Number(r.total_agendamentos || 0).toFixed(2));
+        item.total_projetado = Number((item.total_projetado + item.agendamentos_previstos).toFixed(2));
+      }
     }
 
     return Array.from(mapa.values());

@@ -66,7 +66,7 @@ const CustomTooltip = ({ active, payload, label }) => {
           const keyStr = String(entry.dataKey || entry.name || '').toLowerCase();
           const isCurrency =
             typeof entry.value === 'number' &&
-            ['entradas', 'saidas', 'saldo', 'receita', 'valor', 'faturamento'].some((k) =>
+            ['entradas', 'saidas', 'saldo', 'receita', 'valor', 'faturamento', 'cobrancas', 'agendamentos', 'total_projetado', 'previstas', 'previstos'].some((k) =>
               keyStr.includes(k)
             );
           const formattedVal = isCurrency
@@ -272,6 +272,7 @@ export default function AutoChartRenderer({ type, data, config = {} }) {
   // 4. Gráfico de Barras ('bar')
   if (type === 'bar') {
     const hasEntradasSaidas = 'entradas' in firstItem && 'saidas' in firstItem;
+    const hasProjecao = 'cobrancas_previstas' in firstItem || 'total_projetado' in firstItem;
     const hasReceita = 'receita' in firstItem;
     const hasValor = 'valor' in firstItem;
     const hasTotal = 'total' in firstItem;
@@ -296,6 +297,11 @@ export default function AutoChartRenderer({ type, data, config = {} }) {
                 <Bar dataKey="entradas" name="Entradas" fill="#10b981" radius={[4, 4, 0, 0]} maxBarSize={36} />
                 <Bar dataKey="saidas" name="Saídas" fill="#ef4444" radius={[4, 4, 0, 0]} maxBarSize={36} />
               </>
+            ) : hasProjecao ? (
+              <>
+                <Bar dataKey="cobrancas_previstas" name="Cobranças Previstas" fill="#6366f1" radius={[4, 4, 0, 0]} maxBarSize={32} />
+                <Bar dataKey="agendamentos_previstos" name="Agendamentos Previstos" fill="#0ea5e9" radius={[4, 4, 0, 0]} maxBarSize={32} />
+              </>
             ) : hasReceita ? (
               <Bar dataKey="receita" name="Receita" fill="#6366f1" radius={[4, 4, 0, 0]} maxBarSize={44} />
             ) : hasValor ? (
@@ -314,6 +320,7 @@ export default function AutoChartRenderer({ type, data, config = {} }) {
   // 5. Gráfico de Linha ('line')
   if (type === 'line') {
     const hasEntradasSaidas = 'entradas' in firstItem && 'saidas' in firstItem;
+    const hasProjecao = 'total_projetado' in firstItem || 'cobrancas_previstas' in firstItem;
     const hasNovosClientes = 'novos_clientes' in firstItem;
     const hasTotal = 'total' in firstItem;
     const hasReceita = 'receita' in firstItem;
@@ -349,6 +356,40 @@ export default function AutoChartRenderer({ type, data, config = {} }) {
                   dot={{ r: 3 }}
                   activeDot={{ r: 5 }}
                 />
+              </>
+            ) : hasProjecao ? (
+              <>
+                <Line
+                  type="monotone"
+                  dataKey="total_projetado"
+                  name="Total Projetado"
+                  stroke="#6366f1"
+                  strokeWidth={3}
+                  dot={{ r: 4 }}
+                  activeDot={{ r: 6 }}
+                />
+                {'cobrancas_previstas' in firstItem && (
+                  <Line
+                    type="monotone"
+                    dataKey="cobrancas_previstas"
+                    name="Cobranças Previstas"
+                    stroke="#10b981"
+                    strokeWidth={2}
+                    strokeDasharray="4 4"
+                    dot={{ r: 3 }}
+                  />
+                )}
+                {'agendamentos_previstos' in firstItem && (
+                  <Line
+                    type="monotone"
+                    dataKey="agendamentos_previstos"
+                    name="Agendamentos"
+                    stroke="#0ea5e9"
+                    strokeWidth={2}
+                    strokeDasharray="4 4"
+                    dot={{ r: 3 }}
+                  />
+                )}
               </>
             ) : hasNovosClientes ? (
               <Line
@@ -408,6 +449,7 @@ export default function AutoChartRenderer({ type, data, config = {} }) {
   // 6. Gráfico de Área ('area')
   if (type === 'area') {
     const hasEntradasSaidas = 'entradas' in firstItem && 'saidas' in firstItem;
+    const hasProjecao = 'total_projetado' in firstItem || 'cobrancas_previstas' in firstItem;
     const hasReceita = 'receita' in firstItem;
     const hasValor = 'valor' in firstItem;
 
@@ -456,6 +498,16 @@ export default function AutoChartRenderer({ type, data, config = {} }) {
                   fill="url(#gradienteSaidas)"
                 />
               </>
+            ) : hasProjecao ? (
+              <Area
+                type="monotone"
+                dataKey="total_projetado"
+                name="Total Projetado"
+                stroke="#6366f1"
+                strokeWidth={2}
+                fillOpacity={1}
+                fill="url(#gradienteIndigo)"
+              />
             ) : hasReceita ? (
               <Area
                 type="monotone"

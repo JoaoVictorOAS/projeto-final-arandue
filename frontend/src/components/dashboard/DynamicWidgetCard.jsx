@@ -66,8 +66,15 @@ const DynamicWidgetCard = React.forwardRef(function DynamicWidgetCard({
                 <option value="mes_atual">Mês Atual</option>
                 <option value="ultimos_3_meses">Últimos 3 Meses</option>
                 <option value="ultimos_6_meses">Últimos 6 Meses</option>
+                <option value="ultimos_12_meses">Últimos 12 Meses</option>
                 <option value="ano_atual">Ano Atual</option>
                 <option value="historico_total">Histórico Total</option>
+                <option value="proximos_30_dias">Próximos 30 Dias</option>
+                <option value="proximos_60_dias">Próximos 60 Dias</option>
+                <option value="proximos_3_meses">Próximos 3 Meses</option>
+                <option value="proximos_6_meses">Próximos 6 Meses</option>
+                <option value="proximos_12_meses">Próximos 12 Meses</option>
+                <option value="proximos_1_ano">Próximo 1 Ano</option>
               </select>
               <Calendar className="w-3 h-3 text-gray-400 absolute right-1.5 pointer-events-none" />
             </div>
