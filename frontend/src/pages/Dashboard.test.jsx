@@ -478,5 +478,91 @@ describe('Módulo Dashboard - Visão Consolidada com Indicadores', () => {
     const dragHandles = screen.getAllByTitle(/clique e arraste para reposicionar o gráfico/i);
     expect(dragHandles.length).toBeGreaterThan(0);
   });
+
+  test('deve restaurar o layout padrão dos widgets ao clicar no botão Restaurar Layout', async () => {
+    render(
+      <MemoryRouter>
+        <Dashboard />
+      </MemoryRouter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId('widget-card-101')).toBeInTheDocument();
+    });
+
+    const btnRestaurar = screen.getByTestId('btn-restaurar-layout');
+    expect(btnRestaurar).toBeInTheDocument();
+
+    fireEvent.click(btnRestaurar);
+
+    await waitFor(() => {
+      expect(api.put).toHaveBeenCalledWith(
+        '/dashboards/1/widgets/101',
+        expect.objectContaining({
+          configuracoes: expect.objectContaining({ w: 12, h: 3, x: 0, y: 0 }),
+        })
+      );
+      expect(api.put).toHaveBeenCalledWith(
+        '/dashboards/1/widgets/102',
+        expect.objectContaining({
+          configuracoes: expect.objectContaining({ w: 6, h: 3, x: 0, y: 3 }),
+        })
+      );
+    });
+  });
+
+  test('deve exibir a lixeira ao arrastar a aba de um dashboard e permitir a exclusão ao soltá-la nela', async () => {
+    api.delete.mockResolvedValueOnce({
+      data: { sucesso: true, mensagem: 'Dashboard excluído com sucesso' },
+    });
+
+    render(
+      <MemoryRouter>
+        <Dashboard />
+      </MemoryRouter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('Vendas & Metas')).toBeInTheDocument();
+    });
+
+    const tabVendas = screen.getByTestId('tab-dashboard-2');
+    expect(tabVendas).toBeInTheDocument();
+
+    // Inicia o arraste da aba do dashboard
+    fireEvent.dragStart(tabVendas, {
+      dataTransfer: { setData: vi.fn(), effectAllowed: 'move' },
+    });
+
+    // A lixeira deve aparecer na tela
+    const lixeira = await screen.findByTestId('trash-dropzone-dashboard');
+    expect(lixeira).toBeInTheDocument();
+
+    // Arraste sobre a lixeira
+    fireEvent.dragOver(lixeira, {
+      preventDefault: vi.fn(),
+      dataTransfer: { dropEffect: 'move' },
+    });
+
+    // Solta na lixeira
+    fireEvent.drop(lixeira, {
+      preventDefault: vi.fn(),
+    });
+
+    // Modal de confirmação deve ser aberto
+    await waitFor(() => {
+      expect(screen.getByText(/excluir painel de dashboard/i)).toBeInTheDocument();
+      expect(screen.getAllByText(/vendas & metas/i).length).toBeGreaterThanOrEqual(2);
+    });
+
+    // Confirma a exclusão
+    const btnConfirmar = screen.getByTestId('confirmar-exclusao-dashboard');
+    fireEvent.click(btnConfirmar);
+
+    await waitFor(() => {
+      expect(api.delete).toHaveBeenCalledWith('/dashboards/2');
+    });
+  });
 });
+
 

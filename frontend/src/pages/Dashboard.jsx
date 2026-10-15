@@ -21,10 +21,13 @@ import {
   UserPlus,
   BarChart3,
   LayoutDashboard,
+  RotateCcw,
+  Trash2,
 } from 'lucide-react';
 import { Responsive, WidthProvider } from 'react-grid-layout/legacy';
 import api from '../services/api';
 import StatusBadge from '../components/StatusBadge';
+import Modal from '../components/Modal';
 import DynamicWidgetCard from '../components/dashboard/DynamicWidgetCard';
 import ModalNovoDashboard from '../components/dashboard/ModalNovoDashboard';
 import ModalNovoWidget from '../components/dashboard/ModalNovoWidget';
@@ -79,6 +82,12 @@ export default function Dashboard() {
   const [modalNovoDashboardAberto, setModalNovoDashboardAberto] = useState(false);
   const [modalNovoWidgetAberto, setModalNovoWidgetAberto] = useState(false);
   const [metricasCatalogo, setMetricasCatalogo] = useState([]);
+  const [isDraggingTab, setIsDraggingTab] = useState(false);
+  const [draggedDashboard, setDraggedDashboard] = useState(null);
+  const [isOverTrash, setIsOverTrash] = useState(false);
+  const [modalExcluirDashboardAberto, setModalExcluirDashboardAberto] = useState(false);
+  const [dashboardParaExcluir, setDashboardParaExcluir] = useState(null);
+  const [excluindoDashboard, setExcluindoDashboard] = useState(false);
 
   const fetchDashboardDetalhes = useCallback(async (id, currentList = []) => {
     const listToSearch = currentList.length > 0 ? currentList : dashboards;
@@ -397,6 +406,105 @@ export default function Dashboard() {
     }
   };
 
+  const handleRestaurarLayoutPadrao = async () => {
+    if (!activeDashboard?.widgets || !activeDashboardId) return;
+
+    let curX = 0;
+    let curY = 0;
+    const novosWidgets = (activeDashboard.widgets || []).map((w) => {
+      const isWide = Number(w.largura) === 2;
+      const wWidth = isWide ? 12 : 6;
+      const wHeight = 3;
+
+      if (curX + wWidth > 12) {
+        curX = 0;
+        curY += 3;
+      }
+      const posX = curX;
+      const posY = curY;
+      curX += wWidth;
+
+      return {
+        ...w,
+        configuracoes: {
+          ...(w.configuracoes || {}),
+          x: posX,
+          y: posY,
+          w: wWidth,
+          h: wHeight,
+        },
+      };
+    });
+
+    setActiveDashboard((prev) => ({
+      ...prev,
+      widgets: novosWidgets,
+    }));
+
+    try {
+      await Promise.all(
+        novosWidgets.map((w) =>
+          api.put(`/dashboards/${activeDashboardId}/widgets/${w.id}`, {
+            largura: w.largura,
+            configuracoes: w.configuracoes,
+          })
+        )
+      );
+    } catch (err) {
+      console.error('Erro ao restaurar layout padrão:', err);
+    }
+  };
+
+  const handleDragStartTab = (e, dash) => {
+    if (dashboards.length <= 1) return;
+    setIsDraggingTab(true);
+    setDraggedDashboard(dash);
+    if (e.dataTransfer) {
+      e.dataTransfer.setData('text/plain', String(dash.id));
+      e.dataTransfer.effectAllowed = 'move';
+    }
+  };
+
+  const handleDragEndTab = () => {
+    setIsDraggingTab(false);
+    setDraggedDashboard(null);
+    setIsOverTrash(false);
+  };
+
+  const handleDropOnTrash = () => {
+    if (draggedDashboard) {
+      setDashboardParaExcluir(draggedDashboard);
+      setModalExcluirDashboardAberto(true);
+    }
+    setIsDraggingTab(false);
+    setIsOverTrash(false);
+  };
+
+  const handleConfirmarExclusaoDashboard = async () => {
+    if (!dashboardParaExcluir) return;
+    setExcluindoDashboard(true);
+    try {
+      await api.delete(`/dashboards/${dashboardParaExcluir.id}`);
+      const novaLista = dashboards.filter((d) => d.id !== dashboardParaExcluir.id);
+      setDashboards(novaLista);
+      setModalExcluirDashboardAberto(false);
+      setDashboardParaExcluir(null);
+
+      if (novaLista.length > 0) {
+        const nextActiveId =
+          activeDashboardId === dashboardParaExcluir.id
+            ? (novaLista.find((d) => d.eh_padrao)?.id || novaLista[0].id)
+            : activeDashboardId;
+        setActiveDashboardId(nextActiveId);
+        await fetchDashboardDetalhes(nextActiveId, novaLista);
+      }
+    } catch (err) {
+      console.error('Erro ao excluir dashboard:', err);
+    } finally {
+      setExcluindoDashboard(false);
+    }
+  };
+
   const kpis = [
     {
       title: 'Saldo do Mês',
@@ -568,16 +676,24 @@ export default function Dashboard() {
             <div className="flex items-center gap-1.5 p-1 bg-gray-100/80 rounded-xl">
               {dashboards.map((dash) => {
                 const isActive = dash.id === activeDashboardId;
+                const podeArrastar = dashboards.length > 1;
                 return (
                   <button
                     key={dash.id}
+                    data-testid={`tab-dashboard-${dash.id}`}
                     type="button"
+                    draggable={podeArrastar}
+                    onDragStart={(e) => handleDragStartTab(e, dash)}
+                    onDragEnd={handleDragEndTab}
                     onClick={() => handleSelectDashboard(dash.id)}
-                    className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap ${
+                    className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap select-none ${
+                      podeArrastar ? 'cursor-grab active:cursor-grabbing' : ''
+                    } ${
                       isActive
                         ? 'bg-white text-indigo-700 shadow-xs border border-gray-200/70'
                         : 'text-gray-600 hover:text-gray-900 hover:bg-gray-200/60'
                     }`}
+                    title={podeArrastar ? 'Segure e arraste até a lixeira para excluir este painel' : undefined}
                   >
                     <span>{dash.nome}</span>
                   </button>
@@ -597,6 +713,20 @@ export default function Dashboard() {
 
           {/* Ações da Aba Ativa */}
           <div className="flex items-center gap-2 self-end sm:self-center">
+            {activeDashboard?.widgets && activeDashboard.widgets.length > 0 && (
+              <button
+                type="button"
+                data-testid="btn-restaurar-layout"
+                onClick={handleRestaurarLayoutPadrao}
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 hover:text-indigo-600 text-xs font-semibold shadow-xs transition"
+                title="Restaurar posições e tamanhos originais dos gráficos"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Restaurar Layout</span>
+                <span className="sm:hidden">Restaurar</span>
+              </button>
+            )}
+
             <button
               type="button"
               onClick={() => setModalNovoWidgetAberto(true)}
@@ -782,6 +912,80 @@ export default function Dashboard() {
         dashboardId={activeDashboardId}
         metricasDisponiveis={metricasCatalogo}
       />
+
+      {/* Zona da Lixeira Flutuante para Exclusão de Dashboard via Drag & Drop */}
+      {isDraggingTab && (
+        <div
+          data-testid="trash-dropzone-dashboard"
+          onDragOver={(e) => {
+            e.preventDefault();
+            if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
+            if (!isOverTrash) setIsOverTrash(true);
+          }}
+          onDragLeave={() => setIsOverTrash(false)}
+          onDrop={(e) => {
+            e.preventDefault();
+            handleDropOnTrash();
+          }}
+          className={`fixed bottom-8 left-1/2 -translate-x-1/2 z-50 transition-all duration-200 ease-out flex items-center gap-3.5 px-8 py-4 rounded-2xl shadow-2xl border-2 cursor-pointer select-none ${
+            isOverTrash
+              ? 'bg-rose-600 border-rose-700 text-white scale-110 shadow-rose-500/40 ring-4 ring-rose-200'
+              : 'bg-white/95 backdrop-blur-md border-dashed border-rose-400 text-rose-600 hover:border-rose-500 scale-100'
+          }`}
+        >
+          <Trash2 className={`w-6 h-6 transition-transform ${isOverTrash ? 'scale-125 animate-bounce' : ''}`} />
+          <div className="text-left">
+            <p className="text-xs font-bold uppercase tracking-wider">
+              {isOverTrash ? 'Solte para excluir este painel' : 'Arraste aqui para excluir'}
+            </p>
+            <p className={`text-[11px] ${isOverTrash ? 'text-rose-100' : 'text-gray-500'}`}>
+              {draggedDashboard ? `Painel: "${draggedDashboard.nome}"` : 'Jogar painel na lixeira'}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Confirmação de Exclusão de Dashboard */}
+      <Modal
+        isOpen={modalExcluirDashboardAberto}
+        onClose={() => !excluindoDashboard && setModalExcluirDashboardAberto(false)}
+        title="Excluir Painel de Dashboard"
+        footer={
+          <>
+            <button
+              type="button"
+              disabled={excluindoDashboard}
+              onClick={() => setModalExcluirDashboardAberto(false)}
+              className="w-full sm:w-auto px-4 py-2 rounded-xl border border-gray-200 text-xs font-semibold text-gray-700 hover:bg-gray-100 disabled:opacity-60 transition"
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              data-testid="confirmar-exclusao-dashboard"
+              disabled={excluindoDashboard}
+              onClick={handleConfirmarExclusaoDashboard}
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 active:bg-rose-800 text-xs font-bold text-white shadow-xs disabled:opacity-60 transition"
+            >
+              {excluindoDashboard && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+              Sim, Excluir Painel
+            </button>
+          </>
+        }
+      >
+        <div className="space-y-3">
+          <div className="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center mx-auto mb-2">
+            <Trash2 className="w-6 h-6" />
+          </div>
+          <p className="text-sm font-semibold text-gray-800 text-center">
+            Tem certeza de que deseja excluir o painel{' '}
+            <span className="font-bold text-rose-600">"{dashboardParaExcluir?.nome}"</span>?
+          </p>
+          <p className="text-xs text-gray-500 text-center">
+            Todos os gráficos dinâmicos vinculados a este painel serão removidos permanentemente. Esta ação não pode ser desfeita.
+          </p>
+        </div>
+      </Modal>
     </div>
   );
 }
