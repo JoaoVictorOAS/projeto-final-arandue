@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Users,
@@ -12,15 +12,27 @@ import {
   ArrowRight,
   ArrowUpRight,
   ArrowDownLeft,
+  Plus,
   PlusCircle,
   CheckCircle2,
   AlertCircle,
   Loader2,
   Activity,
   UserPlus,
+  BarChart3,
+  LayoutDashboard,
+  RotateCcw,
+  Trash2,
 } from 'lucide-react';
+import { Responsive, WidthProvider } from 'react-grid-layout/legacy';
 import api from '../services/api';
 import StatusBadge from '../components/StatusBadge';
+import Modal from '../components/Modal';
+import DynamicWidgetCard from '../components/dashboard/DynamicWidgetCard';
+import ModalNovoDashboard from '../components/dashboard/ModalNovoDashboard';
+import ModalNovoWidget from '../components/dashboard/ModalNovoWidget';
+
+const ResponsiveGridLayout = WidthProvider(Responsive);
 
 const formatMoney = (val) => {
   const num = Number(val) || 0;
@@ -62,6 +74,64 @@ export default function Dashboard() {
     agendamentos_hoje: 0,
     proximos_agendamentos: [],
   });
+
+  const [dashboards, setDashboards] = useState([]);
+  const [activeDashboardId, setActiveDashboardId] = useState(null);
+  const [activeDashboard, setActiveDashboard] = useState(null);
+  const [loadingWidgets, setLoadingWidgets] = useState(false);
+  const [modalNovoDashboardAberto, setModalNovoDashboardAberto] = useState(false);
+  const [modalNovoWidgetAberto, setModalNovoWidgetAberto] = useState(false);
+  const [metricasCatalogo, setMetricasCatalogo] = useState([]);
+  const [isDraggingTab, setIsDraggingTab] = useState(false);
+  const [draggedDashboard, setDraggedDashboard] = useState(null);
+  const [isOverTrash, setIsOverTrash] = useState(false);
+  const [modalExcluirDashboardAberto, setModalExcluirDashboardAberto] = useState(false);
+  const [dashboardParaExcluir, setDashboardParaExcluir] = useState(null);
+  const [excluindoDashboard, setExcluindoDashboard] = useState(false);
+
+  const fetchDashboardDetalhes = useCallback(async (id, currentList = []) => {
+    const listToSearch = currentList.length > 0 ? currentList : dashboards;
+    const dashFromList = listToSearch.find((d) => d.id === id);
+    if (dashFromList) {
+      setActiveDashboard(dashFromList);
+    }
+    setLoadingWidgets(true);
+    try {
+      const res = await api.get(`/dashboards/${id}`);
+      const dados = res?.data?.dados || res?.data;
+      if (dados && dados.id) {
+        setActiveDashboard(dados);
+        setDashboards((prev) =>
+          prev.map((d) => (d.id === dados.id ? { ...d, ...dados } : d))
+        );
+      }
+    } catch (err) {
+      if (!dashFromList) {
+        console.error('Erro ao carregar detalhes do dashboard:', err);
+      }
+    } finally {
+      setLoadingWidgets(false);
+    }
+  }, [dashboards]);
+
+  const fetchDashboards = useCallback(async (preferredId = null) => {
+    try {
+      const res = await api.get('/dashboards');
+      const lista = res?.data?.dados || (Array.isArray(res?.data) ? res?.data : []);
+      setDashboards(lista);
+
+      if (lista.length > 0) {
+        const targetId =
+          preferredId ||
+          activeDashboardId ||
+          (lista.find((d) => d.eh_padrao)?.id || lista[0].id);
+        setActiveDashboardId(targetId);
+        await fetchDashboardDetalhes(targetId, lista);
+      }
+    } catch (err) {
+      console.error('Erro ao listar dashboards:', err);
+    }
+  }, [activeDashboardId, fetchDashboardDetalhes]);
 
   const fetchDashboard = useCallback(async () => {
     setLoading(true);
@@ -156,7 +226,284 @@ export default function Dashboard() {
 
   useEffect(() => {
     fetchDashboard();
-  }, [fetchDashboard]);
+    fetchDashboards();
+
+    api
+      .get('/dashboards/metricas/catalogo')
+      .then((res) => {
+        const cats = res?.data?.dados?.metricas || res?.data?.metricas;
+        if (Array.isArray(cats) && cats.length > 0) {
+          setMetricasCatalogo(cats);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const handleSelectDashboard = async (id) => {
+    setActiveDashboardId(id);
+    await fetchDashboardDetalhes(id, dashboards);
+  };
+
+  const handleCriarDashboard = async ({ nome, descricao }) => {
+    const res = await api.post('/dashboards', { nome, descricao });
+    const novo = res?.data?.dados || res?.data;
+    const novoId = novo?.id;
+    await fetchDashboards(novoId);
+  };
+
+  const handleAdicionarWidget = async (dadosWidget) => {
+    if (!activeDashboardId) return;
+    await api.post(`/dashboards/${activeDashboardId}/widgets`, dadosWidget);
+    await fetchDashboardDetalhes(activeDashboardId, dashboards);
+  };
+
+  const layouts = useMemo(() => {
+    let curX = 0;
+    let curY = 0;
+
+    return (activeDashboard?.widgets || []).map((w) => {
+      const cfg = w.configuracoes || {};
+      const width =
+        cfg.w !== undefined
+          ? Number(cfg.w)
+          : Number(w.largura) === 2
+          ? 12
+          : 6;
+      const height = cfg.h !== undefined ? Number(cfg.h) : 3;
+
+      let x = cfg.x !== undefined ? Number(cfg.x) : curX;
+      let y = cfg.y !== undefined ? Number(cfg.y) : curY;
+
+      if (cfg.x === undefined) {
+        if (curX + width > 12) {
+          curX = 0;
+          curY += height;
+          x = curX;
+          y = curY;
+        }
+        curX += width;
+      }
+
+      return {
+        i: String(w.id),
+        x: isNaN(x) ? 0 : x,
+        y: isNaN(y) ? 0 : y,
+        w: isNaN(width) ? 6 : width,
+        h: isNaN(height) ? 3 : height,
+        minW: 4,
+        maxW: 12,
+        minH: 2,
+        maxH: 8,
+      };
+    });
+  }, [activeDashboard?.widgets]);
+
+  const handleDragOrResizeStop = async (layout) => {
+    if (!layout || !activeDashboardId) return;
+
+    setActiveDashboard((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        widgets: (prev.widgets || []).map((w) => {
+          const item = layout.find((l) => l.i === String(w.id));
+          if (!item) return w;
+          const novaLargura = item.w >= 9 ? 2 : 1;
+          return {
+            ...w,
+            largura: novaLargura,
+            configuracoes: {
+              ...(w.configuracoes || {}),
+              x: item.x,
+              y: item.y,
+              w: item.w,
+              h: item.h,
+            },
+          };
+        }),
+      };
+    });
+
+    try {
+      await Promise.all(
+        layout.map(async (item) => {
+          const widgetId = Number(item.i);
+          const targetWidget = (activeDashboard?.widgets || []).find((w) => w.id === widgetId);
+          if (!targetWidget) return;
+          const novaLargura = item.w >= 9 ? 2 : 1;
+          const novoConfig = {
+            ...(targetWidget.configuracoes || {}),
+            x: item.x,
+            y: item.y,
+            w: item.w,
+            h: item.h,
+          };
+          return api.put(`/dashboards/${activeDashboardId}/widgets/${widgetId}`, {
+            largura: novaLargura,
+            configuracoes: novoConfig,
+          });
+        })
+      );
+    } catch (err) {
+      console.error('Erro ao salvar layout ajustado dos widgets:', err);
+    }
+  };
+
+  const handleToggleWidth = async (widget) => {
+    const novaLargura = Number(widget.largura) === 2 ? 1 : 2;
+    const novoW = novaLargura === 2 ? 12 : 6;
+    const novoConfig = {
+      ...(widget.configuracoes || {}),
+      w: novoW,
+    };
+
+    setActiveDashboard((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        widgets: (prev.widgets || []).map((w) =>
+          w.id === widget.id
+            ? { ...w, largura: novaLargura, configuracoes: novoConfig }
+            : w
+        ),
+      };
+    });
+    try {
+      await api.put(`/dashboards/${activeDashboardId}/widgets/${widget.id}`, {
+        largura: novaLargura,
+        configuracoes: novoConfig,
+      });
+    } catch (err) {
+      console.error('Erro ao atualizar largura do widget:', err);
+      await fetchDashboardDetalhes(activeDashboardId, dashboards);
+    }
+  };
+
+  const handleChangePeriod = async (widget, novoPeriodo) => {
+    try {
+      await api.put(`/dashboards/${activeDashboardId}/widgets/${widget.id}`, {
+        periodo: novoPeriodo,
+      });
+      await fetchDashboardDetalhes(activeDashboardId, dashboards);
+    } catch (err) {
+      console.error('Erro ao atualizar período do widget:', err);
+    }
+  };
+
+  const handleDeleteWidget = async (widget) => {
+    setActiveDashboard((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        widgets: (prev.widgets || []).filter((w) => w.id !== widget.id),
+      };
+    });
+    try {
+      await api.delete(`/dashboards/${activeDashboardId}/widgets/${widget.id}`);
+    } catch (err) {
+      console.error('Erro ao excluir widget:', err);
+      await fetchDashboardDetalhes(activeDashboardId, dashboards);
+    }
+  };
+
+  const handleRestaurarLayoutPadrao = async () => {
+    if (!activeDashboard?.widgets || !activeDashboardId) return;
+
+    let curX = 0;
+    let curY = 0;
+    const novosWidgets = (activeDashboard.widgets || []).map((w) => {
+      const isWide = Number(w.largura) === 2;
+      const wWidth = isWide ? 12 : 6;
+      const wHeight = 3;
+
+      if (curX + wWidth > 12) {
+        curX = 0;
+        curY += 3;
+      }
+      const posX = curX;
+      const posY = curY;
+      curX += wWidth;
+
+      return {
+        ...w,
+        configuracoes: {
+          ...(w.configuracoes || {}),
+          x: posX,
+          y: posY,
+          w: wWidth,
+          h: wHeight,
+        },
+      };
+    });
+
+    setActiveDashboard((prev) => ({
+      ...prev,
+      widgets: novosWidgets,
+    }));
+
+    try {
+      await Promise.all(
+        novosWidgets.map((w) =>
+          api.put(`/dashboards/${activeDashboardId}/widgets/${w.id}`, {
+            largura: w.largura,
+            configuracoes: w.configuracoes,
+          })
+        )
+      );
+    } catch (err) {
+      console.error('Erro ao restaurar layout padrão:', err);
+    }
+  };
+
+  const handleDragStartTab = (e, dash) => {
+    if (dashboards.length <= 1) return;
+    setIsDraggingTab(true);
+    setDraggedDashboard(dash);
+    if (e.dataTransfer) {
+      e.dataTransfer.setData('text/plain', String(dash.id));
+      e.dataTransfer.effectAllowed = 'move';
+    }
+  };
+
+  const handleDragEndTab = () => {
+    setIsDraggingTab(false);
+    setDraggedDashboard(null);
+    setIsOverTrash(false);
+  };
+
+  const handleDropOnTrash = () => {
+    if (draggedDashboard) {
+      setDashboardParaExcluir(draggedDashboard);
+      setModalExcluirDashboardAberto(true);
+    }
+    setIsDraggingTab(false);
+    setIsOverTrash(false);
+  };
+
+  const handleConfirmarExclusaoDashboard = async () => {
+    if (!dashboardParaExcluir) return;
+    setExcluindoDashboard(true);
+    try {
+      await api.delete(`/dashboards/${dashboardParaExcluir.id}`);
+      const novaLista = dashboards.filter((d) => d.id !== dashboardParaExcluir.id);
+      setDashboards(novaLista);
+      setModalExcluirDashboardAberto(false);
+      setDashboardParaExcluir(null);
+
+      if (novaLista.length > 0) {
+        const nextActiveId =
+          activeDashboardId === dashboardParaExcluir.id
+            ? (novaLista.find((d) => d.eh_padrao)?.id || novaLista[0].id)
+            : activeDashboardId;
+        setActiveDashboardId(nextActiveId);
+        await fetchDashboardDetalhes(nextActiveId, novaLista);
+      }
+    } catch (err) {
+      console.error('Erro ao excluir dashboard:', err);
+    } finally {
+      setExcluindoDashboard(false);
+    }
+  };
 
   const kpis = [
     {
@@ -320,6 +667,132 @@ export default function Dashboard() {
         })}
       </div>
 
+      {/* Seção de Painéis Analíticos & Gráficos Dinâmicos */}
+      <div className="space-y-4">
+        {/* Barra de Abas e Ações do Painel */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-3 sm:px-5 sm:py-3.5 rounded-2xl border border-gray-200/80 shadow-sm">
+          {/* Abas */}
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
+            <div className="flex items-center gap-1.5 p-1 bg-gray-100/80 rounded-xl">
+              {dashboards.map((dash) => {
+                const isActive = dash.id === activeDashboardId;
+                const podeArrastar = dashboards.length > 1;
+                return (
+                  <button
+                    key={dash.id}
+                    data-testid={`tab-dashboard-${dash.id}`}
+                    type="button"
+                    draggable={podeArrastar}
+                    onDragStart={(e) => handleDragStartTab(e, dash)}
+                    onDragEnd={handleDragEndTab}
+                    onClick={() => handleSelectDashboard(dash.id)}
+                    className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap select-none ${
+                      podeArrastar ? 'cursor-grab active:cursor-grabbing' : ''
+                    } ${
+                      isActive
+                        ? 'bg-white text-indigo-700 shadow-xs border border-gray-200/70'
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-200/60'
+                    }`}
+                    title={podeArrastar ? 'Segure e arraste até a lixeira para excluir este painel' : undefined}
+                  >
+                    <span>{dash.nome}</span>
+                  </button>
+                );
+              })}
+              <button
+                type="button"
+                onClick={() => setModalNovoDashboardAberto(true)}
+                className="px-2.5 py-1.5 rounded-lg text-xs font-semibold text-gray-500 hover:text-indigo-600 hover:bg-white/80 transition flex items-center gap-1 whitespace-nowrap"
+                title="Criar novo painel"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Novo Painel</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Ações da Aba Ativa */}
+          <div className="flex items-center gap-2 self-end sm:self-center">
+            {activeDashboard?.widgets && activeDashboard.widgets.length > 0 && (
+              <button
+                type="button"
+                data-testid="btn-restaurar-layout"
+                onClick={handleRestaurarLayoutPadrao}
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 hover:text-indigo-600 text-xs font-semibold shadow-xs transition"
+                title="Restaurar posições e tamanhos originais dos gráficos"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Restaurar Layout</span>
+                <span className="sm:hidden">Restaurar</span>
+              </button>
+            )}
+
+            <button
+              type="button"
+              onClick={() => setModalNovoWidgetAberto(true)}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-xs transition"
+            >
+              <PlusCircle className="w-4 h-4" />
+              <span>Adicionar Gráfico</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Grid de Widgets do Painel Ativo */}
+        {loadingWidgets ? (
+          <div className="p-12 bg-white rounded-2xl border border-gray-200/80 text-center">
+            <Loader2 className="w-6 h-6 text-indigo-600 animate-spin mx-auto mb-2" />
+            <p className="text-xs text-gray-500">Atualizando gráficos...</p>
+          </div>
+        ) : !activeDashboard?.widgets || activeDashboard.widgets.length === 0 ? (
+          <div className="bg-white rounded-2xl p-8 border border-gray-200/80 text-center">
+            <div className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center mx-auto mb-3">
+              <BarChart3 className="w-6 h-6" />
+            </div>
+            <p className="text-sm font-bold text-gray-800">
+              Nenhum gráfico cadastrado neste painel
+            </p>
+            <p className="text-xs text-gray-500 max-w-sm mx-auto mt-1 mb-4">
+              Adicione gráficos e indicadores customizados para acompanhar o desempenho do seu MEI.
+            </p>
+            <button
+              type="button"
+              onClick={() => setModalNovoWidgetAberto(true)}
+              className="inline-flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl shadow-xs transition"
+            >
+              <PlusCircle className="w-3.5 h-3.5" />
+              Adicionar Gráfico
+            </button>
+          </div>
+        ) : (
+          <ResponsiveGridLayout
+            className="layout"
+            layouts={{ lg: layouts, md: layouts, sm: layouts }}
+            breakpoints={{ lg: 1024, md: 768, sm: 640, xs: 480, xxs: 0 }}
+            cols={{ lg: 12, md: 12, sm: 6, xs: 4, xxs: 2 }}
+            rowHeight={110}
+            draggableHandle=".widget-drag-handle"
+            isResizable={true}
+            isDraggable={true}
+            compactType="vertical"
+            onDragStop={handleDragOrResizeStop}
+            onResizeStop={handleDragOrResizeStop}
+          >
+            {activeDashboard.widgets.map((widget) => (
+              <div key={String(widget.id)} className="h-full relative">
+                <DynamicWidgetCard
+                  widget={widget}
+                  onToggleWidth={handleToggleWidth}
+                  onChangePeriod={handleChangePeriod}
+                  onDelete={handleDeleteWidget}
+                />
+              </div>
+            ))}
+          </ResponsiveGridLayout>
+        )}
+
+      </div>
+
       {/* Seção Próximos Atendimentos */}
       <div className="bg-white rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between flex-wrap gap-2">
@@ -423,6 +896,96 @@ export default function Dashboard() {
           </div>
         )}
       </div>
+
+      {/* Modal Novo Dashboard */}
+      <ModalNovoDashboard
+        isOpen={modalNovoDashboardAberto}
+        onClose={() => setModalNovoDashboardAberto(false)}
+        onSalvar={handleCriarDashboard}
+      />
+
+      {/* Modal Novo Widget */}
+      <ModalNovoWidget
+        isOpen={modalNovoWidgetAberto}
+        onClose={() => setModalNovoWidgetAberto(false)}
+        onSalvar={handleAdicionarWidget}
+        dashboardId={activeDashboardId}
+        metricasDisponiveis={metricasCatalogo}
+      />
+
+      {/* Zona da Lixeira Flutuante para Exclusão de Dashboard via Drag & Drop */}
+      {isDraggingTab && (
+        <div
+          data-testid="trash-dropzone-dashboard"
+          onDragOver={(e) => {
+            e.preventDefault();
+            if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
+            if (!isOverTrash) setIsOverTrash(true);
+          }}
+          onDragLeave={() => setIsOverTrash(false)}
+          onDrop={(e) => {
+            e.preventDefault();
+            handleDropOnTrash();
+          }}
+          className={`fixed bottom-8 left-1/2 -translate-x-1/2 z-50 transition-all duration-200 ease-out flex items-center gap-3.5 px-8 py-4 rounded-2xl shadow-2xl border-2 cursor-pointer select-none ${
+            isOverTrash
+              ? 'bg-rose-600 border-rose-700 text-white scale-110 shadow-rose-500/40 ring-4 ring-rose-200'
+              : 'bg-white/95 backdrop-blur-md border-dashed border-rose-400 text-rose-600 hover:border-rose-500 scale-100'
+          }`}
+        >
+          <Trash2 className={`w-6 h-6 transition-transform ${isOverTrash ? 'scale-125 animate-bounce' : ''}`} />
+          <div className="text-left">
+            <p className="text-xs font-bold uppercase tracking-wider">
+              {isOverTrash ? 'Solte para excluir este painel' : 'Arraste aqui para excluir'}
+            </p>
+            <p className={`text-[11px] ${isOverTrash ? 'text-rose-100' : 'text-gray-500'}`}>
+              {draggedDashboard ? `Painel: "${draggedDashboard.nome}"` : 'Jogar painel na lixeira'}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Confirmação de Exclusão de Dashboard */}
+      <Modal
+        isOpen={modalExcluirDashboardAberto}
+        onClose={() => !excluindoDashboard && setModalExcluirDashboardAberto(false)}
+        title="Excluir Painel de Dashboard"
+        footer={
+          <>
+            <button
+              type="button"
+              disabled={excluindoDashboard}
+              onClick={() => setModalExcluirDashboardAberto(false)}
+              className="w-full sm:w-auto px-4 py-2 rounded-xl border border-gray-200 text-xs font-semibold text-gray-700 hover:bg-gray-100 disabled:opacity-60 transition"
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              data-testid="confirmar-exclusao-dashboard"
+              disabled={excluindoDashboard}
+              onClick={handleConfirmarExclusaoDashboard}
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 active:bg-rose-800 text-xs font-bold text-white shadow-xs disabled:opacity-60 transition"
+            >
+              {excluindoDashboard && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+              Sim, Excluir Painel
+            </button>
+          </>
+        }
+      >
+        <div className="space-y-3">
+          <div className="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center mx-auto mb-2">
+            <Trash2 className="w-6 h-6" />
+          </div>
+          <p className="text-sm font-semibold text-gray-800 text-center">
+            Tem certeza de que deseja excluir o painel{' '}
+            <span className="font-bold text-rose-600">"{dashboardParaExcluir?.nome}"</span>?
+          </p>
+          <p className="text-xs text-gray-500 text-center">
+            Todos os gráficos dinâmicos vinculados a este painel serão removidos permanentemente. Esta ação não pode ser desfeita.
+          </p>
+        </div>
+      </Modal>
     </div>
   );
 }

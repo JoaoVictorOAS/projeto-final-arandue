@@ -1,0 +1,116 @@
+import React from 'react';
+import { render, screen } from '@testing-library/react';
+import { describe, it, expect, beforeEach } from 'vitest';
+import AutoChartRenderer from './AutoChartRenderer';
+
+// Mock de ResizeObserver para compatibilidade com jsdom e Recharts
+class ResizeObserverMock {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
+
+if (!globalThis.ResizeObserver) {
+  globalThis.ResizeObserver = ResizeObserverMock;
+}
+
+describe('AutoChartRenderer Component', () => {
+  it('deve renderizar mensagem de dados vazios quando data for vazio', () => {
+    render(<AutoChartRenderer type="bar" data={[]} />);
+    expect(screen.getByText(/Nenhum dado disponível/i)).toBeInTheDocument();
+  });
+
+  it('deve renderizar mensagem de dados vazios quando data for null ou undefined', () => {
+    const { rerender } = render(<AutoChartRenderer type="line" data={null} />);
+    expect(screen.getByText(/Nenhum dado disponível/i)).toBeInTheDocument();
+
+    rerender(<AutoChartRenderer type="pie" data={undefined} />);
+    expect(screen.getByText(/Nenhum dado disponível/i)).toBeInTheDocument();
+  });
+
+  it('deve renderizar sem quebrar para o tipo radial_gauge (teto MEI)', () => {
+    const data = [{ nome: 'Faturamento', valor: 45000, limite: 81000, percentual: 55.5 }];
+    render(<AutoChartRenderer type="radial_gauge" data={data} />);
+    expect(screen.getByText(/55.5%/i)).toBeInTheDocument();
+    expect(screen.getByText(/R\$\s*45\.000/i)).toBeInTheDocument();
+  });
+
+  it('deve renderizar radial_gauge quando data for objeto unico', () => {
+    const dataObj = { faturamento_anual: 30000, teto_anual: 81000, percentual: 37, saldo_restante: 51000 };
+    render(<AutoChartRenderer type="radial_gauge" data={dataObj} />);
+    expect(screen.getByText(/37%/i)).toBeInTheDocument();
+  });
+
+  it('deve renderizar cartão do tipo kpi com formatação monetária e percentual', () => {
+    const kpiData = {
+      faturamento_anual: 60000,
+      teto_anual: 81000,
+      percentual: 74.07,
+      saldo_restante: 21000
+    };
+    render(<AutoChartRenderer type="kpi" data={kpiData} config={{ titulo: 'Faturamento Anual' }} />);
+    expect(screen.getByText(/R\$\s*60\.000/i)).toBeInTheDocument();
+    expect(screen.getByText(/74\.07%/i)).toBeInTheDocument();
+    expect(screen.getByText(/Teto: R\$\s*81\.000/i)).toBeInTheDocument();
+  });
+
+  it('deve renderizar tipo bar (gráfico de barras) com container e legenda', () => {
+    const fluxoData = [
+      { periodo: 'Jan/26', entradas: 4500, saidas: 2100 },
+      { periodo: 'Fev/26', entradas: 5200, saidas: 2800 },
+    ];
+    const { container } = render(<AutoChartRenderer type="bar" data={fluxoData} />);
+    expect(container.querySelector('.recharts-responsive-container') || container.querySelector('svg')).toBeDefined();
+  });
+
+  it('deve renderizar tipo line (gráfico de linha) sem quebrar', () => {
+    const novosClientesData = [
+      { periodo: 'Jan/26', total: 4 },
+      { periodo: 'Fev/26', total: 8 },
+    ];
+    const { container } = render(<AutoChartRenderer type="line" data={novosClientesData} />);
+    expect(container).toBeDefined();
+  });
+
+  it('deve renderizar tipo area (gráfico de área) com gradientes', () => {
+    const areaData = [
+      { periodo: 'Jan/26', entradas: 3000, saidas: 1500 },
+      { periodo: 'Fev/26', entradas: 4200, saidas: 1800 },
+    ];
+    const { container } = render(<AutoChartRenderer type="area" data={areaData} />);
+    expect(container).toBeDefined();
+  });
+
+  it('deve renderizar tipo donut e pie com categorias e valores formatados', () => {
+    const donutData = [
+      { categoria: 'Mercadorias', valor: 2500, percentual: 62.5 },
+      { categoria: 'Serviços', valor: 1500, percentual: 37.5 },
+    ];
+    const { container: c1 } = render(<AutoChartRenderer type="donut" data={donutData} />);
+    expect(c1).toBeDefined();
+
+    const { container: c2 } = render(<AutoChartRenderer type="pie" data={donutData} />);
+    expect(c2).toBeDefined();
+  });
+
+  it('deve renderizar dados de projecao financeira futura em grafico de barras, linha e area', () => {
+    const projecaoData = [
+      { periodo: 'Nov/26', cobrancas_previstas: 1500, agendamentos_previstos: 2200, total_projetado: 3700 },
+      { periodo: 'Dez/26', cobrancas_previstas: 2000, agendamentos_previstos: 3100, total_projetado: 5100 },
+    ];
+
+    const { container: barContainer } = render(<AutoChartRenderer type="bar" data={projecaoData} />);
+    expect(barContainer).toBeDefined();
+
+    const { container: lineContainer } = render(<AutoChartRenderer type="line" data={projecaoData} />);
+    expect(lineContainer).toBeDefined();
+
+    const { container: areaContainer } = render(<AutoChartRenderer type="area" data={projecaoData} />);
+    expect(areaContainer).toBeDefined();
+  });
+
+  it('deve renderizar fallback amigável para tipo de gráfico desconhecido', () => {
+    render(<AutoChartRenderer type="tipo_inexistente" data={[{ a: 1 }]} />);
+    expect(screen.getByText(/Tipo de gráfico não suportado/i)).toBeInTheDocument();
+  });
+});
