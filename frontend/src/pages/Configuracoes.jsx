@@ -20,6 +20,7 @@ import {
   ToggleLeft,
   ToggleRight,
   FileCheck,
+  Smartphone,
 } from 'lucide-react';
 import api from '../services/api';
 
@@ -119,6 +120,15 @@ export default function Configuracoes() {
   const [alternandoTransmissao, setAlternandoTransmissao] = useState(false);
   const [removendoCert, setRemovendoCert] = useState(false);
 
+  // Estados da Integração WhatsApp (Assistente IA)
+  const [wppStatus, setWppStatus] = useState({
+    bot: { status: 'desconectado', conectado: false, numero: null, qrCode: null },
+    usuario_whatsapp: null,
+    usuario_whatsapp_verificado: false,
+  });
+  const [telefoneWhatsApp, setTelefoneWhatsApp] = useState('');
+  const [vinculandoWpp, setVinculandoWpp] = useState(false);
+
   const showFeedback = (type, message) => {
     setFeedback({ type, message });
     if (type === 'success') {
@@ -132,7 +142,7 @@ export default function Configuracoes() {
     try {
       setCarregandoCert(true);
       const res = await api.get('/configuracoes/certificado');
-      if (res.data?.dados) {
+      if (res.data?.dados && !Array.isArray(res.data.dados)) {
         setCertStatus(res.data.dados);
       }
     } catch (err) {
@@ -141,6 +151,45 @@ export default function Configuracoes() {
       setCarregandoCert(false);
     }
   };
+
+  const carregarStatusWhatsApp = async () => {
+    try {
+      const res = await api.get('/assistente/whatsapp/status');
+      const dados = res.data?.dados;
+      if (dados && !Array.isArray(dados) && dados.bot) {
+        setWppStatus(dados);
+        if (dados.usuario_whatsapp) {
+          setTelefoneWhatsApp(dados.usuario_whatsapp);
+        }
+      }
+    } catch (err) {
+      console.error('Erro ao buscar status do WhatsApp:', err);
+    }
+  };
+
+  const handleVincularWhatsApp = async (e) => {
+    e?.preventDefault();
+    if (!telefoneWhatsApp || !telefoneWhatsApp.trim()) {
+      showFeedback('error', 'Informe um número de WhatsApp com DDD para vincular.');
+      return;
+    }
+
+    try {
+      setVinculandoWpp(true);
+      const res = await api.post('/assistente/whatsapp/vincular', {
+        telefone: telefoneWhatsApp.trim(),
+      });
+      showFeedback('success', res.data?.mensagem || 'Número de WhatsApp vinculado com sucesso!');
+      await carregarStatusWhatsApp();
+    } catch (err) {
+      const msg = err.response?.data?.mensagem || 'Erro ao vincular número de WhatsApp.';
+      showFeedback('error', msg);
+    } finally {
+      setVinculandoWpp(false);
+    }
+  };
+
+
 
   useEffect(() => {
     async function carregarConfiguracoes() {
@@ -184,6 +233,7 @@ export default function Configuracoes() {
 
     carregarConfiguracoes();
     carregarCertificado();
+    carregarStatusWhatsApp();
   }, []);
 
   const handleUploadCertificado = async (e) => {
@@ -1005,6 +1055,67 @@ export default function Configuracoes() {
               </div>
             </div>
           )}
+        </div>
+
+        {/* CARD 5: Integração WhatsApp — Assistente IA Aranduê */}
+        <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-4">
+          <div className="border-b border-gray-100 pb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div>
+              <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                <Smartphone className="w-5 h-5 text-emerald-600" />
+                Integração WhatsApp — Assistente IA Aranduê
+              </h2>
+              <p className="text-xs text-gray-500 mt-0.5">
+                Vincule seu número de celular para consultar seu caixa, cadastrar clientes, criar orçamentos e tirar dúvidas fiscais direto pelo WhatsApp.
+              </p>
+            </div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <span
+                className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${
+                  wppStatus.bot?.conectado
+                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                    : 'bg-gray-100 text-gray-600 border border-gray-200'
+                }`}
+              >
+                {wppStatus.bot?.conectado
+                  ? `Gateway Conectado${wppStatus.bot?.numero ? ` (${wppStatus.bot.numero})` : ''}`
+                  : 'Gateway Desconectado'}
+              </span>
+              {wppStatus.usuario_whatsapp_verificado && wppStatus.usuario_whatsapp && (
+                <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                  <CheckCircle2 className="w-3.5 h-3.5" /> Número Vinculado
+                </span>
+              )}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+            <div className="md:col-span-2">
+              <label htmlFor="whatsapp_vinculo" className="block text-sm font-semibold text-gray-700 mb-1">
+                Seu Número de WhatsApp (com DDD)
+              </label>
+              <input
+                id="whatsapp_vinculo"
+                type="text"
+                value={telefoneWhatsApp}
+                onChange={(e) => setTelefoneWhatsApp(e.target.value)}
+                placeholder="Ex: (11) 98765-4321"
+                className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-gray-300 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+              />
+            </div>
+
+            <div>
+              <button
+                type="button"
+                onClick={handleVincularWhatsApp}
+                disabled={vinculandoWpp}
+                className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700 transition-colors shadow-sm disabled:opacity-50"
+              >
+                {vinculandoWpp ? <Loader2 className="w-4 h-4 animate-spin" /> : <Smartphone className="w-4 h-4" />}
+                Vincular WhatsApp
+              </button>
+            </div>
+          </div>
         </div>
       </form>
     </div>

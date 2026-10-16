@@ -8,10 +8,13 @@ CREATE TABLE IF NOT EXISTS usuarios (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nome VARCHAR(150) NOT NULL,
     email VARCHAR(180) NOT NULL,
+    whatsapp VARCHAR(20) NULL,
+    whatsapp_verificado TINYINT(1) NOT NULL DEFAULT 0,
     senha VARCHAR(255) NOT NULL,
     criado_em DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     atualizado_em DATETIME NULL ON UPDATE CURRENT_TIMESTAMP,
-    CONSTRAINT uk_usuarios_email UNIQUE (email)
+    CONSTRAINT uk_usuarios_email UNIQUE (email),
+    CONSTRAINT uk_usuarios_whatsapp UNIQUE (whatsapp)
 ) ENGINE=InnoDB;
 
 -- 2. Tabela de Clientes
@@ -180,11 +183,13 @@ CREATE TABLE IF NOT EXISTS conversas (
     id INT AUTO_INCREMENT PRIMARY KEY,
     usuario_id INT NOT NULL,
     titulo VARCHAR(120) NOT NULL,
+    canal ENUM('web', 'whatsapp') NOT NULL DEFAULT 'web',
     criado_em DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     atualizado_em DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT fk_conversas_usuario FOREIGN KEY (usuario_id) 
         REFERENCES usuarios(id) ON DELETE CASCADE ON UPDATE CASCADE,
-    INDEX idx_conversas_usuario_atualizado (usuario_id, atualizado_em)
+    INDEX idx_conversas_usuario_atualizado (usuario_id, atualizado_em),
+    INDEX idx_conversas_usuario_canal (usuario_id, canal, atualizado_em)
 ) ENGINE=InnoDB;
 
 -- 10. Tabela de Mensagens do Assistente IA
@@ -414,5 +419,45 @@ CREATE TABLE IF NOT EXISTS mei_configuracoes (
         REFERENCES usuarios(id) ON DELETE CASCADE ON UPDATE CASCADE,
     INDEX idx_mei_config_uf (uf)
 ) ENGINE=InnoDB;
+
+-- 17. Tabela de Dashboards Customizados do Usuário
+CREATE TABLE IF NOT EXISTS dashboards_usuario (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    usuario_id INT NOT NULL,
+    nome VARCHAR(100) NOT NULL,
+    descricao VARCHAR(255) NULL,
+    eh_padrao TINYINT(1) NOT NULL DEFAULT 0,
+    ordem INT NOT NULL DEFAULT 0,
+    criado_em DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    atualizado_em DATETIME NULL ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_dashboards_usuario FOREIGN KEY (usuario_id) 
+        REFERENCES usuarios(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    INDEX idx_dashboards_usuario (usuario_id),
+    INDEX idx_dashboards_ordem (usuario_id, ordem)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 18. Tabela de Widgets de Dashboards Customizados
+CREATE TABLE IF NOT EXISTS dashboard_widgets (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    dashboard_id INT NOT NULL,
+    usuario_id INT NOT NULL,
+    titulo VARCHAR(120) NOT NULL,
+    tipo_grafico VARCHAR(30) NOT NULL,
+    metrica VARCHAR(60) NOT NULL,
+    periodo VARCHAR(30) NOT NULL DEFAULT 'ultimos_6_meses',
+    largura INT NOT NULL DEFAULT 1,
+    ordem INT NOT NULL DEFAULT 0,
+    configuracoes JSON NULL,
+    criado_em DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_widgets_dashboard FOREIGN KEY (dashboard_id) 
+        REFERENCES dashboards_usuario(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT fk_widgets_usuario FOREIGN KEY (usuario_id) 
+        REFERENCES usuarios(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT chk_widget_largura CHECK (largura IN (1, 2)),
+    CONSTRAINT chk_widget_tipo CHECK (tipo_grafico IN ('bar', 'line', 'area', 'donut', 'pie', 'radial_gauge', 'kpi')),
+    INDEX idx_widgets_dashboard (dashboard_id),
+    INDEX idx_widgets_usuario (usuario_id),
+    INDEX idx_widgets_ordem (dashboard_id, ordem)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 SET FOREIGN_KEY_CHECKS = 1;

@@ -49,10 +49,65 @@ const usuarioRepository = {
    */
   async buscarPorId(id) {
     const [rows] = await pool.execute(
-      'SELECT id, nome, email, criado_em, atualizado_em FROM usuarios WHERE id = ?',
+      'SELECT id, nome, email, whatsapp, whatsapp_verificado, criado_em, atualizado_em FROM usuarios WHERE id = ?',
       [id]
     );
 
+    return rows[0] || null;
+  },
+
+  /**
+   * Busca um usuário por variações de número de telefone (whatsapp ou telefone_comercial).
+   * @param {string[]|string} variacoes - Lista de números candidatos (ex: com DDI, sem DDI, com 9, sem 9)
+   * @returns {Promise<Object|null>}
+   */
+  async buscarPorTelefoneOuWhatsapp(variacoes) {
+    const lista = Array.isArray(variacoes) ? variacoes.filter(Boolean) : [variacoes].filter(Boolean);
+    if (lista.length === 0) return null;
+
+    const placeholders = lista.map(() => '?').join(',');
+
+    // 1. Busca direta na tabela usuarios pelo campo whatsapp
+    const [rowsUsuarios] = await pool.query(
+      `SELECT id, nome, email, whatsapp, whatsapp_verificado, criado_em, atualizado_em 
+       FROM usuarios 
+       WHERE whatsapp IN (${placeholders})
+       LIMIT 1`,
+      lista
+    );
+
+    if (rowsUsuarios && rowsUsuarios.length > 0) {
+      return rowsUsuarios[0];
+    }
+
+    return null;
+  },
+
+  /**
+   * Atualiza o número de WhatsApp do usuário e o status de verificação.
+   * @param {number|string} usuario_id 
+   * @param {string} whatsapp 
+   * @param {number|boolean} verificado 
+   * @returns {Promise<boolean>}
+   */
+  async atualizarWhatsapp(usuario_id, whatsapp, verificado = 1) {
+    const [result] = await pool.execute(
+      'UPDATE usuarios SET whatsapp = ?, whatsapp_verificado = ? WHERE id = ?',
+      [whatsapp, verificado ? 1 : 0, usuario_id]
+    );
+    return result.affectedRows > 0;
+  },
+
+  /**
+   * Busca um usuário pelo número exato de WhatsApp.
+   * @param {string} whatsapp 
+   * @returns {Promise<Object|null>}
+   */
+  async buscarPorWhatsapp(whatsapp) {
+    const [rows] = await pool.execute(
+      'SELECT id, nome, email, whatsapp, whatsapp_verificado, criado_em, atualizado_em FROM usuarios WHERE whatsapp = ?',
+      [whatsapp]
+    );
     return rows[0] || null;
   }
 };

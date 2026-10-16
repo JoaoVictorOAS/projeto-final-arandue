@@ -133,4 +133,36 @@ describe('authMiddleware - Scoped Token Tests', () => {
     expect(res.status).toHaveBeenCalledWith(403);
     expect(next).not.toHaveBeenCalled();
   });
+
+  test('deve permitir acesso a /api/assistente/whatsapp com scope assistente:operator (paridade MCP)', () => {
+    const token = jwt.sign({ id: 1, scope: 'assistente:operator' }, JWT_SECRET);
+    req = {
+      method: 'POST',
+      baseUrl: '/api/assistente',
+      path: '/whatsapp/vincular',
+      headers: { authorization: `Bearer ${token}` }
+    };
+
+    authMiddleware(req, res, next);
+    expect(next).toHaveBeenCalled();
+    expect(req.usuario.scope).toBe('assistente:operator');
+  });
+
+  test('deve bloquear acesso a /api/assistente/whatsapp/resetar com scope assistente:operator (protecao do gateway compartilhado)', () => {
+    const token = jwt.sign({ id: 1, scope: 'assistente:operator' }, JWT_SECRET);
+    req = {
+      method: 'POST',
+      baseUrl: '/api/assistente',
+      path: '/whatsapp/resetar',
+      headers: { authorization: `Bearer ${token}` }
+    };
+
+    authMiddleware(req, res, next);
+    expect(res.status).toHaveBeenCalledWith(403);
+    expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
+      sucesso: false,
+      mensagem: expect.stringMatching(/operador do assistente/i)
+    }));
+    expect(next).not.toHaveBeenCalled();
+  });
 });

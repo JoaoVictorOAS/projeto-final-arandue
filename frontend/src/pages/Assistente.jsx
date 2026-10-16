@@ -105,6 +105,7 @@ function AssistenteView() {
           ) : (
             conversas.map((c) => {
               const ativa = c.id === conversaAtivaId;
+              const ehWhatsApp = c.canal === 'whatsapp';
               return (
                 <div
                   key={c.id}
@@ -116,8 +117,13 @@ function AssistenteView() {
                   }`}
                 >
                   <div className="flex items-center gap-2 min-w-0 pr-2">
-                    <MessageSquare className={`w-4 h-4 flex-shrink-0 ${ativa ? 'text-indigo-600' : 'text-slate-400'}`} />
+                    <MessageSquare className={`w-4 h-4 flex-shrink-0 ${ehWhatsApp ? 'text-emerald-600' : ativa ? 'text-indigo-600' : 'text-slate-400'}`} />
                     <span className="truncate">{c.titulo}</span>
+                    {ehWhatsApp && (
+                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 font-semibold flex-shrink-0">
+                        WhatsApp
+                      </span>
+                    )}
                   </div>
                   <button
                     type="button"
@@ -146,6 +152,11 @@ function AssistenteView() {
                 ? conversas.find((c) => c.id === conversaAtivaId)?.titulo || 'Conversa Ativa'
                 : 'Nova Consulta'}
             </span>
+            {conversaAtivaId && conversas.find((c) => c.id === conversaAtivaId)?.canal === 'whatsapp' && (
+              <span className="text-[11px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 font-semibold border border-emerald-200">
+                Canal WhatsApp
+              </span>
+            )}
             <span className="text-[11px] px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 font-medium border border-indigo-100">
               RAG Oficial MEI + Dados do Negócio
             </span>

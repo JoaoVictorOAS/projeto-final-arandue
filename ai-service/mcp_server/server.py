@@ -1,10 +1,57 @@
 import os
 import sys
-from typing import Optional, Dict, Any, List
+from datetime import datetime, date
+from zoneinfo import ZoneInfo
+from typing import Optional, Dict, Any, List, Tuple
 import httpx
 from mcp.server.mcpserver import MCPServer
 
 mcp_server_app = MCPServer("arandue-mcp-tenant")
+
+
+def _obter_data_atual_br() -> date:
+    """Retorna a data atual real no fuso horário de Brasília (America/Sao_Paulo)."""
+    try:
+        return datetime.now(ZoneInfo("America/Sao_Paulo")).date()
+    except Exception:
+        return datetime.now().date()
+
+
+def _validar_data_nao_alucinada(
+    data_str: Optional[str],
+    nome_campo: str = "vencimento"
+) -> Tuple[Optional[str], Optional[str]]:
+    """Valida se a data informada existe, está em formato válido e não é uma data alucinada no passado (ex: 2025-03-30 do treinamento do LLM)."""
+    hoje = _obter_data_atual_br()
+    if not data_str or not str(data_str).strip():
+        return None, (
+            f"O campo '{nome_campo}' não foi informado. É EXPRESSAMENTE PROIBIDO inventar uma data "
+            f"quando o usuário não especificou quando ocorrerá o {nome_campo}. "
+            f"Pergunte ao usuário qual a data desejada (data atual do sistema: {hoje.isoformat()})."
+        )
+
+    texto = str(data_str).strip()
+    parte_data = texto[:10]
+    try:
+        data_parsed = datetime.strptime(parte_data, "%Y-%m-%d").date()
+    except ValueError:
+        return None, (
+            f"Formato inválido para '{nome_campo}': '{texto}'. Utilize o formato YYYY-MM-DD "
+            f"(data atual do sistema: {hoje.isoformat()})."
+        )
+
+    if data_parsed < hoje:
+        return None, (
+            f"Data '{texto}' rejeitada para '{nome_campo}' pois está no passado! "
+            f"A data atual real do sistema é {hoje.isoformat()} (ano {hoje.year}). "
+            f"É TERMINANTEMENTE PROIBIDO usar datas do corte de treinamento do modelo (como 2024 ou 2025) ou datas inventadas. "
+            f"Se o usuário não informou a data de {nome_campo} na mensagem, NÃO chame esta ferramenta: "
+            f"pergunte ao usuário qual a data desejada. Se o usuário informou um prazo relativo (ex: 'hoje', 'amanhã', 'mês que vem'), "
+            f"recalcule a partir de {hoje.isoformat()}."
+        )
+
+    return texto, None
+
 
 def _get_env_config():
     node_url = os.environ.get("NODE_API_URL", "http://localhost:3001/api").rstrip("/")
@@ -206,9 +253,11 @@ async def obter_resumo_negocio() -> Dict[str, Any]:
     return await _fetch("/dashboard/resumo")
 
 @mcp_server_app.tool()
-async def obter_resumo_caixa(ano: int, mes: Optional[int] = None) -> Dict[str, Any]:
-    """Obtém faturamento, despesas e saldo apurado no livro caixa para um ano e mês específicos."""
-    params = {"ano": ano}
+async def obter_resumo_caixa(ano: Optional[int] = None, mes: Optional[int] = None) -> Dict[str, Any]:
+    """Obtém faturamento, despesas e saldo apurado no livro caixa para um ano e mês específicos. Se 'ano' for omitido, assume automaticamente o ano atual."""
+    hoje = _obter_data_atual_br()
+    ano_consulta = int(ano) if ano is not None else hoje.year
+    params: Dict[str, Any] = {"ano": ano_consulta}
     if mes is not None:
         params["mes"] = mes
     return await _fetch("/movimentacoes/resumo", params=params)
@@ -348,16 +397,20 @@ async def listar_clientes(busca: Optional[str] = None, limite: int = 20) -> Dict
 async def cadastrar_cobranca(
     cliente_id: int,
     valor: float,
-    vencimento: str,
+    vencimento: Optional[str] = None,
     observacoes: Optional[str] = "",
     orcamento_id: Optional[int] = None,
     agendamento_id: Optional[int] = None
 ) -> Dict[str, Any]:
-    """Cadastra uma nova cobrança/recebimento para um cliente (formato de vencimento: YYYY-MM-DD), podendo vincular a um atendimento (agendamento_id) ou orçamento (orcamento_id)."""
+    """Cadastra uma nova cobrança/recebimento para um cliente (formato de vencimento: YYYY-MM-DD), podendo vincular a um atendimento (agendamento_id) ou orçamento (orcamento_id). ATENÇÃO: NUNCA invente a data de vencimento e NUNCA utilize datas do treinamento do modelo (ex: 2025). Se o usuário não informou quando a cobrança vence, NÃO chame esta ferramenta e pergunte o vencimento ao usuário."""
+    vencimento_valido, erro_data = _validar_data_nao_alucinada(vencimento, "vencimento")
+    if erro_data:
+        return {"sucesso": False, "erro": erro_data}
+
     payload = {
         "cliente_id": cliente_id,
         "valor": float(valor),
-        "vencimento": vencimento,
+        "vencimento": vencimento_valido,
         "observacoes": observacoes or ""
     }
     if orcamento_id is not None:
@@ -500,11 +553,15 @@ async def cadastrar_agendamento(
     orcamento_id: Optional[int] = None,
     observacoes: Optional[str] = ""
 ) -> Dict[str, Any]:
-    """Agenda um atendimento com um cliente para um serviço cadastrado vinculado a um orçamento aprovado (data_hora no formato YYYY-MM-DD HH:MM)."""
+    """Agenda um atendimento com um cliente para um serviço cadastrado vinculado a um orçamento aprovado (data_hora no formato YYYY-MM-DD HH:MM). ATENÇÃO: NUNCA invente a data/hora do agendamento e NUNCA utilize datas de 2025."""
+    data_hora_valida, erro_data = _validar_data_nao_alucinada(data_hora, "data_hora")
+    if erro_data:
+        return {"sucesso": False, "erro": erro_data}
+
     payload = {
         "cliente_id": cliente_id,
         "servico_id": servico_id,
-        "data_hora": data_hora,
+        "data_hora": data_hora_valida,
         "observacoes": observacoes or ""
     }
     if orcamento_id is not None:
@@ -941,6 +998,22 @@ async def excluir_widget_dashboard(dashboard_id: int, widget_id: int) -> Dict[st
 async def excluir_dashboard(dashboard_id: int) -> Dict[str, Any]:
     """Exclui um painel de dashboard e todos os seus widgets associados."""
     return await _delete(f"/dashboards/{int(dashboard_id)}")
+
+# ==========================================
+# MÓDULO: INTEGRAÇÃO WHATSAPP (PARIDADE MCP)
+# ==========================================
+
+@mcp_server_app.tool()
+async def consultar_status_whatsapp() -> Dict[str, Any]:
+    """Consulta o status da conexão do Gateway WhatsApp Web e verifica o número de WhatsApp vinculado à conta do MEI."""
+    return await _fetch("/assistente/whatsapp/status")
+
+@mcp_server_app.tool()
+async def vincular_whatsapp(telefone: str) -> Dict[str, Any]:
+    """Vincula ou atualiza o número de telefone celular/WhatsApp do MEI para atendimento pelo assistente via WhatsApp."""
+    payload = {"telefone": str(telefone).strip()}
+    return await _post("/assistente/whatsapp/vincular", payload)
+
 
 if __name__ == "__main__":
     mcp_server_app.run()

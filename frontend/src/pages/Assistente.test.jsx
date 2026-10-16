@@ -235,4 +235,34 @@ describe('Módulo do Assistente IA', () => {
       expect(api.delete).toHaveBeenCalledWith('/assistente/conversas/301');
     });
   });
+
+  test('deve exibir o badge WhatsApp nas conversas originadas no canal whatsapp', async () => {
+    const conversasMock = [
+      { id: 401, titulo: 'WhatsApp - Assistente Aranduê', canal: 'whatsapp', atualizado_em: '2026-10-15T10:00:00Z' },
+    ];
+
+    api.get.mockImplementation((url) => {
+      if (url === '/assistente/conversas') {
+        return Promise.resolve({ data: { sucesso: true, dados: conversasMock } });
+      }
+      if (url === '/assistente/conversas/401/mensagens') {
+        return Promise.resolve({
+          data: {
+            sucesso: true,
+            dados: [{ id: 10, papel: 'usuario', conteudo: 'Quanto tenho em caixa?', fontes: [] }],
+          },
+        });
+      }
+      return Promise.resolve({ data: { sucesso: true, dados: [] } });
+    });
+
+    render(<Assistente />);
+
+    expect(await screen.findByText('WhatsApp - Assistente Aranduê')).toBeInTheDocument();
+    expect(screen.getByText('WhatsApp')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByText('WhatsApp - Assistente Aranduê'));
+
+    expect(await screen.findByText('Canal WhatsApp')).toBeInTheDocument();
+  });
 });

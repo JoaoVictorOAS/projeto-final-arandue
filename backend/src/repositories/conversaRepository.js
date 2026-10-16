@@ -2,28 +2,49 @@ const pool = require('../config/database');
 
 const conversaRepository = {
   /**
-   * Cria uma nova conversa vinculada ao usuário.
+   * Cria uma nova conversa vinculada ao usuário com suporte a canal (web ou whatsapp).
    */
-  async criarConversa(usuario_id, titulo) {
+  async criarConversa(usuario_id, titulo, canal = 'web') {
     const sql = `
-      INSERT INTO conversas (usuario_id, titulo)
-      VALUES (?, ?)
+      INSERT INTO conversas (usuario_id, titulo, canal)
+      VALUES (?, ?, ?)
     `;
-    const [result] = await pool.execute(sql, [usuario_id, titulo]);
+    const [result] = await pool.execute(sql, [usuario_id, titulo, canal]);
     return result.insertId;
+  },
+
+  /**
+   * Busca a conversa ativa mais recente para um determinado canal (ex: 'whatsapp').
+   */
+  async buscarConversaAtivaPorCanal(usuario_id, canal = 'whatsapp') {
+    const sql = `
+      SELECT id, usuario_id, titulo, canal, criado_em, atualizado_em
+      FROM conversas
+      WHERE usuario_id = ? AND canal = ?
+      ORDER BY atualizado_em DESC
+      LIMIT 1
+    `;
+    const [rows] = await pool.execute(sql, [usuario_id, canal]);
+    return rows[0] || null;
   },
 
   /**
    * Lista todas as conversas do usuário ordenadas pela data da última interação.
    */
-  async listarConversasPorUsuario(usuario_id) {
-    const sql = `
-      SELECT id, titulo, criado_em, atualizado_em
+  async listarConversasPorUsuario(usuario_id, canal = null) {
+    let sql = `
+      SELECT id, titulo, canal, criado_em, atualizado_em
       FROM conversas
       WHERE usuario_id = ?
-      ORDER BY atualizado_em DESC
     `;
-    const [rows] = await pool.execute(sql, [usuario_id]);
+    const params = [usuario_id];
+    if (canal) {
+      sql += ' AND canal = ?';
+      params.push(canal);
+    }
+    sql += ' ORDER BY atualizado_em DESC';
+
+    const [rows] = await pool.execute(sql, params);
     return rows;
   },
 
@@ -32,7 +53,7 @@ const conversaRepository = {
    */
   async buscarConversaPorId(conversa_id, usuario_id) {
     const sql = `
-      SELECT id, usuario_id, titulo, criado_em, atualizado_em
+      SELECT id, usuario_id, titulo, canal, criado_em, atualizado_em
       FROM conversas
       WHERE id = ? AND usuario_id = ?
     `;

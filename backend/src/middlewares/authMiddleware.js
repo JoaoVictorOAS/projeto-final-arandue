@@ -45,10 +45,13 @@ function authMiddleware(req, res, next) {
       const baseUrl = req.baseUrl || '';
       const path = req.path || '';
       const isAssistenteRoute = baseUrl.startsWith('/api/assistente') || path.startsWith('/api/assistente') || baseUrl === '/api/assistente';
+      const isStatusRoute = (path === '/whatsapp/status' || path === '/api/assistente/whatsapp/status' || path.startsWith('/whatsapp/status')) && req.method === 'GET';
+      const isVincularRoute = (path === '/whatsapp/vincular' || path === '/api/assistente/whatsapp/vincular' || path.startsWith('/whatsapp/vincular')) && req.method === 'POST';
+      const isAllowedWhatsappRoute = isStatusRoute || isVincularRoute;
       const isAuthMutation = (baseUrl.startsWith('/api/auth') || path.startsWith('/api/auth')) && req.method !== 'GET';
 
-      // Scoped tokens de operador do assistente podem ler e cadastrar (GET e POST), mas não podem excluir (DELETE) nem mutar auth ou chat
-      if (req.method === 'DELETE' || isAssistenteRoute || isAuthMutation) {
+      // Scoped tokens de operador do assistente podem ler e cadastrar (GET e POST), mas não podem excluir (DELETE) nem mutar auth, chat ou resetar o gateway WhatsApp
+      if (req.method === 'DELETE' || (isAssistenteRoute && !isAllowedWhatsappRoute) || isAuthMutation) {
         return res.status(403).json({
           sucesso: false,
           mensagem: 'Acesso negado: operação não permitida para o operador do assistente'

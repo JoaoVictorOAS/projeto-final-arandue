@@ -6,6 +6,11 @@ dist/
 build/
 .env
 
+# Sessões e credenciais do WhatsApp
+.wweb_auth_baileys/
+*.wweb_auth*
+
+
 # Banco vetorial de teste e arquivos temporários
 data/
 tmp/

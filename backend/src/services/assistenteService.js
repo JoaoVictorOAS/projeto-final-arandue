@@ -30,7 +30,7 @@ const assistenteService = {
   /**
    * Envia uma mensagem no assistente e processa a resposta (suporta síncrono ou assíncrono).
    */
-  async enviarMensagem(usuario_id, { conversa_id, mensagem, assincrono = false }) {
+  async enviarMensagem(usuario_id, { conversa_id, mensagem, assincrono = false, canal = 'web' }) {
     if (!usuario_id) {
       const erro = new Error('Identificação do usuário é obrigatória');
       erro.statusCode = 401;
@@ -65,7 +65,7 @@ const assistenteService = {
     } else {
       const titulo = mensagemLimpa.length > 60 ? mensagemLimpa.slice(0, 57) + '...' : mensagemLimpa;
       try {
-        idConversaAtiva = await conversaRepository.criarConversa(usuario_id, titulo);
+        idConversaAtiva = await conversaRepository.criarConversa(usuario_id, titulo, canal);
       } catch (err) {
         if (err.code === 'ER_NO_REFERENCED_ROW_2' || err.message?.includes('foreign key constraint fails')) {
           const erroAuth = new Error('Sessão expirada ou usuário não encontrado no banco de dados. Por favor, saia e faça login novamente.');

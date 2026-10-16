@@ -546,9 +546,69 @@ Esta documentação detalha os padrões arquiteturais, cabeçalhos, autenticaç�
 }
 ```
 
-### 10.4 Excluir Conversa
+### 10.5 Excluir Conversa
 - **Método:** `DELETE`
 - **Rota:** `/api/assistente/conversas/:id`
 - **Isolamento:** Retorna `404 Not Found` se a conversa pertencer a outro usuário.
 - **Resposta Sucesso (`204 No Content`):** Vazio.
+
+### 10.6 Consultar Status da Integração WhatsApp
+- **Método:** `GET`
+- **Rota:** `/api/assistente/whatsapp/status`
+- **Descrição:** Retorna o status da conexão do Gateway WhatsApp Web (Baileys) no servidor e o número de WhatsApp vinculado à conta do MEI autenticado.
+- **Resposta Sucesso (`200 OK`):**
+```json
+{
+  "sucesso": true,
+  "mensagem": "Status do WhatsApp obtido com sucesso",
+  "dados": {
+    "bot": {
+      "status": "conectado",
+      "conectado": true,
+      "numero": "5511999990000",
+      "qrCode": null
+    },
+    "usuario_whatsapp": "5511987654321",
+    "usuario_whatsapp_verificado": true
+  }
+}
 ```
+
+### 10.7 Vincular Número de WhatsApp do MEI
+- **Método:** `POST`
+- **Rota:** `/api/assistente/whatsapp/vincular`
+- **Payload:** `{ "telefone": "(11) 98765-4321" }`
+- **Validações:**
+  - `400 Bad Request` caso o telefone não seja um celular brasileiro válido (DDD + 8 ou 9 dígitos).
+  - `409 Conflict` caso o número já esteja vinculado a outra conta MEI.
+- **Resposta Sucesso (`200 OK`):**
+```json
+{
+  "sucesso": true,
+  "mensagem": "Número de WhatsApp vinculado com sucesso ao assistente!",
+  "dados": {
+    "whatsapp": "5511987654321",
+    "formatado": "+55 (11) 98765-4321",
+    "whatsapp_verificado": true
+  }
+}
+```
+
+### 10.8 Reiniciar Sessão do Gateway WhatsApp (Gerar Novo QR Code)
+- **Método:** `POST`
+- **Rota:** `/api/assistente/whatsapp/resetar`
+- **Descrição:** Encerra o socket ativo do Baileys, limpa as credenciais locais (`.wweb_auth_baileys`) e reinicia a conexão gerando um novo QR Code no terminal do servidor.
+- **Resposta Sucesso (`200 OK`):**
+```json
+{
+  "sucesso": true,
+  "mensagem": "Sessão do WhatsApp reiniciada com sucesso. Um novo QR Code foi gerado no terminal do servidor.",
+  "dados": {
+    "status": "aguardando_qr",
+    "conectado": false,
+    "numero": null,
+    "qrCode": "2@..."
+  }
+}
+```
+
