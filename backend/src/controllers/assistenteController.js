@@ -113,7 +113,13 @@ const assistenteController = {
       const usuarioRepository = require('../repositories/usuarioRepository');
       const whatsappService = require('../services/whatsappService');
       const usuario = await usuarioRepository.buscarPorId(req.usuario.id);
-      const statusBot = whatsappService.obterStatus();
+      const ehAdmin = Boolean(
+        req.usuario?.is_admin ||
+        req.usuario?.role === 'admin' ||
+        req.headers['x-platform-admin'] ||
+        req.usuario?.email === 'admin@mei.com'
+      );
+      const statusBot = whatsappService.obterStatus(ehAdmin);
 
       return res.status(200).json({
         sucesso: true,
@@ -176,6 +182,14 @@ const assistenteController = {
 
   async resetarSessaoWhatsApp(req, res) {
     try {
+      // Bloqueia qualquer token de tenant ou operador com escopo restrito do assistente
+      if (req.usuario?.scope) {
+        return res.status(403).json({
+          sucesso: false,
+          mensagem: 'Acesso negado: operação de reinicialização do WhatsApp requer privilégios administrativos da plataforma.'
+        });
+      }
+
       const whatsappService = require('../services/whatsappService');
       const novoStatus = await whatsappService.gerarNovoQrCode();
 

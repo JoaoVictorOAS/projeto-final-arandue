@@ -24,12 +24,22 @@ describe('WhatsAppService - Gateway do WhatsApp com Assistente IA', () => {
   });
 
   describe('obterStatus', () => {
-    it('deve retornar status, indicador de conexao e número do bot', () => {
-      const status = whatsappService.obterStatus();
+    it('deve retornar status, indicador de conexao e número do bot omitindo qrCode para tenants', () => {
+      whatsappService.qrCode = 'codigo_qr_secreto';
+      const status = whatsappService.obterStatus(false);
 
       expect(status.status).toBe('conectado');
       expect(status.conectado).toBe(true);
       expect(status.numero).toBe('5511999990000');
+      expect(status.qrCode).toBeUndefined();
+    });
+
+    it('deve expor qrCode apenas quando chamado com privilégio administrativo', () => {
+      whatsappService.qrCode = 'codigo_qr_secreto';
+      const status = whatsappService.obterStatus(true);
+
+      expect(status.qrCode).toBe('codigo_qr_secreto');
+      expect(whatsappService.obterStatusAdmin().qrCode).toBe('codigo_qr_secreto');
     });
   });
 
@@ -254,6 +264,26 @@ describe('WhatsAppService - Gateway do WhatsApp com Assistente IA', () => {
 
       expect(aceito).toBe(false);
       expect(whatsappService._enfileirarMensagem).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('desconectar', () => {
+    it('deve fazer logout, remover event listeners e encerrar o socket', async () => {
+      const mockEv = { removeAllListeners: jest.fn() };
+      const activeSock = {
+        logout: jest.fn().mockResolvedValue(true),
+        end: jest.fn(),
+        ev: mockEv
+      };
+      whatsappService.sock = activeSock;
+
+      await whatsappService.desconectar();
+
+      expect(activeSock.logout).toHaveBeenCalled();
+      expect(mockEv.removeAllListeners).toHaveBeenCalled();
+      expect(activeSock.end).toHaveBeenCalled();
+      expect(whatsappService.sock).toBeNull();
+      expect(whatsappService.status).toBe('desconectado');
     });
   });
 });

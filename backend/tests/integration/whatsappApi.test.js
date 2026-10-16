@@ -2,6 +2,7 @@ const request = require('supertest');
 const app = require('../../src/app');
 const pool = require('../../src/config/database');
 const usuarioRepository = require('../../src/repositories/usuarioRepository');
+const whatsappService = require('../../src/services/whatsappService');
 
 describe('Rotas de WhatsApp do Assistente (/api/assistente/whatsapp)', () => {
   let tokenUser1;
@@ -141,6 +142,12 @@ describe('Rotas de WhatsApp do Assistente (/api/assistente/whatsapp)', () => {
     });
 
     it('deve permitir resetar a sessão do WhatsApp e retornar status de reconexão', async () => {
+      const spyGerarNovoQrCode = jest.spyOn(whatsappService, 'gerarNovoQrCode').mockResolvedValue({
+        status: 'aguardando_qr',
+        conectado: false,
+        numero: null
+      });
+
       const res = await request(app)
         .post('/api/assistente/whatsapp/resetar')
         .set('Authorization', `Bearer ${tokenUser1}`);
@@ -148,6 +155,9 @@ describe('Rotas de WhatsApp do Assistente (/api/assistente/whatsapp)', () => {
       expect(res.status).toBe(200);
       expect(res.body.sucesso).toBe(true);
       expect(res.body.dados).toHaveProperty('status');
+
+      expect(spyGerarNovoQrCode).toHaveBeenCalled();
+      spyGerarNovoQrCode.mockRestore();
     });
   });
 });

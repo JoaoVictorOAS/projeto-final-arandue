@@ -41,14 +41,26 @@ class WhatsAppService {
 
   /**
    * Retorna o status atual da conexão do WhatsApp.
+   * O qrCode é omitido por padrão para proteger o gateway compartilhado, sendo exposto apenas via admin.
+   * @param {boolean} [isAdmin=false]
    */
-  obterStatus() {
-    return {
+  obterStatus(isAdmin = false) {
+    const statusObj = {
       status: this.status,
       conectado: this.status === 'conectado',
-      numero: this.numeroBot,
-      qrCode: this.qrCode
+      numero: this.numeroBot
     };
+    if (isAdmin) {
+      statusObj.qrCode = this.qrCode;
+    }
+    return statusObj;
+  }
+
+  /**
+   * Retorna o status administrativo completo da conexão do WhatsApp (com qrCode).
+   */
+  obterStatusAdmin() {
+    return this.obterStatus(true);
   }
 
   /**
@@ -165,13 +177,24 @@ class WhatsAppService {
 
       const { state, saveCreds } = await useMultiFileAuthState(this.authPath);
 
-      this.sock = makeWASocket({
+      if (this.sock) {
+        try {
+          this.sock.ev?.removeAllListeners?.();
+        } catch (e) {}
+        try {
+          this.sock.end?.();
+        } catch (e) {}
+        this.sock = null;
+      }
+
+      const socket = makeWASocket({
         auth: state,
         printQRInTerminal: false,
         logger: pino({ level: 'silent' })
       });
+      this.sock = socket;
 
-      this.sock.ev.on('creds.update', async () => {
+      socket.ev.on('creds.update', async () => {
         try {
           if (!fs.existsSync(this.authPath)) {
             fs.mkdirSync(this.authPath, { recursive: true });
@@ -182,7 +205,11 @@ class WhatsAppService {
         }
       });
 
-      this.sock.ev.on('connection.update', (update) => {
+      socket.ev.on('connection.update', (update) => {
+        if (this.sock !== socket) {
+          return;
+        }
+
         const { connection, lastDisconnect, qr } = update;
 
         if (qr) {
@@ -203,6 +230,17 @@ class WhatsAppService {
           const deveReconectar = statusCode !== DisconnectReason.loggedOut;
 
           console.log(`[WhatsApp] Conexão encerrada (Status: ${statusCode || 'desconhecido'}). Reconectando: ${deveReconectar}`);
+
+          try {
+            socket.ev?.removeAllListeners?.();
+          } catch (e) {}
+          try {
+            socket.end?.();
+          } catch (e) {}
+          if (this.sock === socket) {
+            this.sock = null;
+          }
+
           if (deveReconectar) {
             this.inicializado = false;
             setTimeout(() => this.inicializar(), 3000);
@@ -220,13 +258,13 @@ class WhatsAppService {
         } else if (connection === 'open') {
           this.status = 'conectado';
           this.qrCode = null;
-          this.numeroBot = this.sock.user?.id?.replace(/[:@].*$/, '') || null;
-          this.lidBot = this.sock.user?.lid?.replace(/[:@].*$/, '') || null;
+          this.numeroBot = socket.user?.id?.replace(/[:@].*$/, '') || null;
+          this.lidBot = socket.user?.lid?.replace(/[:@].*$/, '') || null;
           console.log(`[WhatsApp] ✅ Conectado com sucesso ao número oficial do Aranduê: ${this.numeroBot || ''}!`);
         }
       });
 
-      this.sock.ev.on('messages.upsert', async ({ messages, type }) => {
+      socket.ev.on('messages.upsert', async ({ messages, type }) => {
         if (type !== 'notify' && type !== 'append') return;
 
         for (const msg of messages) {
@@ -368,7 +406,7 @@ class WhatsAppService {
       }
 
       if (process.env.NODE_ENV !== 'test') {
-        console.log(`[WhatsApp] 📩 Mensagem de ${usuario.nome} (${tel.comDdi || identificadorTelefone}): "${texto}"`);
+        console.log(`[WhatsApp] 📩 Mensagem recebida para usuário ${usuario.id} (tamanho: ${texto.length})`);
       }
 
       // 2. Feedback visual imediato: indica "digitando..." no WhatsApp
@@ -416,7 +454,7 @@ class WhatsAppService {
       }
 
       if (process.env.NODE_ENV !== 'test') {
-        console.log(`[WhatsApp] ✅ Resposta enviada para ${usuario.nome} (${tel.comDdi || identificadorTelefone})`);
+        console.log(`[WhatsApp] ✅ Resposta enviada para usuário ${usuario.id}`);
       }
 
     } catch (error) {
@@ -444,11 +482,18 @@ class WhatsAppService {
    */
   async desconectar() {
     if (this.sock) {
+      const activeSock = this.sock;
       try {
-        await this.sock.logout();
+        await activeSock.logout();
       } catch (e) {
         // Ignora erro no logout
       }
+      try {
+        activeSock.ev?.removeAllListeners?.();
+      } catch (e) {}
+      try {
+        activeSock.end?.();
+      } catch (e) {}
       this.sock = null;
     }
     this.status = 'desconectado';
@@ -478,7 +523,7 @@ class WhatsAppService {
     this.qrCode = null;
 
     await this.inicializar();
-    return this.obterStatus();
+    return this.obterStatusAdmin();
   }
 }
 

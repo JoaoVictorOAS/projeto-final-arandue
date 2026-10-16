@@ -7,7 +7,7 @@ from google import genai
 from google.genai import types
 
 from app.rag.stores.base import Trecho
-from app.llm.prompts import SYSTEM_PROMPT, build_system_prompt, build_context_prompt
+from app.llm.prompts import SYSTEM_PROMPT, _get_now_br, build_system_prompt, build_context_prompt
 from mcp.client.session import ClientSession
 
 logger = logging.getLogger(__name__)
@@ -131,7 +131,8 @@ class Orchestrator:
         if not self._client:
             raise RuntimeError("GEMINI_API_KEY não configurada no serviço de IA.")
 
-        prompt_conteudo = build_context_prompt(mensagem, trechos, rag_backend)
+        now_br = _get_now_br()
+        prompt_conteudo = build_context_prompt(mensagem, trechos, rag_backend, now=now_br)
         contents: List[Any] = []
 
         # Adiciona histórico anterior (papel: usuario / assistente)
@@ -151,7 +152,7 @@ class Orchestrator:
         # Prepara tools do MCP
         function_decls = await self._mcp_tools_to_declarations(mcp_session)
         tools = [types.Tool(function_declarations=function_decls)] if function_decls else None
-        system_prompt_dinamico = build_system_prompt()
+        system_prompt_dinamico = build_system_prompt(now=now_br)
 
         config = types.GenerateContentConfig(
             system_instruction=system_prompt_dinamico,

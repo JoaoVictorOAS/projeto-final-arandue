@@ -39,7 +39,7 @@ function normalizarNumeroWhatsApp(input) {
   let numero = '';
   let comDdi = digitos;
 
-  if (digitos.startsWith('55') && digitos.length >= 10) {
+  if (digitos.startsWith('55') && (digitos.length === 12 || digitos.length === 13)) {
     ddd = digitos.slice(2, 4);
     numero = digitos.slice(4);
     comDdi = digitos;

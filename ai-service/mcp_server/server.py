@@ -1014,10 +1014,6 @@ async def vincular_whatsapp(telefone: str) -> Dict[str, Any]:
     payload = {"telefone": str(telefone).strip()}
     return await _post("/assistente/whatsapp/vincular", payload)
 
-@mcp_server_app.tool()
-async def reiniciar_sessao_whatsapp() -> Dict[str, Any]:
-    """Reinicia a sessão do Gateway WhatsApp do servidor e gera um novo QR Code de pareamento."""
-    return await _post("/assistente/whatsapp/resetar", {})
 
 if __name__ == "__main__":
     mcp_server_app.run()

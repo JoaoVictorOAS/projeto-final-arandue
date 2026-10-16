@@ -5,7 +5,6 @@ from unittest.mock import patch, AsyncMock
 from mcp_server.server import (
     consultar_status_whatsapp,
     vincular_whatsapp,
-    reiniciar_sessao_whatsapp,
 )
 
 
@@ -56,34 +55,15 @@ async def test_vincular_whatsapp_mcp():
         )
 
 
-@pytest.mark.asyncio
-async def test_reiniciar_sessao_whatsapp_mcp():
-    mock_resp = {
-        "sucesso": True,
-        "dados": {
-            "status": "aguardando_qr",
-            "conectado": False,
-            "numero": None,
-            "qrCode": "mock_qr_code",
-        },
-    }
-    with patch("mcp_server.server._post", new_callable=AsyncMock) as mock_post:
-        mock_post.return_value = mock_resp
-        res = await reiniciar_sessao_whatsapp()
-        assert res.get("sucesso") is True
-        assert res["dados"]["status"] == "aguardando_qr"
-        mock_post.assert_called_once_with("/assistente/whatsapp/resetar", {})
-
-
 def test_mcp_security_no_tenant_parameters_whatsapp():
     """Valida que nenhuma ferramenta MCP de WhatsApp expõe parâmetros de tenant."""
     for tool_func in [
         consultar_status_whatsapp,
         vincular_whatsapp,
-        reiniciar_sessao_whatsapp,
     ]:
         params = inspect.signature(tool_func).parameters.keys()
         for forbidden in ["tenant", "tenant_id", "usuario", "usuario_id", "user_id"]:
             assert (
                 forbidden not in params
             ), f"Tool {tool_func.__name__} expõe parâmetro proibido '{forbidden}'"
+

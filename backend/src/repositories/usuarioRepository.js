@@ -80,21 +80,6 @@ const usuarioRepository = {
       return rowsUsuarios[0];
     }
 
-    // 2. Busca de fallback na tabela mei_configuracoes (telefone_comercial)
-    const [rowsConfig] = await pool.query(
-      `SELECT u.id, u.nome, u.email, u.whatsapp, u.whatsapp_verificado, u.criado_em, u.atualizado_em,
-              c.telefone_comercial, c.razao_social, c.nome_fantasia
-       FROM mei_configuracoes c
-       INNER JOIN usuarios u ON u.id = c.usuario_id
-       WHERE c.telefone_comercial IN (${placeholders})
-       LIMIT 1`,
-      lista
-    );
-
-    if (rowsConfig && rowsConfig.length > 0) {
-      return rowsConfig[0];
-    }
-
     return null;
   },
 

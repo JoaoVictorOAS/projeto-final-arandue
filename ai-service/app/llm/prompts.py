@@ -1,5 +1,5 @@
 import calendar
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import List, Optional
 from zoneinfo import ZoneInfo
 from app.rag.stores.base import Trecho
@@ -32,12 +32,17 @@ MESES_PT = [
 
 
 def _get_now_br(now: Optional[datetime] = None) -> datetime:
-    if now is not None:
-        return now
     try:
-        return datetime.now(ZoneInfo("America/Sao_Paulo"))
+        tz = ZoneInfo("America/Sao_Paulo")
     except Exception:
-        return datetime.now()
+        tz = timezone(timedelta(hours=-3))
+
+    if now is not None:
+        if now.tzinfo is not None and now.tzinfo.utcoffset(now) is not None:
+            return now.astimezone(tz)
+        return now
+
+    return datetime.now(tz)
 
 
 def build_runtime_context_pack(now: Optional[datetime] = None) -> str:
