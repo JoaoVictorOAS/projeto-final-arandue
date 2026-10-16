@@ -281,7 +281,7 @@ Registro individual de cada mensagem trocada na conversa, com suporte multimodal
 | `conversa_id` | `INT` | Não | — | Chave estrangeira -> `conversas(id)` (CASCADE) |
 | `papel` | `ENUM('usuario','assistente')` | Não | — | Papel do emissor |
 | `tipo_midia` | `ENUM('texto','audio','imagem')` | Não | `'texto'` | Tipo de mídia da mensagem |
-| `midia_mime_type` | `VARCHAR(100)` | Sim | `NULL` | MIME type do anexo (ex: `audio/ogg`, `image/png`) |
+| `midia_mime_type` | `VARCHAR(50)` | Sim | `NULL` | MIME type do anexo (ex: `audio/ogg`, `image/png`) |
 | `transcricao_audio`| `TEXT` | Sim | `NULL` | Transcrição textual do áudio via IA Gemini |
 | `status` | `ENUM('processando','concluida','erro')` | Não | `'concluida'` | Status de processamento assíncrono |
 | `erro_mensagem` | `VARCHAR(500)` | Sim | `NULL` | Detalhe do erro em caso de falha |
@@ -589,7 +589,7 @@ CREATE TABLE IF NOT EXISTS mensagens (
     conversa_id INT NOT NULL,
     papel ENUM('usuario', 'assistente') NOT NULL,
     tipo_midia ENUM('texto', 'audio', 'imagem') NOT NULL DEFAULT 'texto',
-    midia_mime_type VARCHAR(100) NULL,
+    midia_mime_type VARCHAR(50) NULL,
     transcricao_audio TEXT NULL,
     status ENUM('processando', 'concluida', 'erro') NOT NULL DEFAULT 'concluida',
     erro_mensagem VARCHAR(500) NULL,

@@ -626,12 +626,12 @@ Esta documentação detalha os padrões arquiteturais, cabeçalhos, autenticaç�
 - **Payload:**
 ```json
 {
-  "dados_base64": "GkXfo59ChoEBQveBAULygQ8...",
+  "audio_base64": "GkXfo59ChoEBQveBAULygQ8...",
   "mime_type": "audio/ogg; codecs=opus"
 }
 ```
 - **Validações:**
-  - `400 Bad Request` se `dados_base64` não for informado.
+  - `400 Bad Request` se `audio_base64` não for informado.
 - **Resposta Sucesso (`200 OK`):**
 ```json
 {
@@ -650,20 +650,27 @@ Esta documentação detalha os padrões arquiteturais, cabeçalhos, autenticaç�
 - **Payload:**
 ```json
 {
-  "dados_base64": "iVBORw0KGgoAAAANSUhEUgAA...",
+  "imagem_base64": "iVBORw0KGgoAAAANSUhEUgAA...",
   "mime_type": "image/jpeg",
-  "prompt": "Extraia o valor total, emitente e data deste comprovante."
+  "instrucao": "Extraia o valor total, emitente e data deste comprovante."
 }
 ```
 - **Validações:**
-  - `400 Bad Request` se `dados_base64` não for fornecido.
+  - `400 Bad Request` se `imagem_base64` não for fornecido.
 - **Resposta Sucesso (`200 OK`):**
 ```json
 {
   "sucesso": true,
   "mensagem": "Imagem analisada com sucesso",
   "dados": {
-    "analise": "O comprovante refere-se a um pagamento no valor de R$ 150,00 emitido em 15/10/2026 para Papelaria Central."
+    "tipo_detectado": "comprovante",
+    "descricao": "Comprovante de pagamento referente a compra de materiais de escritório.",
+    "dados_estruturados": {
+      "valor_total": 150.00,
+      "emitente": "Papelaria Central",
+      "data": "2026-10-15"
+    },
+    "sugestao_acao": "Registrar despesa de R$ 150,00 no Livro Caixa na categoria Material de Escritório."
   }
 }
 ```
