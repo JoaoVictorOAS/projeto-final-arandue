@@ -54,7 +54,10 @@ describe('E2E Integration - Mensagens para o próprio número (Self-Messaging)',
     whatsappService.sock = mockSock;
     whatsappService.status = 'conectado';
     whatsappService.numeroBot = numeroProprio;
+    whatsappService.lidBot = '136361000607750';
     whatsappService.mensagensEnviadasPeloBot.clear();
+    whatsappService.textosEnviadosPeloBot.clear();
+    whatsappService.mensagensProcessadas.clear();
   });
 
   it('deve processar mensagem enviada pelo MEI para si mesmo, gerar token de escopo, chamar IA e evitar loop', async () => {
@@ -116,5 +119,41 @@ describe('E2E Integration - Mensagens para o próprio número (Self-Messaging)',
     const aceitoEco = whatsappService.tratarMensagemUpsert(msgEchoBot);
     expect(aceitoEco).toBe(false);
     expect(whatsappService.mensagensEnviadasPeloBot.has(idMensagemBot)).toBe(false);
+  });
+
+  it('deve processar mensagem para si mesmo quando o WhatsApp Multi-Device envia remoteJid no formato @lid', async () => {
+    aiServiceClient.enviarMensagem.mockResolvedValue({
+      resposta: 'Estou online! Seu número vinculado está funcionando perfeitamente.',
+      fontes: [],
+      tools_usadas: []
+    });
+
+    const jidLidProprio = '136361000607750@lid';
+
+    const msgSelfLid = {
+      key: {
+        id: 'user_sent_lid_self_1',
+        remoteJid: jidLidProprio,
+        fromMe: true
+      },
+      message: {
+        ephemeralMessage: {
+          message: {
+            extendedTextMessage: {
+              text: 'Teste'
+            }
+          }
+        }
+      }
+    };
+
+    const aceito = whatsappService.tratarMensagemUpsert(msgSelfLid);
+    expect(aceito).toBe(true);
+
+    await whatsappService.filasPorJid.get(jidLidProprio);
+
+    expect(mockSock.sendMessage).toHaveBeenCalledWith(jidLidProprio, {
+      text: 'Estou online! Seu número vinculado está funcionando perfeitamente.'
+    });
   });
 });

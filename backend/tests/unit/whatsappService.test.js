@@ -140,7 +140,10 @@ describe('WhatsAppService - Gateway do WhatsApp com Assistente IA', () => {
   describe('tratarMensagemUpsert - Mensagens para o próprio número (Self-Messaging) e Anti-Loop', () => {
     beforeEach(() => {
       whatsappService.numeroBot = '5511999990000';
+      whatsappService.lidBot = '136361000607750';
       whatsappService.mensagensEnviadasPeloBot.clear();
+      whatsappService.textosEnviadosPeloBot.clear();
+      whatsappService.mensagensProcessadas.clear();
       jest.spyOn(whatsappService, '_enfileirarMensagem').mockImplementation(() => {});
     });
 
@@ -165,8 +168,34 @@ describe('WhatsAppService - Gateway do WhatsApp com Assistente IA', () => {
       expect(aceito).toBe(true);
       expect(whatsappService._enfileirarMensagem).toHaveBeenCalledWith(
         '5511999990000@s.whatsapp.net',
-        'Qual é o meu saldo de hoje?'
+        'Qual é o meu saldo de hoje?',
+        msgSelf.key
       );
+    });
+
+    it('deve aceitar mensagem enviada para si mesmo quando o WhatsApp Multi-Device usar JID no formato @lid', () => {
+      const msgSelfLid = {
+        key: {
+          id: 'msg_self_lid_1',
+          remoteJid: '136361000607750@lid',
+          fromMe: true
+        },
+        message: {
+          extendedTextMessage: {
+            text: 'Teste'
+          }
+        }
+      };
+
+      const aceito = whatsappService.tratarMensagemUpsert(msgSelfLid);
+
+      expect(aceito).toBe(true);
+      expect(whatsappService._enfileirarMensagem).toHaveBeenCalledWith(
+        '136361000607750@lid',
+        'Teste',
+        msgSelfLid.key
+      );
+      expect(whatsappService.resolverIdentificadorTelefone('136361000607750@lid', msgSelfLid.key)).toBe('5511999990000');
     });
 
     it('deve descartar mensagens enviadas pelo próprio bot (anti-loop) registradas no Set', () => {
