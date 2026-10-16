@@ -277,9 +277,9 @@ Esta documentação detalha os padrões arquiteturais, cabeçalhos, autenticaç�
 ## 9. Módulo de Dashboard (`/api/dashboard`)
 *Todas as rotas requerem autenticação.*
 
-### 9.1 Resumo Consolidado do Negócio
+### 9.1 Resumo Consolidado do Negócio (Legado)
 - **Método:** `GET`
-- **Rota:** `/api/dashboard/resumo`
+- **Rota:** `/api/dashboard/resumo` (ou alias `GET /api/dashboard`)
 - **Resposta Sucesso (`200 OK`):**
 ```json
 {
@@ -308,6 +308,94 @@ Esta documentação detalha os padrões arquiteturais, cabeçalhos, autenticaç�
   }
 }
 ```
+
+### 9.2 Listar Dashboards do MEI (com Auto-Provisionamento)
+- **Método:** `GET`
+- **Rota:** `/api/dashboards`
+- **Descrição:** Retorna a lista de painéis do MEI com seus respectivos widgets. Caso o MEI não possua dashboards cadastrados, provisiona automaticamente o dashboard "Principal" com os 3 widgets essenciais (Termômetro MEI, Fluxo de Caixa e Despesas por Categoria).
+- **Resposta Sucesso (`200 OK`):**
+```json
+{
+  "sucesso": true,
+  "mensagem": "Dashboards obtidos com sucesso",
+  "dados": [
+    {
+      "id": 1,
+      "nome": "Principal",
+      "descricao": "Visão geral e indicadores principais do negócio",
+      "eh_padrao": 1,
+      "ordem": 0,
+      "widgets": [
+        {
+          "id": 1,
+          "titulo": "Termômetro do Teto MEI",
+          "tipo_grafico": "radial_gauge",
+          "metrica": "limite_mei",
+          "periodo": "ano_atual",
+          "largura": 2,
+          "ordem": 0
+        }
+      ]
+    }
+  ]
+}
+```
+
+### 9.3 Catálogo Seguro de Métricas Analíticas
+- **Método:** `GET`
+- **Rota:** `/api/dashboards/metricas/catalogo`
+- **Resposta Sucesso (`200 OK`):**
+```json
+{
+  "sucesso": true,
+  "mensagem": "Catálogo de métricas analíticas obtido com sucesso",
+  "dados": {
+    "metricas": [
+      { "chave": "limite_mei", "nome": "Faturamento vs Teto MEI", "graficos_compativeis": ["radial_gauge", "kpi"] },
+      { "chave": "fluxo_caixa", "nome": "Fluxo de Caixa (Entradas vs Saídas)", "graficos_compativeis": ["bar", "area", "line"] },
+      { "chave": "despesas_categoria", "nome": "Despesas por Categoria", "graficos_compativeis": ["donut", "pie", "bar"] },
+      { "chave": "top_servicos", "nome": "Serviços e Produtos Mais Vendidos", "graficos_compativeis": ["bar", "pie", "donut"] },
+      { "chave": "cobrancas_status", "nome": "Status das Cobranças", "graficos_compativeis": ["donut", "pie", "bar"] },
+      { "chave": "funil_orcamentos", "nome": "Funil de Orçamentos", "graficos_compativeis": ["bar", "donut"] },
+      { "chave": "novos_clientes", "nome": "Evolução de Novos Clientes", "graficos_compativeis": ["line", "bar", "area"] }
+    ],
+    "periodos": ["mes_atual", "ultimos_3_meses", "ultimos_6_meses", "ano_atual", "historico_total"]
+  }
+}
+```
+
+### 9.4 Obter Dashboard Detalhado com Dados Computados
+- **Método:** `GET`
+- **Rota:** `/api/dashboards/:id`
+- **Descrição:** Retorna o dashboard com os dados computados de cada métrica em tempo real.
+
+### 9.5 Criar Novo Dashboard
+- **Método:** `POST`
+- **Rota:** `/api/dashboards`
+- **Payload:** `{ "nome": "Acompanhamento de Vendas", "descricao": "Metas e clientes" }`
+- **Resposta Sucesso (`201 Created`)**
+
+### 9.6 Adicionar Widget Gráfico ao Dashboard
+- **Método:** `POST`
+- **Rota:** `/api/dashboards/:id/widgets`
+- **Payload:**
+```json
+{
+  "titulo": "Evolução de Vendas",
+  "tipo_grafico": "bar",
+  "metrica": "fluxo_caixa",
+  "periodo": "ultimos_6_meses",
+  "largura": 1
+}
+```
+- **Resposta Sucesso (`201 Created`)**
+
+### 9.7 Atualizar e Excluir Widgets / Dashboards
+- `PUT /api/dashboards/:id` — Atualiza título, descrição ou ordem do painel.
+- `DELETE /api/dashboards/:id` — Exclui painel customizado (impede exclusão do único painel ativo).
+- `PUT /api/dashboards/:id/widgets/:widgetId` — Atualiza título, métrica, tipo, período ou largura do widget.
+- `DELETE /api/dashboards/:id/widgets/:widgetId` — Remove widget do painel.
+
 
 ---
 
@@ -458,9 +546,69 @@ Esta documentação detalha os padrões arquiteturais, cabeçalhos, autenticaç�
 }
 ```
 
-### 10.4 Excluir Conversa
+### 10.5 Excluir Conversa
 - **Método:** `DELETE`
 - **Rota:** `/api/assistente/conversas/:id`
 - **Isolamento:** Retorna `404 Not Found` se a conversa pertencer a outro usuário.
 - **Resposta Sucesso (`204 No Content`):** Vazio.
+
+### 10.6 Consultar Status da Integração WhatsApp
+- **Método:** `GET`
+- **Rota:** `/api/assistente/whatsapp/status`
+- **Descrição:** Retorna o status da conexão do Gateway WhatsApp Web (Baileys) no servidor e o número de WhatsApp vinculado à conta do MEI autenticado.
+- **Resposta Sucesso (`200 OK`):**
+```json
+{
+  "sucesso": true,
+  "mensagem": "Status do WhatsApp obtido com sucesso",
+  "dados": {
+    "bot": {
+      "status": "conectado",
+      "conectado": true,
+      "numero": "5511999990000",
+      "qrCode": null
+    },
+    "usuario_whatsapp": "5511987654321",
+    "usuario_whatsapp_verificado": true
+  }
+}
 ```
+
+### 10.7 Vincular Número de WhatsApp do MEI
+- **Método:** `POST`
+- **Rota:** `/api/assistente/whatsapp/vincular`
+- **Payload:** `{ "telefone": "(11) 98765-4321" }`
+- **Validações:**
+  - `400 Bad Request` caso o telefone não seja um celular brasileiro válido (DDD + 8 ou 9 dígitos).
+  - `409 Conflict` caso o número já esteja vinculado a outra conta MEI.
+- **Resposta Sucesso (`200 OK`):**
+```json
+{
+  "sucesso": true,
+  "mensagem": "Número de WhatsApp vinculado com sucesso ao assistente!",
+  "dados": {
+    "whatsapp": "5511987654321",
+    "formatado": "+55 (11) 98765-4321",
+    "whatsapp_verificado": true
+  }
+}
+```
+
+### 10.8 Reiniciar Sessão do Gateway WhatsApp (Gerar Novo QR Code)
+- **Método:** `POST`
+- **Rota:** `/api/assistente/whatsapp/resetar`
+- **Descrição:** Encerra o socket ativo do Baileys, limpa as credenciais locais (`.wweb_auth_baileys`) e reinicia a conexão gerando um novo QR Code no terminal do servidor.
+- **Resposta Sucesso (`200 OK`):**
+```json
+{
+  "sucesso": true,
+  "mensagem": "Sessão do WhatsApp reiniciada com sucesso. Um novo QR Code foi gerado no terminal do servidor.",
+  "dados": {
+    "status": "aguardando_qr",
+    "conectado": false,
+    "numero": null,
+    "qrCode": "2@..."
+  }
+}
+```
+

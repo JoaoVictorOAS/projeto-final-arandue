@@ -193,4 +193,49 @@ describe('Autenticação API (/api/auth)', () => {
       expect(res.body.mensagem).toMatch(/token/i);
     });
   });
+
+  describe('POST /api/auth/google', () => {
+    test('deve autenticar e registrar novo usuário via Google (200)', async () => {
+      const googleUser = {
+        email: 'novo.google.teste@mei.com',
+        nome: 'Empreendedor Google Teste'
+      };
+
+      const res = await request(app)
+        .post('/api/auth/google')
+        .send(googleUser);
+
+      expect(res.statusCode).toBe(200);
+      expect(res.body.sucesso).toBe(true);
+      expect(res.body.mensagem).toBe('Autenticado com sucesso via Google');
+      expect(res.body.dados.token).toBeDefined();
+      expect(res.body.dados.usuario).toBeDefined();
+      expect(res.body.dados.usuario.email).toBe(googleUser.email);
+      expect(res.body.dados.usuario.nome).toBe(googleUser.nome);
+    });
+
+    test('deve autenticar usuário existente via Google retornando seu JWT (200)', async () => {
+      const res = await request(app)
+        .post('/api/auth/google')
+        .send({
+          email: usuarioTeste.email,
+          nome: usuarioTeste.nome
+        });
+
+      expect(res.statusCode).toBe(200);
+      expect(res.body.sucesso).toBe(true);
+      expect(res.body.dados.token).toBeDefined();
+      expect(res.body.dados.usuario.email).toBe(usuarioTeste.email);
+    });
+
+    test('deve rejeitar login Google com e-mail ausente (400)', async () => {
+      const res = await request(app)
+        .post('/api/auth/google')
+        .send({ nome: 'Sem Email' });
+
+      expect(res.statusCode).toBe(400);
+      expect(res.body.sucesso).toBe(false);
+      expect(res.body.mensagem).toMatch(/e-mail/i);
+    });
+  });
 });

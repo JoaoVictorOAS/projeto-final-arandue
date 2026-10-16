@@ -1,6 +1,7 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'react-grid-layout/css/styles.css';
+@import 'react-resizable/css/styles.css';
+@import 'tailwindcss';
+@config '../tailwind.config.js';
 
 body {
   margin: 0;
@@ -31,4 +32,70 @@ body {
 .animate-scale-in {
   animation: scaleIn 0.15s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   will-change: transform, opacity;
+}
+
+/* Custom styling para o Grid ajustável com react-grid-layout */
+.react-grid-layout {
+  position: relative;
+  transition: height 200ms ease;
+}
+
+.react-grid-item {
+  transition: all 200ms ease;
+  transition-property: left, top;
+}
+
+.react-grid-item.cssTransforms {
+  transition-property: transform;
+}
+
+.react-grid-item.resizing {
+  z-index: 10;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  opacity: 0.95;
+}
+
+.react-grid-item.react-draggable-dragging {
+  transition: none;
+  z-index: 30;
+  box-shadow: 0 20px 25px -5px rgba(99, 102, 241, 0.2), 0 8px 10px -6px rgba(99, 102, 241, 0.1);
+  cursor: grabbing !important;
+}
+
+.react-grid-item.react-grid-placeholder {
+  background: rgba(99, 102, 241, 0.08) !important;
+  border: 2px dashed #818cf8 !important;
+  border-radius: 1rem !important;
+  transition-duration: 100ms;
+  z-index: 2;
+  user-select: none;
+}
+
+/* Puxador de redimensionamento sutil no canto inferior direito */
+.react-grid-item > .react-resizable-handle {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  bottom: 4px;
+  right: 4px;
+  cursor: se-resize;
+  z-index: 25;
+}
+
+.react-grid-item > .react-resizable-handle::after {
+  content: "";
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  width: 8px;
+  height: 8px;
+  border-right: 2.5px solid #94a3b8;
+  border-bottom: 2.5px solid #94a3b8;
+  border-bottom-right-radius: 2px;
+  transition: border-color 0.15s ease, transform 0.15s ease;
+}
+
+.react-grid-item:hover > .react-resizable-handle::after {
+  border-color: #6366f1;
+  transform: scale(1.15);
 }

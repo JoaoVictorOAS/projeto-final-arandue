@@ -7,14 +7,50 @@
 
 set -e
 
-# Ao sair (Ctrl+C), encerra todos os processos em background iniciados por este script
-trap 'echo -e "\n🛑 Encerrando todos os serviços..."; kill 0' SIGINT SIGTERM EXIT
-
 echo "🚀 Iniciando ambiente de desenvolvimento Aranduê..."
 
-# 1. Backend Node.js
-echo "📦 [1/3] Iniciando Backend Node.js na porta 3001..."
-npm --prefix backend run dev &
+# 0. Verificação de portas antes de iniciar os serviços
+echo "🔍 Verificando disponibilidade das portas (3000, 3001, 8001)..."
+ports_occupied=0
+
+check_port() {
+  local port=$1
+  local service_name=$2
+  local pid=""
+
+  if command -v lsof >/dev/null 2>&1; then
+    pid=$(lsof -ti :"$port" 2>/dev/null | xargs)
+  elif command -v fuser >/dev/null 2>&1; then
+    pid=$(fuser "$port/tcp" 2>/dev/null | xargs)
+  fi
+
+  if [ -n "$pid" ]; then
+    echo "❌ Erro: Porta $port ($service_name) já está em uso pelo(s) processo(s) PID: $pid"
+    echo "   Comando para liberar: kill -9 $pid"
+    ports_occupied=1
+    return 1
+  fi
+
+  if command -v python3 >/dev/null 2>&1; then
+    if python3 -c "import socket, sys; s = socket.socket(); sys.exit(0 if s.connect_ex(('127.0.0.1', int(sys.argv[1]))) == 0 else 1)" "$port" 2>/dev/null; then
+      echo "❌ Erro: Porta $port ($service_name) já está ocupada por outro serviço."
+      ports_occupied=1
+      return 1
+    fi
+  fi
+
+  return 0
+}
+
+check_port 3001 "Backend Node.js" || true
+check_port 8001 "AI Service FastAPI" || true
+check_port 3000 "Frontend React / Vite" || true
+
+if [ "$ports_occupied" -ne 0 ]; then
+  echo -e "\n⚠️  Conflito de portas detectado! Encerre os processos acima antes de rodar 'npm run dev'."
+  echo "   Dica rápida para liberar: kill -9 \$(lsof -ti :3000,:3001,:8001 2>/dev/null) 2>/dev/null || true"
+  exit 1
+fi
 
 # Verifica integridade do ambiente virtual Python
 if [ ! -f ".venv/bin/uvicorn" ]; then
@@ -30,6 +66,13 @@ if [ ! -f ".venv/bin/uvicorn" ]; then
     exit 1
   fi
 fi
+
+# Ao sair (Ctrl+C ou fechamento), encerra todos os processos em background iniciados por este script
+trap 'echo -e "\n🛑 Encerrando todos os serviços..."; kill 0' SIGINT SIGTERM EXIT
+
+# 1. Backend Node.js
+echo "📦 [1/3] Iniciando Backend Node.js na porta 3001..."
+npm --prefix backend run dev &
 
 # 2. Microserviço de IA Python
 echo "🤖 [2/3] Iniciando AI Service FastAPI na porta 8001..."

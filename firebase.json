@@ -1,0 +1,13 @@
+{
+  "auth": {
+    "authorizedDomains": [
+      "localhost"
+    ],
+    "providers": {
+      "googleSignIn": {
+        "oAuthBrandDisplayName": "Aranduê",
+        "supportEmail": "playerthejvs@gmail.com"
+      }
+    }
+  }
+}

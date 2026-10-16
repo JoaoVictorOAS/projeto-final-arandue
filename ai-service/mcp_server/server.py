@@ -95,6 +95,30 @@ async def _patch(endpoint: str, payload: Dict[str, Any]) -> Dict[str, Any]:
         except Exception as e:
             return {"sucesso": False, "erro": f"Falha de conexão com a API: {str(e)}"}
 
+async def _delete(endpoint: str) -> Dict[str, Any]:
+    node_url, token, _ = _get_env_config()
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json"
+    }
+    url = f"{node_url}{endpoint}"
+    async with httpx.AsyncClient(timeout=10.0) as client:
+        try:
+            resp = await client.delete(url, headers=headers)
+            if resp.status_code == 401 or resp.status_code == 403:
+                return {"sucesso": False, "erro": "Acesso não autorizado ou sessão expirada no backend"}
+            if resp.status_code == 204:
+                return {"sucesso": True}
+            try:
+                data = resp.json()
+            except Exception:
+                data = {}
+            if resp.status_code != 200:
+                return {"sucesso": False, "erro": data.get("mensagem") or f"Erro do servidor (status {resp.status_code})"}
+            return data
+        except Exception as e:
+            return {"sucesso": False, "erro": f"Falha de conexão com a API: {str(e)}"}
+
 @mcp_server_app.tool()
 async def obter_configuracoes_mei() -> Dict[str, Any]:
     """Obtém os dados cadastrais e fiscais do MEI (razão social, nome fantasia, CNPJ, endereço completo, UF, ambiente fiscal e séries de notas)."""
@@ -858,6 +882,85 @@ async def registrar_entrada_por_nota(
     if numero_documento:
         payload["numero_documento"] = str(numero_documento)
     return await _post("/estoque/insumos/entrada-nota", payload)
+
+@mcp_server_app.tool()
+async def listar_dashboards() -> Any:
+    """Lista todos os dashboards configurados para o MEI com seus respectivos widgets e status."""
+    return await _fetch("/dashboards")
+
+@mcp_server_app.tool()
+async def obter_dashboard_detalhado(dashboard_id: int) -> Dict[str, Any]:
+    """Obtém os detalhes de um dashboard específico, incluindo os dados calculados de suas métricas e gráficos."""
+    return await _fetch(f"/dashboards/{int(dashboard_id)}")
+
+@mcp_server_app.tool()
+async def obter_catalogo_metricas() -> Dict[str, Any]:
+    """Retorna o catálogo completo de métricas disponíveis para montagem de gráficos nos dashboards, incluindo tipos de gráficos e períodos suportados."""
+    return await _fetch("/dashboards/metricas/catalogo")
+
+@mcp_server_app.tool()
+async def criar_dashboard(nome: str, descricao: Optional[str] = None) -> Dict[str, Any]:
+    """Cria um novo painel de dashboard personalizado para o MEI."""
+    payload: Dict[str, Any] = {"nome": str(nome).strip()}
+    if descricao is not None:
+        payload["descricao"] = str(descricao).strip()
+    return await _post("/dashboards", payload)
+
+@mcp_server_app.tool()
+async def adicionar_widget_dashboard(
+    dashboard_id: int,
+    titulo: str,
+    tipo_grafico: str,
+    metrica: str,
+    periodo: str = "ultimos_6_meses",
+    largura: int = 1
+) -> Dict[str, Any]:
+    """Adiciona um widget gráfico a um painel de dashboard existente.
+    
+    Parâmetros:
+    - metrica: 'projecao_financeira' (previsão de entradas futuras por cobranças a vencer e serviços agendados), 'fluxo_caixa', 'limite_mei', 'despesas_categoria', 'top_servicos', 'cobrancas_status', 'funil_orcamentos', 'novos_clientes'.
+    - periodo: aceita períodos paramétricos futuros ou passados como 'proximos_30_dias', 'proximos_3_meses', 'proximos_6_meses', 'proximos_1_ano', 'ultimos_12_meses', além dos legados 'mes_atual', 'ultimos_3_meses', 'ultimos_6_meses', 'ano_atual', 'historico_total'.
+    - tipo_grafico: 'bar', 'line', 'area', 'donut', 'pie', 'radial_gauge', 'kpi'.
+    - largura: 1 (metade da grade) ou 2 (largura total).
+    """
+    payload = {
+        "titulo": str(titulo).strip(),
+        "tipo_grafico": str(tipo_grafico).strip(),
+        "metrica": str(metrica).strip(),
+        "periodo": str(periodo).strip(),
+        "largura": int(largura)
+    }
+    return await _post(f"/dashboards/{int(dashboard_id)}/widgets", payload)
+
+@mcp_server_app.tool()
+async def excluir_widget_dashboard(dashboard_id: int, widget_id: int) -> Dict[str, Any]:
+    """Remove um widget gráfico de um painel de dashboard."""
+    return await _delete(f"/dashboards/{int(dashboard_id)}/widgets/{int(widget_id)}")
+
+@mcp_server_app.tool()
+async def excluir_dashboard(dashboard_id: int) -> Dict[str, Any]:
+    """Exclui um painel de dashboard e todos os seus widgets associados."""
+    return await _delete(f"/dashboards/{int(dashboard_id)}")
+
+# ==========================================
+# MÓDULO: INTEGRAÇÃO WHATSAPP (PARIDADE MCP)
+# ==========================================
+
+@mcp_server_app.tool()
+async def consultar_status_whatsapp() -> Dict[str, Any]:
+    """Consulta o status da conexão do Gateway WhatsApp Web e verifica o número de WhatsApp vinculado à conta do MEI."""
+    return await _fetch("/assistente/whatsapp/status")
+
+@mcp_server_app.tool()
+async def vincular_whatsapp(telefone: str) -> Dict[str, Any]:
+    """Vincula ou atualiza o número de telefone celular/WhatsApp do MEI para atendimento pelo assistente via WhatsApp."""
+    payload = {"telefone": str(telefone).strip()}
+    return await _post("/assistente/whatsapp/vincular", payload)
+
+@mcp_server_app.tool()
+async def reiniciar_sessao_whatsapp() -> Dict[str, Any]:
+    """Reinicia a sessão do Gateway WhatsApp do servidor e gera um novo QR Code de pareamento."""
+    return await _post("/assistente/whatsapp/resetar", {})
 
 if __name__ == "__main__":
     mcp_server_app.run()

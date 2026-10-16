@@ -1,4 +1,4 @@
--- Migração 010: Integração do Assistente IA com WhatsApp (Multitenant por telefone)
+-- Migração 011: Integração do Assistente IA com WhatsApp (Multitenant por telefone)
 
 ALTER TABLE usuarios
     ADD COLUMN whatsapp VARCHAR(20) NULL AFTER email,

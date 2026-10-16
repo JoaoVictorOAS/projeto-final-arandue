@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, test, expect, vi, beforeEach } from 'vitest';
 import Dashboard from './Dashboard';
@@ -54,6 +54,69 @@ describe('Módulo Dashboard - Visão Consolidada com Indicadores', () => {
     ],
   };
 
+  const mockDashboards = [
+    {
+      id: 1,
+      nome: 'Principal',
+      eh_padrao: 1,
+      ordem: 0,
+      widgets: [
+        {
+          id: 101,
+          dashboard_id: 1,
+          titulo: 'Termômetro MEI',
+          tipo_grafico: 'radial_gauge',
+          metrica: 'limite_mei',
+          periodo: 'ano_atual',
+          largura: 2,
+          ordem: 0,
+          dados: {
+            valor: 45000,
+            limite: 81000,
+            percentual: 55.5,
+            saldo_restante: 36000,
+          },
+        },
+        {
+          id: 102,
+          dashboard_id: 1,
+          titulo: 'Fluxo de Caixa Mensal',
+          tipo_grafico: 'bar',
+          metrica: 'fluxo_caixa',
+          periodo: 'ultimos_6_meses',
+          largura: 1,
+          ordem: 1,
+          dados: [
+            { periodo: 'Set/26', entradas: 4000, saidas: 1500 },
+            { periodo: 'Out/26', entradas: 5000, saidas: 2000 },
+          ],
+        },
+      ],
+    },
+    {
+      id: 2,
+      nome: 'Vendas & Metas',
+      eh_padrao: 0,
+      ordem: 1,
+      widgets: [
+        {
+          id: 201,
+          dashboard_id: 2,
+          titulo: 'Top Serviços',
+          tipo_grafico: 'donut',
+          metrica: 'top_servicos',
+          periodo: 'mes_atual',
+          largura: 1,
+          ordem: 0,
+          dados: [
+            { nome: 'Consultoria', valor: 3000, percentual: 60 },
+            { nome: 'Manutenção', valor: 2000, percentual: 40 },
+          ],
+        },
+      ],
+    },
+  ];
+
   beforeEach(() => {
     vi.clearAllMocks();
     api.get.mockImplementation((url) => {
@@ -65,8 +128,64 @@ describe('Módulo Dashboard - Visão Consolidada com Indicadores', () => {
           },
         });
       }
+      if (url === '/dashboards') {
+        return Promise.resolve({
+          data: {
+            sucesso: true,
+            dados: mockDashboards,
+          },
+        });
+      }
+      if (url === '/dashboards/1') {
+        return Promise.resolve({
+          data: {
+            sucesso: true,
+            dados: mockDashboards[0],
+          },
+        });
+      }
+      if (url === '/dashboards/2') {
+        return Promise.resolve({
+          data: {
+            sucesso: true,
+            dados: mockDashboards[1],
+          },
+        });
+      }
+      if (url === '/dashboards/metricas/catalogo') {
+        return Promise.resolve({
+          data: {
+            sucesso: true,
+            dados: {
+              metricas: [
+                {
+                  chave: 'limite_mei',
+                  nome: 'Faturamento vs Teto MEI',
+                  tipos_grafico_compativeis: ['radial_gauge', 'kpi'],
+                  periodos_compativeis: ['ano_atual'],
+                },
+                {
+                  chave: 'fluxo_caixa',
+                  nome: 'Fluxo de Caixa (Entradas vs Saídas)',
+                  tipos_grafico_compativeis: ['bar', 'area', 'line'],
+                  periodos_compativeis: ['mes_atual', 'ultimos_3_meses', 'ultimos_6_meses', 'ano_atual', 'historico_total'],
+                },
+                {
+                  chave: 'top_servicos',
+                  nome: 'Serviços / Produtos Mais Vendidos',
+                  tipos_grafico_compativeis: ['bar', 'pie', 'donut'],
+                  periodos_compativeis: ['mes_atual', 'ultimos_3_meses', 'ultimos_6_meses', 'ano_atual', 'historico_total'],
+                },
+              ],
+            },
+          },
+        });
+      }
       return Promise.resolve({ data: { dados: [] } });
     });
+    api.post.mockResolvedValue({ data: { sucesso: true, dados: { id: 999 } } });
+    api.put.mockResolvedValue({ data: { sucesso: true, dados: {} } });
+    api.delete.mockResolvedValue({ data: { sucesso: true, mensagem: 'OK' } });
   });
 
   test('deve renderizar a seção de Ações Rápidas e navegação do dashboard', async () => {
@@ -188,4 +307,262 @@ describe('Módulo Dashboard - Visão Consolidada com Indicadores', () => {
       expect(screen.getByText('Cliente Estrutura Aninhada')).toBeInTheDocument();
     });
   });
+
+  test('deve renderizar as abas de dashboards e os widgets do dashboard ativo', async () => {
+    render(
+      <MemoryRouter>
+        <Dashboard />
+      </MemoryRouter>
+    );
+
+    // Abas de dashboards
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /principal/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /vendas & metas/i })).toBeInTheDocument();
+    });
+
+    // Widgets do dashboard ativo (Principal)
+    expect(screen.getByText('Termômetro MEI')).toBeInTheDocument();
+    expect(screen.getByText('Fluxo de Caixa Mensal')).toBeInTheDocument();
+    expect(screen.getByText(/55\.5%/i)).toBeInTheDocument();
+  });
+
+  test('deve alternar entre abas de dashboards ao clicar', async () => {
+    render(
+      <MemoryRouter>
+        <Dashboard />
+      </MemoryRouter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /vendas & metas/i })).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /vendas & metas/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText('Top Serviços')).toBeInTheDocument();
+    });
+  });
+
+  test('deve abrir modal de novo dashboard e criar novo painel', async () => {
+    api.post.mockResolvedValueOnce({
+      data: {
+        sucesso: true,
+        dados: { id: 3, nome: 'Metas 2026', eh_padrao: 0, widgets: [] },
+      },
+    });
+
+    render(
+      <MemoryRouter>
+        <Dashboard />
+      </MemoryRouter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /novo painel/i })).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /novo painel/i }));
+
+    expect(screen.getByText(/novo painel de dashboard/i)).toBeInTheDocument();
+
+    const inputNome = screen.getByPlaceholderText(/vendas e metas/i);
+    fireEvent.change(inputNome, { target: { value: 'Metas 2026' } });
+
+    fireEvent.click(screen.getByRole('button', { name: /criar painel/i }));
+
+    await waitFor(() => {
+      expect(api.post).toHaveBeenCalledWith('/dashboards', expect.objectContaining({
+        nome: 'Metas 2026',
+      }));
+    });
+  });
+
+  test('deve abrir modal de novo widget e adicionar ao dashboard ativo', async () => {
+    api.post.mockResolvedValueOnce({
+      data: {
+        sucesso: true,
+        dados: {
+          id: 103,
+          dashboard_id: 1,
+          titulo: 'Despesas por Categoria',
+          tipo_grafico: 'donut',
+          metrica: 'despesas_categoria',
+          periodo: 'mes_atual',
+          largura: 1,
+        },
+      },
+    });
+
+    render(
+      <MemoryRouter>
+        <Dashboard />
+      </MemoryRouter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /adicionar gráfico/i })).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /adicionar gráfico/i }));
+
+    expect(screen.getByText(/novo gráfico/i)).toBeInTheDocument();
+
+    const inputTitulo = screen.getByLabelText(/título do gráfico/i);
+    fireEvent.change(inputTitulo, { target: { value: 'Despesas por Categoria' } });
+
+    fireEvent.click(screen.getByRole('button', { name: /salvar gráfico/i }));
+
+    await waitFor(() => {
+      expect(api.post).toHaveBeenCalledWith('/dashboards/1/widgets', expect.objectContaining({
+        titulo: 'Despesas por Categoria',
+      }));
+    });
+  });
+
+  test('deve permitir alternar a largura e excluir um widget', async () => {
+    api.put.mockResolvedValueOnce({
+      data: {
+        sucesso: true,
+        dados: { id: 102, largura: 2 },
+      },
+    });
+    api.delete.mockResolvedValueOnce({
+      data: {
+        sucesso: true,
+        mensagem: 'Widget excluído com sucesso',
+      },
+    });
+
+    render(
+      <MemoryRouter>
+        <Dashboard />
+      </MemoryRouter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId('widget-card-102')).toBeInTheDocument();
+    });
+
+    // Redimensionar
+    const resizeBtn = screen.getByTestId('widget-resize-btn-102');
+    fireEvent.click(resizeBtn);
+
+    await waitFor(() => {
+      expect(api.put).toHaveBeenCalledWith('/dashboards/1/widgets/102', expect.objectContaining({
+        largura: 2,
+      }));
+    });
+
+    // Excluir
+    const deleteBtn = screen.getByTestId('widget-delete-btn-102');
+    fireEvent.click(deleteBtn);
+
+    await waitFor(() => {
+      expect(api.delete).toHaveBeenCalledWith('/dashboards/1/widgets/102');
+    });
+  });
+
+  test('deve exibir a alça de arraste (drag handle) para reposicionamento dos gráficos', async () => {
+    render(
+      <MemoryRouter>
+        <Dashboard />
+      </MemoryRouter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId('widget-card-101')).toBeInTheDocument();
+    });
+
+    const dragHandles = screen.getAllByTitle(/clique e arraste para reposicionar o gráfico/i);
+    expect(dragHandles.length).toBeGreaterThan(0);
+  });
+
+  test('deve restaurar o layout padrão dos widgets ao clicar no botão Restaurar Layout', async () => {
+    render(
+      <MemoryRouter>
+        <Dashboard />
+      </MemoryRouter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId('widget-card-101')).toBeInTheDocument();
+    });
+
+    const btnRestaurar = screen.getByTestId('btn-restaurar-layout');
+    expect(btnRestaurar).toBeInTheDocument();
+
+    fireEvent.click(btnRestaurar);
+
+    await waitFor(() => {
+      expect(api.put).toHaveBeenCalledWith(
+        '/dashboards/1/widgets/101',
+        expect.objectContaining({
+          configuracoes: expect.objectContaining({ w: 12, h: 3, x: 0, y: 0 }),
+        })
+      );
+      expect(api.put).toHaveBeenCalledWith(
+        '/dashboards/1/widgets/102',
+        expect.objectContaining({
+          configuracoes: expect.objectContaining({ w: 6, h: 3, x: 0, y: 3 }),
+        })
+      );
+    });
+  });
+
+  test('deve exibir a lixeira ao arrastar a aba de um dashboard e permitir a exclusão ao soltá-la nela', async () => {
+    api.delete.mockResolvedValueOnce({
+      data: { sucesso: true, mensagem: 'Dashboard excluído com sucesso' },
+    });
+
+    render(
+      <MemoryRouter>
+        <Dashboard />
+      </MemoryRouter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('Vendas & Metas')).toBeInTheDocument();
+    });
+
+    const tabVendas = screen.getByTestId('tab-dashboard-2');
+    expect(tabVendas).toBeInTheDocument();
+
+    // Inicia o arraste da aba do dashboard
+    fireEvent.dragStart(tabVendas, {
+      dataTransfer: { setData: vi.fn(), effectAllowed: 'move' },
+    });
+
+    // A lixeira deve aparecer na tela
+    const lixeira = await screen.findByTestId('trash-dropzone-dashboard');
+    expect(lixeira).toBeInTheDocument();
+
+    // Arraste sobre a lixeira
+    fireEvent.dragOver(lixeira, {
+      preventDefault: vi.fn(),
+      dataTransfer: { dropEffect: 'move' },
+    });
+
+    // Solta na lixeira
+    fireEvent.drop(lixeira, {
+      preventDefault: vi.fn(),
+    });
+
+    // Modal de confirmação deve ser aberto
+    await waitFor(() => {
+      expect(screen.getByText(/excluir painel de dashboard/i)).toBeInTheDocument();
+      expect(screen.getAllByText(/vendas & metas/i).length).toBeGreaterThanOrEqual(2);
+    });
+
+    // Confirma a exclusão
+    const btnConfirmar = screen.getByTestId('confirmar-exclusao-dashboard');
+    fireEvent.click(btnConfirmar);
+
+    await waitFor(() => {
+      expect(api.delete).toHaveBeenCalledWith('/dashboards/2');
+    });
+  });
 });
+
+

@@ -45,10 +45,11 @@ function authMiddleware(req, res, next) {
       const baseUrl = req.baseUrl || '';
       const path = req.path || '';
       const isAssistenteRoute = baseUrl.startsWith('/api/assistente') || path.startsWith('/api/assistente') || baseUrl === '/api/assistente';
+      const isWhatsappRoute = path.startsWith('/whatsapp') || path.startsWith('/api/assistente/whatsapp');
       const isAuthMutation = (baseUrl.startsWith('/api/auth') || path.startsWith('/api/auth')) && req.method !== 'GET';
 
       // Scoped tokens de operador do assistente podem ler e cadastrar (GET e POST), mas não podem excluir (DELETE) nem mutar auth ou chat
-      if (req.method === 'DELETE' || isAssistenteRoute || isAuthMutation) {
+      if (req.method === 'DELETE' || (isAssistenteRoute && !isWhatsappRoute) || isAuthMutation) {
         return res.status(403).json({
           sucesso: false,
           mensagem: 'Acesso negado: operação não permitida para o operador do assistente'

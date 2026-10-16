@@ -313,4 +313,52 @@ describe('Módulo de Configurações — MEI & SEFAZ Multi-Estado', () => {
     expect(screen.getByText(/12345678000195/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /remover certificado/i })).toBeInTheDocument();
   });
+
+  test('deve exibir card de Integração WhatsApp e permitir vincular número de celular', async () => {
+    api.get.mockImplementation((url) => {
+      if (url === '/configuracoes') {
+        return Promise.resolve({ data: mockConfigInicial });
+      }
+      if (url === '/assistente/whatsapp/status') {
+        return Promise.resolve({
+          data: {
+            sucesso: true,
+            dados: {
+              bot: { status: 'conectado', conectado: true, numero: '5511999990000', qrCode: null },
+              usuario_whatsapp: null,
+              usuario_whatsapp_verificado: false,
+            },
+          },
+        });
+      }
+      return Promise.resolve({ data: { sucesso: true, dados: [] } });
+    });
+
+    api.post.mockResolvedValueOnce({
+      data: {
+        sucesso: true,
+        mensagem: 'Número de WhatsApp vinculado com sucesso ao assistente!',
+        dados: { whatsapp: '5511987654321', whatsapp_verificado: true },
+      },
+    });
+
+    render(<Configuracoes />);
+
+    expect(await screen.findByText(/integração whatsapp — assistente ia aranduê/i)).toBeInTheDocument();
+    expect(screen.getByText(/gateway conectado/i)).toBeInTheDocument();
+
+    const inputWpp = screen.getByLabelText(/seu número de whatsapp/i);
+    fireEvent.change(inputWpp, { target: { value: '(11) 98765-4321' } });
+
+    const btnVincular = screen.getByRole('button', { name: /vincular whatsapp/i });
+    fireEvent.click(btnVincular);
+
+    await waitFor(() => {
+      expect(api.post).toHaveBeenCalledWith('/assistente/whatsapp/vincular', {
+        telefone: '(11) 98765-4321',
+      });
+    });
+
+    expect(await screen.findByText(/número de whatsapp vinculado com sucesso/i)).toBeInTheDocument();
+  });
 });

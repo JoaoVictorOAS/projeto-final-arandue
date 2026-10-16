@@ -24,7 +24,7 @@ router.delete('/certificado', configuracoesController.removerCertificado);
 router.patch('/certificado/toggle', configuracoesController.toggleTransmissaoSefaz);
 
 router.get('/cnpj/:cnpj', configuracoesController.consultarCnpj);
-router.get('/cnpj/*', (req, res) => {
+router.get(/^\/cnpj\/(.+)$/, (req, res) => {
   req.params.cnpj = req.params[0] || req.params.cnpj;
   return configuracoesController.consultarCnpj(req, res);
 });
