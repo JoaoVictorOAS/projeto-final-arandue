@@ -195,7 +195,7 @@ export default function Login() {
           </div>
 
           {/* Cabeçalho do formulário */}
-          <div className="mb-8">
+          <div className="mb-8 text-center">
             <h2 className="text-2xl sm:text-3xl font-bold text-stone-900 tracking-tight">
               Bem-vindo de volta
             </h2>
