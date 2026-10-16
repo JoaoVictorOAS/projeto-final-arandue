@@ -551,7 +551,8 @@ class WhatsAppService {
       }
 
       if (process.env.NODE_ENV !== 'test') {
-        console.log(`[WhatsApp] ✅ Resposta enviada para usuário ${usuario.id}`);
+        const preview = respostaFormatada.length > 120 ? respostaFormatada.slice(0, 117) + '...' : respostaFormatada;
+        console.log(`[WhatsApp] ✅ Resposta enviada para usuário ${usuario.id} (${tipoMidia}) -> «${preview.replace(/\n/g, ' ')}»`);
       }
 
     } catch (error) {

@@ -147,16 +147,25 @@ class Orchestrator:
         user_parts: List[Any] = [types.Part.from_text(text=prompt_conteudo)]
         if midia and midia.get("dados_base64"):
             import base64
-            m_data = midia["dados_base64"]
-            if "," in m_data:
-                m_data = m_data.split(",", 1)[1]
-            try:
-                m_bytes = base64.b64decode(m_data)
-                m_tipo = midia.get("tipo", "imagem")
-                m_mime = midia.get("mime_type") or ("audio/ogg" if m_tipo == "audio" else "image/jpeg")
-                user_parts.append(types.Part.from_bytes(data=m_bytes, mime_type=m_mime))
-            except Exception as e:
-                logger.warning(f"Erro ao decodificar mídia base64 no orchestrator: {e}")
+            m_tipo = midia.get("tipo", "imagem")
+            # Se a mídia for imagem, SEMPRE anexa os bytes para visão computacional.
+            # Se for áudio, anexa apenas se a mensagem for vazia ou placeholder (evitando eco quando já há texto transcrito).
+            deve_anexar_bytes = True
+            if m_tipo == "audio":
+                msg_limpa = mensagem.strip().lower()
+                if msg_limpa and msg_limpa not in ("áudio recebido.", "áudio recebido", "audio recebido"):
+                    deve_anexar_bytes = False
+
+            if deve_anexar_bytes:
+                m_data = midia["dados_base64"]
+                if "," in m_data:
+                    m_data = m_data.split(",", 1)[1]
+                try:
+                    m_bytes = base64.b64decode(m_data)
+                    m_mime = midia.get("mime_type") or ("audio/ogg" if m_tipo == "audio" else "image/jpeg")
+                    user_parts.append(types.Part.from_bytes(data=m_bytes, mime_type=m_mime))
+                except Exception as e:
+                    logger.warning(f"Erro ao decodificar mídia base64 no orchestrator: {e}")
 
         # Adiciona a pergunta atual com os trechos RAG
         contents.append(types.Content(
@@ -172,7 +181,8 @@ class Orchestrator:
         config = types.GenerateContentConfig(
             system_instruction=system_prompt_dinamico,
             tools=tools,
-            temperature=0.2
+            temperature=0.2,
+            automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True)
         )
 
         tools_usadas: List[str] = []
@@ -189,8 +199,20 @@ class Orchestrator:
             # Verifica se o modelo solicitou chamadas de função
             function_calls = response.function_calls
             if not function_calls:
+                texto_resp = (response.text or "").strip()
+                # Validação anti-eco: se o modelo devolveu texto vazio ou repetiu a entrada do usuário
+                if not texto_resp or texto_resp == mensagem.strip():
+                    if tools_usadas:
+                        texto_resp = (
+                            f"Operações solicitadas concluídas com sucesso no sistema (ações: {', '.join(tools_usadas)}). "
+                            "Os registros foram salvos no banco de dados. "
+                            "Caso necessite emitir Nota Fiscal, por favor me informe o CPF ou CNPJ do cliente."
+                        )
+                    else:
+                        texto_resp = "Não foi possível gerar uma resposta para a consulta."
+
                 return RespostaLLM(
-                    resposta=response.text or "Não foi possível gerar uma resposta para a consulta.",
+                    resposta=texto_resp,
                     tools_usadas=tools_usadas,
                     modelo=modelo_utilizado
                 )
@@ -235,16 +257,39 @@ class Orchestrator:
                 parts=function_responses
             ))
 
-        # Se atingir o limite de chamadas, faz uma chamada final para consolidar resposta
+        # Se atingir o limite de chamadas, instrui explicitamente o modelo a consolidar um resumo amigável
+        contents.append(types.Content(
+            role="user",
+            parts=[types.Part.from_text(
+                text="Todas as ações e ferramentas solicitadas foram executadas com sucesso. "
+                     "Agora elabore uma resposta final conclusiva, clara e amigável para o MEI, "
+                     "resumindo os dados cadastrados ou consultados e orientando os próximos passos ou tirando dúvidas. "
+                     "NUNCA repita ou ecoe o texto de entrada do usuário nem os comandos brutos."
+            )]
+        ))
+
         final_response, modelo_utilizado = await self._generate_content_with_fallback(
             contents=contents,
             config=types.GenerateContentConfig(
                 system_instruction=system_prompt_dinamico,
-                temperature=0.2
+                temperature=0.2,
+                automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True)
             )
         )
+
+        texto_final = (final_response.text or "").strip()
+        if not texto_final or texto_final == mensagem.strip():
+            if tools_usadas:
+                texto_final = (
+                    f"Operações solicitadas concluídas com sucesso no sistema (ações: {', '.join(tools_usadas)}). "
+                    "Os registros foram criados no banco de dados. "
+                    "Caso necessite emitir Nota Fiscal, por favor informe o CPF ou CNPJ do cliente."
+                )
+            else:
+                texto_final = "Consulta processada com base nos dados do estabelecimento."
+
         return RespostaLLM(
-            resposta=final_response.text or "Consulta processada com base nos dados do estabelecimento.",
+            resposta=texto_final,
             tools_usadas=tools_usadas,
             modelo=modelo_utilizado
         )

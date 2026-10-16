@@ -202,13 +202,18 @@ const assistenteService = {
     // Modo Síncrono (Padrão para retrocompatibilidade)
     let respostaAi;
     try {
-      respostaAi = await aiServiceClient.enviarMensagem({
+      const payloadAi = {
         tenant_id: usuario_id,
         tenant_token: tenantToken,
         mensagem: textoMensagem,
-        historico: historicoRecente,
-        midia
-      });
+        historico: historicoRecente
+      };
+      // Repassa anexo de mídia somente se for imagem (para visão computacional).
+      // Se for áudio, o texto já foi integralmente transcrito, evitando eco e sobrecarga desnecessária.
+      if (midia && midia.tipo === 'imagem') {
+        payloadAi.midia = midia;
+      }
+      respostaAi = await aiServiceClient.enviarMensagem(payloadAi);
     } catch (err) {
       const erroStatus = err.statusCode || 503;
       const erroAmigavel = new Error(err.message || 'Assistente IA temporariamente indisponível. Tente novamente em instantes.');
@@ -251,13 +256,16 @@ const assistenteService = {
     midia = null
   }) {
     try {
-      const respostaAi = await aiServiceClient.enviarMensagem({
+      const payloadAi = {
         tenant_id: usuario_id,
         tenant_token: tenantToken,
         mensagem: mensagemLimpa,
-        historico: historicoRecente,
-        midia
-      });
+        historico: historicoRecente
+      };
+      if (midia && midia.tipo === 'imagem') {
+        payloadAi.midia = midia;
+      }
+      const respostaAi = await aiServiceClient.enviarMensagem(payloadAi);
 
       await conversaRepository.atualizarMensagem(msgAssistenteId, {
         conteudo: respostaAi.resposta,
