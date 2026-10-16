@@ -6,6 +6,13 @@ from typing import Optional, Dict, Any, List, Tuple
 import httpx
 from mcp.server.mcpserver import MCPServer
 
+current_dir = os.path.dirname(os.path.abspath(__file__))
+parent_dir = os.path.dirname(current_dir)
+if parent_dir not in sys.path:
+    sys.path.insert(0, parent_dir)
+
+from app.utils.color_engine import synthesize_theme
+
 mcp_server_app = MCPServer("arandue-mcp-tenant")
 
 
@@ -235,6 +242,90 @@ async def obter_status_certificado_digital() -> Dict[str, Any]:
 async def alternar_transmissao_sefaz(ativo: bool) -> Dict[str, Any]:
     """Ativa (True) ou desativa (False) a transmissão oficial de notas fiscais com Certificado Digital A1 aos servidores de Homologação da SEFAZ."""
     return await _patch("/configuracoes/certificado/toggle", {"ativo": ativo})
+
+
+# ==========================================
+# TEMAS VISUAIS DINÂMICOS
+# ==========================================
+
+@mcp_server_app.tool()
+async def listar_temas() -> Dict[str, Any]:
+    """Lista todos os temas visuais disponíveis na biblioteca do MEI e identifica qual está atualmente ativo."""
+    dados = await _fetch("/configuracoes/temas")
+    if isinstance(dados, dict) and "erro" in dados:
+        return {"sucesso": False, "mensagem": dados["erro"]}
+    return {
+        "sucesso": True,
+        "temas": dados if isinstance(dados, list) else [],
+    }
+
+
+@mcp_server_app.tool()
+async def ativar_tema(tema_id_ou_nome: str) -> Dict[str, Any]:
+    """Ativa um tema visual da biblioteca do MEI pelo nome (ex: 'Noturno Corporativo', 'Esmeralda MEI') ou ID numérico."""
+    temas_resp = await _fetch("/configuracoes/temas")
+    if not isinstance(temas_resp, list):
+        mensagem = temas_resp.get("erro") if isinstance(temas_resp, dict) and "erro" in temas_resp else "Não foi possível carregar a lista de temas do sistema."
+        return {"sucesso": False, "mensagem": mensagem}
+
+    busca = str(tema_id_ou_nome).strip().lower()
+    alvo = None
+    for t in temas_resp:
+        if str(t.get("id")) == busca or t.get("nome", "").lower() == busca or t.get("slug", "").lower() == busca:
+            alvo = t
+            break
+
+    if not alvo:
+        # Busca aproximada por inclusão
+        for t in temas_resp:
+            if busca in t.get("nome", "").lower() or busca in t.get("slug", "").lower():
+                alvo = t
+                break
+
+    if not alvo:
+        nomes_disponiveis = ", ".join([f"'{t.get('nome')}'" for t in temas_resp])
+        return {
+            "sucesso": False,
+            "mensagem": f"Tema '{tema_id_ou_nome}' não encontrado. Temas disponíveis: {nomes_disponiveis}.",
+        }
+
+    res = await _put(f"/configuracoes/temas/{alvo['id']}/ativar", {})
+    if not res.get("sucesso", True):
+        return {"sucesso": False, "mensagem": res.get("mensagem") or res.get("erro", "Falha ao ativar tema no sistema.")}
+
+    return {
+        "sucesso": True,
+        "mensagem": f"Tema '{alvo.get('nome')}' ({alvo.get('modo')}) ativado com sucesso em todo o sistema!",
+        "tema": alvo,
+    }
+
+
+@mcp_server_app.tool()
+async def gerar_tema_ia(descricao: str, modo: Optional[str] = "dark", cor_base_hex: Optional[str] = None) -> Dict[str, Any]:
+    """Gera um tema visual harmônico e acessível com IA baseado na descrição do MEI (ex: 'tema escuro para oficina', 'tema verde para floricultura').
+    Aplica regras estritas de Teoria das Cores: proporção 60-30-10, matiz oposta para acentos, contraste WCAG 2.1 (AA/AAA) e escalas de cinza com tinted neutrals.
+    Salva e ativa automaticamente o tema no sistema.
+    """
+    sintese = synthesize_theme(description=descricao, mode=modo or "dark", base_color=cor_base_hex)
+    payload = {
+        "nome": sintese["nome"],
+        "modo": sintese["modo"],
+        "descricao": sintese["descricao"],
+        "cores": sintese["cores"],
+        "ativar": True,
+    }
+
+    res = await _post("/configuracoes/temas/upload", payload)
+    if not res.get("sucesso", False):
+        return {"sucesso": False, "mensagem": res.get("mensagem") or res.get("erro", "Erro ao persistir tema gerado pela IA.")}
+
+    return {
+        "sucesso": True,
+        "mensagem": f"Tema '{sintese['nome']}' gerado e ativado com sucesso! Proporção 60-30-10 e contraste WCAG {sintese.get('contraste_texto_wcag')}:1 aprovados.",
+        "cores": sintese["cores"],
+        "modo": sintese["modo"],
+        "contraste_wcag": sintese.get("contraste_texto_wcag"),
+    }
 
 
 @mcp_server_app.tool()
