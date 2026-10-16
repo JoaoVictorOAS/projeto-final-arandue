@@ -3,8 +3,8 @@ const fs = require('fs');
 const path = require('path');
 
 // Carrega variáveis de ambiente
-require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
-require('dotenv').config();
+require('dotenv').config({ path: path.resolve(__dirname, '../../.env'), quiet: true });
+require('dotenv').config({ quiet: true });
 
 async function runMigration() {
   console.log('Iniciando migração do banco de dados...');
