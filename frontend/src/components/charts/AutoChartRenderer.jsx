@@ -60,8 +60,19 @@ const PALETTE_COLORS = [
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-white p-3 rounded-lg shadow-md border border-gray-100 text-xs z-50">
-        {label && <p className="font-semibold text-gray-700 mb-1">{label}</p>}
+      <div
+        className="theme-card bg-white p-3 rounded-lg shadow-md border border-gray-100 text-xs z-50"
+        style={{
+          backgroundColor: 'var(--bg-surface)',
+          borderColor: 'var(--border-color)',
+          color: 'var(--text-main)',
+        }}
+      >
+        {label && (
+          <p className="font-semibold text-gray-700 mb-1" style={{ color: 'var(--text-main)' }}>
+            {label}
+          </p>
+        )}
         {payload.map((entry, index) => {
           const keyStr = String(entry.dataKey || entry.name || '').toLowerCase();
           const isCurrency =
@@ -79,8 +90,12 @@ const CustomTooltip = ({ active, payload, label }) => {
                 className="w-2.5 h-2.5 rounded-full inline-block"
                 style={{ backgroundColor: entry.color || entry.fill }}
               />
-              <span className="text-gray-600 font-medium">{entry.name}:</span>
-              <span className="font-bold text-gray-900">{formattedVal}</span>
+              <span className="text-gray-600 font-medium" style={{ color: 'var(--text-secondary)' }}>
+                {entry.name}:
+              </span>
+              <span className="font-bold text-gray-900" style={{ color: 'var(--text-main)' }}>
+                {formattedVal}
+              </span>
             </div>
           );
         })}
@@ -177,7 +192,10 @@ export default function AutoChartRenderer({ type, data, config = {} }) {
 
           {/* Conteúdo central do medidor */}
           <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none">
-            <span className="text-2xl font-black text-gray-800 tracking-tight">
+            <span
+              className="text-2xl font-black text-gray-800 tracking-tight"
+              style={{ color: 'var(--text-main)' }}
+            >
               {percentual}%
             </span>
             <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border mt-1 ${statusBg}`}>
@@ -187,17 +205,26 @@ export default function AutoChartRenderer({ type, data, config = {} }) {
         </div>
 
         {/* Resumo financeiro de suporte */}
-        <div className="grid grid-cols-2 gap-3 w-full max-w-sm mt-3 pt-3 border-t border-gray-100 text-center">
-          <div className="bg-gray-50/80 p-2 rounded-lg">
-            <p className="text-[11px] font-medium text-gray-500 uppercase tracking-wider">Faturado</p>
-            <p className="text-sm font-bold text-gray-800 mt-0.5">{formatarMoeda(valor)}</p>
+        <div
+          className="grid grid-cols-2 gap-3 w-full max-w-sm mt-3 pt-3 border-t border-gray-100 text-center"
+          style={{ borderColor: 'var(--border-color)' }}
+        >
+          <div
+            className="bg-gray-50/80 p-2 rounded-lg"
+            style={{ backgroundColor: 'var(--bg-surface-hover)' }}
+          >
+            <p className="text-[11px] font-medium text-gray-500 uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>Faturado</p>
+            <p className="text-sm font-bold text-gray-800 mt-0.5" style={{ color: 'var(--text-main)' }}>{formatarMoeda(valor)}</p>
           </div>
-          <div className="bg-gray-50/80 p-2 rounded-lg">
-            <p className="text-[11px] font-medium text-gray-500 uppercase tracking-wider">Saldo Restante</p>
+          <div
+            className="bg-gray-50/80 p-2 rounded-lg"
+            style={{ backgroundColor: 'var(--bg-surface-hover)' }}
+          >
+            <p className="text-[11px] font-medium text-gray-500 uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>Saldo Restante</p>
             <p className="text-sm font-bold text-emerald-600 mt-0.5">{formatarMoeda(saldoRestante)}</p>
           </div>
         </div>
-        <p className="text-[11px] text-gray-400 mt-2">Teto Anual: {formatarMoeda(limite)}</p>
+        <p className="text-[11px] text-gray-400 mt-2" style={{ color: 'var(--text-muted)' }}>Teto Anual: {formatarMoeda(limite)}</p>
       </div>
     );
   }
@@ -219,20 +246,30 @@ export default function AutoChartRenderer({ type, data, config = {} }) {
     const titulo = config.titulo || raw.nome || raw.rotulo || 'Métrica Principal';
 
     return (
-      <div className="p-4 bg-gradient-to-br from-white to-gray-50/50 rounded-xl border border-gray-100 flex flex-col justify-between h-full">
+      <div
+        className="theme-card p-4 bg-gradient-to-br from-white to-gray-50/50 rounded-xl border border-gray-100 flex flex-col justify-between h-full"
+        style={{
+          backgroundColor: 'var(--bg-surface)',
+          borderColor: 'var(--border-color)',
+          color: 'var(--text-main)',
+        }}
+      >
         <div>
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{titulo}</span>
+            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>{titulo}</span>
             <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg">
               <TrendingUp className="w-4 h-4" />
             </div>
           </div>
-          <div className="text-2xl sm:text-3xl font-extrabold text-gray-900 mt-2">
+          <div className="text-2xl sm:text-3xl font-extrabold text-gray-900 mt-2" style={{ color: 'var(--text-main)' }}>
             {formatarMoeda(valor)}
           </div>
         </div>
 
-        <div className="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500">
+        <div
+          className="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500"
+          style={{ borderColor: 'var(--border-color)', color: 'var(--text-secondary)' }}
+        >
           {percentual !== null && (
             <span className="inline-flex items-center gap-1 font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
               {percentual}%

@@ -142,6 +142,7 @@ export default function Configuracoes() {
     temaAtual,
     temas = [],
     carregando: carregandoTemas = false,
+    carregarTemas,
     ativarTema,
     uploadTema,
     gerarTemaIA,
@@ -298,6 +299,11 @@ export default function Configuracoes() {
       setTemaExcluindoId(null);
     }
   };
+
+  useEffect(() => {
+    carregarTemas?.();
+  }, [carregarTemas]);
+
   useEffect(() => {
     async function carregarConfiguracoes() {
       try {

@@ -49,7 +49,9 @@ export function applyThemeToDOM(tema) {
     root.style.setProperty('--status-info', tokens.status.info || '#3b82f6');
   }
 
-  // Alterna classe 'dark' no <html> para compatibilidade total
+  // Alterna classe 'dark' e atributos de tema no <html> para compatibilidade total
+  root.setAttribute('data-theme-mode', modo);
+  root.setAttribute('data-theme-id', String(tema?.id || tema?.slug || 'padrao'));
   if (modo === 'dark') {
     root.classList.add('dark');
   } else {

@@ -25,13 +25,21 @@ const DynamicWidgetCard = React.forwardRef(function DynamicWidgetCard({
   return (
     <div
       ref={ref}
-      style={style}
+      style={{
+        backgroundColor: 'var(--bg-surface)',
+        borderColor: 'var(--border-color)',
+        color: 'var(--text-main)',
+        ...style,
+      }}
       data-testid={`widget-card-${widget.id}`}
-      className={`bg-white rounded-2xl p-5 border border-gray-200/80 shadow-sm flex flex-col justify-between transition-shadow hover:shadow-md h-full relative overflow-hidden group select-none ${className}`}
+      className={`theme-card bg-white rounded-2xl p-5 border border-gray-200/80 shadow-sm flex flex-col justify-between transition-all duration-200 hover:shadow-md h-full relative overflow-hidden group select-none ${className}`}
       {...rest}
     >
       {/* Cabeçalho do Card com Alça de Arraste */}
-      <div className="flex items-center justify-between gap-3 pb-3 border-b border-gray-100 flex-wrap sm:flex-nowrap">
+      <div
+        className="flex items-center justify-between gap-3 pb-3 border-b border-gray-100 flex-wrap sm:flex-nowrap"
+        style={{ borderColor: 'var(--border-color)' }}
+      >
         <div className="flex items-center gap-1.5 min-w-0 flex-1">
           {/* Alça de Arraste */}
           <div
@@ -43,6 +51,7 @@ const DynamicWidgetCard = React.forwardRef(function DynamicWidgetCard({
 
           <h3
             className="font-bold text-sm text-gray-900 truncate"
+            style={{ color: 'var(--text-main)' }}
             title={widget.titulo}
           >
             {widget.titulo}
@@ -52,7 +61,14 @@ const DynamicWidgetCard = React.forwardRef(function DynamicWidgetCard({
         <div className="flex items-center gap-2 flex-shrink-0">
           {/* Seletor Rápido de Período */}
           {isLimiteMei ? (
-            <span className="text-[11px] font-semibold bg-gray-100 text-gray-600 px-2 py-0.5 rounded-lg border border-gray-200">
+            <span
+              className="text-[11px] font-semibold bg-gray-100 text-gray-600 px-2 py-0.5 rounded-lg border border-gray-200"
+              style={{
+                backgroundColor: 'var(--bg-surface-hover)',
+                color: 'var(--text-secondary)',
+                borderColor: 'var(--border-color)',
+              }}
+            >
               Ano Atual
             </span>
           ) : (
@@ -61,6 +77,11 @@ const DynamicWidgetCard = React.forwardRef(function DynamicWidgetCard({
                 value={widget.periodo || 'ultimos_6_meses'}
                 onChange={(e) => onChangePeriod && onChangePeriod(widget, e.target.value)}
                 className="text-xs font-medium bg-gray-50 hover:bg-gray-100 border border-gray-200 text-gray-700 rounded-lg px-2 py-1 pr-6 focus:outline-none focus:ring-1 focus:ring-indigo-500 cursor-pointer appearance-none transition"
+                style={{
+                  backgroundColor: 'var(--bg-surface-hover)',
+                  borderColor: 'var(--border-color)',
+                  color: 'var(--text-main)',
+                }}
                 aria-label="Selecionar período"
               >
                 <option value="mes_atual">Mês Atual</option>

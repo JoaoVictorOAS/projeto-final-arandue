@@ -109,7 +109,7 @@ const temaController = {
         descricao: (conteudo && conteudo.descricao) || 'Tema importado via upload JSON',
         tokens: paleta,
         ativar: Boolean(!conteudo || conteudo.ativar !== false),
-        origem: 'UPLOAD',
+        origem: (conteudo && conteudo.origem) || 'UPLOAD',
       });
 
       return res.status(201).json({

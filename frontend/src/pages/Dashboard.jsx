@@ -599,8 +599,18 @@ export default function Dashboard() {
   return (
     <div className="space-y-6">
       {/* Seção de Ações Rápidas */}
-      <div className="bg-white rounded-2xl p-5 border border-gray-200/80 shadow-sm">
-        <h2 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-3 flex items-center gap-2">
+      <div
+        className="theme-card bg-white rounded-2xl p-5 border border-gray-200/80 shadow-sm transition-colors duration-200"
+        style={{
+          backgroundColor: 'var(--bg-surface)',
+          borderColor: 'var(--border-color)',
+          color: 'var(--text-main)',
+        }}
+      >
+        <h2
+          className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-3 flex items-center gap-2"
+          style={{ color: 'var(--text-main)' }}
+        >
           <Activity className="w-4 h-4 text-indigo-600" />
           Ações Rápidas
         </h2>
@@ -638,11 +648,19 @@ export default function Dashboard() {
               key={kpi.title}
               to={kpi.link}
               data-testid={kpi.labelTest}
-              className="bg-white rounded-2xl p-5 border border-gray-200/80 shadow-sm hover:shadow-md hover:border-indigo-200 transition-all flex flex-col justify-between group"
+              className="theme-card bg-white rounded-2xl p-5 border border-gray-200/80 shadow-sm hover:shadow-md hover:border-indigo-200 transition-all flex flex-col justify-between group"
+              style={{
+                backgroundColor: 'var(--bg-surface)',
+                borderColor: 'var(--border-color)',
+                color: 'var(--text-main)',
+              }}
             >
               <div className="flex items-start justify-between">
                 <div>
-                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  <p
+                    className="text-xs font-semibold text-gray-500 uppercase tracking-wider"
+                    style={{ color: 'var(--text-secondary)' }}
+                  >
                     {kpi.title}
                   </p>
                   <p className={`text-2xl font-extrabold mt-2 ${kpi.textColor}`}>
@@ -656,7 +674,10 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              <div className="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between text-xs text-gray-400">
+              <div
+                className="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between text-xs text-gray-400"
+                style={{ borderColor: 'var(--border-color)' }}
+              >
                 <span className="truncate">{kpi.desc}</span>
                 <span className="text-indigo-600 font-semibold group-hover:translate-x-0.5 transition-transform inline-flex items-center gap-0.5 ml-2 flex-shrink-0">
                   Ver <ArrowRight className="w-3 h-3" />
@@ -670,7 +691,13 @@ export default function Dashboard() {
       {/* Seção de Painéis Analíticos & Gráficos Dinâmicos */}
       <div className="space-y-4">
         {/* Barra de Abas e Ações do Painel */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-3 sm:px-5 sm:py-3.5 rounded-2xl border border-gray-200/80 shadow-sm">
+        <div
+          className="theme-card flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-3 sm:px-5 sm:py-3.5 rounded-2xl border border-gray-200/80 shadow-sm transition-colors duration-200"
+          style={{
+            backgroundColor: 'var(--bg-surface)',
+            borderColor: 'var(--border-color)',
+          }}
+        >
           {/* Abas */}
           <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
             <div className="flex items-center gap-1.5 p-1 bg-gray-100/80 rounded-xl">
@@ -740,19 +767,33 @@ export default function Dashboard() {
 
         {/* Grid de Widgets do Painel Ativo */}
         {loadingWidgets ? (
-          <div className="p-12 bg-white rounded-2xl border border-gray-200/80 text-center">
+          <div
+            className="theme-card p-12 bg-white rounded-2xl border border-gray-200/80 text-center transition-colors duration-200"
+            style={{
+              backgroundColor: 'var(--bg-surface)',
+              borderColor: 'var(--border-color)',
+              color: 'var(--text-main)',
+            }}
+          >
             <Loader2 className="w-6 h-6 text-indigo-600 animate-spin mx-auto mb-2" />
-            <p className="text-xs text-gray-500">Atualizando gráficos...</p>
+            <p className="text-xs text-gray-500" style={{ color: 'var(--text-secondary)' }}>Atualizando gráficos...</p>
           </div>
         ) : !activeDashboard?.widgets || activeDashboard.widgets.length === 0 ? (
-          <div className="bg-white rounded-2xl p-8 border border-gray-200/80 text-center">
+          <div
+            className="theme-card bg-white rounded-2xl p-8 border border-gray-200/80 text-center transition-colors duration-200"
+            style={{
+              backgroundColor: 'var(--bg-surface)',
+              borderColor: 'var(--border-color)',
+              color: 'var(--text-main)',
+            }}
+          >
             <div className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center mx-auto mb-3">
               <BarChart3 className="w-6 h-6" />
             </div>
-            <p className="text-sm font-bold text-gray-800">
+            <p className="text-sm font-bold text-gray-800" style={{ color: 'var(--text-main)' }}>
               Nenhum gráfico cadastrado neste painel
             </p>
-            <p className="text-xs text-gray-500 max-w-sm mx-auto mt-1 mb-4">
+            <p className="text-xs text-gray-500 max-w-sm mx-auto mt-1 mb-4" style={{ color: 'var(--text-secondary)' }}>
               Adicione gráficos e indicadores customizados para acompanhar o desempenho do seu MEI.
             </p>
             <button
@@ -794,14 +835,24 @@ export default function Dashboard() {
       </div>
 
       {/* Seção Próximos Atendimentos */}
-      <div className="bg-white rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between flex-wrap gap-2">
+      <div
+        className="theme-card bg-white rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden transition-colors duration-200"
+        style={{
+          backgroundColor: 'var(--bg-surface)',
+          borderColor: 'var(--border-color)',
+          color: 'var(--text-main)',
+        }}
+      >
+        <div
+          className="px-6 py-4 border-b border-gray-100 flex items-center justify-between flex-wrap gap-2"
+          style={{ borderColor: 'var(--border-color)' }}
+        >
           <div>
-            <h2 className="text-base font-bold text-gray-900 flex items-center gap-2">
+            <h2 className="text-base font-bold text-gray-900 flex items-center gap-2" style={{ color: 'var(--text-main)' }}>
               <Calendar className="w-5 h-5 text-indigo-600" />
               Próximos Atendimentos
             </h2>
-            <p className="text-xs text-gray-500 mt-0.5">
+            <p className="text-xs text-gray-500 mt-0.5" style={{ color: 'var(--text-secondary)' }}>
               Compromissos agendados na sua agenda de serviços
             </p>
           </div>

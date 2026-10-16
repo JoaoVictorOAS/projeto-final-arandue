@@ -116,3 +116,193 @@ body {
   border-color: #6366f1;
   transform: scale(1.15);
 }
+
+/* =========================================================================
+   SISTEMA DE TEMAS DINÂMICOS — MAPEAMENTO DE SUPERFÍCIES, CARDS E WIDGETS
+   Garante que todos os cards, widgets, inputs e tabelas herdem as cores
+   do tema ativo (inclusive temas escuros e customizados).
+   ========================================================================= */
+
+/* 1. Mapeamento Universal de Superfície (.theme-card, .bg-white e variantes de opacidade) */
+.theme-card,
+.theme-app-wrapper .bg-white,
+.theme-app-wrapper [class*="bg-white"],
+.dark .bg-white,
+.dark [class*="bg-white"],
+[data-theme-mode="dark"] .bg-white,
+[data-theme-mode="dark"] [class*="bg-white"] {
+  background-color: var(--bg-surface) !important;
+  color: var(--text-main);
+}
+
+/* Modais e popups */
+[role="dialog"] .bg-white,
+[role="dialog"] [class*="bg-white"],
+.dark [role="dialog"],
+[data-theme-mode="dark"] [role="dialog"] {
+  background-color: var(--bg-surface) !important;
+  color: var(--text-main);
+}
+
+/* 2. Superfícies secundárias (hover, listagens alternadas, cabeçalhos de tabela) */
+.dark .bg-gray-50,
+.dark .bg-gray-100,
+.dark .bg-gray-200,
+.dark [class*="bg-gray-50"],
+.dark [class*="bg-gray-100"],
+.dark [class*="bg-gray-200"],
+[data-theme-mode="dark"] .bg-gray-50,
+[data-theme-mode="dark"] .bg-gray-100,
+[data-theme-mode="dark"] .bg-gray-200,
+[data-theme-mode="dark"] [class*="bg-gray-50"],
+[data-theme-mode="dark"] [class*="bg-gray-100"],
+[data-theme-mode="dark"] [class*="bg-gray-200"] {
+  background-color: var(--bg-surface-hover) !important;
+}
+
+/* 3. Bordas dinâmicas */
+.dark .border-gray-100,
+.dark .border-gray-200,
+.dark .border-gray-300,
+.dark [class*="border-gray-"],
+.dark [class*="divide-gray-"],
+[data-theme-mode="dark"] .border-gray-100,
+[data-theme-mode="dark"] .border-gray-200,
+[data-theme-mode="dark"] .border-gray-300,
+[data-theme-mode="dark"] [class*="border-gray-"],
+[data-theme-mode="dark"] [class*="divide-gray-"] {
+  border-color: var(--border-color) !important;
+}
+
+/* 4. Textos principais e de alta ênfase */
+.dark .text-gray-900,
+.dark .text-gray-800,
+.dark .text-gray-700,
+.dark [class*="text-gray-900"],
+.dark [class*="text-gray-800"],
+.dark [class*="text-gray-700"],
+[data-theme-mode="dark"] .text-gray-900,
+[data-theme-mode="dark"] .text-gray-800,
+[data-theme-mode="dark"] .text-gray-700,
+[data-theme-mode="dark"] [class*="text-gray-900"],
+[data-theme-mode="dark"] [class*="text-gray-800"],
+[data-theme-mode="dark"] [class*="text-gray-700"] {
+  color: var(--text-main) !important;
+}
+
+/* 5. Textos secundários */
+.dark .text-gray-600,
+.dark .text-gray-500,
+.dark [class*="text-gray-600"],
+.dark [class*="text-gray-500"],
+[data-theme-mode="dark"] .text-gray-600,
+[data-theme-mode="dark"] .text-gray-500,
+[data-theme-mode="dark"] [class*="text-gray-600"],
+[data-theme-mode="dark"] [class*="text-gray-500"] {
+  color: var(--text-secondary) !important;
+}
+
+/* 6. Textos muted e placeholders */
+.dark .text-gray-400,
+.dark [class*="text-gray-400"],
+[data-theme-mode="dark"] .text-gray-400,
+[data-theme-mode="dark"] [class*="text-gray-400"] {
+  color: var(--text-muted) !important;
+}
+
+/* 7. Formulários, Inputs, Textareas e Selects em modo escuro */
+.dark input:not([type="checkbox"]):not([type="radio"]),
+.dark textarea,
+.dark select,
+[data-theme-mode="dark"] input:not([type="checkbox"]):not([type="radio"]),
+[data-theme-mode="dark"] textarea,
+[data-theme-mode="dark"] select {
+  background-color: var(--bg-surface) !important;
+  color: var(--text-main) !important;
+  border-color: var(--border-color) !important;
+}
+
+.dark select option,
+[data-theme-mode="dark"] select option {
+  background-color: var(--bg-surface) !important;
+  color: var(--text-main) !important;
+}
+
+.dark input::placeholder,
+.dark textarea::placeholder,
+[data-theme-mode="dark"] input::placeholder,
+[data-theme-mode="dark"] textarea::placeholder {
+  color: var(--text-muted) !important;
+}
+
+.dark input:disabled,
+.dark select:disabled,
+[data-theme-mode="dark"] input:disabled,
+[data-theme-mode="dark"] select:disabled {
+  background-color: var(--bg-surface-hover) !important;
+  color: var(--text-muted) !important;
+}
+
+/* 8. Tabelas, Thead e Linhas */
+.dark table,
+.dark th,
+.dark td,
+[data-theme-mode="dark"] table,
+[data-theme-mode="dark"] th,
+[data-theme-mode="dark"] td {
+  border-color: var(--border-color) !important;
+}
+
+.dark thead,
+.dark thead tr,
+.dark thead th,
+[data-theme-mode="dark"] thead,
+[data-theme-mode="dark"] thead tr,
+[data-theme-mode="dark"] thead th {
+  background-color: var(--bg-surface-hover) !important;
+  color: var(--text-main) !important;
+}
+
+.dark tbody tr:hover,
+[data-theme-mode="dark"] tbody tr:hover {
+  background-color: var(--bg-surface-hover) !important;
+}
+
+/* 9. Gráficos SVG (Recharts) */
+.dark .recharts-cartesian-grid-horizontal line,
+.dark .recharts-cartesian-grid-vertical line,
+[data-theme-mode="dark"] .recharts-cartesian-grid-horizontal line,
+[data-theme-mode="dark"] .recharts-cartesian-grid-vertical line {
+  stroke: var(--border-color) !important;
+  opacity: 0.5;
+}
+
+.dark .recharts-text,
+[data-theme-mode="dark"] .recharts-text {
+  fill: var(--text-secondary) !important;
+}
+
+/* 10. Gradientes em Tailwind para modo escuro */
+.dark [class*="from-white"],
+[data-theme-mode="dark"] [class*="from-white"] {
+  --tw-gradient-from: var(--bg-surface) var(--tw-gradient-from-position) !important;
+  --tw-gradient-to: var(--bg-surface-hover) var(--tw-gradient-to-position) !important;
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
+}
+
+/* 11. Sombras refinadas para Dark Mode (evita reflexos brancos de sombra padrão) */
+.dark .shadow-sm,
+.dark .shadow,
+.dark .shadow-md,
+.dark .shadow-lg,
+.dark .shadow-xl,
+.dark .shadow-2xl,
+[data-theme-mode="dark"] .shadow-sm,
+[data-theme-mode="dark"] .shadow,
+[data-theme-mode="dark"] .shadow-md,
+[data-theme-mode="dark"] .shadow-lg,
+[data-theme-mode="dark"] .shadow-xl,
+[data-theme-mode="dark"] .shadow-2xl {
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.45) !important;
+}
+
