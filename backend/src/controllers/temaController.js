@@ -80,7 +80,7 @@ const temaController = {
   async uploadTema(req, res) {
     try {
       const usuarioId = req.usuario.id;
-      let conteudo = req.body;
+      let conteudo = req.body || {};
 
       if (req.file && req.file.buffer) {
         try {
@@ -93,7 +93,7 @@ const temaController = {
         }
       }
 
-      const paleta = conteudo.tokens || conteudo.cores || conteudo;
+      const paleta = (conteudo && (conteudo.tokens || conteudo.cores)) ? (conteudo.tokens || conteudo.cores) : conteudo;
       const validacao = validarTemaTokens(paleta);
       if (!validacao.valido) {
         return res.status(400).json({
@@ -104,11 +104,11 @@ const temaController = {
       }
 
       const novoTema = await temaRepository.criarTema(usuarioId, {
-        nome: conteudo.nome || 'Tema Importado',
-        modo: conteudo.modo || 'dark',
-        descricao: conteudo.descricao || 'Tema importado via upload JSON',
+        nome: (conteudo && conteudo.nome) || 'Tema Importado',
+        modo: (conteudo && conteudo.modo) || 'dark',
+        descricao: (conteudo && conteudo.descricao) || 'Tema importado via upload JSON',
         tokens: paleta,
-        ativar: Boolean(conteudo.ativar !== false),
+        ativar: Boolean(!conteudo || conteudo.ativar !== false),
         origem: 'UPLOAD',
       });
 
@@ -130,7 +130,13 @@ const temaController = {
     try {
       const usuarioId = req.usuario.id;
       const { id } = req.params;
-      await temaRepository.excluirTema(usuarioId, id);
+      const excluido = await temaRepository.excluirTema(usuarioId, id);
+      if (!excluido) {
+        return res.status(404).json({
+          sucesso: false,
+          mensagem: 'Tema não encontrado na sua biblioteca.',
+        });
+      }
       return res.status(200).json({
         sucesso: true,
         mensagem: 'Tema removido da sua biblioteca.',
@@ -146,7 +152,7 @@ const temaController = {
   async gerarTemaIA(req, res) {
     try {
       const usuarioId = req.usuario.id;
-      const { descricao, modo = 'dark', cor_base } = req.body;
+      const { descricao, modo = 'dark', cor_base } = req.body || {};
 
       // Gerador algorítmico de suporte REST para síntese cromática
       const isDark = modo === 'dark';
