@@ -4,12 +4,14 @@ const assistenteController = {
   async enviarMensagem(req, res) {
     try {
       const usuario_id = req.usuario.id;
-      const { conversa_id, mensagem, assincrono } = req.body;
+      const { conversa_id, mensagem, assincrono, midia, tipo_midia } = req.body;
       const ehAssincrono = assincrono === true || req.query.assincrono === 'true' || req.query.async === 'true';
 
       const resultado = await assistenteService.enviarMensagem(usuario_id, {
         conversa_id: conversa_id ? Number(conversa_id) : undefined,
         mensagem,
+        midia,
+        tipo_midia,
         assincrono: ehAssincrono
       });
 
@@ -202,6 +204,44 @@ const assistenteController = {
       return res.status(500).json({
         sucesso: false,
         mensagem: error.message || 'Erro ao gerar novo QR Code do WhatsApp'
+      });
+    }
+  },
+
+  async transcreverAudio(req, res) {
+    try {
+      const usuario_id = req.usuario.id;
+      const { audio_base64, mime_type } = req.body;
+      const resultado = await assistenteService.transcreverAudio(usuario_id, { audio_base64, mime_type });
+      return res.status(200).json({
+        sucesso: true,
+        mensagem: 'Áudio transcrito com sucesso',
+        dados: resultado
+      });
+    } catch (error) {
+      const status = error.statusCode || 500;
+      return res.status(status).json({
+        sucesso: false,
+        mensagem: error.message || 'Erro ao transcrever áudio'
+      });
+    }
+  },
+
+  async analisarImagem(req, res) {
+    try {
+      const usuario_id = req.usuario.id;
+      const { imagem_base64, mime_type, instrucao } = req.body;
+      const resultado = await assistenteService.analisarImagem(usuario_id, { imagem_base64, mime_type, instrucao });
+      return res.status(200).json({
+        sucesso: true,
+        mensagem: 'Imagem analisada com sucesso',
+        dados: resultado
+      });
+    } catch (error) {
+      const status = error.statusCode || 500;
+      return res.status(status).json({
+        sucesso: false,
+        mensagem: error.message || 'Erro ao analisar imagem'
       });
     }
   }

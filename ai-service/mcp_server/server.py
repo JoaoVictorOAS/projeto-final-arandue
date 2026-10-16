@@ -1015,5 +1015,35 @@ async def vincular_whatsapp(telefone: str) -> Dict[str, Any]:
     return await _post("/assistente/whatsapp/vincular", payload)
 
 
+# ==========================================
+# MÓDULO: MULTIMODAL (ÁUDIO E IMAGEM)
+# ==========================================
+
+@mcp_server_app.tool()
+async def transcrever_audio(audio_base64: str, mime_type: Optional[str] = "audio/ogg") -> Dict[str, Any]:
+    """Transcreve um áudio gravado em base64 (voz do MEI ou cliente) com alta fidelidade em português brasileiro."""
+    payload = {
+        "audio_base64": str(audio_base64).strip(),
+        "mime_type": str(mime_type or "audio/ogg").strip()
+    }
+    return await _post("/assistente/audio/transcrever", payload)
+
+
+@mcp_server_app.tool()
+async def analisar_imagem_documento(
+    imagem_base64: str,
+    mime_type: Optional[str] = "image/jpeg",
+    instrucao: Optional[str] = None
+) -> Dict[str, Any]:
+    """Analisa visualmente uma imagem (recibo, comprovante Pix, nota fiscal, produto, estoque ou cartão) extraindo dados e sugerindo ações operacionais."""
+    payload: Dict[str, Any] = {
+        "imagem_base64": str(imagem_base64).strip(),
+        "mime_type": str(mime_type or "image/jpeg").strip()
+    }
+    if instrucao:
+        payload["instrucao"] = str(instrucao).strip()
+    return await _post("/assistente/imagem/analisar", payload)
+
+
 if __name__ == "__main__":
     mcp_server_app.run()

@@ -145,6 +145,67 @@ class WhatsAppService {
   }
 
   /**
+   * Identifica se a mensagem contém anexo de áudio ou imagem.
+   * @param {Object} messageObj
+   * @returns {Object|null} Metadados da mídia { tipo, mimeType, caption } ou null
+   */
+  extrairMidiaMensagem(messageObj) {
+    if (!messageObj || typeof messageObj !== 'object') return null;
+
+    const inner =
+      messageObj.ephemeralMessage?.message ||
+      messageObj.viewOnceMessage?.message ||
+      messageObj.viewOnceMessageV2?.message ||
+      messageObj.deviceSentMessage?.message ||
+      messageObj.documentWithCaptionMessage?.message ||
+      messageObj.editedMessage?.message?.protocolMessage?.editedMessage ||
+      messageObj;
+
+    if (inner.audioMessage) {
+      return {
+        tipo: 'audio',
+        mimeType: inner.audioMessage.mimetype || 'audio/ogg; codecs=opus'
+      };
+    }
+
+    if (inner.imageMessage) {
+      return {
+        tipo: 'imagem',
+        caption: inner.imageMessage.caption || '',
+        mimeType: inner.imageMessage.mimetype || 'image/jpeg'
+      };
+    }
+
+    return null;
+  }
+
+  /**
+   * Baixa os dados binários (buffer) de uma mídia do WhatsApp utilizando o Baileys.
+   * @param {Object} msg - Mensagem completa do Baileys contendo a mídia
+   * @returns {Promise<Buffer|null>}
+   */
+  async baixarBufferMidia(msg) {
+    try {
+      const baileys = carregarBaileys();
+      const downloadMedia = baileys.downloadMediaMessage;
+      if (!downloadMedia || typeof downloadMedia !== 'function') {
+        return null;
+      }
+      return await downloadMedia(
+        msg,
+        'buffer',
+        {},
+        {
+          reuploadRequest: this.sock?.updateMediaMessage
+        }
+      );
+    } catch (err) {
+      console.warn('[WhatsApp] Falha ao baixar mídia da mensagem:', err.message);
+      return null;
+    }
+  }
+
+  /**
    * Inicializa o cliente WhatsApp e escuta os eventos de conexão e mensagens.
    */
   async inicializar() {
@@ -311,13 +372,15 @@ class WhatsAppService {
     // 3. Ignora mensagens de grupos ou transmissões de status
     if (!jid || jid.endsWith('@g.us') || jid === 'status@broadcast') return false;
 
-    // 4. Extrai o texto da mensagem
+    // 4. Extrai o texto e/ou mídia da mensagem
+    const midiaInfo = this.extrairMidiaMensagem(msg.message);
     const texto = this.extrairTextoMensagem(msg.message);
-    if (!texto || !texto.trim()) return false;
-    const textoLimpo = texto.trim();
+    const textoLimpo = (texto && typeof texto === 'string') ? texto.trim() : '';
+
+    if (!textoLimpo && !midiaInfo) return false;
 
     // Proteção adicional anti-loop por conteúdo exato recém-enviado pelo bot
-    if (msg.key?.fromMe && this.textosEnviadosPeloBot.has(textoLimpo)) {
+    if (msg.key?.fromMe && textoLimpo && this.textosEnviadosPeloBot.has(textoLimpo)) {
       this.textosEnviadosPeloBot.delete(textoLimpo);
       return false;
     }
@@ -357,17 +420,21 @@ class WhatsAppService {
     }
 
     // 6. Enfileira para processamento sequencial e seguro
-    this._enfileirarMensagem(jid, textoLimpo, msg.key);
+    if (midiaInfo) {
+      this._enfileirarMensagem(jid, textoLimpo, msg.key, midiaInfo, msg);
+    } else {
+      this._enfileirarMensagem(jid, textoLimpo, msg.key);
+    }
     return true;
   }
 
   /**
    * Enfileira mensagens recebidas para garantir processamento sequencial e ordenado por remetente.
    */
-  _enfileirarMensagem(jid, texto, msgKey = null) {
+  _enfileirarMensagem(jid, texto, msgKey = null, midiaInfo = null, fullMsg = null) {
     const filaAtual = this.filasPorJid.get(jid) || Promise.resolve();
     const proximaExecucao = filaAtual
-      .then(() => this.processarMensagemRecebida(jid, texto, msgKey))
+      .then(() => this.processarMensagemRecebida(jid, texto, msgKey, midiaInfo, fullMsg))
       .catch((err) => {
         console.error(`[WhatsApp] Erro não tratado na fila de ${jid}:`, err);
       });
@@ -380,8 +447,10 @@ class WhatsAppService {
    * @param {string} jid - Remote JID do remetente
    * @param {string} texto - Conteúdo textual enviado
    * @param {Object|null} [msgKey=null] - Metadados da chave da mensagem
+   * @param {Object|null} [midiaInfo=null] - Informações de tipo e mime type da mídia
+   * @param {Object|null} [fullMsg=null] - Mensagem completa do Baileys para download
    */
-  async processarMensagemRecebida(jid, texto, msgKey = null) {
+  async processarMensagemRecebida(jid, texto, msgKey = null, midiaInfo = null, fullMsg = null) {
     try {
       const identificadorTelefone = this.resolverIdentificadorTelefone(jid, msgKey);
       const tel = normalizarNumeroWhatsApp(identificadorTelefone);
@@ -406,11 +475,12 @@ class WhatsAppService {
       }
 
       if (process.env.NODE_ENV !== 'test') {
-        console.log(`[WhatsApp] 📩 Mensagem recebida para usuário ${usuario.id} (tamanho: ${texto.length})`);
+        console.log(`[WhatsApp] 📩 Mensagem recebida para usuário ${usuario.id} (texto: ${texto?.length || 0}, midia: ${midiaInfo?.tipo || 'nenhuma'})`);
       }
 
-      // 2. Feedback visual imediato: indica "digitando..." no WhatsApp
-      await this.sock.sendPresenceUpdate('composing', jid);
+      // 2. Feedback visual imediato: indica "digitando..." ou "gravando..." no WhatsApp
+      const presenca = midiaInfo?.tipo === 'audio' ? 'recording' : 'composing';
+      await this.sock.sendPresenceUpdate(presenca, jid);
 
       // 3. Localiza ou cria a conversa do canal WhatsApp para este usuário
       let conversa = await conversaRepository.buscarConversaAtivaPorCanal(usuario.id, 'whatsapp');
@@ -424,19 +494,46 @@ class WhatsAppService {
         );
       }
 
-      // 4. Executa a mensagem no assistente via pipeline oficial (gera scoped token e chama ai-service com MCP)
-      const resultado = await assistenteService.enviarMensagem(usuario.id, {
+      // 4. Prepara payload multimodal se houver mídia
+      let midiaPayload = null;
+      let tipoMidia = 'texto';
+      let textoParaEnvio = texto;
+
+      if (midiaInfo && fullMsg) {
+        tipoMidia = midiaInfo.tipo;
+        const buffer = await this.baixarBufferMidia(fullMsg);
+        if (buffer) {
+          midiaPayload = {
+            tipo: midiaInfo.tipo,
+            dados_base64: buffer.toString('base64'),
+            mime_type: midiaInfo.mimeType
+          };
+          if (tipoMidia === 'imagem' && !textoParaEnvio) {
+            textoParaEnvio = midiaInfo.caption || 'Analise a imagem enviada pelo MEI e sugira ou execute as ações cabíveis.';
+          }
+        } else {
+          console.warn(`[WhatsApp] Não foi possível baixar buffer de mídia (${tipoMidia}) da mensagem ${msgKey?.id}`);
+        }
+      }
+
+      // 5. Executa a mensagem no assistente via pipeline oficial (gera scoped token e chama ai-service com MCP)
+      const payloadEnvio = {
         conversa_id: conversaId,
-        mensagem: texto,
+        mensagem: textoParaEnvio,
         canal: 'whatsapp',
         assincrono: false
-      });
+      };
+      if (midiaPayload) {
+        payloadEnvio.midia = midiaPayload;
+        payloadEnvio.tipo_midia = tipoMidia;
+      }
+      const resultado = await assistenteService.enviarMensagem(usuario.id, payloadEnvio);
 
-      // 5. Converte o Markdown rico da IA para a formatação do WhatsApp
+      // 6. Converte o Markdown rico da IA para a formatação do WhatsApp
       const conteudoBruto = resultado?.mensagem?.conteudo || 'Solicitação processada com sucesso.';
       const respostaFormatada = converterMarkdownParaWhatsApp(conteudoBruto);
 
-      // 6. Finaliza indicador de digitação e envia a resposta com proteção anti-loop prévia
+      // 7. Finaliza indicador de digitação e envia a resposta com proteção anti-loop prévia
       await this.sock.sendPresenceUpdate('paused', jid);
       this.textosEnviadosPeloBot.add(respostaFormatada.trim());
       if (this.textosEnviadosPeloBot.size > 200) {

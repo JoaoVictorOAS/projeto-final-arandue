@@ -190,30 +190,54 @@ export function ChatProvider({ children }) {
     setNotificacao(null);
   }, []);
 
-  // Envio de mensagem com suporte a Short-Polling assíncrono
-  const enviarMensagemTexto = useCallback(async (textoParaEnviar) => {
-    const texto = (textoParaEnviar || mensagemInput).trim();
-    if (!texto || enviando) return;
+  const [anexoMidia, setAnexoMidia] = useState(null); // { tipo: 'imagem' | 'audio', dados_base64, mime_type, previewUrl, nomeArquivo }
+
+  // Envio de mensagem com suporte a Short-Polling assíncrono e anexos de áudio/imagem
+  const enviarMensagemTexto = useCallback(async (textoParaEnviar, midiaParaEnviar) => {
+    const midiaFinal = midiaParaEnviar !== undefined ? midiaParaEnviar : anexoMidia;
+    const tipoMidiaFinal = midiaFinal ? midiaFinal.tipo : 'texto';
+    const textoEntrada = typeof textoParaEnviar === 'string' ? textoParaEnviar : mensagemInput;
+    let texto = textoEntrada.trim();
+
+    if (!texto && !midiaFinal) return;
+    if (enviando) return;
+
+    if (!texto && midiaFinal) {
+      texto = tipoMidiaFinal === 'audio' ? 'Áudio gravado' : 'Analise esta imagem enviada.';
+    }
 
     setErro(null);
     const msgTemporariaUsuario = {
       id: `user-${Date.now()}`,
       papel: 'usuario',
       conteudo: texto,
+      tipo_midia: tipoMidiaFinal,
+      midia_preview: midiaFinal?.previewUrl || null,
       status: 'concluida',
       criado_em: new Date().toISOString(),
     };
 
     setMensagens((prev) => [...prev, msgTemporariaUsuario]);
     setMensagemInput('');
+    setAnexoMidia(null);
     setEnviando(true);
 
     try {
-      const res = await api.post('/assistente/mensagens', {
+      const payload = {
         conversa_id: conversaAtivaId,
         mensagem: texto,
         assincrono: true,
-      });
+      };
+      if (midiaFinal) {
+        payload.midia = {
+          tipo: midiaFinal.tipo,
+          dados_base64: midiaFinal.dados_base64,
+          mime_type: midiaFinal.mime_type
+        };
+        payload.tipo_midia = midiaFinal.tipo;
+      }
+
+      const res = await api.post('/assistente/mensagens', payload);
 
       if (res.data?.sucesso) {
         const { conversa_id: novoConversaId, mensagem: msgAssistente } = res.data.dados;
@@ -240,7 +264,11 @@ export function ChatProvider({ children }) {
       setErro(mensagemErro);
       setEnviando(false);
     }
-  }, [mensagemInput, enviando, conversaAtivaId, carregarConversas, iniciarPolling]);
+  }, [mensagemInput, anexoMidia, enviando, conversaAtivaId, carregarConversas, iniciarPolling]);
+
+  const limparAnexoMidia = useCallback(() => {
+    setAnexoMidia(null);
+  }, []);
 
   return (
     <ChatContext.Provider
@@ -250,6 +278,7 @@ export function ChatProvider({ children }) {
         conversaAtivaId,
         mensagens,
         mensagemInput,
+        anexoMidia,
         carregandoConversas,
         carregandoMensagens,
         enviando,
@@ -258,6 +287,8 @@ export function ChatProvider({ children }) {
         fontesAbertas,
         notificacao,
         setMensagemInput,
+        setAnexoMidia,
+        limparAnexoMidia,
         setErro,
         carregarConversas,
         selecionarConversa,

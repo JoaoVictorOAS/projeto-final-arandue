@@ -265,4 +265,202 @@ describe('Módulo do Assistente IA', () => {
 
     expect(await screen.findByText('Canal WhatsApp')).toBeInTheDocument();
   });
+
+  test('deve renderizar mensagens com indicadores de áudio e imagem no histórico', async () => {
+    const conversasMock = [
+      { id: 601, titulo: 'Conversa Multimodal', atualizado_em: '2026-10-15T10:00:00Z' },
+    ];
+    const mensagensMock = [
+      {
+        id: 1,
+        papel: 'usuario',
+        conteudo: 'Áudio gravado',
+        tipo_midia: 'audio',
+        fontes: [],
+      },
+      {
+        id: 2,
+        papel: 'assistente',
+        conteudo: 'Entendi seu áudio! Seu saldo atual é R$ 1.500,00.',
+        fontes: [],
+      },
+      {
+        id: 3,
+        papel: 'usuario',
+        conteudo: 'Veja esta nota fiscal',
+        tipo_midia: 'imagem',
+        midia_preview: 'data:image/png;base64,fakeimage',
+        fontes: [],
+      },
+    ];
+
+    api.get.mockImplementation((url) => {
+      if (url === '/assistente/conversas') {
+        return Promise.resolve({ data: { sucesso: true, dados: conversasMock } });
+      }
+      if (url === '/assistente/conversas/601/mensagens') {
+        return Promise.resolve({ data: { sucesso: true, dados: mensagensMock } });
+      }
+      return Promise.resolve({ data: { sucesso: true, dados: [] } });
+    });
+
+    render(<Assistente />);
+
+    expect(await screen.findByText('Conversa Multimodal')).toBeInTheDocument();
+    fireEvent.click(screen.getByText('Conversa Multimodal'));
+
+    expect(await screen.findByText('Mensagem de Voz')).toBeInTheDocument();
+    expect(screen.getByText('Entendi seu áudio! Seu saldo atual é R$ 1.500,00.')).toBeInTheDocument();
+    expect(screen.getByText('Imagem Anexada')).toBeInTheDocument();
+    expect(screen.getByAltText('Pré-visualização')).toHaveAttribute('src', 'data:image/png;base64,fakeimage');
+  });
+
+  test('deve permitir anexar imagem e enviá-la para o assistente', async () => {
+    api.get.mockResolvedValueOnce({
+      data: { sucesso: true, dados: [] },
+    });
+    api.post.mockResolvedValueOnce({
+      data: {
+        sucesso: true,
+        dados: {
+          conversa_id: 701,
+          mensagem: {
+            id: 888,
+            papel: 'assistente',
+            conteudo: 'Recebi o comprovante e registrei a receita.',
+            fontes: [],
+            criado_em: new Date().toISOString(),
+          },
+        },
+      },
+    });
+
+    const fakeBase64 = 'data:image/png;base64,mockedimgdata';
+    class MockFileReader {
+      readAsDataURL() {
+        this.result = fakeBase64;
+        if (this.onload) this.onload();
+      }
+    }
+    const originalFileReader = window.FileReader;
+    window.FileReader = MockFileReader;
+
+    try {
+      render(<Assistente />);
+
+      const fileInput = screen.getByLabelText(/upload de imagem/i);
+      const file = new File(['fake-image-content'], 'comprovante.png', { type: 'image/png' });
+
+      fireEvent.change(fileInput, { target: { files: [file] } });
+
+      await waitFor(() => {
+        expect(screen.getByText('comprovante.png')).toBeInTheDocument();
+      });
+
+      const btnEnviar = screen.getByRole('button', { name: /enviar/i });
+      fireEvent.click(btnEnviar);
+
+      await waitFor(() => {
+        expect(api.post).toHaveBeenCalledWith(
+          '/assistente/mensagens',
+          expect.objectContaining({
+            mensagem: 'Analise esta imagem enviada.',
+            tipo_midia: 'imagem',
+            midia: {
+              tipo: 'imagem',
+              dados_base64: fakeBase64,
+              mime_type: 'image/png',
+            },
+            assincrono: true,
+          })
+        );
+      });
+    } finally {
+      window.FileReader = originalFileReader;
+    }
+  });
+
+  test('deve permitir remover imagem anexada antes de enviar', async () => {
+    api.get.mockResolvedValueOnce({
+      data: { sucesso: true, dados: [] },
+    });
+
+    const fakeBase64 = 'data:image/jpeg;base64,recibo';
+    class MockFileReader {
+      readAsDataURL() {
+        this.result = fakeBase64;
+        if (this.onload) this.onload();
+      }
+    }
+    const originalFileReader = window.FileReader;
+    window.FileReader = MockFileReader;
+
+    try {
+      render(<Assistente />);
+
+      const fileInput = screen.getByLabelText(/upload de imagem/i);
+      const file = new File(['recibo-bytes'], 'recibo.jpg', { type: 'image/jpeg' });
+
+      fireEvent.change(fileInput, { target: { files: [file] } });
+
+      await waitFor(() => {
+        expect(screen.getByText('recibo.jpg')).toBeInTheDocument();
+      });
+
+      const btnRemover = screen.getByLabelText(/remover anexo/i);
+      fireEvent.click(btnRemover);
+
+      await waitFor(() => {
+        expect(screen.queryByText('recibo.jpg')).not.toBeInTheDocument();
+      });
+    } finally {
+      window.FileReader = originalFileReader;
+    }
+  });
+
+  test('deve iniciar gravação de áudio e permitir cancelamento', async () => {
+    api.get.mockResolvedValueOnce({
+      data: { sucesso: true, dados: [] },
+    });
+
+    const mockStream = {
+      getTracks: vi.fn(() => [{ stop: vi.fn() }]),
+    };
+    navigator.mediaDevices = {
+      getUserMedia: vi.fn().mockResolvedValue(mockStream),
+    };
+
+    class MockMediaRecorder {
+      constructor(stream) {
+        this.stream = stream;
+        this.state = 'recording';
+        this.ondataavailable = null;
+        this.onstop = null;
+      }
+      start() {}
+      stop() {
+        this.state = 'inactive';
+        if (this.onstop) this.onstop();
+      }
+    }
+    window.MediaRecorder = MockMediaRecorder;
+
+    render(<Assistente />);
+
+    const btnGravar = screen.getByLabelText(/gravar áudio/i);
+    fireEvent.click(btnGravar);
+
+    await waitFor(() => {
+      expect(screen.getByText(/gravando mensagem de voz/i)).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /cancelar/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /concluir/i })).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /cancelar/i }));
+
+    await waitFor(() => {
+      expect(screen.queryByText(/gravando mensagem de voz/i)).not.toBeInTheDocument();
+    });
+  });
 });
+

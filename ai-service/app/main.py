@@ -115,11 +115,17 @@ class HistoricoItem(BaseModel):
     papel: str = Field(..., description="'usuario' ou 'assistente'")
     texto: str
 
+class MidiaPayload(BaseModel):
+    tipo: str = Field(..., description="'audio' ou 'imagem'")
+    dados_base64: str = Field(..., description="Conteúdo em base64 da mídia")
+    mime_type: str = Field(default="image/jpeg", description="MIME type (ex: image/jpeg, audio/ogg)")
+
 class ChatRequest(BaseModel):
     tenant_id: int
     tenant_token: str
     mensagem: str = Field(..., min_length=1, max_length=2000)
     historico: List[HistoricoItem] = Field(default_factory=list)
+    midia: Optional[MidiaPayload] = None
 
 class FonteItem(BaseModel):
     pagina: int
@@ -166,7 +172,8 @@ async def chat_endpoint(payload: ChatRequest):
                     historico=[h.model_dump() for h in payload.historico],
                     trechos=trechos,
                     rag_backend=rag_backend,
-                    mcp_session=mcp_session
+                    mcp_session=mcp_session,
+                    midia=payload.midia.model_dump() if payload.midia else None
                 ),
                 timeout=settings.LLM_TIMEOUT_S
             )
@@ -316,5 +323,165 @@ Se algum dado não for visível, tente deduzir com base no contexto ou deixe nul
         return OcrNotaFiscalResponse(
             sucesso=False,
             mensagem=f"Não foi possível extrair dados da nota fiscal pela foto: {str(e)}"
+        )
+
+
+class TranscricaoAudioRequest(BaseModel):
+    audio_base64: str
+    mime_type: str = "audio/ogg"
+
+
+class TranscricaoAudioResponse(BaseModel):
+    sucesso: bool
+    transcricao: str
+    duracao_estimada_s: Optional[float] = None
+    modelo: Optional[str] = None
+    mensagem: Optional[str] = None
+
+
+@app.post("/audio/transcrever", response_model=TranscricaoAudioResponse, dependencies=[Depends(verify_internal_secret)])
+async def transcrever_audio_endpoint(payload: TranscricaoAudioRequest):
+    orchestrator: Orchestrator = state.get("orchestrator")
+    if not orchestrator or not orchestrator._client:
+        return TranscricaoAudioResponse(
+            sucesso=True,
+            transcricao="Registrar despesa de cinquenta reais com combustível.",
+            duracao_estimada_s=3.0,
+            modelo="simulado",
+            mensagem="Áudio processado em modo de demonstração local."
+        )
+
+    try:
+        import base64
+        audio_str = payload.audio_base64
+        if "," in audio_str:
+            audio_str = audio_str.split(",", 1)[1]
+        audio_bytes = base64.b64decode(audio_str)
+
+        prompt_transcricao = """Você é um especialista em transcrição de áudio em português brasileiro para Microempreendedores Individuais (MEI).
+Transcreva com alta fidelidade o áudio recebido.
+Preserve comandos de negócios, valores monetários, nomes de clientes e pontuação correta.
+Responda APENAS com o texto transcrito, sem aspas e sem introduções adicionais."""
+
+        from google.genai import types
+
+        response = await asyncio.to_thread(
+            orchestrator._client.models.generate_content,
+            model=orchestrator.model_name,
+            contents=[
+                types.Part.from_bytes(data=audio_bytes, mime_type=payload.mime_type),
+                prompt_transcricao
+            ]
+        )
+        if asyncio.iscoroutine(response):
+            response = await response
+
+        texto_transcrito = response.text.strip() if response.text else ""
+        return TranscricaoAudioResponse(
+            sucesso=True,
+            transcricao=texto_transcrito,
+            modelo=orchestrator.model_name
+        )
+    except Exception as e:
+        logger.error(f"Erro ao transcrever áudio com Gemini: {e}")
+        return TranscricaoAudioResponse(
+            sucesso=False,
+            transcricao="",
+            mensagem=f"Não foi possível transcrever o áudio: {str(e)}"
+        )
+
+
+class AnaliseImagemRequest(BaseModel):
+    imagem_base64: str
+    mime_type: str = "image/jpeg"
+    instrucao: Optional[str] = None
+
+
+class AnaliseImagemResponse(BaseModel):
+    sucesso: bool
+    tipo_detectado: str = "documento"
+    descricao: str
+    dados_estruturados: Dict[str, Any] = {}
+    sugestao_acao: Optional[str] = None
+    mensagem: Optional[str] = None
+
+
+@app.post("/imagem/analisar", response_model=AnaliseImagemResponse, dependencies=[Depends(verify_internal_secret)])
+async def analisar_imagem_endpoint(payload: AnaliseImagemRequest):
+    orchestrator: Orchestrator = state.get("orchestrator")
+    if not orchestrator or not orchestrator._client:
+        return AnaliseImagemResponse(
+            sucesso=True,
+            tipo_detectado="recibo",
+            descricao="Comprovante de pagamento no valor de R$ 85,00 referente a materiais de escritório.",
+            dados_estruturados={"valor": 85.0, "estabelecimento": "Papelaria Central", "data": "2026-10-15"},
+            sugestao_acao="registrar_despesa",
+            mensagem="Análise visual processada em modo de demonstração local."
+        )
+
+    try:
+        import base64
+        import json
+        img_str = payload.imagem_base64
+        if "," in img_str:
+            img_str = img_str.split(",", 1)[1]
+        image_bytes = base64.b64decode(img_str)
+
+        prompt_analise = f"""Você é um assistente visual para Microempreendedores Individuais (MEI) brasileiros.
+Analise a imagem enviada (recibo, comprovante Pix, nota fiscal, produto, estoque, cartão de visita, tabela de preços, anotação).
+Instrução adicional do usuário: {payload.instrucao or 'Nenhuma'}
+
+Responda em formato JSON estrito (sem markdown extra, apenas o objeto JSON):
+{{
+  "tipo_detectado": "recibo | comprovante_pix | nota_fiscal | cartao_visita | produto | estoque | outro",
+  "descricao": "Resumo claro e conciso do que a imagem retrata para o MEI",
+  "dados_estruturados": {{
+    "valor": 0.00,
+    "estabelecimento_ou_pessoa": "Nome se visível",
+    "data": "AAAA-MM-DD se visível",
+    "itens": ["item 1", "item 2"]
+  }},
+  "sugestao_acao": "registrar_despesa | registrar_receita | cadastrar_cliente | registrar_entrada_estoque | nenhuma"
+}}
+Responda APENAS o JSON."""
+
+        from google.genai import types
+
+        response = await asyncio.to_thread(
+            orchestrator._client.models.generate_content,
+            model=orchestrator.model_name,
+            contents=[
+                types.Part.from_bytes(data=image_bytes, mime_type=payload.mime_type),
+                prompt_analise
+            ]
+        )
+        if asyncio.iscoroutine(response):
+            response = await response
+
+        texto_limpo = response.text.strip()
+        if texto_limpo.startswith("```json"):
+            texto_limpo = texto_limpo[7:]
+        if texto_limpo.startswith("```"):
+            texto_limpo = texto_limpo[3:]
+        if texto_limpo.endswith("```"):
+            texto_limpo = texto_limpo[:-3]
+        texto_limpo = texto_limpo.strip()
+
+        dados = json.loads(texto_limpo)
+
+        return AnaliseImagemResponse(
+            sucesso=True,
+            tipo_detectado=dados.get("tipo_detectado", "documento"),
+            descricao=dados.get("descricao", "Documento analisado com sucesso."),
+            dados_estruturados=dados.get("dados_estruturados", {}),
+            sugestao_acao=dados.get("sugestao_acao")
+        )
+    except Exception as e:
+        logger.error(f"Erro ao analisar imagem com Gemini: {e}")
+        return AnaliseImagemResponse(
+            sucesso=False,
+            tipo_detectado="erro",
+            descricao="Falha ao processar a imagem.",
+            mensagem=f"Não foi possível analisar a imagem: {str(e)}"
         )
 

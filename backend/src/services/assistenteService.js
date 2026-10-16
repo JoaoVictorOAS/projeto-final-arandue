@@ -30,21 +30,59 @@ const assistenteService = {
   /**
    * Envia uma mensagem no assistente e processa a resposta (suporta síncrono ou assíncrono).
    */
-  async enviarMensagem(usuario_id, { conversa_id, mensagem, assincrono = false, canal = 'web' }) {
+  async enviarMensagem(usuario_id, { conversa_id, mensagem, midia = null, tipo_midia = 'texto', assincrono = false, canal = 'web' }) {
     if (!usuario_id) {
       const erro = new Error('Identificação do usuário é obrigatória');
       erro.statusCode = 401;
       throw erro;
     }
 
-    if (!mensagem || typeof mensagem !== 'string' || !mensagem.trim()) {
-      const erro = new Error('O conteúdo da mensagem é obrigatório');
-      erro.statusCode = 400;
-      throw erro;
+    let tipoMidiaEfetivo = tipo_midia || (midia?.tipo ? midia.tipo : 'texto');
+    let textoMensagem = (mensagem && typeof mensagem === 'string') ? mensagem.trim() : '';
+    let transcricaoAudio = null;
+
+    // Se for mensagem de áudio
+    if (tipoMidiaEfetivo === 'audio') {
+      if (!midia || !midia.dados_base64) {
+        const erro = new Error('Os dados de áudio são obrigatórios para mensagens de voz');
+        erro.statusCode = 400;
+        throw erro;
+      }
+      // Se não veio texto, transcreve usando aiServiceClient
+      if (!textoMensagem) {
+        try {
+          const resultadoTranscricao = await aiServiceClient.transcreverAudio({
+            audio_base64: midia.dados_base64,
+            mime_type: midia.mime_type || 'audio/ogg'
+          });
+          textoMensagem = resultadoTranscricao.transcricao || 'Áudio recebido.';
+          transcricaoAudio = textoMensagem;
+        } catch (transcErr) {
+          console.warn('[Assistente] Aviso ao transcrever áudio:', transcErr.message);
+          textoMensagem = 'Áudio recebido (não foi possível transcrever o texto).';
+        }
+      } else {
+        transcricaoAudio = textoMensagem;
+      }
+    } else if (tipoMidiaEfetivo === 'imagem') {
+      if (!midia || !midia.dados_base64) {
+        const erro = new Error('Os dados da imagem são obrigatórios para mensagens visuais');
+        erro.statusCode = 400;
+        throw erro;
+      }
+      if (!textoMensagem) {
+        textoMensagem = 'Por favor, analise a imagem enviada pelo MEI e responda ou sugira ações operacionais.';
+      }
+    } else {
+      tipoMidiaEfetivo = 'texto';
+      if (!textoMensagem) {
+        const erro = new Error('O conteúdo da mensagem é obrigatório');
+        erro.statusCode = 400;
+        throw erro;
+      }
     }
 
-    const mensagemLimpa = mensagem.trim();
-    if (mensagemLimpa.length > 2000) {
+    if (textoMensagem.length > 2000) {
       const erro = new Error('A mensagem não pode ultrapassar 2000 caracteres');
       erro.statusCode = 400;
       throw erro;
@@ -63,7 +101,7 @@ const assistenteService = {
         throw erro;
       }
     } else {
-      const titulo = mensagemLimpa.length > 60 ? mensagemLimpa.slice(0, 57) + '...' : mensagemLimpa;
+      const titulo = textoMensagem.length > 60 ? textoMensagem.slice(0, 57) + '...' : textoMensagem;
       try {
         idConversaAtiva = await conversaRepository.criarConversa(usuario_id, titulo, canal);
       } catch (err) {
@@ -95,15 +133,19 @@ const assistenteService = {
         texto: m.conteudo
       }));
 
-    // 4. Salva a pergunta do usuário
+    // 4. Salva a pergunta do usuário com os campos multimodais
     const msgUsuarioId = await conversaRepository.salvarMensagem(
       idConversaAtiva,
       'usuario',
-      mensagemLimpa,
+      textoMensagem,
       null,
       null,
       null,
-      'concluida'
+      'concluida',
+      null,
+      tipoMidiaEfetivo,
+      midia?.mime_type || null,
+      transcricaoAudio
     );
 
     // 5. Gera token restrito de operação (scoped token) de 15 minutos para as tools do MCP
@@ -135,8 +177,9 @@ const assistenteService = {
         idConversaAtiva,
         usuario_id,
         tenantToken,
-        mensagemLimpa,
-        historicoRecente
+        mensagemLimpa: textoMensagem,
+        historicoRecente,
+        midia
       }).catch(err => {
         console.error(`[Assistente] Erro de background na mensagem ${msgAssistenteId}:`, err);
       });
@@ -162,8 +205,9 @@ const assistenteService = {
       respostaAi = await aiServiceClient.enviarMensagem({
         tenant_id: usuario_id,
         tenant_token: tenantToken,
-        mensagem: mensagemLimpa,
-        historico: historicoRecente
+        mensagem: textoMensagem,
+        historico: historicoRecente,
+        midia
       });
     } catch (err) {
       const erroStatus = err.statusCode || 503;
@@ -203,14 +247,16 @@ const assistenteService = {
     usuario_id,
     tenantToken,
     mensagemLimpa,
-    historicoRecente
+    historicoRecente,
+    midia = null
   }) {
     try {
       const respostaAi = await aiServiceClient.enviarMensagem({
         tenant_id: usuario_id,
         tenant_token: tenantToken,
         mensagem: mensagemLimpa,
-        historico: historicoRecente
+        historico: historicoRecente,
+        midia
       });
 
       await conversaRepository.atualizarMensagem(msgAssistenteId, {
@@ -229,6 +275,36 @@ const assistenteService = {
         erro_mensagem: mensagemErro
       });
     }
+  },
+
+  async transcreverAudio(usuario_id, { audio_base64, mime_type = 'audio/ogg' }) {
+    if (!usuario_id) {
+      const erro = new Error('Identificação do usuário é obrigatória');
+      erro.statusCode = 401;
+      throw erro;
+    }
+    if (!audio_base64) {
+      const erro = new Error('Os dados de áudio em base64 são obrigatórios');
+      erro.statusCode = 400;
+      throw erro;
+    }
+    checkRateLimit(usuario_id);
+    return await aiServiceClient.transcreverAudio({ audio_base64, mime_type });
+  },
+
+  async analisarImagem(usuario_id, { imagem_base64, mime_type = 'image/jpeg', instrucao = null }) {
+    if (!usuario_id) {
+      const erro = new Error('Identificação do usuário é obrigatória');
+      erro.statusCode = 401;
+      throw erro;
+    }
+    if (!imagem_base64) {
+      const erro = new Error('Os dados da imagem em base64 são obrigatórios');
+      erro.statusCode = 400;
+      throw erro;
+    }
+    checkRateLimit(usuario_id);
+    return await aiServiceClient.analisarImagem({ imagem_base64, mime_type, instrucao });
   },
 
   async buscarStatusMensagem(mensagem_id, usuario_id) {

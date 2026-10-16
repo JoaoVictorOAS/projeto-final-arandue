@@ -126,7 +126,8 @@ class Orchestrator:
         historico: List[Dict[str, str]],
         trechos: List[Trecho],
         rag_backend: str,
-        mcp_session: Optional[ClientSession] = None
+        mcp_session: Optional[ClientSession] = None,
+        midia: Optional[Dict[str, Any]] = None
     ) -> RespostaLLM:
         if not self._client:
             raise RuntimeError("GEMINI_API_KEY não configurada no serviço de IA.")
@@ -143,10 +144,24 @@ class Orchestrator:
                 parts=[types.Part.from_text(text=h.get("texto", ""))]
             ))
 
+        user_parts: List[Any] = [types.Part.from_text(text=prompt_conteudo)]
+        if midia and midia.get("dados_base64"):
+            import base64
+            m_data = midia["dados_base64"]
+            if "," in m_data:
+                m_data = m_data.split(",", 1)[1]
+            try:
+                m_bytes = base64.b64decode(m_data)
+                m_tipo = midia.get("tipo", "imagem")
+                m_mime = midia.get("mime_type") or ("audio/ogg" if m_tipo == "audio" else "image/jpeg")
+                user_parts.append(types.Part.from_bytes(data=m_bytes, mime_type=m_mime))
+            except Exception as e:
+                logger.warning(f"Erro ao decodificar mídia base64 no orchestrator: {e}")
+
         # Adiciona a pergunta atual com os trechos RAG
         contents.append(types.Content(
             role="user",
-            parts=[types.Part.from_text(text=prompt_conteudo)]
+            parts=user_parts
         ))
 
         # Prepara tools do MCP
