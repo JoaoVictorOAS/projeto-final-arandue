@@ -186,3 +186,64 @@ async def test_orcamento_tools_e_fluxo_integrado():
     res_cob = await cadastrar_cobranca(cliente_id=99, valor=450.0, vencimento="2026-11-10", orcamento_id=10, agendamento_id=20)
     assert res_cob["cobranca_id"] == 30
 
+
+@pytest.mark.asyncio
+async def test_cadastrar_cobranca_bloqueia_data_alucinada_do_treinamento():
+    """Garante que datas alucinadas do treinamento (ex: '2025-03-30') ou ausentes são bloqueadas antes de chegar ao backend."""
+    res_alucinada = await cadastrar_cobranca(
+        cliente_id=786,
+        valor=300.0,
+        vencimento="2025-03-30",
+        orcamento_id=1009
+    )
+    assert res_alucinada.get("sucesso") is False
+    assert "passado" in res_alucinada.get("erro", "").lower()
+    assert "2025-03-30" in res_alucinada.get("erro", "")
+
+    res_sem_data = await cadastrar_cobranca(
+        cliente_id=786,
+        valor=300.0,
+        vencimento=None,
+        orcamento_id=1009
+    )
+    assert res_sem_data.get("sucesso") is False
+    assert "não foi informado" in res_sem_data.get("erro", "").lower()
+
+
+@pytest.mark.asyncio
+async def test_cadastrar_agendamento_bloqueia_data_alucinada():
+    res_ag = await cadastrar_agendamento(
+        cliente_id=786,
+        servico_id=1,
+        data_hora="2025-03-30 14:00",
+        orcamento_id=1009
+    )
+    assert res_ag.get("sucesso") is False
+    assert "passado" in res_ag.get("erro", "").lower()
+
+
+def test_runtime_context_pack_e_prompts_temporais():
+    from datetime import datetime
+    from app.llm.prompts import build_runtime_context_pack, build_system_prompt, build_context_prompt
+
+    dt_fixa = datetime(2026, 10, 15, 23, 15, 0)
+    pack = build_runtime_context_pack(now=dt_fixa)
+    assert "<contexto_sistema>" in pack
+    assert "2026-10-15" in pack
+    assert "15/10/2026" in pack
+    assert "Quinta-feira" in pack
+    assert "Outubro de 2026" in pack
+    assert "2026-10-16" in pack  # Amanhã
+    assert "2026-10-22" in pack  # +7 dias
+    assert "2026-11-14" in pack  # +30 dias
+    assert "2026-10-31" in pack  # Último dia do mês
+
+    sys_prompt = build_system_prompt(now=dt_fixa)
+    assert "<contexto_sistema>" in sys_prompt
+    assert "2026-10-15" in sys_prompt
+
+    ctx_prompt = build_context_prompt("Qual meu saldo?", [], "chroma", now=dt_fixa)
+    assert "2026-10-15" in ctx_prompt
+    assert "Não invente datas nem utilize datas de 2025" in ctx_prompt
+
+

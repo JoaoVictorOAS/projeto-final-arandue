@@ -7,7 +7,7 @@ from google import genai
 from google.genai import types
 
 from app.rag.stores.base import Trecho
-from app.llm.prompts import SYSTEM_PROMPT, build_context_prompt
+from app.llm.prompts import SYSTEM_PROMPT, build_system_prompt, build_context_prompt
 from mcp.client.session import ClientSession
 
 logger = logging.getLogger(__name__)
@@ -151,9 +151,10 @@ class Orchestrator:
         # Prepara tools do MCP
         function_decls = await self._mcp_tools_to_declarations(mcp_session)
         tools = [types.Tool(function_declarations=function_decls)] if function_decls else None
+        system_prompt_dinamico = build_system_prompt()
 
         config = types.GenerateContentConfig(
-            system_instruction=SYSTEM_PROMPT,
+            system_instruction=system_prompt_dinamico,
             tools=tools,
             temperature=0.2
         )
@@ -222,7 +223,7 @@ class Orchestrator:
         final_response, modelo_utilizado = await self._generate_content_with_fallback(
             contents=contents,
             config=types.GenerateContentConfig(
-                system_instruction=SYSTEM_PROMPT,
+                system_instruction=system_prompt_dinamico,
                 temperature=0.2
             )
         )
