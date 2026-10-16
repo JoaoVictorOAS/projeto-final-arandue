@@ -431,11 +431,18 @@ Esta documentação detalha os padrões arquiteturais, cabeçalhos, autenticaç�
 {
   "conversa_id": 1,
   "mensagem": "Qual o limite de faturamento anual do MEI?",
-  "assincrono": true
+  "assincrono": true,
+  "tipo_midia": "texto",
+  "midia": {
+    "tipo": "imagem",
+    "dados_base64": "data:image/png;base64,iVBORw0KGgoAAA...",
+    "mime_type": "image/png"
+  }
 }
 ```
 *Nota: Se `conversa_id` for omitido ou nulo, uma nova conversa é criada automaticamente com título baseado na mensagem.*
 *Nota: Se `assincrono` for `true`, a rota responde imediatamente com status `202 Accepted`, permitindo que a IA processe a resposta em segundo plano enquanto o frontend executa short-polling.*
+*Nota Multimodal: O campo `midia` é opcional e aceita áudio (`audio/ogg`, `audio/mp3`, `audio/webm`, `audio/wav`) ou imagens (`image/jpeg`, `image/png`, `image/webp`). Para áudios, se `mensagem` for omitida ou placeholder, o backend realiza transcrição automática de voz antes do processamento.*
 
 - **Resposta Sucesso Síncrona (`200 OK` - quando `assincrono: false` ou omitido):**
 ```json
@@ -611,4 +618,61 @@ Esta documentação detalha os padrões arquiteturais, cabeçalhos, autenticaç�
   }
 }
 ```
+
+### 10.9 Transcrever Áudio de Voz
+- **Método:** `POST`
+- **Rota:** `/api/assistente/audio/transcrever`
+- **Descrição:** Realiza a transcrição pontual de um áudio (formato base64) para texto utilizando o motor Gemini multimodal. Também espelhado como ferramenta MCP (`transcrever_audio`).
+- **Payload:**
+```json
+{
+  "audio_base64": "GkXfo59ChoEBQveBAULygQ8...",
+  "mime_type": "audio/ogg; codecs=opus"
+}
+```
+- **Validações:**
+  - `400 Bad Request` se `audio_base64` não for informado.
+- **Resposta Sucesso (`200 OK`):**
+```json
+{
+  "sucesso": true,
+  "mensagem": "Áudio transcrito com sucesso",
+  "dados": {
+    "transcricao": "Quanto eu tenho de saldo em caixa hoje?"
+  }
+}
+```
+
+### 10.10 Analisar Imagem ou Documento Fiscal
+- **Método:** `POST`
+- **Rota:** `/api/assistente/imagem/analisar`
+- **Descrição:** Analisa uma imagem ou comprovante/recibo/documento fiscal via visão computacional do Gemini, extraindo dados ou respondendo ao prompt instrucional. Também espelhado como ferramenta MCP (`analisar_imagem_documento`).
+- **Payload:**
+```json
+{
+  "imagem_base64": "iVBORw0KGgoAAAANSUhEUgAA...",
+  "mime_type": "image/jpeg",
+  "instrucao": "Extraia o valor total, emitente e data deste comprovante."
+}
+```
+- **Validações:**
+  - `400 Bad Request` se `imagem_base64` não for fornecido.
+- **Resposta Sucesso (`200 OK`):**
+```json
+{
+  "sucesso": true,
+  "mensagem": "Imagem analisada com sucesso",
+  "dados": {
+    "tipo_detectado": "comprovante",
+    "descricao": "Comprovante de pagamento referente a compra de materiais de escritório.",
+    "dados_estruturados": {
+      "valor_total": 150.00,
+      "emitente": "Papelaria Central",
+      "data": "2026-10-15"
+    },
+    "sugestao_acao": "Registrar despesa de R$ 150,00 no Livro Caixa na categoria Material de Escritório."
+  }
+}
+```
+
 

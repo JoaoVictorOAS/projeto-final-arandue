@@ -9,6 +9,10 @@ router.get('/mensagens/:id/status', assistenteController.consultarStatusMensagem
 router.get('/conversas/:id/mensagens', assistenteController.listarMensagens);
 router.delete('/conversas/:id', assistenteController.excluirConversa);
 
+// Rotas Multimodais (Paridade MCP)
+router.post('/audio/transcrever', assistenteController.transcreverAudio);
+router.post('/imagem/analisar', assistenteController.analisarImagem);
+
 // Rotas de Integração do WhatsApp
 router.get('/whatsapp/status', assistenteController.obterStatusWhatsApp);
 router.post('/whatsapp/vincular', assistenteController.vincularWhatsApp);

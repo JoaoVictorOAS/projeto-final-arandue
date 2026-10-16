@@ -12,25 +12,30 @@ const aiServiceClient = {
    * @param {Array} payload.historico
    * @returns {Promise<Object>}
    */
-  async enviarMensagem({ tenant_id, tenant_token, mensagem, historico = [] }) {
+  async enviarMensagem({ tenant_id, tenant_token, mensagem, historico = [], midia = null }) {
     const url = `${AI_SERVICE_URL.replace(/\/$/, '')}/chat`;
 
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), AI_SERVICE_TIMEOUT_MS);
 
     try {
+      const bodyPayload = {
+        tenant_id,
+        tenant_token,
+        mensagem,
+        historico
+      };
+      if (midia) {
+        bodyPayload.midia = midia;
+      }
+
       const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'X-Internal-Secret': INTERNAL_SERVICE_SECRET
         },
-        body: JSON.stringify({
-          tenant_id,
-          tenant_token,
-          mensagem,
-          historico
-        }),
+        body: JSON.stringify(bodyPayload),
         signal: controller.signal
       });
 
@@ -48,6 +53,102 @@ const aiServiceClient = {
       clearTimeout(timeout);
       if (err.name === 'AbortError') {
         const erroTimeout = new Error('Tempo limite excedido ao comunicar com o assistente IA');
+        erroTimeout.statusCode = 504;
+        throw erroTimeout;
+      }
+      throw err;
+    }
+  },
+
+  /**
+   * Transcreve áudio com alta fidelidade usando o modelo de IA.
+   * @param {Object} payload
+   * @param {string} payload.audio_base64
+   * @param {string} [payload.mime_type='audio/ogg']
+   * @returns {Promise<Object>}
+   */
+  async transcreverAudio({ audio_base64, mime_type = 'audio/ogg' }) {
+    const url = `${AI_SERVICE_URL.replace(/\/$/, '')}/audio/transcrever`;
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 60000);
+
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Internal-Secret': INTERNAL_SERVICE_SECRET
+        },
+        body: JSON.stringify({
+          audio_base64,
+          mime_type
+        }),
+        signal: controller.signal
+      });
+
+      clearTimeout(timeout);
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        const erro = new Error(errorData.detail || `Falha na transcrição de áudio (status ${response.status})`);
+        erro.statusCode = response.status || 500;
+        throw erro;
+      }
+
+      return await response.json();
+    } catch (err) {
+      clearTimeout(timeout);
+      if (err.name === 'AbortError') {
+        const erroTimeout = new Error('Tempo limite excedido na transcrição do áudio');
+        erroTimeout.statusCode = 504;
+        throw erroTimeout;
+      }
+      throw err;
+    }
+  },
+
+  /**
+   * Analisa visualmente uma imagem para extração de dados e sugestão de ação.
+   * @param {Object} payload
+   * @param {string} payload.imagem_base64
+   * @param {string} [payload.mime_type='image/jpeg']
+   * @param {string} [payload.instrucao]
+   * @returns {Promise<Object>}
+   */
+  async analisarImagem({ imagem_base64, mime_type = 'image/jpeg', instrucao = null }) {
+    const url = `${AI_SERVICE_URL.replace(/\/$/, '')}/imagem/analisar`;
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 60000);
+
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Internal-Secret': INTERNAL_SERVICE_SECRET
+        },
+        body: JSON.stringify({
+          imagem_base64,
+          mime_type,
+          instrucao
+        }),
+        signal: controller.signal
+      });
+
+      clearTimeout(timeout);
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        const erro = new Error(errorData.detail || `Falha na análise visual de imagem (status ${response.status})`);
+        erro.statusCode = response.status || 500;
+        throw erro;
+      }
+
+      return await response.json();
+    } catch (err) {
+      clearTimeout(timeout);
+      if (err.name === 'AbortError') {
+        const erroTimeout = new Error('Tempo limite excedido na análise da imagem');
         erroTimeout.statusCode = 504;
         throw erroTimeout;
       }

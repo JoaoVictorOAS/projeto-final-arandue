@@ -197,6 +197,9 @@ CREATE TABLE IF NOT EXISTS mensagens (
     id INT AUTO_INCREMENT PRIMARY KEY,
     conversa_id INT NOT NULL,
     papel ENUM('usuario', 'assistente') NOT NULL,
+    tipo_midia ENUM('texto', 'audio', 'imagem') NOT NULL DEFAULT 'texto',
+    midia_mime_type VARCHAR(50) NULL,
+    transcricao_audio TEXT NULL,
     status ENUM('processando', 'concluida', 'erro') NOT NULL DEFAULT 'concluida',
     erro_mensagem VARCHAR(500) NULL,
     conteudo TEXT NULL,
@@ -207,7 +210,8 @@ CREATE TABLE IF NOT EXISTS mensagens (
     CONSTRAINT fk_mensagens_conversa FOREIGN KEY (conversa_id) 
         REFERENCES conversas(id) ON DELETE CASCADE ON UPDATE CASCADE,
     INDEX idx_mensagens_conversa_criado (conversa_id, criado_em),
-    INDEX idx_mensagens_conversa_status (conversa_id, status)
+    INDEX idx_mensagens_conversa_status (conversa_id, status),
+    INDEX idx_mensagens_tipo_midia (conversa_id, tipo_midia)
 ) ENGINE=InnoDB;
 
 -- 11. Tabela de Insumos (Módulo de Estoque)

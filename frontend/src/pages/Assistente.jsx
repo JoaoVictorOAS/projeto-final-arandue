@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useContext } from 'react';
+import React, { useEffect, useRef, useContext, useState } from 'react';
 import {
   MessageSquare,
   Send,
@@ -12,6 +12,12 @@ import {
   AlertCircle,
   Sparkles,
   Loader2,
+  Paperclip,
+  Image,
+  Mic,
+  MicOff,
+  X,
+  Volume2,
 } from 'lucide-react';
 import { ChatContext, ChatProvider, useChat } from '../context/ChatContext';
 
@@ -28,12 +34,15 @@ function AssistenteView() {
     conversaAtivaId,
     mensagens,
     mensagemInput,
+    anexoMidia,
     carregandoConversas,
     carregandoMensagens,
     enviando,
     erro,
     fontesAbertas,
     setMensagemInput,
+    setAnexoMidia,
+    limparAnexoMidia,
     iniciarNovaConversa,
     selecionarConversa,
     excluirConversa,
@@ -43,6 +52,104 @@ function AssistenteView() {
   } = useChat();
 
   const finalDoChatRef = useRef(null);
+  const fileInputRef = useRef(null);
+  const mediaRecorderRef = useRef(null);
+  const audioChunksRef = useRef([]);
+  const timerRef = useRef(null);
+
+  const [gravando, setGravando] = useState(false);
+  const [tempoGravacao, setTempoGravacao] = useState(0);
+
+  // Inicia gravação de áudio pelo microfone
+  const iniciarGravacao = async () => {
+    try {
+      if (!navigator?.mediaDevices?.getUserMedia) {
+        alert('Seu navegador não suporta gravação de áudio.');
+        return;
+      }
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      audioChunksRef.current = [];
+      const mr = new MediaRecorder(stream);
+      mediaRecorderRef.current = mr;
+
+      mr.ondataavailable = (e) => {
+        if (e.data && e.data.size > 0) {
+          audioChunksRef.current.push(e.data);
+        }
+      };
+
+      mr.onstop = () => {
+        stream.getTracks().forEach((t) => t.stop());
+        const mimeTypeGravado = mr.mimeType || 'audio/webm';
+        const blob = new Blob(audioChunksRef.current, { type: mimeTypeGravado });
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setAnexoMidia({
+            tipo: 'audio',
+            dados_base64: reader.result,
+            mime_type: blob.type || mimeTypeGravado,
+            previewUrl: null,
+            nomeArquivo: mimeTypeGravado.includes('ogg') ? 'mensagem-voz.ogg' : 'mensagem-voz.webm',
+          });
+        };
+        reader.readAsDataURL(blob);
+      };
+
+      mr.start();
+      setGravando(true);
+      setTempoGravacao(0);
+      timerRef.current = setInterval(() => {
+        setTempoGravacao((prev) => prev + 1);
+      }, 1000);
+    } catch (err) {
+      console.error('Erro ao acessar microfone:', err);
+      alert('Não foi possível acessar o microfone. Verifique as permissões do navegador.');
+    }
+  };
+
+  const pararGravacao = () => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.stop();
+    }
+    setGravando(false);
+  };
+
+  const cancelarGravacao = () => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.onstop = null;
+      mediaRecorderRef.current.stream?.getTracks().forEach((t) => t.stop());
+      mediaRecorderRef.current.stop();
+    }
+    audioChunksRef.current = [];
+    setGravando(false);
+    setTempoGravacao(0);
+  };
+
+  const handleFileSelect = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      setAnexoMidia({
+        tipo: 'imagem',
+        dados_base64: reader.result,
+        mime_type: file.type || 'image/jpeg',
+        previewUrl: reader.result,
+        nomeArquivo: file.name,
+      });
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  };
 
   // Rola até o final das mensagens
   const rolarParaOFinal = () => {
@@ -222,6 +329,24 @@ function AssistenteView() {
                             : 'bg-white text-slate-800 rounded-bl-none border border-slate-200 shadow-sm'
                         }`}
                       >
+                        {/* Indicador de mensagem multimodal */}
+                        {msg.tipo_midia === 'audio' && (
+                          <div className={`flex items-center gap-1.5 mb-2 text-xs font-semibold px-2.5 py-1 rounded-lg w-fit ${ehUsuario ? 'bg-indigo-700 text-indigo-100' : 'bg-slate-100 text-slate-700'}`}>
+                            <Volume2 className="w-3.5 h-3.5" />
+                            <span>Mensagem de Voz</span>
+                          </div>
+                        )}
+                        {msg.tipo_midia === 'imagem' && (
+                          <div className={`flex items-center gap-1.5 mb-2 text-xs font-semibold px-2.5 py-1 rounded-lg w-fit ${ehUsuario ? 'bg-indigo-700 text-indigo-100' : 'bg-slate-100 text-slate-700'}`}>
+                            <Image className="w-3.5 h-3.5" />
+                            <span>Imagem Anexada</span>
+                          </div>
+                        )}
+                        {msg.midia_preview && (
+                          <div className="mb-2">
+                            <img src={msg.midia_preview} alt="Pré-visualização" className="max-h-48 rounded-xl object-cover border border-indigo-400/40 shadow-xs" />
+                          </div>
+                        )}
                         <div className="whitespace-pre-wrap">{msg.conteudo}</div>
                       </div>
 
@@ -293,20 +418,103 @@ function AssistenteView() {
         {/* Rodapé: Input + Aviso Legal Obrigatório */}
         <div className="bg-white border-t border-slate-200 p-4">
           <form onSubmit={handleSubmit} className="max-w-4xl mx-auto space-y-2">
-            <div className="relative flex items-center">
+            {/* Pré-visualização do Anexo de Mídia */}
+            {anexoMidia && (
+              <div className="flex items-center gap-2 p-2 bg-indigo-50 border border-indigo-200 rounded-xl mb-1 text-xs text-indigo-900 animate-fadeIn">
+                {anexoMidia.tipo === 'imagem' ? (
+                  <>
+                    {anexoMidia.previewUrl && (
+                      <img src={anexoMidia.previewUrl} alt="Preview" className="w-8 h-8 rounded-lg object-cover border border-indigo-300" />
+                    )}
+                    <span className="flex-1 font-medium truncate">{anexoMidia.nomeArquivo || 'Imagem anexada'}</span>
+                  </>
+                ) : (
+                  <>
+                    <Volume2 className="w-4 h-4 text-indigo-600 animate-pulse" />
+                    <span className="flex-1 font-medium">Áudio gravado pronto para envio</span>
+                  </>
+                )}
+                <button
+                  type="button"
+                  onClick={limparAnexoMidia}
+                  aria-label="Remover anexo"
+                  className="p-1 text-slate-400 hover:text-rose-600 rounded-md transition-colors"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            )}
+
+            {/* Barra de Gravação de Áudio ao Vivo */}
+            {gravando && (
+              <div className="flex items-center justify-between p-2.5 bg-rose-50 border border-rose-200 rounded-xl mb-1 text-xs text-rose-700 animate-pulse">
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-rose-600 animate-ping" />
+                  <span className="font-semibold">Gravando mensagem de voz... {Math.floor(tempoGravacao / 60)}:{(tempoGravacao % 60).toString().padStart(2, '0')}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={cancelarGravacao}
+                    className="px-2.5 py-1 text-rose-600 hover:bg-rose-100 rounded-lg font-medium transition-colors"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={pararGravacao}
+                    className="px-3 py-1 bg-rose-600 hover:bg-rose-700 text-white rounded-lg font-semibold transition-colors"
+                  >
+                    Concluir
+                  </button>
+                </div>
+              </div>
+            )}
+
+            <div className="relative flex items-center gap-1.5">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                aria-label="Upload de imagem"
+                className="hidden"
+                onChange={handleFileSelect}
+              />
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={enviando || gravando}
+                aria-label="Anexar imagem"
+                title="Anexar foto ou documento"
+                className="p-2 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-colors disabled:opacity-50"
+              >
+                <Paperclip className="w-5 h-5" />
+              </button>
+              <button
+                type="button"
+                onClick={gravando ? pararGravacao : iniciarGravacao}
+                disabled={enviando}
+                aria-label={gravando ? "Parar gravação" : "Gravar áudio"}
+                title={gravando ? "Parar gravação" : "Gravar mensagem de voz"}
+                className={`p-2 rounded-xl transition-colors disabled:opacity-50 ${
+                  gravando ? 'text-rose-600 bg-rose-100 animate-pulse' : 'text-slate-500 hover:text-indigo-600 hover:bg-indigo-50'
+                }`}
+              >
+                <Mic className="w-5 h-5" />
+              </button>
               <textarea
                 value={mensagemInput}
                 onChange={(e) => setMensagemInput(e.target.value)}
                 onKeyDown={handleKeyDown}
                 rows={1}
                 maxLength={2000}
-                placeholder="Digite sua dúvida contábil ou sobre seu negócio..."
+                placeholder={anexoMidia ? "Adicione uma instrução opcional..." : "Digite sua dúvida contábil ou sobre seu negócio..."}
                 className="w-full resize-none rounded-xl border border-slate-300 py-3 pl-4 pr-14 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                disabled={enviando}
+                disabled={enviando || gravando}
               />
               <button
                 type="submit"
-                disabled={!mensagemInput.trim() || enviando}
+                disabled={(!mensagemInput.trim() && !anexoMidia) || enviando || gravando}
                 aria-label="Enviar"
                 className="absolute right-2 p-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 text-white rounded-lg transition-colors flex items-center justify-center"
               >

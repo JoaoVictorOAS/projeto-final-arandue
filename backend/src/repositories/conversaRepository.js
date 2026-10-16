@@ -84,11 +84,14 @@ const conversaRepository = {
     tools_usadas = null,
     rag_backend = null,
     status = 'concluida',
-    erro_mensagem = null
+    erro_mensagem = null,
+    tipo_midia = 'texto',
+    midia_mime_type = null,
+    transcricao_audio = null
   ) {
     const sql = `
-      INSERT INTO mensagens (conversa_id, papel, conteudo, status, erro_mensagem, fontes, tools_usadas, rag_backend)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO mensagens (conversa_id, papel, tipo_midia, midia_mime_type, transcricao_audio, conteudo, status, erro_mensagem, fontes, tools_usadas, rag_backend)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
     const fontesJson = fontes ? JSON.stringify(fontes) : null;
     const toolsJson = tools_usadas ? JSON.stringify(tools_usadas) : null;
@@ -96,6 +99,9 @@ const conversaRepository = {
     const [result] = await pool.execute(sql, [
       conversa_id,
       papel,
+      tipo_midia || 'texto',
+      midia_mime_type || null,
+      transcricao_audio || null,
       conteudo,
       status,
       erro_mensagem,
@@ -121,7 +127,8 @@ const conversaRepository = {
       tools_usadas = null,
       rag_backend = null,
       status = 'concluida',
-      erro_mensagem = null
+      erro_mensagem = null,
+      transcricao_audio = null
     }
   ) {
     const sql = `
@@ -131,7 +138,8 @@ const conversaRepository = {
           erro_mensagem = ?,
           fontes = ?,
           tools_usadas = ?,
-          rag_backend = ?
+          rag_backend = ?,
+          transcricao_audio = COALESCE(?, transcricao_audio)
       WHERE id = ?
     `;
     const fontesJson = fontes ? JSON.stringify(fontes) : null;
@@ -144,6 +152,7 @@ const conversaRepository = {
       fontesJson,
       toolsJson,
       rag_backend,
+      transcricao_audio,
       mensagem_id
     ]);
 
@@ -163,7 +172,7 @@ const conversaRepository = {
    */
   async buscarMensagemPorId(mensagem_id, usuario_id) {
     const sql = `
-      SELECT m.id, m.conversa_id, m.papel, m.conteudo, m.status, m.erro_mensagem, m.fontes, m.tools_usadas, m.rag_backend, m.criado_em
+      SELECT m.id, m.conversa_id, m.papel, m.tipo_midia, m.midia_mime_type, m.transcricao_audio, m.conteudo, m.status, m.erro_mensagem, m.fontes, m.tools_usadas, m.rag_backend, m.criado_em
       FROM mensagens m
       INNER JOIN conversas c ON c.id = m.conversa_id
       WHERE m.id = ? AND c.usuario_id = ?
@@ -189,7 +198,7 @@ const conversaRepository = {
     }
 
     const sql = `
-      SELECT id, papel, conteudo, status, erro_mensagem, fontes, tools_usadas, rag_backend, criado_em
+      SELECT id, papel, tipo_midia, midia_mime_type, transcricao_audio, conteudo, status, erro_mensagem, fontes, tools_usadas, rag_backend, criado_em
       FROM mensagens
       WHERE conversa_id = ?
       ORDER BY criado_em ASC

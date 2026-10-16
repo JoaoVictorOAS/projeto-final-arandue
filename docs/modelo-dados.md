@@ -258,6 +258,39 @@ Representa o Livro Caixa do negócio, registrando todas as entradas e saídas de
 
 ---
 
+### 2.9 Tabela `conversas`
+Histórico de sessões de diálogo mantidas entre o MEI e o Assistente de IA (Web ou WhatsApp).
+
+| Campo | Tipo | Nulo | Padrão | Descrição |
+| :--- | :--- | :--- | :--- | :--- |
+| `id` | `INT AUTO_INCREMENT` | Não | — | Chave primária |
+| `usuario_id` | `INT` | Não | — | Chave estrangeira -> `usuarios(id)` |
+| `titulo` | `VARCHAR(255)` | Não | — | Título da conversa ou identificador de canal |
+| `canal` | `VARCHAR(20)` | Não | `'web'` | Canal de origem: `'web'` ou `'whatsapp'` |
+| `criado_em` | `DATETIME` | Não | `CURRENT_TIMESTAMP` | Data de criação |
+| `atualizado_em` | `DATETIME` | Não | `CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP` | Data da última interação |
+
+---
+
+### 2.10 Tabela `mensagens`
+Registro individual de cada mensagem trocada na conversa, com suporte multimodal a áudio e imagem.
+
+| Campo | Tipo | Nulo | Padrão | Descrição |
+| :--- | :--- | :--- | :--- | :--- |
+| `id` | `INT AUTO_INCREMENT` | Não | — | Chave primária |
+| `conversa_id` | `INT` | Não | — | Chave estrangeira -> `conversas(id)` (CASCADE) |
+| `papel` | `ENUM('usuario','assistente')` | Não | — | Papel do emissor |
+| `tipo_midia` | `ENUM('texto','audio','imagem')` | Não | `'texto'` | Tipo de mídia da mensagem |
+| `midia_mime_type` | `VARCHAR(50)` | Sim | `NULL` | MIME type do anexo (ex: `audio/ogg`, `image/png`) |
+| `transcricao_audio`| `TEXT` | Sim | `NULL` | Transcrição textual do áudio via IA Gemini |
+| `status` | `ENUM('processando','concluida','erro')` | Não | `'concluida'` | Status de processamento assíncrono |
+| `erro_mensagem` | `VARCHAR(500)` | Sim | `NULL` | Detalhe do erro em caso de falha |
+| `conteudo` | `TEXT` | Sim | `NULL` | Conteúdo textual da mensagem ou resposta |
+| `fontes` | `JSON` | Sim | `NULL` | Citações e páginas oficiais (RAG) |
+| `tools_usadas` | `JSON` | Sim | `NULL` | Lista de ferramentas MCP acionadas pela IA |
+| `rag_backend` | `VARCHAR(20)` | Sim | `NULL` | Mecanismo de RAG acionado (`chroma`, `local`, etc.) |
+| `criado_em` | `DATETIME` | Não | `CURRENT_TIMESTAMP` | Data e hora do envio |
+
 ---
 
 ## 3. Matriz de Integridade Referencial, Restrições e Soft Delete
@@ -555,6 +588,9 @@ CREATE TABLE IF NOT EXISTS mensagens (
     id INT AUTO_INCREMENT PRIMARY KEY,
     conversa_id INT NOT NULL,
     papel ENUM('usuario', 'assistente') NOT NULL,
+    tipo_midia ENUM('texto', 'audio', 'imagem') NOT NULL DEFAULT 'texto',
+    midia_mime_type VARCHAR(50) NULL,
+    transcricao_audio TEXT NULL,
     status ENUM('processando', 'concluida', 'erro') NOT NULL DEFAULT 'concluida',
     erro_mensagem VARCHAR(500) NULL,
     conteudo TEXT NULL,
