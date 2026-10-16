@@ -21,7 +21,6 @@ import {
   ToggleRight,
   FileCheck,
   Smartphone,
-  RefreshCw,
 } from 'lucide-react';
 import api from '../services/api';
 
@@ -129,7 +128,6 @@ export default function Configuracoes() {
   });
   const [telefoneWhatsApp, setTelefoneWhatsApp] = useState('');
   const [vinculandoWpp, setVinculandoWpp] = useState(false);
-  const [resetandoWpp, setResetandoWpp] = useState(false);
 
   const showFeedback = (type, message) => {
     setFeedback({ type, message });
@@ -191,22 +189,7 @@ export default function Configuracoes() {
     }
   };
 
-  const handleResetarWhatsApp = async () => {
-    try {
-      setResetandoWpp(true);
-      const res = await api.post('/assistente/whatsapp/resetar');
-      showFeedback(
-        'success',
-        res.data?.mensagem || 'Sessão do WhatsApp reiniciada. Novo QR Code disponível no servidor.'
-      );
-      await carregarStatusWhatsApp();
-    } catch (err) {
-      const msg = err.response?.data?.mensagem || 'Erro ao reiniciar sessão do WhatsApp.';
-      showFeedback('error', msg);
-    } finally {
-      setResetandoWpp(false);
-    }
-  };
+
 
   useEffect(() => {
     async function carregarConfiguracoes() {
@@ -1091,16 +1074,12 @@ export default function Configuracoes() {
                 className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${
                   wppStatus.bot?.conectado
                     ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                    : wppStatus.bot?.status === 'aguardando_qr'
-                      ? 'bg-amber-50 text-amber-700 border border-amber-200'
-                      : 'bg-gray-100 text-gray-600 border border-gray-200'
+                    : 'bg-gray-100 text-gray-600 border border-gray-200'
                 }`}
               >
                 {wppStatus.bot?.conectado
                   ? `Gateway Conectado${wppStatus.bot?.numero ? ` (${wppStatus.bot.numero})` : ''}`
-                  : wppStatus.bot?.status === 'aguardando_qr'
-                    ? 'Aguardando Leitura de QR Code'
-                    : 'Gateway Desconectado'}
+                  : 'Gateway Desconectado'}
               </span>
               {wppStatus.usuario_whatsapp_verificado && wppStatus.usuario_whatsapp && (
                 <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200">
@@ -1125,26 +1104,15 @@ export default function Configuracoes() {
               />
             </div>
 
-            <div className="flex items-center gap-2">
+            <div>
               <button
                 type="button"
                 onClick={handleVincularWhatsApp}
                 disabled={vinculandoWpp}
-                className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700 transition-colors shadow-sm disabled:opacity-50"
+                className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700 transition-colors shadow-sm disabled:opacity-50"
               >
                 {vinculandoWpp ? <Loader2 className="w-4 h-4 animate-spin" /> : <Smartphone className="w-4 h-4" />}
                 Vincular WhatsApp
-              </button>
-
-              <button
-                type="button"
-                onClick={handleResetarWhatsApp}
-                disabled={resetandoWpp}
-                title="Reiniciar sessão do gateway e gerar novo QR Code no servidor"
-                className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 rounded-xl border border-gray-300 text-gray-700 text-xs font-semibold hover:bg-gray-50 transition-colors disabled:opacity-50"
-              >
-                <RefreshCw className={`w-4 h-4 ${resetandoWpp ? 'animate-spin' : ''}`} />
-                Novo QR
               </button>
             </div>
           </div>
