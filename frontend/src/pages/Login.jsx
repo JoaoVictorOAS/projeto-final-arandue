@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   LogIn,
@@ -26,6 +26,25 @@ export default function Login() {
 
   const { login, loginComGoogle } = useAuth();
   const navigate = useNavigate();
+
+  // Desativa modo escuro e isola o tema enquanto estiver na tela de login
+  useEffect(() => {
+    const root = document.documentElement;
+    const estavaDark = root.classList.contains('dark');
+    const modoAnterior = root.getAttribute('data-theme-mode');
+
+    root.classList.remove('dark');
+    root.setAttribute('data-theme-mode', 'light');
+
+    return () => {
+      if (estavaDark) {
+        root.classList.add('dark');
+      }
+      if (modoAnterior) {
+        root.setAttribute('data-theme-mode', modoAnterior);
+      }
+    };
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -87,9 +106,16 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen w-full flex flex-col lg:flex-row bg-white">
-      {/* Lado Esquerdo: Vitrine Modular (50% da tela em desktop) */}
-      <div className="w-full lg:w-1/2 bg-stone-100/70 border-b lg:border-b-0 lg:border-r border-stone-200 p-8 sm:p-12 lg:p-16 flex flex-col justify-between">
+    <div
+      className="min-h-screen w-full flex flex-col lg:flex-row bg-white theme-isolated"
+      style={{
+        backgroundColor: '#ffffff',
+        color: '#1c1917',
+        colorScheme: 'light',
+      }}
+    >
+      {/* Lado Esquerdo: Vitrine Modular (Oculto no mobile, visível apenas a partir de lg) */}
+      <div className="hidden lg:flex lg:w-1/2 bg-stone-100/70 border-r border-stone-200 p-8 sm:p-12 lg:p-16 flex-col justify-between">
         <div>
           <Logo size="md" showText={true} />
 
@@ -160,9 +186,14 @@ export default function Login() {
         </div>
       </div>
 
-      {/* Lado Direito: Formulário de Autenticação (50% da tela) */}
+      {/* Lado Direito: Formulário de Autenticação (100% da tela no mobile, 50% em desktop) */}
       <div className="w-full lg:w-1/2 min-h-screen flex items-center justify-center p-6 sm:p-12 lg:p-16 bg-white">
         <div className="w-full max-w-md">
+          {/* Logo exibido no topo do formulário em dispositivos móveis */}
+          <div className="lg:hidden mb-8 flex justify-center">
+            <Logo size="md" showText={true} />
+          </div>
+
           {/* Cabeçalho do formulário */}
           <div className="mb-8">
             <h2 className="text-2xl sm:text-3xl font-bold text-stone-900 tracking-tight">

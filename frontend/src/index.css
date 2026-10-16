@@ -551,3 +551,116 @@ body {
   box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.45) !important;
 }
 
+/* =========================================================================
+   13. ISOLAMENTO DE TEMA — TELA DE LOGIN
+   A tela de login possui identidade visual fixa (light/stone) e não deve
+   ser afetada por modos escuros ou tokens de temas dinâmicos configurados.
+   ========================================================================= */
+.theme-isolated,
+.dark .theme-isolated,
+[data-theme-mode="dark"] .theme-isolated {
+  background-color: #ffffff !important;
+  color: #1c1917 !important;
+}
+
+.theme-isolated .bg-white,
+.dark .theme-isolated .bg-white,
+[data-theme-mode="dark"] .theme-isolated .bg-white {
+  background-color: #ffffff !important;
+  color: #1c1917 !important;
+}
+
+.theme-isolated .bg-stone-100\/70,
+.dark .theme-isolated .bg-stone-100\/70,
+[data-theme-mode="dark"] .theme-isolated .bg-stone-100\/70 {
+  background-color: rgba(245, 245, 244, 0.7) !important;
+}
+
+.theme-isolated .bg-stone-100,
+.dark .theme-isolated .bg-stone-100,
+[data-theme-mode="dark"] .theme-isolated .bg-stone-100 {
+  background-color: #f5f5f4 !important;
+}
+
+.theme-isolated .bg-stone-900,
+.dark .theme-isolated .bg-stone-900,
+[data-theme-mode="dark"] .theme-isolated .bg-stone-900 {
+  background-color: #1c1917 !important;
+  color: #ffffff !important;
+}
+
+.theme-isolated input:not([type="checkbox"]):not([type="radio"]),
+.dark .theme-isolated input:not([type="checkbox"]):not([type="radio"]),
+[data-theme-mode="dark"] .theme-isolated input:not([type="checkbox"]):not([type="radio"]) {
+  background-color: #ffffff !important;
+  color: #1c1917 !important;
+  border-color: #d6d3d1 !important;
+}
+
+.theme-isolated input::placeholder,
+.dark .theme-isolated input::placeholder,
+[data-theme-mode="dark"] .theme-isolated input::placeholder {
+  color: #a8a29e !important;
+}
+
+.theme-isolated .text-stone-900,
+.dark .theme-isolated .text-stone-900,
+[data-theme-mode="dark"] .theme-isolated .text-stone-900 {
+  color: #1c1917 !important;
+}
+
+.theme-isolated .text-stone-800,
+.dark .theme-isolated .text-stone-800,
+[data-theme-mode="dark"] .theme-isolated .text-stone-800 {
+  color: #292524 !important;
+}
+
+.theme-isolated .text-stone-700,
+.dark .theme-isolated .text-stone-700,
+[data-theme-mode="dark"] .theme-isolated .text-stone-700 {
+  color: #44403c !important;
+}
+
+.theme-isolated .text-stone-600,
+.dark .theme-isolated .text-stone-600,
+[data-theme-mode="dark"] .theme-isolated .text-stone-600 {
+  color: #57534e !important;
+}
+
+.theme-isolated .text-stone-500,
+.dark .theme-isolated .text-stone-500,
+[data-theme-mode="dark"] .theme-isolated .text-stone-500 {
+  color: #78716c !important;
+}
+
+.theme-isolated .text-stone-400,
+.dark .theme-isolated .text-stone-400,
+[data-theme-mode="dark"] .theme-isolated .text-stone-400 {
+  color: #a8a29e !important;
+}
+
+.theme-isolated .border-stone-200,
+.dark .theme-isolated .border-stone-200,
+[data-theme-mode="dark"] .theme-isolated .border-stone-200 {
+  border-color: #e7e5e4 !important;
+}
+
+.theme-isolated .border-stone-300,
+.dark .theme-isolated .border-stone-300,
+[data-theme-mode="dark"] .theme-isolated .border-stone-300 {
+  border-color: #d6d3d1 !important;
+}
+
+.theme-isolated .bg-emerald-100,
+.dark .theme-isolated .bg-emerald-100,
+[data-theme-mode="dark"] .theme-isolated .bg-emerald-100 {
+  background-color: #d1fae5 !important;
+}
+
+.theme-isolated .text-emerald-800,
+.dark .theme-isolated .text-emerald-800,
+[data-theme-mode="dark"] .theme-isolated .text-emerald-800 {
+  color: #065f46 !important;
+}
+
+

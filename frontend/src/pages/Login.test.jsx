@@ -69,4 +69,45 @@ describe('Tela de Login', () => {
     expect(screen.getByText(/Notas Fiscais/i)).toBeInTheDocument();
     expect(screen.getByText(/Assistente Virtual Aranduê/i)).toBeInTheDocument();
   });
+
+  test('deve possuir isolamento de tema (theme-isolated) e desativar modo escuro temporariamente', () => {
+    document.documentElement.classList.add('dark');
+    document.documentElement.setAttribute('data-theme-mode', 'dark');
+
+    const { unmount, container } = render(
+      <BrowserRouter>
+        <AuthProvider>
+          <Login />
+        </AuthProvider>
+      </BrowserRouter>
+    );
+
+    const loginRoot = container.querySelector('.theme-isolated');
+    expect(loginRoot).toBeInTheDocument();
+    expect(loginRoot).toHaveStyle({ backgroundColor: 'rgb(255, 255, 255)' });
+
+    // Modo escuro deve ser desativado temporariamente na tela de login
+    expect(document.documentElement.classList.contains('dark')).toBe(false);
+
+    // Ao desmontar a tela de login, o tema anterior deve ser restaurado
+    unmount();
+    expect(document.documentElement.classList.contains('dark')).toBe(true);
+  });
+
+  test('deve ocultar a vitrine modular no mobile (hidden lg:flex) mantendo apenas o formulário', () => {
+    const { container } = render(
+      <BrowserRouter>
+        <AuthProvider>
+          <Login />
+        </AuthProvider>
+      </BrowserRouter>
+    );
+
+    // O lado esquerdo (vitrine) deve ter hidden no mobile e lg:flex
+    const vitrineEsquerda = container.querySelector('.bg-stone-100\\/70');
+    expect(vitrineEsquerda).toBeInTheDocument();
+    expect(vitrineEsquerda).toHaveClass('hidden');
+    expect(vitrineEsquerda).toHaveClass('lg:flex');
+    expect(vitrineEsquerda).not.toHaveClass('w-full');
+  });
 });
