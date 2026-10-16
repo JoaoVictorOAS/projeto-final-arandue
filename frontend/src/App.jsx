@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
+import { ThemeProvider } from './context/ThemeContext';
 import { ChatProvider } from './context/ChatContext';
 import PrivateRoute from './components/PrivateRoute';
 import Layout from './components/Layout';
@@ -22,35 +23,37 @@ import Configuracoes from './pages/Configuracoes';
 export default function App() {
   return (
     <BrowserRouter>
-      <AuthProvider>
-        <ChatProvider>
-          <Routes>
-          {/* Rotas Públicas */}
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
+      <ThemeProvider>
+        <AuthProvider>
+          <ChatProvider>
+            <Routes>
+            {/* Rotas Públicas */}
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
 
-          {/* Rotas Protegidas com Layout Base (Navbar + Sidebar) */}
-          <Route element={<PrivateRoute />}>
-            <Route element={<Layout />}>
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/clientes" element={<Clientes />} />
-              <Route path="/servicos" element={<Servicos />} />
-              <Route path="/agenda" element={<Agenda />} />
-              <Route path="/orcamentos" element={<Orcamentos />} />
-              <Route path="/cobrancas" element={<Cobrancas />} />
-              <Route path="/caixa" element={<Caixa />} />
-              <Route path="/estoque" element={<Estoque />} />
-              <Route path="/fiscal" element={<NotasFiscais />} />
-              <Route path="/assistente" element={<Assistente />} />
-              <Route path="/configuracoes" element={<Configuracoes />} />
+            {/* Rotas Protegidas com Layout Base (Navbar + Sidebar) */}
+            <Route element={<PrivateRoute />}>
+              <Route element={<Layout />}>
+                <Route path="/" element={<Dashboard />} />
+                <Route path="/clientes" element={<Clientes />} />
+                <Route path="/servicos" element={<Servicos />} />
+                <Route path="/agenda" element={<Agenda />} />
+                <Route path="/orcamentos" element={<Orcamentos />} />
+                <Route path="/cobrancas" element={<Cobrancas />} />
+                <Route path="/caixa" element={<Caixa />} />
+                <Route path="/estoque" element={<Estoque />} />
+                <Route path="/fiscal" element={<NotasFiscais />} />
+                <Route path="/assistente" element={<Assistente />} />
+                <Route path="/configuracoes" element={<Configuracoes />} />
+              </Route>
             </Route>
-          </Route>
 
-          {/* Redirecionamento padrão para rota desconhecida */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-        </ChatProvider>
-      </AuthProvider>
+            {/* Redirecionamento padrão para rota desconhecida */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+          </ChatProvider>
+        </AuthProvider>
+      </ThemeProvider>
     </BrowserRouter>
   );
 }
