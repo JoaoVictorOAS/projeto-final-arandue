@@ -26,6 +26,64 @@ function checkRateLimit(usuario_id) {
   userRateLimits.set(usuario_id, records);
 }
 
+const MIME_TYPES_VALIDOS = {
+  audio: new Set(['audio/ogg', 'audio/mp3', 'audio/mpeg', 'audio/webm', 'audio/wav', 'audio/x-wav']),
+  imagem: new Set(['image/jpeg', 'image/jpg', 'image/png', 'image/webp'])
+};
+
+/**
+ * Valida o tipo MIME de arquivos de mídia (áudio ou imagem),
+ * preservando parâmetros válidos (ex: 'audio/ogg; codecs=opus') e
+ * rejeitando tipos não suportados ou com tamanho superior a 50 caracteres.
+ *
+ * @param {string} mimeType - Valor do MIME type a ser validado
+ * @param {'audio'|'imagem'} tipoEsperado - Tipo esperado da mídia
+ * @returns {string} O MIME type validado e higienizado
+ */
+function validarMimeType(mimeType, tipoEsperado) {
+  if (!mimeType || typeof mimeType !== 'string') {
+    const erro = new Error('Tipo MIME é obrigatório para anexos de mídia');
+    erro.statusCode = 400;
+    throw erro;
+  }
+
+  const mimeTrimmed = mimeType.trim();
+
+  if (mimeTrimmed.length > 50) {
+    const erro = new Error('O formato MIME da mídia não pode exceder 50 caracteres');
+    erro.statusCode = 400;
+    throw erro;
+  }
+
+  const partes = mimeTrimmed.split(';');
+  const baseType = partes[0].trim().toLowerCase();
+
+  const permitidos = tipoEsperado === 'audio'
+    ? MIME_TYPES_VALIDOS.audio
+    : MIME_TYPES_VALIDOS.imagem;
+
+  if (!permitidos || !permitidos.has(baseType)) {
+    const erro = new Error(
+      `Formato MIME não suportado para ${tipoEsperado === 'audio' ? 'áudio' : 'imagem'}: "${baseType}". Formatos aceitos: ${Array.from(permitidos).join(', ')}`
+    );
+    erro.statusCode = 400;
+    throw erro;
+  }
+
+  if (partes.length > 1) {
+    for (let i = 1; i < partes.length; i++) {
+      const param = partes[i].trim();
+      if (!param || !param.includes('=')) {
+        const erro = new Error(`Parâmetro de tipo MIME inválido: "${param}"`);
+        erro.statusCode = 400;
+        throw erro;
+      }
+    }
+  }
+
+  return mimeTrimmed;
+}
+
 const assistenteService = {
   /**
    * Envia uma mensagem no assistente e processa a resposta (suporta síncrono ou assíncrono).
@@ -48,18 +106,33 @@ const assistenteService = {
         erro.statusCode = 400;
         throw erro;
       }
+      const mimeValidado = validarMimeType(midia.mime_type || 'audio/ogg', 'audio');
+      midia.mime_type = mimeValidado;
+
       // Se não veio texto, transcreve usando aiServiceClient
       if (!textoMensagem) {
         try {
           const resultadoTranscricao = await aiServiceClient.transcreverAudio({
             audio_base64: midia.dados_base64,
-            mime_type: midia.mime_type || 'audio/ogg'
+            mime_type: midia.mime_type
           });
-          textoMensagem = resultadoTranscricao.transcricao || 'Áudio recebido.';
+          const transcricao = (resultadoTranscricao?.transcricao || '').trim();
+          if (!transcricao) {
+            const erro = new Error('Não foi possível identificar conteúdo de fala no áudio enviado. Por favor, tente gravar novamente ou digite sua mensagem.');
+            erro.statusCode = 400;
+            throw erro;
+          }
+          textoMensagem = transcricao;
           transcricaoAudio = textoMensagem;
         } catch (transcErr) {
-          console.warn('[Assistente] Aviso ao transcrever áudio:', transcErr.message);
-          textoMensagem = 'Áudio recebido (não foi possível transcrever o texto).';
+          console.warn('[Assistente] Falha ao transcrever áudio:', transcErr.message);
+          const statusCode = transcErr.statusCode || 500;
+          const mensagemErro = (transcErr.message && !transcErr.message.includes('status '))
+            ? transcErr.message
+            : 'Não foi possível transcrever o áudio enviado. Por favor, tente novamente ou digite sua mensagem.';
+          const erro = new Error(mensagemErro);
+          erro.statusCode = statusCode;
+          throw erro;
         }
       } else {
         transcricaoAudio = textoMensagem;
@@ -70,6 +143,9 @@ const assistenteService = {
         erro.statusCode = 400;
         throw erro;
       }
+      const mimeValidado = validarMimeType(midia.mime_type || 'image/jpeg', 'imagem');
+      midia.mime_type = mimeValidado;
+
       if (!textoMensagem) {
         textoMensagem = 'Por favor, analise a imagem enviada pelo MEI e responda ou sugira ações operacionais.';
       }
@@ -296,8 +372,9 @@ const assistenteService = {
       erro.statusCode = 400;
       throw erro;
     }
+    const mimeValidado = validarMimeType(mime_type || 'audio/ogg', 'audio');
     checkRateLimit(usuario_id);
-    return await aiServiceClient.transcreverAudio({ audio_base64, mime_type });
+    return await aiServiceClient.transcreverAudio({ audio_base64, mime_type: mimeValidado });
   },
 
   async analisarImagem(usuario_id, { imagem_base64, mime_type = 'image/jpeg', instrucao = null }) {
@@ -311,8 +388,9 @@ const assistenteService = {
       erro.statusCode = 400;
       throw erro;
     }
+    const mimeValidado = validarMimeType(mime_type || 'image/jpeg', 'imagem');
     checkRateLimit(usuario_id);
-    return await aiServiceClient.analisarImagem({ imagem_base64, mime_type, instrucao });
+    return await aiServiceClient.analisarImagem({ imagem_base64, mime_type: mimeValidado, instrucao });
   },
 
   async buscarStatusMensagem(mensagem_id, usuario_id) {

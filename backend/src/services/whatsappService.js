@@ -513,6 +513,24 @@ class WhatsAppService {
           }
         } else {
           console.warn(`[WhatsApp] Não foi possível baixar buffer de mídia (${tipoMidia}) da mensagem ${msgKey?.id}`);
+          if (tipoMidia === 'audio' && !textoParaEnvio) {
+            await this.sock.sendPresenceUpdate('paused', jid);
+            const msgReenvioAudio = '⚠️ *Aranduê:* Não foi possível baixar seu áudio. Por favor, envie o áudio novamente ou escreva sua mensagem por texto.';
+            this.textosEnviadosPeloBot.add(msgReenvioAudio.trim());
+            if (this.textosEnviadosPeloBot.size > 200) {
+              const primeiroTexto = this.textosEnviadosPeloBot.values().next().value;
+              this.textosEnviadosPeloBot.delete(primeiroTexto);
+            }
+            const sent = await this.sock.sendMessage(jid, { text: msgReenvioAudio });
+            if (sent?.key?.id) {
+              this.mensagensEnviadasPeloBot.add(sent.key.id);
+              if (this.mensagensEnviadasPeloBot.size > 500) {
+                const primeiro = this.mensagensEnviadasPeloBot.values().next().value;
+                this.mensagensEnviadasPeloBot.delete(primeiro);
+              }
+            }
+            return;
+          }
         }
       }
 

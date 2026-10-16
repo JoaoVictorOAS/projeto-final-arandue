@@ -187,6 +187,112 @@ describe('Assistente IA - Capacidades Multimodais (Áudio e Imagem)', () => {
         })
       );
     });
+
+    it('deve rejeitar MIME type não suportado ou com mais de 50 caracteres (400)', async () => {
+      const resInvalido = await request(app)
+        .post('/api/assistente/mensagens')
+        .set('Authorization', `Bearer ${tokenValido}`)
+        .send({
+          tipo_midia: 'audio',
+          midia: {
+            tipo: 'audio',
+            dados_base64: 'YXVkaW9fZmFrZQ==',
+            mime_type: 'video/mp4'
+          }
+        });
+
+      expect(resInvalido.statusCode).toBe(400);
+      expect(resInvalido.body.sucesso).toBe(false);
+      expect(resInvalido.body.mensagem).toMatch(/Formato MIME não suportado/i);
+
+      const resLongo = await request(app)
+        .post('/api/assistente/mensagens')
+        .set('Authorization', `Bearer ${tokenValido}`)
+        .send({
+          tipo_midia: 'audio',
+          midia: {
+            tipo: 'audio',
+            dados_base64: 'YXVkaW9fZmFrZQ==',
+            mime_type: 'audio/ogg; codecs=opus; parameter_very_very_long_exceeding_fifty_characters=true'
+          }
+        });
+
+      expect(resLongo.statusCode).toBe(400);
+      expect(resLongo.body.mensagem).toMatch(/não pode exceder 50 caracteres/i);
+    });
+
+    it('deve aceitar parâmetros válidos de MIME como audio/ogg; codecs=opus', async () => {
+      aiServiceClient.transcreverAudio.mockResolvedValueOnce({
+        sucesso: true,
+        transcricao: 'Testando áudio opus'
+      });
+      aiServiceClient.enviarMensagem.mockResolvedValueOnce({
+        resposta: 'Áudio opus processado com sucesso.',
+        fontes: [],
+        tools_usadas: []
+      });
+
+      const res = await request(app)
+        .post('/api/assistente/mensagens')
+        .set('Authorization', `Bearer ${tokenValido}`)
+        .send({
+          tipo_midia: 'audio',
+          midia: {
+            tipo: 'audio',
+            dados_base64: 'YXVkaW9fZmFrZQ==',
+            mime_type: 'audio/ogg; codecs=opus'
+          }
+        });
+
+      expect(res.statusCode).toBe(200);
+      expect(res.body.sucesso).toBe(true);
+    });
+
+    it('deve retornar erro e interromper fluxo se a transcrição de voz falhar', async () => {
+      const erroTranscricao = new Error('Falha de conexão com Gemini Speech');
+      erroTranscricao.statusCode = 502;
+      aiServiceClient.transcreverAudio.mockRejectedValueOnce(erroTranscricao);
+
+      const res = await request(app)
+        .post('/api/assistente/mensagens')
+        .set('Authorization', `Bearer ${tokenValido}`)
+        .send({
+          tipo_midia: 'audio',
+          midia: {
+            tipo: 'audio',
+            dados_base64: 'YXVkaW9fZmFrZQ==',
+            mime_type: 'audio/ogg'
+          }
+        });
+
+      expect(res.statusCode).toBe(502);
+      expect(res.body.sucesso).toBe(false);
+      expect(aiServiceClient.enviarMensagem).not.toHaveBeenCalled();
+    });
+
+    it('deve retornar 400 se a transcrição retornar conteúdo vazio', async () => {
+      aiServiceClient.transcreverAudio.mockResolvedValueOnce({
+        sucesso: true,
+        transcricao: '   '
+      });
+
+      const res = await request(app)
+        .post('/api/assistente/mensagens')
+        .set('Authorization', `Bearer ${tokenValido}`)
+        .send({
+          tipo_midia: 'audio',
+          midia: {
+            tipo: 'audio',
+            dados_base64: 'YXVkaW9fZmFrZQ==',
+            mime_type: 'audio/ogg'
+          }
+        });
+
+      expect(res.statusCode).toBe(400);
+      expect(res.body.sucesso).toBe(false);
+      expect(res.body.mensagem).toMatch(/Não foi possível identificar conteúdo de fala/i);
+      expect(aiServiceClient.enviarMensagem).not.toHaveBeenCalled();
+    });
   });
 
   describe('WhatsApp Service - Suporte a Áudio e Imagem', () => {
@@ -307,6 +413,39 @@ describe('Assistente IA - Capacidades Multimodais (Áudio e Imagem)', () => {
           }
         })
       );
+    });
+
+    it('deve enviar mensagem orientando reenvio de áudio quando falhar o download de áudio sem texto', async () => {
+      whatsappService.baixarBufferMidia = jest.fn().mockResolvedValue(null);
+      const spyEnviar = jest.spyOn(assistenteService, 'enviarMensagem');
+
+      const msgAudio = {
+        key: { remoteJid: '5511999990000@s.whatsapp.net', id: 'audio_falha_1' },
+        message: {
+          audioMessage: {
+            mimetype: 'audio/ogg; codecs=opus'
+          }
+        }
+      };
+
+      const midiaInfo = whatsappService.extrairMidiaMensagem(msgAudio.message);
+
+      await whatsappService.processarMensagemRecebida(
+        '5511999990000@s.whatsapp.net',
+        '',
+        msgAudio.key,
+        midiaInfo,
+        msgAudio
+      );
+
+      expect(mockSock.sendPresenceUpdate).toHaveBeenCalledWith('paused', '5511999990000@s.whatsapp.net');
+      expect(mockSock.sendMessage).toHaveBeenCalledWith(
+        '5511999990000@s.whatsapp.net',
+        expect.objectContaining({
+          text: expect.stringContaining('Não foi possível baixar seu áudio')
+        })
+      );
+      expect(spyEnviar).not.toHaveBeenCalled();
     });
   });
 });
