@@ -260,9 +260,15 @@ body {
 .dark .bg-gray-50,
 .dark .bg-gray-100,
 .dark .bg-gray-200,
+.dark .bg-slate-50,
+.dark .bg-slate-100,
+.dark .bg-slate-200,
 [data-theme-mode="dark"] .bg-gray-50,
 [data-theme-mode="dark"] .bg-gray-100,
-[data-theme-mode="dark"] .bg-gray-200 {
+[data-theme-mode="dark"] .bg-gray-200,
+[data-theme-mode="dark"] .bg-slate-50,
+[data-theme-mode="dark"] .bg-slate-100,
+[data-theme-mode="dark"] .bg-slate-200 {
   background-color: var(--bg-surface-hover) !important;
 }
 
@@ -288,11 +294,21 @@ body {
 .dark .border-gray-300,
 .dark [class*="border-gray-"],
 .dark [class*="divide-gray-"],
+.dark .border-slate-100,
+.dark .border-slate-200,
+.dark .border-slate-300,
+.dark [class*="border-slate-"],
+.dark [class*="divide-slate-"],
 [data-theme-mode="dark"] .border-gray-100,
 [data-theme-mode="dark"] .border-gray-200,
 [data-theme-mode="dark"] .border-gray-300,
 [data-theme-mode="dark"] [class*="border-gray-"],
-[data-theme-mode="dark"] [class*="divide-gray-"] {
+[data-theme-mode="dark"] [class*="divide-gray-"],
+[data-theme-mode="dark"] .border-slate-100,
+[data-theme-mode="dark"] .border-slate-200,
+[data-theme-mode="dark"] .border-slate-300,
+[data-theme-mode="dark"] [class*="border-slate-"],
+[data-theme-mode="dark"] [class*="divide-slate-"] {
   border-color: var(--border-color) !important;
 }
 
@@ -339,12 +355,24 @@ body {
 .dark [class*="text-gray-900"],
 .dark [class*="text-gray-800"],
 .dark [class*="text-gray-700"],
+.dark .text-slate-900,
+.dark .text-slate-800,
+.dark .text-slate-700,
+.dark [class*="text-slate-900"],
+.dark [class*="text-slate-800"],
+.dark [class*="text-slate-700"],
 [data-theme-mode="dark"] .text-gray-900,
 [data-theme-mode="dark"] .text-gray-800,
 [data-theme-mode="dark"] .text-gray-700,
 [data-theme-mode="dark"] [class*="text-gray-900"],
 [data-theme-mode="dark"] [class*="text-gray-800"],
-[data-theme-mode="dark"] [class*="text-gray-700"] {
+[data-theme-mode="dark"] [class*="text-gray-700"],
+[data-theme-mode="dark"] .text-slate-900,
+[data-theme-mode="dark"] .text-slate-800,
+[data-theme-mode="dark"] .text-slate-700,
+[data-theme-mode="dark"] [class*="text-slate-900"],
+[data-theme-mode="dark"] [class*="text-slate-800"],
+[data-theme-mode="dark"] [class*="text-slate-700"] {
   color: var(--text-main) !important;
 }
 
@@ -353,18 +381,30 @@ body {
 .dark .text-gray-500,
 .dark [class*="text-gray-600"],
 .dark [class*="text-gray-500"],
+.dark .text-slate-600,
+.dark .text-slate-500,
+.dark [class*="text-slate-600"],
+.dark [class*="text-slate-500"],
 [data-theme-mode="dark"] .text-gray-600,
 [data-theme-mode="dark"] .text-gray-500,
 [data-theme-mode="dark"] [class*="text-gray-600"],
-[data-theme-mode="dark"] [class*="text-gray-500"] {
+[data-theme-mode="dark"] [class*="text-gray-500"],
+[data-theme-mode="dark"] .text-slate-600,
+[data-theme-mode="dark"] .text-slate-500,
+[data-theme-mode="dark"] [class*="text-slate-600"],
+[data-theme-mode="dark"] [class*="text-slate-500"] {
   color: var(--text-secondary) !important;
 }
 
 /* 7. Textos muted e placeholders */
 .dark .text-gray-400,
 .dark [class*="text-gray-400"],
+.dark .text-slate-400,
+.dark [class*="text-slate-400"],
 [data-theme-mode="dark"] .text-gray-400,
-[data-theme-mode="dark"] [class*="text-gray-400"] {
+[data-theme-mode="dark"] [class*="text-gray-400"],
+[data-theme-mode="dark"] .text-slate-400,
+[data-theme-mode="dark"] [class*="text-slate-400"] {
   color: var(--text-muted) !important;
 }
 

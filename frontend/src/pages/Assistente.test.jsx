@@ -535,5 +535,92 @@ describe('Módulo do Assistente IA', () => {
       window.FileReader = originalFileReader;
     }
   });
+
+  test('deve aplicar tokens dinâmicos de tema na área de conversa e container', async () => {
+    api.get.mockResolvedValueOnce({
+      data: { sucesso: true, dados: [] },
+    });
+
+    const { container } = render(<Assistente />);
+
+    await waitFor(() => {
+      expect(screen.getByText(/como posso ajudar o seu negócio hoje\?/i)).toBeInTheDocument();
+    });
+
+    // Container principal deve ter classes do tema
+    const outerContainer = container.querySelector('.theme-card');
+    expect(outerContainer).toBeInTheDocument();
+    expect(outerContainer).toHaveStyle({ backgroundColor: 'var(--bg-surface)' });
+
+    // Área de mensagens (canvas da conversa) deve adotar var(--bg-app)
+    const mainChatArea = container.querySelector('main');
+    expect(mainChatArea).toBeInTheDocument();
+    expect(mainChatArea).toHaveStyle({ backgroundColor: 'var(--bg-app)' });
+  });
+
+  test('deve permitir abrir e fechar o drawer de histórico de conversas no mobile', async () => {
+    api.get.mockResolvedValueOnce({
+      data: { sucesso: true, dados: [] },
+    });
+
+    render(<Assistente />);
+
+    await waitFor(() => {
+      expect(screen.getByText(/como posso ajudar o seu negócio hoje\?/i)).toBeInTheDocument();
+    });
+
+    const btnAbrirDrawer = screen.getByRole('button', { name: /abrir histórico de conversas/i });
+    expect(btnAbrirDrawer).toBeInTheDocument();
+
+    const aside = screen.getByRole('complementary');
+    expect(aside).toHaveClass('-translate-x-full');
+
+    // Abre o drawer no mobile
+    fireEvent.click(btnAbrirDrawer);
+    expect(aside).toHaveClass('translate-x-0');
+
+    // Fecha pelo botão X
+    const btnFechar = screen.getByRole('button', { name: /fechar histórico/i });
+    fireEvent.click(btnFechar);
+    expect(aside).toHaveClass('-translate-x-full');
+  });
+
+  test('deve fechar o drawer móvel ao selecionar uma conversa ou iniciar nova', async () => {
+    const conversasMock = [
+      { id: 301, titulo: 'Conversa Teste Mobile', atualizado_em: '2026-10-07T12:00:00Z' },
+    ];
+    api.get.mockImplementation((url) => {
+      if (url === '/assistente/conversas') {
+        return Promise.resolve({ data: { sucesso: true, dados: conversasMock } });
+      }
+      if (url === '/assistente/conversas/301/mensagens') {
+        return Promise.resolve({ data: { sucesso: true, dados: [] } });
+      }
+      return Promise.reject(new Error('URL não encontrada'));
+    });
+
+    render(<Assistente />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Conversa Teste Mobile')).toBeInTheDocument();
+    });
+
+    const btnAbrirDrawer = screen.getByRole('button', { name: /abrir histórico de conversas/i });
+    const aside = screen.getByRole('complementary');
+
+    // Abre o drawer
+    fireEvent.click(btnAbrirDrawer);
+    expect(aside).toHaveClass('translate-x-0');
+
+    // Clica na conversa -> deve fechar o drawer
+    fireEvent.click(screen.getByText('Conversa Teste Mobile'));
+    expect(aside).toHaveClass('-translate-x-full');
+
+    // Abre de novo e clica em "Nova conversa" -> deve fechar
+    fireEvent.click(btnAbrirDrawer);
+    expect(aside).toHaveClass('translate-x-0');
+    fireEvent.click(screen.getByRole('button', { name: /nova conversa/i }));
+    expect(aside).toHaveClass('-translate-x-full');
+  });
 });
 

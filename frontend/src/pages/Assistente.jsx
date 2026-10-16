@@ -59,6 +59,7 @@ function AssistenteView() {
 
   const [gravando, setGravando] = useState(false);
   const [tempoGravacao, setTempoGravacao] = useState(0);
+  const [sidebarConversasAberta, setSidebarConversasAberta] = useState(false);
 
   // Inicia gravação de áudio pelo microfone
   const iniciarGravacao = async () => {
@@ -179,34 +180,85 @@ function AssistenteView() {
   };
 
   return (
-    <div className="flex h-[calc(85vh)] bg-slate-50 overflow-hidden rounded-2xl shadow-lg border border-slate-200">
-      {/* Sidebar de Histórico de Conversas */}
-      <aside className="w-80 bg-white border-r border-slate-200 flex flex-col flex-shrink-0">
-        <div className="p-4 flex items-center justify-between">
+    <div
+      className="flex h-[calc(100dvh-7.5rem)] md:h-[calc(85vh)] min-h-[520px] theme-card overflow-hidden rounded-2xl shadow-lg border transition-colors duration-200 relative"
+      style={{
+        backgroundColor: 'var(--bg-surface)',
+        borderColor: 'var(--border-color)',
+        color: 'var(--text-main)',
+      }}
+    >
+      {/* Backdrop para fechar o drawer de conversas no mobile */}
+      {sidebarConversasAberta && (
+        <div
+          className="fixed inset-0 bg-black/50 backdrop-blur-xs z-40 md:hidden transition-opacity"
+          onClick={() => setSidebarConversasAberta(false)}
+          aria-hidden="true"
+        />
+      )}
+
+      {/* Sidebar de Histórico de Conversas (Off-canvas responsivo no mobile, estático no desktop) */}
+      <aside
+        role="complementary"
+        className={`
+          fixed inset-y-0 left-0 z-50 w-72 sm:w-80 max-w-[85vw] flex flex-col transition-transform duration-200 ease-in-out border-r
+          md:static md:translate-x-0 md:z-auto md:flex-shrink-0 md:w-80
+          ${sidebarConversasAberta ? 'translate-x-0 shadow-2xl' : '-translate-x-full md:translate-x-0'}
+        `}
+        style={{
+          backgroundColor: 'var(--bg-surface)',
+          borderColor: 'var(--border-color)',
+          color: 'var(--text-main)',
+        }}
+      >
+        <div
+          className="p-4 flex items-center justify-between border-b"
+          style={{ borderColor: 'var(--border-color)' }}
+        >
           <div className="flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-indigo-600" />
-            <h1 className="font-bold text-slate-800 text-base">Assistente Virtual MEI</h1>
+            <Sparkles className="w-5 h-5" style={{ color: 'var(--color-primary)' }} />
+            <h1 className="font-bold text-base" style={{ color: 'var(--text-main)' }}>
+              Assistente Virtual MEI
+            </h1>
           </div>
-          <button
-            type="button"
-            onClick={iniciarNovaConversa}
-            className="p-1.5 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors flex items-center gap-1 text-xs font-semibold"
-            title="Nova conversa"
-            aria-label="Nova conversa"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Nova</span>
-          </button>
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={() => {
+                iniciarNovaConversa();
+                setSidebarConversasAberta(false);
+              }}
+              className="p-1.5 rounded-lg transition-colors flex items-center gap-1 text-xs font-semibold hover:opacity-90"
+              style={{
+                color: 'var(--color-primary)',
+                backgroundColor: 'var(--bg-surface-hover)',
+              }}
+              title="Nova conversa"
+              aria-label="Nova conversa"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Nova</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setSidebarConversasAberta(false)}
+              className="p-1.5 rounded-lg md:hidden transition-colors hover:opacity-80"
+              style={{ color: 'var(--text-secondary)' }}
+              aria-label="Fechar histórico"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
         <div className="flex-1 overflow-y-auto p-3 space-y-1">
           {carregandoConversas ? (
-            <div className="flex items-center justify-center p-6 text-slate-400 text-xs">
-              <Loader2 className="w-4 h-4 animate-spin mr-2" />
+            <div className="flex items-center justify-center p-6 text-xs" style={{ color: 'var(--text-muted)' }}>
+              <Loader2 className="w-4 h-4 animate-spin mr-2" style={{ color: 'var(--color-primary)' }} />
               Carregando conversas...
             </div>
           ) : conversas.length === 0 ? (
-            <div className="text-center py-8 px-4 text-xs text-slate-400">
+            <div className="text-center py-8 px-4 text-xs" style={{ color: 'var(--text-muted)' }}>
               Nenhuma conversa anterior encontrada. Tire sua primeira dúvida!
             </div>
           ) : (
@@ -216,15 +268,32 @@ function AssistenteView() {
               return (
                 <div
                   key={c.id}
-                  onClick={() => selecionarConversa(c.id)}
+                  onClick={() => {
+                    selecionarConversa(c.id);
+                    setSidebarConversasAberta(false);
+                  }}
                   className={`group flex items-center justify-between px-3 py-2.5 rounded-lg text-xs cursor-pointer transition-colors ${
-                    ativa
-                      ? 'bg-indigo-50 text-indigo-800 font-medium'
-                      : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                    ativa ? 'font-medium' : 'hover:opacity-90'
                   }`}
+                  style={
+                    ativa
+                      ? {
+                          backgroundColor: 'var(--bg-surface-hover)',
+                          color: 'var(--text-main)',
+                          borderLeft: '3px solid var(--color-primary)',
+                        }
+                      : {
+                          color: 'var(--text-secondary)',
+                        }
+                  }
                 >
                   <div className="flex items-center gap-2 min-w-0 pr-2">
-                    <MessageSquare className={`w-4 h-4 flex-shrink-0 ${ehWhatsApp ? 'text-emerald-600' : ativa ? 'text-indigo-600' : 'text-slate-400'}`} />
+                    <MessageSquare
+                      className="w-4 h-4 flex-shrink-0"
+                      style={{
+                        color: ehWhatsApp ? '#059669' : ativa ? 'var(--color-primary)' : 'var(--text-muted)',
+                      }}
+                    />
                     <span className="truncate">{c.titulo}</span>
                     {ehWhatsApp && (
                       <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 font-semibold flex-shrink-0">
@@ -235,7 +304,8 @@ function AssistenteView() {
                   <button
                     type="button"
                     onClick={(e) => excluirConversa(e, c.id)}
-                    className="opacity-0 group-hover:opacity-100 p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded transition-opacity"
+                    className="opacity-0 group-hover:opacity-100 p-1 rounded transition-opacity hover:text-rose-600"
+                    style={{ color: 'var(--text-muted)' }}
                     aria-label="Excluir conversa"
                     title="Excluir"
                   >
@@ -249,55 +319,89 @@ function AssistenteView() {
       </aside>
 
       {/* Área Principal de Chat */}
-      <main className="flex-1 flex flex-col h-full bg-slate-50 relative overflow-hidden">
+      <main
+        className="flex-1 flex flex-col h-full min-w-0 relative overflow-hidden transition-colors duration-200"
+        style={{ backgroundColor: 'var(--bg-app)', color: 'var(--text-main)' }}
+      >
         {/* Header do Chat */}
-        <header className="h-14 bg-white border-b border-slate-200 px-6 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Bot className="w-5 h-5 text-indigo-600" />
-            <span className="text-sm font-semibold text-slate-800">
+        <header
+          className="h-14 border-b px-3 sm:px-6 flex items-center justify-between flex-shrink-0 transition-colors duration-200"
+          style={{
+            backgroundColor: 'var(--bg-surface)',
+            borderColor: 'var(--border-color)',
+            color: 'var(--text-main)',
+          }}
+        >
+          <div className="flex items-center gap-2 min-w-0">
+            <button
+              type="button"
+              onClick={() => setSidebarConversasAberta(true)}
+              className="p-1.5 sm:p-2 -ml-1 rounded-lg md:hidden transition-colors hover:opacity-80 flex-shrink-0"
+              style={{ color: 'var(--text-secondary)' }}
+              title="Abrir histórico de conversas"
+              aria-label="Abrir histórico de conversas"
+            >
+              <MessageSquare className="w-5 h-5" />
+            </button>
+            <Bot className="w-5 h-5 flex-shrink-0" style={{ color: 'var(--color-primary)' }} />
+            <span className="text-xs sm:text-sm font-semibold truncate max-w-[130px] sm:max-w-xs md:max-w-md" style={{ color: 'var(--text-main)' }}>
               {conversaAtivaId
                 ? conversas.find((c) => c.id === conversaAtivaId)?.titulo || 'Conversa Ativa'
                 : 'Nova Consulta'}
             </span>
             {conversaAtivaId && conversas.find((c) => c.id === conversaAtivaId)?.canal === 'whatsapp' && (
-              <span className="text-[11px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 font-semibold border border-emerald-200">
+              <span className="text-[10px] sm:text-[11px] px-1.5 sm:px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 font-semibold border border-emerald-200 flex-shrink-0">
                 Canal WhatsApp
               </span>
             )}
-            <span className="text-[11px] px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 font-medium border border-indigo-100">
+            <span className="hidden sm:inline-flex text-[11px] px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 font-medium border border-indigo-100 flex-shrink-0">
               RAG Oficial MEI + Dados do Negócio
+            </span>
+            <span className="sm:hidden text-[10px] px-1.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 font-medium border border-indigo-100 flex-shrink-0">
+              RAG MEI
             </span>
           </div>
         </header>
 
         {/* Mensagens ou Sugestões Iniciais */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-4">
+        <div className="flex-1 overflow-y-auto p-3 sm:p-6 space-y-4">
           {carregandoMensagens ? (
-            <div className="flex items-center justify-center h-full text-slate-400 text-sm">
-              <Loader2 className="w-6 h-6 animate-spin mr-2 text-indigo-600" />
+            <div className="flex items-center justify-center h-full text-sm" style={{ color: 'var(--text-muted)' }}>
+              <Loader2 className="w-6 h-6 animate-spin mr-2" style={{ color: 'var(--color-primary)' }} />
               Carregando mensagens da conversa...
             </div>
           ) : mensagens.length === 0 ? (
-            <div className="max-w-2xl mx-auto py-12 text-center">
-              <div className="inline-flex p-3 rounded-2xl bg-indigo-100 text-indigo-600 mb-4">
+            <div className="max-w-2xl mx-auto py-8 sm:py-12 text-center">
+              <div
+                className="inline-flex p-3 rounded-2xl mb-4"
+                style={{
+                  backgroundColor: 'var(--bg-surface-hover)',
+                  color: 'var(--color-primary)',
+                }}
+              >
                 <Sparkles className="w-8 h-8" />
               </div>
-              <h2 className="text-xl font-bold text-slate-900 mb-2">
+              <h2 className="text-lg sm:text-xl font-bold mb-2" style={{ color: 'var(--text-main)' }}>
                 Como posso ajudar o seu negócio hoje?
               </h2>
-              <p className="text-sm text-slate-600 mb-8">
+              <p className="text-xs sm:text-sm mb-6 sm:mb-8 max-w-lg mx-auto" style={{ color: 'var(--text-secondary)' }}>
                 Tire dúvidas com base no documento oficial do MEI e consulte informações em tempo real sobre seus clientes, orçamentos e financeiro.
               </p>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-left">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3 text-left">
                 {SUGESTOES_PADRAO.map((sugestao, idx) => (
                   <button
                     key={idx}
                     type="button"
                     onClick={() => enviarMensagemTexto(sugestao)}
-                    className="p-3.5 bg-white border border-slate-200 rounded-xl hover:border-indigo-300 hover:bg-indigo-50/40 transition-all text-xs font-medium text-slate-700 hover:text-indigo-900 shadow-sm flex items-start gap-2.5 group"
+                    className="p-3 sm:p-3.5 border rounded-xl transition-all text-xs font-medium shadow-xs flex items-start gap-2.5 group hover:opacity-95"
+                    style={{
+                      backgroundColor: 'var(--bg-surface)',
+                      borderColor: 'var(--border-color)',
+                      color: 'var(--text-main)',
+                    }}
                   >
-                    <MessageSquare className="w-4 h-4 text-indigo-500 mt-0.5 group-hover:scale-110 transition-transform flex-shrink-0" />
+                    <MessageSquare className="w-4 h-4 mt-0.5 group-hover:scale-110 transition-transform flex-shrink-0" style={{ color: 'var(--color-primary)' }} />
                     <span>{sugestao}</span>
                   </button>
                 ))}
@@ -311,50 +415,86 @@ function AssistenteView() {
                 return (
                   <div
                     key={msg.id || idx}
-                    className={`flex gap-3 max-w-3xl ${ehUsuario ? 'ml-auto flex-row-reverse' : 'mr-auto'}`}
+                    className={`flex gap-2 sm:gap-3 max-w-full ${ehUsuario ? 'ml-auto flex-row-reverse' : 'mr-auto'}`}
                   >
                     <div
-                      className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                        ehUsuario ? 'bg-indigo-600 text-white' : 'bg-slate-200 text-slate-700'
-                      }`}
+                      className="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center flex-shrink-0 text-xs"
+                      style={
+                        ehUsuario
+                          ? {
+                              backgroundColor: 'var(--color-primary)',
+                              color: 'var(--color-primary-text)',
+                            }
+                          : {
+                              backgroundColor: 'var(--bg-surface-hover)',
+                              color: 'var(--text-secondary)',
+                              border: '1px solid var(--border-color)',
+                            }
+                      }
                     >
-                      {ehUsuario ? <User className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
+                      {ehUsuario ? <User className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> : <Bot className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
                     </div>
 
-                    <div className={`space-y-2 max-w-2xl`}>
+                    <div className="space-y-2 max-w-[85%] sm:max-w-2xl min-w-0">
                       <div
-                        className={`p-4 rounded-2xl text-sm leading-relaxed ${
-                          ehUsuario
-                            ? 'bg-indigo-600 text-white rounded-br-none shadow-sm'
-                            : 'bg-white text-slate-800 rounded-bl-none border border-slate-200 shadow-sm'
+                        className={`p-3 sm:p-4 rounded-2xl text-xs sm:text-sm leading-relaxed shadow-xs ${
+                          ehUsuario ? 'rounded-br-none' : 'rounded-bl-none border'
                         }`}
+                        style={
+                          ehUsuario
+                            ? {
+                                backgroundColor: 'var(--color-primary)',
+                                color: 'var(--color-primary-text)',
+                              }
+                            : {
+                                backgroundColor: 'var(--bg-surface)',
+                                borderColor: 'var(--border-color)',
+                                color: 'var(--text-main)',
+                              }
+                        }
                       >
                         {/* Indicador de mensagem multimodal */}
                         {msg.tipo_midia === 'audio' && (
-                          <div className={`flex items-center gap-1.5 mb-2 text-xs font-semibold px-2.5 py-1 rounded-lg w-fit ${ehUsuario ? 'bg-indigo-700 text-indigo-100' : 'bg-slate-100 text-slate-700'}`}>
+                          <div
+                            className={`flex items-center gap-1.5 mb-2 text-xs font-semibold px-2 py-0.5 rounded-lg w-fit ${
+                              ehUsuario ? 'bg-black/20 text-white' : 'border'
+                            }`}
+                            style={!ehUsuario ? { backgroundColor: 'var(--bg-surface-hover)', borderColor: 'var(--border-color)', color: 'var(--text-main)' } : {}}
+                          >
                             <Volume2 className="w-3.5 h-3.5" />
                             <span>Mensagem de Voz</span>
                           </div>
                         )}
                         {msg.tipo_midia === 'imagem' && (
-                          <div className={`flex items-center gap-1.5 mb-2 text-xs font-semibold px-2.5 py-1 rounded-lg w-fit ${ehUsuario ? 'bg-indigo-700 text-indigo-100' : 'bg-slate-100 text-slate-700'}`}>
+                          <div
+                            className={`flex items-center gap-1.5 mb-2 text-xs font-semibold px-2 py-0.5 rounded-lg w-fit ${
+                              ehUsuario ? 'bg-black/20 text-white' : 'border'
+                            }`}
+                            style={!ehUsuario ? { backgroundColor: 'var(--bg-surface-hover)', borderColor: 'var(--border-color)', color: 'var(--text-main)' } : {}}
+                          >
                             <Image className="w-3.5 h-3.5" />
                             <span>Imagem Anexada</span>
                           </div>
                         )}
                         {msg.midia_preview && (
                           <div className="mb-2">
-                            <img src={msg.midia_preview} alt="Pré-visualização" className="max-h-48 rounded-xl object-cover border border-indigo-400/40 shadow-xs" />
+                            <img src={msg.midia_preview} alt="Pré-visualização" className="max-h-48 rounded-xl object-cover border shadow-xs" style={{ borderColor: 'var(--border-color)' }} />
                           </div>
                         )}
-                        <div className="whitespace-pre-wrap">{msg.conteudo}</div>
+                        <div className="whitespace-pre-wrap break-words">{msg.conteudo}</div>
                       </div>
 
                       {/* Exibição de Fontes Citadas pelo RAG */}
                       {!ehUsuario && msg.fontes && msg.fontes.length > 0 && (
-                        <div className="bg-slate-100/80 rounded-xl p-3 border border-slate-200/80 space-y-2">
-                          <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-700">
-                            <FileText className="w-3.5 h-3.5 text-indigo-600" />
+                        <div
+                          className="rounded-xl p-3 border space-y-2"
+                          style={{
+                            backgroundColor: 'var(--bg-surface-hover)',
+                            borderColor: 'var(--border-color)',
+                          }}
+                        >
+                          <div className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: 'var(--text-main)' }}>
+                            <FileText className="w-3.5 h-3.5" style={{ color: 'var(--color-primary)' }} />
                             <span>Fontes Oficiais Consultadas ({msg.fontes.length}):</span>
                           </div>
                           <div className="flex flex-wrap gap-1.5">
@@ -366,13 +506,25 @@ function AssistenteView() {
                                   <button
                                     type="button"
                                     onClick={() => alternarFonte(msg.id || idx, fIdx)}
-                                    className="inline-flex items-center gap-1 px-2 py-1 bg-white hover:bg-slate-50 border border-slate-300 rounded text-[11px] font-medium text-slate-700 transition-colors shadow-2xs"
+                                    className="inline-flex items-center gap-1 px-2 py-1 border rounded text-[11px] font-medium transition-colors shadow-2xs"
+                                    style={{
+                                      backgroundColor: 'var(--bg-surface)',
+                                      borderColor: 'var(--border-color)',
+                                      color: 'var(--text-main)',
+                                    }}
                                   >
                                     <span>pág. {fonte.pagina}{fonte.score ? ` (${Math.round(fonte.score * 100)}%)` : ''}</span>
-                                    {aberta ? <ChevronUp className="w-3 h-3 text-slate-400" /> : <ChevronDown className="w-3 h-3 text-slate-400" />}
+                                    {aberta ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
                                   </button>
                                   {aberta && fonte.trecho && (
-                                    <div className="mt-1 p-2 bg-white rounded border border-slate-200 text-[11px] text-slate-600 italic leading-snug">
+                                    <div
+                                      className="mt-1 p-2 rounded border text-[11px] italic leading-snug"
+                                      style={{
+                                        backgroundColor: 'var(--bg-surface)',
+                                        borderColor: 'var(--border-color)',
+                                        color: 'var(--text-secondary)',
+                                      }}
+                                    >
                                       "{fonte.trecho}"
                                     </div>
                                   )}
@@ -390,12 +542,26 @@ function AssistenteView() {
 
           {/* Indicador de digitando/processando */}
           {enviando && (
-            <div className="flex gap-3 mr-auto max-w-3xl items-center">
-              <div className="w-8 h-8 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center flex-shrink-0">
-                <Bot className="w-4 h-4 animate-pulse" />
+            <div className="flex gap-2 sm:gap-3 mr-auto max-w-[85%] sm:max-w-2xl items-center">
+              <div
+                className="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center flex-shrink-0"
+                style={{
+                  backgroundColor: 'var(--bg-surface-hover)',
+                  color: 'var(--text-secondary)',
+                  border: '1px solid var(--border-color)',
+                }}
+              >
+                <Bot className="w-3.5 h-3.5 sm:w-4 sm:h-4 animate-pulse" />
               </div>
-              <div className="bg-white text-slate-500 rounded-2xl rounded-bl-none border border-slate-200 p-3.5 text-xs flex items-center gap-2 shadow-xs">
-                <Loader2 className="w-3.5 h-3.5 animate-spin text-indigo-600" />
+              <div
+                className="rounded-2xl rounded-bl-none border p-3 sm:p-3.5 text-xs flex items-center gap-2 shadow-xs"
+                style={{
+                  backgroundColor: 'var(--bg-surface)',
+                  borderColor: 'var(--border-color)',
+                  color: 'var(--text-secondary)',
+                }}
+              >
+                <Loader2 className="w-3.5 h-3.5 animate-spin" style={{ color: 'var(--color-primary)' }} />
                 <span>Consultando regras oficiais e dados do negócio...</span>
               </div>
             </div>
@@ -416,21 +582,34 @@ function AssistenteView() {
         </div>
 
         {/* Rodapé: Input + Aviso Legal Obrigatório */}
-        <div className="bg-white border-t border-slate-200 p-4">
+        <div
+          className="border-t p-2.5 sm:p-4 transition-colors duration-200 flex-shrink-0"
+          style={{
+            backgroundColor: 'var(--bg-surface)',
+            borderColor: 'var(--border-color)',
+          }}
+        >
           <form onSubmit={handleSubmit} className="max-w-4xl mx-auto space-y-2">
             {/* Pré-visualização do Anexo de Mídia */}
             {anexoMidia && (
-              <div className="flex items-center gap-2 p-2 bg-indigo-50 border border-indigo-200 rounded-xl mb-1 text-xs text-indigo-900 animate-fadeIn">
+              <div
+                className="flex items-center gap-2 p-2 rounded-xl mb-1 text-xs border"
+                style={{
+                  backgroundColor: 'var(--bg-surface-hover)',
+                  borderColor: 'var(--border-color)',
+                  color: 'var(--text-main)',
+                }}
+              >
                 {anexoMidia.tipo === 'imagem' ? (
                   <>
                     {anexoMidia.previewUrl && (
-                      <img src={anexoMidia.previewUrl} alt="Preview" className="w-8 h-8 rounded-lg object-cover border border-indigo-300" />
+                      <img src={anexoMidia.previewUrl} alt="Preview" className="w-8 h-8 rounded-lg object-cover border" style={{ borderColor: 'var(--border-color)' }} />
                     )}
                     <span className="flex-1 font-medium truncate">{anexoMidia.nomeArquivo || 'Imagem anexada'}</span>
                   </>
                 ) : (
                   <>
-                    <Volume2 className="w-4 h-4 text-indigo-600 animate-pulse" />
+                    <Volume2 className="w-4 h-4 animate-pulse" style={{ color: 'var(--color-primary)' }} />
                     <span className="flex-1 font-medium">Áudio gravado pronto para envio</span>
                   </>
                 )}
@@ -438,7 +617,8 @@ function AssistenteView() {
                   type="button"
                   onClick={limparAnexoMidia}
                   aria-label="Remover anexo"
-                  className="p-1 text-slate-400 hover:text-rose-600 rounded-md transition-colors"
+                  className="p-1 rounded-md transition-colors hover:text-rose-600"
+                  style={{ color: 'var(--text-muted)' }}
                 >
                   <X className="w-3.5 h-3.5" />
                 </button>
@@ -447,23 +627,23 @@ function AssistenteView() {
 
             {/* Barra de Gravação de Áudio ao Vivo */}
             {gravando && (
-              <div className="flex items-center justify-between p-2.5 bg-rose-50 border border-rose-200 rounded-xl mb-1 text-xs text-rose-700 animate-pulse">
-                <div className="flex items-center gap-2">
-                  <span className="w-2.5 h-2.5 rounded-full bg-rose-600 animate-ping" />
-                  <span className="font-semibold">Gravando mensagem de voz... {Math.floor(tempoGravacao / 60)}:{(tempoGravacao % 60).toString().padStart(2, '0')}</span>
+              <div className="flex items-center justify-between p-2 sm:p-2.5 bg-rose-50 border border-rose-200 rounded-xl mb-1 text-xs text-rose-700 animate-pulse">
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="w-2.5 h-2.5 rounded-full bg-rose-600 animate-ping flex-shrink-0" />
+                  <span className="font-semibold truncate">Gravando mensagem de voz... {Math.floor(tempoGravacao / 60)}:{(tempoGravacao % 60).toString().padStart(2, '0')}</span>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
                   <button
                     type="button"
                     onClick={cancelarGravacao}
-                    className="px-2.5 py-1 text-rose-600 hover:bg-rose-100 rounded-lg font-medium transition-colors"
+                    className="px-2 sm:px-2.5 py-1 text-rose-600 hover:bg-rose-100 rounded-lg font-medium transition-colors"
                   >
                     Cancelar
                   </button>
                   <button
                     type="button"
                     onClick={pararGravacao}
-                    className="px-3 py-1 bg-rose-600 hover:bg-rose-700 text-white rounded-lg font-semibold transition-colors"
+                    className="px-2.5 sm:px-3 py-1 bg-rose-600 hover:bg-rose-700 text-white rounded-lg font-semibold transition-colors"
                   >
                     Concluir
                   </button>
@@ -471,7 +651,7 @@ function AssistenteView() {
               </div>
             )}
 
-            <div className="relative flex items-center gap-1.5">
+            <div className="relative flex items-center gap-1 sm:gap-1.5">
               <input
                 ref={fileInputRef}
                 type="file"
@@ -486,7 +666,10 @@ function AssistenteView() {
                 disabled={enviando || gravando}
                 aria-label="Anexar imagem"
                 title="Anexar foto ou documento"
-                className="p-2 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-colors disabled:opacity-50"
+                className="p-1.5 sm:p-2 rounded-xl transition-colors disabled:opacity-50 hover:opacity-80"
+                style={{
+                  color: 'var(--text-secondary)',
+                }}
               >
                 <Paperclip className="w-5 h-5" />
               </button>
@@ -496,9 +679,10 @@ function AssistenteView() {
                 disabled={enviando}
                 aria-label={gravando ? "Parar gravação" : "Gravar áudio"}
                 title={gravando ? "Parar gravação" : "Gravar mensagem de voz"}
-                className={`p-2 rounded-xl transition-colors disabled:opacity-50 ${
-                  gravando ? 'text-rose-600 bg-rose-100 animate-pulse' : 'text-slate-500 hover:text-indigo-600 hover:bg-indigo-50'
+                className={`p-1.5 sm:p-2 rounded-xl transition-colors disabled:opacity-50 ${
+                  gravando ? 'text-rose-600 bg-rose-100 animate-pulse' : 'hover:opacity-80'
                 }`}
+                style={!gravando ? { color: 'var(--text-secondary)' } : {}}
               >
                 <Mic className="w-5 h-5" />
               </button>
@@ -509,20 +693,29 @@ function AssistenteView() {
                 rows={1}
                 maxLength={2000}
                 placeholder={anexoMidia ? "Adicione uma instrução opcional..." : "Digite sua dúvida contábil ou sobre seu negócio..."}
-                className="w-full resize-none rounded-xl border border-slate-300 py-3 pl-4 pr-14 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                className="w-full resize-none rounded-xl border py-2.5 sm:py-3 pl-3 sm:pl-4 pr-11 sm:pr-14 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:border-transparent transition-colors"
+                style={{
+                  backgroundColor: 'var(--bg-surface)',
+                  borderColor: 'var(--border-color)',
+                  color: 'var(--text-main)',
+                }}
                 disabled={enviando || gravando}
               />
               <button
                 type="submit"
                 disabled={(!mensagemInput.trim() && !anexoMidia) || enviando || gravando}
                 aria-label="Enviar"
-                className="absolute right-2 p-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 text-white rounded-lg transition-colors flex items-center justify-center"
+                className="absolute right-1.5 sm:right-2 p-1.5 sm:p-2 rounded-lg transition-colors flex items-center justify-center disabled:opacity-40"
+                style={{
+                  backgroundColor: 'var(--color-primary)',
+                  color: 'var(--color-primary-text)',
+                }}
               >
                 {enviando ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
               </button>
             </div>
 
-            <p className="text-center text-[11px] text-slate-400">
+            <p className="text-center text-[10px] sm:text-[11px]" style={{ color: 'var(--text-muted)' }}>
               Orientação informativa baseada no documento oficial do MEI. Não substitui assessoria contábil.
             </p>
           </form>
