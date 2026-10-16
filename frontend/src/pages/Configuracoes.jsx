@@ -21,8 +21,16 @@ import {
   ToggleRight,
   FileCheck,
   Smartphone,
+  Palette,
+  Sparkles,
+  Upload,
+  Download,
+  Check,
+  Sun,
+  Moon,
 } from 'lucide-react';
 import api from '../services/api';
+import { useTheme } from '../context/ThemeContext';
 
 export const UFS_BRASIL = [
   { uf: 'AC', nome: 'Acre', cUf: '12', autorizador: 'SVRS', aliquotaPadrao: 19 },
@@ -129,6 +137,25 @@ export default function Configuracoes() {
   const [telefoneWhatsApp, setTelefoneWhatsApp] = useState('');
   const [vinculandoWpp, setVinculandoWpp] = useState(false);
 
+  // Estados e Ações do Sistema de Temas Dinâmicos & IA
+  const {
+    temaAtual,
+    temas = [],
+    carregando: carregandoTemas = false,
+    ativarTema,
+    uploadTema,
+    gerarTemaIA,
+    excluirTema,
+    exportarTema,
+  } = useTheme() || {};
+
+  const [iaDescricao, setIaDescricao] = useState('');
+  const [iaModo, setIaModo] = useState('dark');
+  const [gerandoTemaIA, setGerandoTemaIA] = useState(false);
+  const [temaUploadando, setTemaUploadando] = useState(false);
+  const [temaAtivandoId, setTemaAtivandoId] = useState(null);
+  const [temaExcluindoId, setTemaExcluindoId] = useState(null);
+
   const showFeedback = (type, message) => {
     setFeedback({ type, message });
     if (type === 'success') {
@@ -189,8 +216,88 @@ export default function Configuracoes() {
     }
   };
 
+  const handleAtivarTema = async (idOuSlug) => {
+    if (!ativarTema) return;
+    try {
+      setTemaAtivandoId(idOuSlug);
+      const res = await ativarTema(idOuSlug);
+      if (res?.sucesso) {
+        showFeedback('success', `Tema "${res.tema?.nome || 'selecionado'}" ativado com sucesso!`);
+      } else {
+        showFeedback('error', res?.erro || 'Erro ao ativar tema.');
+      }
+    } catch (err) {
+      showFeedback('error', 'Falha ao ativar tema.');
+    } finally {
+      setTemaAtivandoId(null);
+    }
+  };
 
+  const handleUploadTema = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!uploadTema) return;
 
+    try {
+      setTemaUploadando(true);
+      const res = await uploadTema(file);
+      if (res?.sucesso) {
+        showFeedback('success', `Tema "${res.dados?.nome || 'importado'}" carregado com sucesso!`);
+      } else {
+        showFeedback('error', res?.erro || 'Falha ao importar tema (.json).');
+      }
+    } catch (err) {
+      showFeedback('error', 'Falha ao realizar upload do tema.');
+    } finally {
+      setTemaUploadando(false);
+      e.target.value = '';
+    }
+  };
+
+  const handleGerarTemaIA = async (e) => {
+    e?.preventDefault();
+    if (!iaDescricao.trim()) {
+      showFeedback('error', 'Informe uma descrição para gerar o tema com IA.');
+      return;
+    }
+    if (!gerarTemaIA) return;
+
+    try {
+      setGerandoTemaIA(true);
+      const res = await gerarTemaIA(iaDescricao.trim(), iaModo);
+      if (res?.sucesso) {
+        showFeedback('success', `Tema "${res.dados?.nome || 'IA'}" gerado com sucesso!`);
+        setIaDescricao('');
+      } else {
+        showFeedback('error', res?.erro || 'Falha ao gerar tema com IA.');
+      }
+    } catch (err) {
+      showFeedback('error', 'Erro ao processar solicitação de tema com IA.');
+    } finally {
+      setGerandoTemaIA(false);
+    }
+  };
+
+  const handleExcluirTema = async (id, nome) => {
+    if (!window.confirm(`Deseja realmente excluir o tema "${nome}"?`)) {
+      return;
+    }
+    if (!excluirTema) return;
+
+    try {
+      setTemaExcluindoId(id);
+      const res = await excluirTema(id);
+      if (res?.sucesso) {
+        showFeedback('success', 'Tema excluído com sucesso.');
+      } else {
+        showFeedback('error', res?.erro || 'Erro ao excluir tema.');
+      }
+    } catch (err) {
+      showFeedback('error', 'Falha ao excluir tema.');
+    } finally {
+      setTemaExcluindoId(null);
+    }
+  };
   useEffect(() => {
     async function carregarConfiguracoes() {
       try {
@@ -1115,6 +1222,312 @@ export default function Configuracoes() {
                 Vincular WhatsApp
               </button>
             </div>
+          </div>
+        </div>
+
+        {/* CARD 6: Aparência & Temas do Sistema */}
+        <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-6">
+          <div className="border-b border-gray-100 pb-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                <Palette className="w-5 h-5 text-indigo-600" />
+                Aparência & Temas do Sistema
+              </h2>
+              <p className="text-xs text-gray-500 mt-0.5">
+                Personalize as cores, modo visual e estilo de todo o ERP Aranduê com contraste WCAG garantido.
+              </p>
+            </div>
+
+            {/* Ações Rápidas: Importar e Exportar */}
+            <div className="flex items-center gap-2.5 flex-wrap">
+              <label
+                htmlFor="upload-tema-json"
+                className="inline-flex items-center gap-2 px-3.5 py-2 text-xs font-semibold text-gray-700 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-xl cursor-pointer transition-colors"
+              >
+                <Upload className="w-4 h-4 text-gray-600" />
+                <span>Importar Tema (.json)</span>
+                <input
+                  id="upload-tema-json"
+                  type="file"
+                  accept=".json"
+                  onChange={handleUploadTema}
+                  className="hidden"
+                  disabled={temaUploadando}
+                />
+              </label>
+
+              <button
+                type="button"
+                onClick={() => exportarTema && exportarTema(temaAtual)}
+                className="inline-flex items-center gap-2 px-3.5 py-2 text-xs font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-xl transition-colors"
+              >
+                <Download className="w-4 h-4 text-indigo-600" />
+                <span>Exportar Tema Ativo</span>
+              </button>
+            </div>
+          </div>
+
+          {/* SUBSEÇÃO 1: Gerador de Tema com IA */}
+          <div className="bg-gradient-to-r from-purple-50/70 via-indigo-50/50 to-pink-50/60 p-5 rounded-2xl border border-purple-100 space-y-3">
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-purple-600" />
+                <h3 className="text-sm font-bold text-gray-900">Gerar Tema com IA</h3>
+              </div>
+              <span className="text-[11px] font-medium text-purple-700 bg-purple-100/80 px-2.5 py-0.5 rounded-full">
+                Motor IA Gemini + WCAG Contrast Validator
+              </span>
+            </div>
+            <p className="text-xs text-gray-600">
+              Descreva o estilo, nicho ou paleta desejada para seu negócio. A inteligência artificial criará a paleta completa com contraste validado.
+            </p>
+
+            <div className="flex flex-col sm:flex-row items-stretch gap-3 pt-1">
+              <div className="relative flex-1">
+                <input
+                  type="text"
+                  value={iaDescricao}
+                  onChange={(e) => setIaDescricao(e.target.value)}
+                  placeholder="Quero um tema escuro sofisticado com detalhes em cobre para uma barbearia retrô"
+                  className="w-full px-3.5 py-2.5 text-xs sm:text-sm bg-white rounded-xl border border-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-500 shadow-sm"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleGerarTemaIA(e);
+                    }
+                  }}
+                />
+              </div>
+
+              {/* Seletor de Modo Claro / Escuro */}
+              <div className="inline-flex bg-white rounded-xl border border-purple-200 p-1 shadow-sm shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setIaModo('light')}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors ${
+                    iaModo === 'light'
+                      ? 'bg-purple-600 text-white shadow-xs'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  <Sun className="w-3.5 h-3.5" />
+                  Claro
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIaModo('dark')}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors ${
+                    iaModo === 'dark'
+                      ? 'bg-purple-600 text-white shadow-xs'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  <Moon className="w-3.5 h-3.5" />
+                  Escuro
+                </button>
+              </div>
+
+              {/* Botão Gerar com IA */}
+              <button
+                type="button"
+                onClick={handleGerarTemaIA}
+                disabled={gerandoTemaIA || !iaDescricao.trim()}
+                className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-purple-600 hover:bg-purple-700 text-white text-xs sm:text-sm font-semibold rounded-xl shadow-sm transition-colors disabled:opacity-50 shrink-0"
+              >
+                {gerandoTemaIA ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Criando Paleta...</span>
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-4 h-4" />
+                    <span>Gerar com IA</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+
+          {/* SUBSEÇÃO 2: Catálogo de Temas */}
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
+                Catálogo de Temas Disponíveis
+                <span className="text-xs font-normal text-gray-500">
+                  ({temas.length} {temas.length === 1 ? 'tema' : 'temas'})
+                </span>
+              </h3>
+              {carregandoTemas && (
+                <span className="text-xs text-gray-400 flex items-center gap-1">
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" /> Carregando biblioteca...
+                </span>
+              )}
+            </div>
+
+            {temas.length === 0 && !carregandoTemas ? (
+              <div className="text-center py-8 text-gray-500 bg-gray-50/50 rounded-xl border border-dashed border-gray-200">
+                <Palette className="w-8 h-8 text-gray-400 mx-auto mb-2 opacity-50" />
+                <p className="text-sm font-medium">Nenhum tema encontrado na biblioteca.</p>
+                <p className="text-xs text-gray-400 mt-1">Crie um novo tema com IA ou importe um arquivo .json acima.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {temas.map((tema) => {
+                  const isAtivo = Boolean(
+                    (temaAtual && (String(temaAtual.id) === String(tema.id) || temaAtual.slug === tema.slug)) ||
+                    tema.eh_ativo
+                  );
+                  const tokens = tema.tokens || tema.cores || {};
+                  const bgApp = tokens.bgApp || '#ffffff';
+                  const bgSurface = tokens.bgSurface || '#f8fafc';
+                  const primary = tokens.primary || '#4f46e5';
+                  const accent = tokens.accent || '#f59e0b';
+                  const textMain = tokens.textMain || (tema.modo === 'dark' ? '#f8fafc' : '#0f172a');
+
+                  return (
+                    <div
+                      key={tema.id || tema.slug}
+                      className={`relative rounded-2xl p-4 transition-all flex flex-col justify-between ${
+                        isAtivo
+                          ? 'border-2 border-indigo-500 bg-indigo-50/30 shadow-md ring-2 ring-indigo-200'
+                          : 'border border-gray-200 bg-white hover:border-gray-300 hover:shadow-xs'
+                      }`}
+                    >
+                      <div>
+                        {/* Cabeçalho do Card */}
+                        <div className="flex items-start justify-between gap-2 mb-2">
+                          <div className="min-w-0">
+                            <h4 className="text-sm font-bold text-gray-900 truncate" title={tema.nome}>
+                              {tema.nome}
+                            </h4>
+                            <p className="text-[11px] text-gray-500 line-clamp-1 mt-0.5" title={tema.descricao}>
+                              {tema.descricao || (tema.eh_sistema ? 'Tema nativo do sistema' : 'Tema personalizado')}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-1 shrink-0">
+                            <span
+                              className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+                                tema.modo === 'dark'
+                                  ? 'bg-slate-800 text-slate-200'
+                                  : 'bg-amber-100 text-amber-800'
+                              }`}
+                            >
+                              {tema.modo === 'dark' ? <Moon className="w-2.5 h-2.5" /> : <Sun className="w-2.5 h-2.5" />}
+                              {tema.modo === 'dark' ? 'Escuro' : 'Claro'}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Amostras circulares/quadradas de cores: bgApp, bgSurface, primary, accent */}
+                        <div
+                          className="rounded-xl p-3 my-3 border flex flex-col gap-2"
+                          style={{ backgroundColor: bgApp, borderColor: tokens.border || '#e2e8f0' }}
+                        >
+                          <div
+                            className="p-2.5 rounded-lg border flex items-center justify-between"
+                            style={{
+                              backgroundColor: bgSurface,
+                              borderColor: tokens.border || '#e2e8f0',
+                              color: textMain,
+                            }}
+                          >
+                            <span className="text-xs font-semibold">Amostra Visual</span>
+                            <span
+                              className="text-[10px] px-2 py-0.5 rounded-md font-semibold text-white"
+                              style={{ backgroundColor: primary }}
+                            >
+                              Botão
+                            </span>
+                          </div>
+
+                          <div className="flex items-center justify-between pt-1">
+                            <span className="text-[10px] font-medium opacity-70" style={{ color: textMain }}>
+                              Amostras:
+                            </span>
+                            <div className="flex items-center gap-1.5">
+                              <span
+                                className="w-4 h-4 rounded-full border border-black/10 shadow-xs"
+                                style={{ backgroundColor: bgApp }}
+                                title={`bgApp: ${bgApp}`}
+                              />
+                              <span
+                                className="w-4 h-4 rounded-full border border-black/10 shadow-xs"
+                                style={{ backgroundColor: bgSurface }}
+                                title={`bgSurface: ${bgSurface}`}
+                              />
+                              <span
+                                className="w-4 h-4 rounded-full border border-black/10 shadow-xs"
+                                style={{ backgroundColor: primary }}
+                                title={`primary: ${primary}`}
+                              />
+                              <span
+                                className="w-4 h-4 rounded-full border border-black/10 shadow-xs"
+                                style={{ backgroundColor: accent }}
+                                title={`accent: ${accent}`}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Rodapé e Ações do Tema */}
+                      <div className="pt-3 border-t border-gray-100 flex items-center justify-between gap-2 mt-auto">
+                        <div>
+                          {isAtivo ? (
+                            <span className="inline-flex items-center gap-1 text-xs font-bold text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-lg">
+                              <Check className="w-3.5 h-3.5" />
+                              Tema Ativo
+                            </span>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => handleAtivarTema(tema.id || tema.slug)}
+                              disabled={temaAtivandoId === (tema.id || tema.slug)}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-lg transition-colors disabled:opacity-50"
+                            >
+                              {temaAtivandoId === (tema.id || tema.slug) ? (
+                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                              ) : null}
+                              Ativar Tema
+                            </button>
+                          )}
+                        </div>
+
+                        <div className="flex items-center gap-1">
+                          {/* Exportar JSON individual */}
+                          <button
+                            type="button"
+                            onClick={() => exportarTema && exportarTema(tema)}
+                            title={`Exportar tema "${tema.nome}"`}
+                            className="p-1.5 text-gray-500 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
+                          >
+                            <Download className="w-3.5 h-3.5" />
+                          </button>
+
+                          {/* Excluir (somente se não for do sistema) */}
+                          {!tema.eh_sistema && (
+                            <button
+                              type="button"
+                              onClick={() => handleExcluirTema(tema.id, tema.nome)}
+                              disabled={temaExcluindoId === tema.id}
+                              title={`Excluir tema "${tema.nome}"`}
+                              className="p-1.5 text-gray-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors disabled:opacity-50"
+                            >
+                              {temaExcluindoId === tema.id ? (
+                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                              ) : (
+                                <Trash2 className="w-3.5 h-3.5" />
+                              )}
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </div>
       </form>

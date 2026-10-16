@@ -1,7 +1,9 @@
 import React from 'react';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
-import { describe, test, expect, vi, beforeEach } from 'vitest';
+import { describe, test, it, expect, vi, beforeEach } from 'vitest';
+import { BrowserRouter } from 'react-router-dom';
 import Configuracoes from './Configuracoes';
+import { ThemeProvider } from '../context/ThemeContext';
 import api from '../services/api';
 
 vi.mock('../services/api', () => {
@@ -360,5 +362,374 @@ describe('Módulo de Configurações — MEI & SEFAZ Multi-Estado', () => {
     });
 
     expect(await screen.findByText(/número de whatsapp vinculado com sucesso/i)).toBeInTheDocument();
+  });
+
+  it('deve renderizar a seção de Aparência e Temas do Sistema com opções de troca e IA', async () => {
+    api.get.mockImplementation((url) => {
+      if (url === '/configuracoes') {
+        return Promise.resolve({ data: mockConfigInicial });
+      }
+      if (url === '/configuracoes/temas') {
+        return Promise.resolve({
+          data: {
+            sucesso: true,
+            dados: [
+              {
+                id: 'padrao-claro',
+                slug: 'claro-arandue',
+                nome: 'Claro Aranduê',
+                modo: 'light',
+                eh_sistema: true,
+                eh_ativo: true,
+                tokens: {
+                  bgApp: '#f8fafc',
+                  bgSurface: '#ffffff',
+                  primary: '#4f46e5',
+                  accent: '#f59e0b',
+                },
+              },
+            ],
+          },
+        });
+      }
+      return Promise.resolve({ data: { sucesso: true, dados: [] } });
+    });
+
+    render(
+      <BrowserRouter>
+        <ThemeProvider>
+          <Configuracoes />
+        </ThemeProvider>
+      </BrowserRouter>
+    );
+
+    expect(await screen.findByText(/Aparência & Temas do Sistema/i)).toBeInTheDocument();
+    expect(screen.getByText(/Gerar Tema com IA/i)).toBeInTheDocument();
+    expect(screen.getByText(/Importar Tema \(\.json\)/i)).toBeInTheDocument();
+    expect(screen.getByText(/Exportar Tema Ativo/i)).toBeInTheDocument();
+    expect(screen.getByText('Claro Aranduê')).toBeInTheDocument();
+  });
+
+  it('deve permitir ativar um tema inativo da biblioteca', async () => {
+    api.get.mockImplementation((url) => {
+      if (url === '/configuracoes') return Promise.resolve({ data: mockConfigInicial });
+      if (url === '/configuracoes/temas') {
+        return Promise.resolve({
+          data: {
+            sucesso: true,
+            dados: [
+              {
+                id: 'padrao-claro',
+                slug: 'claro-arandue',
+                nome: 'Claro Aranduê',
+                modo: 'light',
+                eh_sistema: true,
+                eh_ativo: true,
+                tokens: {
+                  bgApp: '#f8fafc',
+                  bgSurface: '#ffffff',
+                  primary: '#4f46e5',
+                  accent: '#f59e0b',
+                },
+              },
+              {
+                id: 2,
+                slug: 'tema-barbearia',
+                nome: 'Barbearia Retrô',
+                modo: 'dark',
+                eh_sistema: false,
+                eh_ativo: false,
+                tokens: {
+                  bgApp: '#18181b',
+                  bgSurface: '#27272a',
+                  primary: '#d97706',
+                  accent: '#f59e0b',
+                },
+              },
+            ],
+          },
+        });
+      }
+      return Promise.resolve({ data: { sucesso: true, dados: [] } });
+    });
+
+    api.put.mockImplementation((url) => {
+      if (url.includes('/configuracoes/temas/')) {
+        return Promise.resolve({
+          data: {
+            sucesso: true,
+            mensagem: 'Tema ativado com sucesso!',
+            dados: {
+              id: 2,
+              slug: 'tema-barbearia',
+              nome: 'Barbearia Retrô',
+              modo: 'dark',
+              eh_ativo: true,
+              tokens: {
+                bgApp: '#18181b',
+                bgSurface: '#27272a',
+                primary: '#d97706',
+                accent: '#f59e0b',
+              },
+            },
+          },
+        });
+      }
+      return Promise.resolve({ data: { sucesso: true } });
+    });
+
+    render(
+      <BrowserRouter>
+        <ThemeProvider>
+          <Configuracoes />
+        </ThemeProvider>
+      </BrowserRouter>
+    );
+
+    expect(await screen.findByText('Barbearia Retrô')).toBeInTheDocument();
+    const btnAtivar = screen.getByRole('button', { name: /Ativar Tema/i });
+    fireEvent.click(btnAtivar);
+
+    await waitFor(() => {
+      expect(api.put).toHaveBeenCalledWith('/configuracoes/temas/2/ativar');
+    });
+  });
+
+  it('deve permitir gerar tema com IA via prompt e modo selecionado', async () => {
+    api.get.mockImplementation((url) => {
+      if (url === '/configuracoes') return Promise.resolve({ data: mockConfigInicial });
+      if (url === '/configuracoes/temas') {
+        return Promise.resolve({
+          data: {
+            sucesso: true,
+            dados: [
+              {
+                id: 'padrao-claro',
+                slug: 'claro-arandue',
+                nome: 'Claro Aranduê',
+                modo: 'light',
+                eh_sistema: true,
+                eh_ativo: true,
+                tokens: {
+                  bgApp: '#f8fafc',
+                  bgSurface: '#ffffff',
+                  primary: '#4f46e5',
+                  accent: '#f59e0b',
+                },
+              },
+            ],
+          },
+        });
+      }
+      return Promise.resolve({ data: { sucesso: true, dados: [] } });
+    });
+
+    api.post.mockImplementation((url, body) => {
+      if (url === '/configuracoes/temas/gerar-ia') {
+        return Promise.resolve({
+          data: {
+            sucesso: true,
+            mensagem: 'Tema gerado com IA com sucesso!',
+            dados: {
+              id: 99,
+              nome: 'Cafeteria Aconchegante',
+              slug: 'cafeteria-aconchegante',
+              modo: body.modo || 'dark',
+              origem: 'IA',
+              tokens: {
+                bgApp: '#271c19',
+                bgSurface: '#3e2723',
+                primary: '#d7ccc8',
+                accent: '#ffb74d',
+              },
+            },
+          },
+        });
+      }
+      return Promise.resolve({ data: { sucesso: true } });
+    });
+
+    render(
+      <BrowserRouter>
+        <ThemeProvider>
+          <Configuracoes />
+        </ThemeProvider>
+      </BrowserRouter>
+    );
+
+    expect(await screen.findByText(/Gerar Tema com IA/i)).toBeInTheDocument();
+
+    const inputDesc = screen.getByPlaceholderText(/Quero um tema escuro sofisticado/i);
+    fireEvent.change(inputDesc, { target: { value: 'Tema para cafeteria vintage tons terrosos' } });
+
+    const btnGerar = screen.getByRole('button', { name: /Gerar com IA/i });
+    fireEvent.click(btnGerar);
+
+    await waitFor(() => {
+      expect(api.post).toHaveBeenCalledWith('/configuracoes/temas/gerar-ia', expect.objectContaining({
+        descricao: 'Tema para cafeteria vintage tons terrosos',
+      }));
+    });
+  });
+
+  it('deve permitir importar tema através de upload de arquivo .json', async () => {
+    api.get.mockImplementation((url) => {
+      if (url === '/configuracoes') return Promise.resolve({ data: mockConfigInicial });
+      if (url === '/configuracoes/temas') {
+        return Promise.resolve({
+          data: {
+            sucesso: true,
+            dados: [],
+          },
+        });
+      }
+      return Promise.resolve({ data: { sucesso: true, dados: [] } });
+    });
+
+    api.post.mockImplementation((url) => {
+      if (url === '/configuracoes/temas/upload') {
+        return Promise.resolve({
+          data: {
+            sucesso: true,
+            mensagem: 'Tema importado com sucesso!',
+            dados: {
+              id: 10,
+              nome: 'Tema Arquivo Importado',
+              slug: 'tema-arquivo-importado',
+            },
+          },
+        });
+      }
+      return Promise.resolve({ data: { sucesso: true } });
+    });
+
+    render(
+      <BrowserRouter>
+        <ThemeProvider>
+          <Configuracoes />
+        </ThemeProvider>
+      </BrowserRouter>
+    );
+
+    expect(await screen.findByText(/Importar Tema \(\.json\)/i)).toBeInTheDocument();
+
+    const fileInput = document.querySelector('input[type="file"][accept=".json"]');
+    expect(fileInput).not.toBeNull();
+
+    const file = new File(['{"nome":"Tema Arquivo Importado"}'], 'tema.json', { type: 'application/json' });
+    fireEvent.change(fileInput, { target: { files: [file] } });
+
+    await waitFor(() => {
+      expect(api.post).toHaveBeenCalledWith(
+        '/configuracoes/temas/upload',
+        expect.any(FormData),
+        expect.objectContaining({
+          headers: { 'Content-Type': 'multipart/form-data' },
+        })
+      );
+    });
+  });
+
+  it('deve permitir excluir tema customizado com confirmação', async () => {
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+
+    api.get.mockImplementation((url) => {
+      if (url === '/configuracoes') return Promise.resolve({ data: mockConfigInicial });
+      if (url === '/configuracoes/temas') {
+        return Promise.resolve({
+          data: {
+            sucesso: true,
+            dados: [
+              {
+                id: 55,
+                slug: 'tema-deletavel',
+                nome: 'Tema Deletável',
+                modo: 'light',
+                eh_sistema: false,
+                eh_ativo: false,
+                tokens: {
+                  bgApp: '#ffffff',
+                  bgSurface: '#f3f4f6',
+                  primary: '#ec4899',
+                  accent: '#8b5cf6',
+                },
+              },
+            ],
+          },
+        });
+      }
+      return Promise.resolve({ data: { sucesso: true, dados: [] } });
+    });
+
+    api.delete.mockResolvedValueOnce({
+      data: { sucesso: true, mensagem: 'Tema removido com sucesso' },
+    });
+
+    render(
+      <BrowserRouter>
+        <ThemeProvider>
+          <Configuracoes />
+        </ThemeProvider>
+      </BrowserRouter>
+    );
+
+    expect(await screen.findByText('Tema Deletável')).toBeInTheDocument();
+
+    const btnExcluir = screen.getByTitle(/Excluir tema/i);
+    fireEvent.click(btnExcluir);
+
+    await waitFor(() => {
+      expect(api.delete).toHaveBeenCalledWith('/configuracoes/temas/55');
+    });
+  });
+
+  it('deve permitir exportar o tema ativo chamando a função de download', async () => {
+    // Mock createObjectURL e revokeObjectURL para jsdom
+    window.URL.createObjectURL = vi.fn().mockReturnValue('blob:http://localhost/mock-blob');
+    window.URL.revokeObjectURL = vi.fn();
+
+    api.get.mockImplementation((url) => {
+      if (url === '/configuracoes') return Promise.resolve({ data: mockConfigInicial });
+      if (url === '/configuracoes/temas') {
+        return Promise.resolve({
+          data: {
+            sucesso: true,
+            dados: [
+              {
+                id: 'padrao-claro',
+                slug: 'claro-arandue',
+                nome: 'Claro Aranduê',
+                modo: 'light',
+                eh_sistema: true,
+                eh_ativo: true,
+                tokens: {
+                  bgApp: '#f8fafc',
+                  bgSurface: '#ffffff',
+                  primary: '#4f46e5',
+                  accent: '#f59e0b',
+                },
+              },
+            ],
+          },
+        });
+      }
+      return Promise.resolve({ data: { sucesso: true, dados: [] } });
+    });
+
+    render(
+      <BrowserRouter>
+        <ThemeProvider>
+          <Configuracoes />
+        </ThemeProvider>
+      </BrowserRouter>
+    );
+
+    expect(await screen.findByText('Claro Aranduê')).toBeInTheDocument();
+
+    const btnExportarAtivo = screen.getByRole('button', { name: /Exportar Tema Ativo/i });
+    expect(btnExportarAtivo).toBeInTheDocument();
+    fireEvent.click(btnExportarAtivo);
+
+    expect(window.URL.createObjectURL).toHaveBeenCalled();
   });
 });
