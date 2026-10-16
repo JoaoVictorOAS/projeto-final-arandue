@@ -188,6 +188,7 @@ class Orchestrator:
         tools_usadas: List[str] = []
         calls_count = 0
         modelo_utilizado = self.model_name
+        houve_erro_ferramenta = False
 
         # Loop de Function Calling (até max_tool_calls)
         while calls_count < self.max_tool_calls:
@@ -203,11 +204,17 @@ class Orchestrator:
                 # Validação anti-eco: se o modelo devolveu texto vazio ou repetiu a entrada do usuário
                 if not texto_resp or texto_resp == mensagem.strip():
                     if tools_usadas:
-                        texto_resp = (
-                            f"Operações solicitadas concluídas com sucesso no sistema (ações: {', '.join(tools_usadas)}). "
-                            "Os registros foram salvos no banco de dados. "
-                            "Caso necessite emitir Nota Fiscal, por favor me informe o CPF ou CNPJ do cliente."
-                        )
+                        if houve_erro_ferramenta:
+                            texto_resp = (
+                                f"Operações processadas no sistema ({', '.join(tools_usadas)}), porém foram identificadas falhas ou inconsistências em etapas da execução. "
+                                "Por favor, revise os dados informados ou tente novamente."
+                            )
+                        else:
+                            texto_resp = (
+                                f"Operações solicitadas concluídas com sucesso no sistema (ações: {', '.join(tools_usadas)}). "
+                                "Os registros foram salvos no banco de dados. "
+                                "Caso necessite emitir Nota Fiscal, por favor me informe o CPF ou CNPJ do cliente."
+                            )
                     else:
                         texto_resp = "Não foi possível gerar uma resposta para a consulta."
 
@@ -247,6 +254,13 @@ class Orchestrator:
                 else:
                     tool_result_content = {"erro": "Sessão MCP não disponível"}
 
+                if isinstance(tool_result_content, dict) and (
+                    "erro" in tool_result_content
+                    or tool_result_content.get("sucesso") is False
+                    or tool_result_content.get("status") == "error"
+                ):
+                    houve_erro_ferramenta = True
+
                 function_responses.append(types.Part.from_function_response(
                     name=tool_name,
                     response={"output": tool_result_content}
@@ -261,9 +275,13 @@ class Orchestrator:
         contents.append(types.Content(
             role="user",
             parts=[types.Part.from_text(
-                text="Todas as ações e ferramentas solicitadas foram executadas com sucesso. "
-                     "Agora elabore uma resposta final conclusiva, clara e amigável para o MEI, "
-                     "resumindo os dados cadastrados ou consultados e orientando os próximos passos ou tirando dúvidas. "
+                text="Com base nas execuções e retornos das ferramentas acima, elabore uma resposta final "
+                     "conclusiva, clara e amigável para o MEI. "
+                     "Analise criticamente o resultado de cada ferramenta: se houver erros, falhas ou recusas, "
+                     "relate-os com clareza e transparência ao usuário, orientando os ajustes necessários. "
+                     "NÃO confirme registros, cadastros ou alterações a menos que o resultado das ferramentas "
+                     "comprove expressamente o sucesso da operação. "
+                     "Resuma os dados efetivamente cadastrados ou consultados e oriente os próximos passos. "
                      "NUNCA repita ou ecoe o texto de entrada do usuário nem os comandos brutos."
             )]
         ))
@@ -280,11 +298,17 @@ class Orchestrator:
         texto_final = (final_response.text or "").strip()
         if not texto_final or texto_final == mensagem.strip():
             if tools_usadas:
-                texto_final = (
-                    f"Operações solicitadas concluídas com sucesso no sistema (ações: {', '.join(tools_usadas)}). "
-                    "Os registros foram criados no banco de dados. "
-                    "Caso necessite emitir Nota Fiscal, por favor informe o CPF ou CNPJ do cliente."
-                )
+                if houve_erro_ferramenta:
+                    texto_final = (
+                        f"Operações processadas no sistema ({', '.join(tools_usadas)}), porém foram identificadas falhas ou inconsistências em etapas da execução. "
+                        "Por favor, revise os dados informados ou tente novamente."
+                    )
+                else:
+                    texto_final = (
+                        f"Operações solicitadas concluídas com sucesso no sistema (ações: {', '.join(tools_usadas)}). "
+                        "Os registros foram criados no banco de dados. "
+                        "Caso necessite emitir Nota Fiscal, por favor informe o CPF ou CNPJ do cliente."
+                    )
             else:
                 texto_final = "Consulta processada com base nos dados do estabelecimento."
 

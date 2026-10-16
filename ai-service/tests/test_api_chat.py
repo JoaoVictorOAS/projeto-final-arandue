@@ -214,3 +214,36 @@ async def test_imagem_analisar_endpoint():
         assert data_mock["tipo_detectado"] == "comprovante_pix"
         assert data_mock["sugestao_acao"] == "registrar_receita"
 
+        # 4. Falha na API do Gemini -> 502 sem vazar detalhes internos
+        mock_orch._client.models.generate_content.side_effect = Exception("Falha de conexão com a API interna do Gemini")
+        res_error = await client.post(
+            "/imagem/analisar",
+            headers={"X-Internal-Secret": "super_secreto_interno_arandue_2026"},
+            json={
+                "imagem_base64": "dGVzdGU=",
+                "mime_type": "image/jpeg"
+            }
+        )
+        assert res_error.status_code == 502
+        assert res_error.json()["detail"] == "Não foi possível processar a análise da imagem no momento."
+        assert "Falha de conexão" not in res_error.text
+
+
+@pytest.mark.asyncio
+async def test_audio_transcrever_gemini_error_raises_502():
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        mock_orch = MagicMock()
+        mock_orch.model_name = "gemini-3-flash-preview"
+        mock_orch._client.models.generate_content.side_effect = Exception("Erro interno sensível do Gemini")
+        state["orchestrator"] = mock_orch
+
+        res = await client.post(
+            "/audio/transcrever",
+            headers={"X-Internal-Secret": "super_secreto_interno_arandue_2026"},
+            json={"audio_base64": "dGVzdGU=", "mime_type": "audio/ogg"}
+        )
+        assert res.status_code == 502
+        assert res.json()["detail"] == "Não foi possível processar a transcrição de áudio no momento."
+        assert "Erro interno" not in res.text
+
+

@@ -320,9 +320,9 @@ Se algum dado não for visível, tente deduzir com base no contexto ou deixe nul
         )
     except Exception as e:
         logger.error(f"Erro ao processar OCR multimodal de nota fiscal: {e}")
-        return OcrNotaFiscalResponse(
-            sucesso=False,
-            mensagem=f"Não foi possível extrair dados da nota fiscal pela foto: {str(e)}"
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="Não foi possível extrair os dados da nota fiscal pela foto no momento."
         )
 
 
@@ -384,10 +384,9 @@ Responda APENAS com o texto transcrito, sem aspas e sem introduções adicionais
         )
     except Exception as e:
         logger.error(f"Erro ao transcrever áudio com Gemini: {e}")
-        return TranscricaoAudioResponse(
-            sucesso=False,
-            transcricao="",
-            mensagem=f"Não foi possível transcrever o áudio: {str(e)}"
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="Não foi possível processar a transcrição de áudio no momento."
         )
 
 
@@ -478,10 +477,8 @@ Responda APENAS o JSON."""
         )
     except Exception as e:
         logger.error(f"Erro ao analisar imagem com Gemini: {e}")
-        return AnaliseImagemResponse(
-            sucesso=False,
-            tipo_detectado="erro",
-            descricao="Falha ao processar a imagem.",
-            mensagem=f"Não foi possível analisar a imagem: {str(e)}"
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="Não foi possível processar a análise da imagem no momento."
         )
 
