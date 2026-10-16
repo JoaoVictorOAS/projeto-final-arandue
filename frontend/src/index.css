@@ -123,44 +123,166 @@ body {
    do tema ativo (inclusive temas escuros e customizados).
    ========================================================================= */
 
-/* 1. Mapeamento Universal de Superfície (.theme-card, .bg-white e variantes de opacidade) */
-.theme-card,
-.theme-app-wrapper .bg-white,
-.theme-app-wrapper [class*="bg-white"],
-.dark .bg-white,
-.dark [class*="bg-white"],
-[data-theme-mode="dark"] .bg-white,
-[data-theme-mode="dark"] [class*="bg-white"] {
+/* 1. Mapeamento Universal de Superfície (Cards e Superfícies Brancas) */
+.theme-card:not([class*="bg-gradient-"]),
+.theme-app-wrapper .bg-white:not([class*="bg-gradient-"]):not([class*="bg-white/"]),
+.dark .bg-white:not([class*="bg-gradient-"]):not([class*="bg-white/"]),
+[data-theme-mode="dark"] .bg-white:not([class*="bg-gradient-"]):not([class*="bg-white/"]) {
   background-color: var(--bg-surface) !important;
   color: var(--text-main);
 }
 
 /* Modais e popups */
-[role="dialog"] .bg-white,
-[role="dialog"] [class*="bg-white"],
-.dark [role="dialog"],
-[data-theme-mode="dark"] [role="dialog"] {
+[role="dialog"] .bg-white:not([class*="bg-gradient-"]):not([class*="bg-white/"]),
+.dark [role="dialog"] .bg-white:not([class*="bg-gradient-"]):not([class*="bg-white/"]),
+[data-theme-mode="dark"] [role="dialog"] .bg-white:not([class*="bg-gradient-"]):not([class*="bg-white/"]) {
   background-color: var(--bg-surface) !important;
   color: var(--text-main);
 }
 
-/* 2. Superfícies secundárias (hover, listagens alternadas, cabeçalhos de tabela) */
+/* 2. Gradientes Harmonizados em Modo Escuro (remove o "filtro cinza") */
+.dark [class*="bg-gradient-"],
+[data-theme-mode="dark"] [class*="bg-gradient-"] {
+  background-color: transparent !important;
+}
+
+.dark [class*="from-indigo-50"],
+[data-theme-mode="dark"] [class*="from-indigo-50"] {
+  --tw-gradient-from: rgba(99, 102, 241, 0.15) var(--tw-gradient-from-position) !important;
+  --tw-gradient-to: rgba(99, 102, 241, 0) var(--tw-gradient-to-position) !important;
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
+}
+
+.dark [class*="to-purple-50"],
+[data-theme-mode="dark"] [class*="to-purple-50"] {
+  --tw-gradient-to: rgba(168, 85, 247, 0.15) var(--tw-gradient-to-position) !important;
+}
+
+.dark [class*="from-purple-50"],
+[data-theme-mode="dark"] [class*="from-purple-50"] {
+  --tw-gradient-from: rgba(168, 85, 247, 0.15) var(--tw-gradient-from-position) !important;
+  --tw-gradient-to: rgba(168, 85, 247, 0) var(--tw-gradient-to-position) !important;
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
+}
+
+.dark [class*="via-indigo-50"],
+[data-theme-mode="dark"] [class*="via-indigo-50"] {
+  --tw-gradient-stops: var(--tw-gradient-from), rgba(99, 102, 241, 0.12) var(--tw-gradient-via-position), var(--tw-gradient-to) !important;
+}
+
+.dark [class*="to-pink-50"],
+[data-theme-mode="dark"] [class*="to-pink-50"] {
+  --tw-gradient-to: rgba(236, 72, 153, 0.12) var(--tw-gradient-to-position) !important;
+}
+
+.dark [class*="from-blue-50"],
+[data-theme-mode="dark"] [class*="from-blue-50"] {
+  --tw-gradient-from: rgba(59, 130, 246, 0.15) var(--tw-gradient-from-position) !important;
+  --tw-gradient-to: rgba(59, 130, 246, 0) var(--tw-gradient-to-position) !important;
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
+}
+
+.dark [class*="to-indigo-50"],
+[data-theme-mode="dark"] [class*="to-indigo-50"] {
+  --tw-gradient-to: rgba(99, 102, 241, 0.15) var(--tw-gradient-to-position) !important;
+}
+
+.dark [class*="from-emerald-50"],
+[data-theme-mode="dark"] [class*="from-emerald-50"] {
+  --tw-gradient-from: rgba(16, 185, 129, 0.15) var(--tw-gradient-from-position) !important;
+  --tw-gradient-to: rgba(16, 185, 129, 0) var(--tw-gradient-to-position) !important;
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
+}
+
+.dark [class*="to-teal-50"],
+[data-theme-mode="dark"] [class*="to-teal-50"] {
+  --tw-gradient-to: rgba(20, 184, 166, 0.15) var(--tw-gradient-to-position) !important;
+}
+
+.dark [class*="from-white"],
+[data-theme-mode="dark"] [class*="from-white"] {
+  --tw-gradient-from: var(--bg-surface) var(--tw-gradient-from-position) !important;
+  --tw-gradient-to: var(--bg-surface-hover) var(--tw-gradient-to-position) !important;
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
+}
+
+/* 3. Fundos Coloridos e Opacidades em Dark Mode (substitui o filtro cinza leitoso por cores luminosas) */
+.dark .bg-indigo-50,
+.dark [class*="bg-indigo-50/"],
+[data-theme-mode="dark"] .bg-indigo-50,
+[data-theme-mode="dark"] [class*="bg-indigo-50/"] {
+  background-color: rgba(99, 102, 241, 0.14) !important;
+}
+
+.dark .bg-purple-50,
+.dark [class*="bg-purple-50/"],
+[data-theme-mode="dark"] .bg-purple-50,
+[data-theme-mode="dark"] [class*="bg-purple-50/"] {
+  background-color: rgba(168, 85, 247, 0.14) !important;
+}
+
+.dark .bg-blue-50,
+.dark [class*="bg-blue-50/"],
+[data-theme-mode="dark"] .bg-blue-50,
+[data-theme-mode="dark"] [class*="bg-blue-50/"] {
+  background-color: rgba(59, 130, 246, 0.14) !important;
+}
+
+.dark .bg-emerald-50,
+.dark [class*="bg-emerald-50/"],
+[data-theme-mode="dark"] .bg-emerald-50,
+[data-theme-mode="dark"] [class*="bg-emerald-50/"] {
+  background-color: rgba(16, 185, 129, 0.14) !important;
+}
+
+.dark .bg-rose-50,
+.dark [class*="bg-rose-50/"],
+[data-theme-mode="dark"] .bg-rose-50,
+[data-theme-mode="dark"] [class*="bg-rose-50/"] {
+  background-color: rgba(239, 68, 68, 0.14) !important;
+}
+
+.dark .bg-amber-50,
+.dark [class*="bg-amber-50/"],
+[data-theme-mode="dark"] .bg-amber-50,
+[data-theme-mode="dark"] [class*="bg-amber-50/"] {
+  background-color: rgba(245, 158, 11, 0.14) !important;
+}
+
+.dark .bg-sky-50,
+.dark [class*="bg-sky-50/"],
+[data-theme-mode="dark"] .bg-sky-50,
+[data-theme-mode="dark"] [class*="bg-sky-50/"] {
+  background-color: rgba(14, 165, 233, 0.14) !important;
+}
+
+/* Opacidades de cinza e branco em modo escuro */
 .dark .bg-gray-50,
 .dark .bg-gray-100,
 .dark .bg-gray-200,
-.dark [class*="bg-gray-50"],
-.dark [class*="bg-gray-100"],
-.dark [class*="bg-gray-200"],
 [data-theme-mode="dark"] .bg-gray-50,
 [data-theme-mode="dark"] .bg-gray-100,
-[data-theme-mode="dark"] .bg-gray-200,
-[data-theme-mode="dark"] [class*="bg-gray-50"],
-[data-theme-mode="dark"] [class*="bg-gray-100"],
-[data-theme-mode="dark"] [class*="bg-gray-200"] {
+[data-theme-mode="dark"] .bg-gray-200 {
   background-color: var(--bg-surface-hover) !important;
 }
 
-/* 3. Bordas dinâmicas */
+.dark [class*="bg-gray-50/"],
+.dark [class*="bg-gray-100/"],
+.dark [class*="bg-slate-100/"],
+[data-theme-mode="dark"] [class*="bg-gray-50/"],
+[data-theme-mode="dark"] [class*="bg-gray-100/"],
+[data-theme-mode="dark"] [class*="bg-slate-100/"] {
+  background-color: rgba(255, 255, 255, 0.04) !important;
+}
+
+.dark [class*="bg-white/80"],
+.dark [class*="bg-white/90"],
+[data-theme-mode="dark"] [class*="bg-white/80"],
+[data-theme-mode="dark"] [class*="bg-white/90"] {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* 4. Bordas dinâmicas */
 .dark .border-gray-100,
 .dark .border-gray-200,
 .dark .border-gray-300,
@@ -174,7 +296,43 @@ body {
   border-color: var(--border-color) !important;
 }
 
-/* 4. Textos principais e de alta ênfase */
+/* Bordas coloridas em Dark Mode (sem contraste branco ofuscante) */
+.dark .border-indigo-100,
+.dark .border-indigo-200,
+[data-theme-mode="dark"] .border-indigo-100,
+[data-theme-mode="dark"] .border-indigo-200 {
+  border-color: rgba(99, 102, 241, 0.3) !important;
+}
+
+.dark .border-purple-100,
+.dark .border-purple-200,
+[data-theme-mode="dark"] .border-purple-100,
+[data-theme-mode="dark"] .border-purple-200 {
+  border-color: rgba(168, 85, 247, 0.3) !important;
+}
+
+.dark .border-blue-100,
+.dark .border-blue-200,
+[data-theme-mode="dark"] .border-blue-100,
+[data-theme-mode="dark"] .border-blue-200 {
+  border-color: rgba(59, 130, 246, 0.3) !important;
+}
+
+.dark .border-emerald-100,
+.dark .border-emerald-200,
+[data-theme-mode="dark"] .border-emerald-100,
+[data-theme-mode="dark"] .border-emerald-200 {
+  border-color: rgba(16, 185, 129, 0.3) !important;
+}
+
+.dark .border-rose-100,
+.dark .border-rose-200,
+[data-theme-mode="dark"] .border-rose-100,
+[data-theme-mode="dark"] .border-rose-200 {
+  border-color: rgba(239, 68, 68, 0.3) !important;
+}
+
+/* 5. Textos principais e de alta ênfase */
 .dark .text-gray-900,
 .dark .text-gray-800,
 .dark .text-gray-700,
@@ -190,7 +348,7 @@ body {
   color: var(--text-main) !important;
 }
 
-/* 5. Textos secundários */
+/* 6. Textos secundários */
 .dark .text-gray-600,
 .dark .text-gray-500,
 .dark [class*="text-gray-600"],
@@ -202,7 +360,7 @@ body {
   color: var(--text-secondary) !important;
 }
 
-/* 6. Textos muted e placeholders */
+/* 7. Textos muted e placeholders */
 .dark .text-gray-400,
 .dark [class*="text-gray-400"],
 [data-theme-mode="dark"] .text-gray-400,
@@ -210,7 +368,62 @@ body {
   color: var(--text-muted) !important;
 }
 
-/* 7. Formulários, Inputs, Textareas e Selects em modo escuro */
+/* 8. Textos coloridos com alto contraste em Dark Mode */
+.dark .text-indigo-700,
+.dark .text-indigo-800,
+.dark .text-indigo-900,
+[data-theme-mode="dark"] .text-indigo-700,
+[data-theme-mode="dark"] .text-indigo-800,
+[data-theme-mode="dark"] .text-indigo-900 {
+  color: #a5b4fc !important;
+}
+
+.dark .text-purple-700,
+.dark .text-purple-800,
+.dark .text-purple-900,
+[data-theme-mode="dark"] .text-purple-700,
+[data-theme-mode="dark"] .text-purple-800,
+[data-theme-mode="dark"] .text-purple-900 {
+  color: #d8b4fe !important;
+}
+
+.dark .text-blue-700,
+.dark .text-blue-800,
+.dark .text-blue-900,
+[data-theme-mode="dark"] .text-blue-700,
+[data-theme-mode="dark"] .text-blue-800,
+[data-theme-mode="dark"] .text-blue-900 {
+  color: #93c5fd !important;
+}
+
+.dark .text-emerald-700,
+.dark .text-emerald-800,
+.dark .text-emerald-900,
+[data-theme-mode="dark"] .text-emerald-700,
+[data-theme-mode="dark"] .text-emerald-800,
+[data-theme-mode="dark"] .text-emerald-900 {
+  color: #6ee7b7 !important;
+}
+
+.dark .text-rose-700,
+.dark .text-rose-800,
+.dark .text-rose-900,
+[data-theme-mode="dark"] .text-rose-700,
+[data-theme-mode="dark"] .text-rose-800,
+[data-theme-mode="dark"] .text-rose-900 {
+  color: #fca5a5 !important;
+}
+
+.dark .text-amber-700,
+.dark .text-amber-800,
+.dark .text-amber-900,
+[data-theme-mode="dark"] .text-amber-700,
+[data-theme-mode="dark"] .text-amber-800,
+[data-theme-mode="dark"] .text-amber-900 {
+  color: #fcd34d !important;
+}
+
+/* 9. Formulários, Inputs, Textareas e Selects em modo escuro */
 .dark input:not([type="checkbox"]):not([type="radio"]),
 .dark textarea,
 .dark select,
@@ -243,7 +456,7 @@ body {
   color: var(--text-muted) !important;
 }
 
-/* 8. Tabelas, Thead e Linhas */
+/* 10. Tabelas, Thead e Linhas */
 .dark table,
 .dark th,
 .dark td,
@@ -268,7 +481,7 @@ body {
   background-color: var(--bg-surface-hover) !important;
 }
 
-/* 9. Gráficos SVG (Recharts) */
+/* 11. Gráficos SVG (Recharts) */
 .dark .recharts-cartesian-grid-horizontal line,
 .dark .recharts-cartesian-grid-vertical line,
 [data-theme-mode="dark"] .recharts-cartesian-grid-horizontal line,
@@ -282,15 +495,7 @@ body {
   fill: var(--text-secondary) !important;
 }
 
-/* 10. Gradientes em Tailwind para modo escuro */
-.dark [class*="from-white"],
-[data-theme-mode="dark"] [class*="from-white"] {
-  --tw-gradient-from: var(--bg-surface) var(--tw-gradient-from-position) !important;
-  --tw-gradient-to: var(--bg-surface-hover) var(--tw-gradient-to-position) !important;
-  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
-}
-
-/* 11. Sombras refinadas para Dark Mode (evita reflexos brancos de sombra padrão) */
+/* 12. Sombras refinadas para Dark Mode (evita reflexos brancos de sombra padrão) */
 .dark .shadow-sm,
 .dark .shadow,
 .dark .shadow-md,

@@ -575,14 +575,14 @@ export default function Configuracoes() {
       </div>
 
       {/* CARD 0: Busca Rápida de CNPJ (BrasilAPI) */}
-      <div className="bg-gradient-to-r from-indigo-50/60 to-purple-50/60 p-6 rounded-2xl border border-indigo-100 shadow-sm">
+      <div className="bg-gradient-to-r from-indigo-50/60 to-purple-50/60 dark:from-indigo-950/40 dark:to-purple-950/40 p-6 rounded-2xl border border-indigo-100 dark:border-indigo-800/40 shadow-sm transition-colors duration-200">
         <div className="flex items-start justify-between flex-wrap gap-4">
           <div>
-            <h2 className="text-base font-bold text-gray-900 flex items-center gap-2">
-              <Search className="w-5 h-5 text-indigo-600" />
+            <h2 className="text-base font-bold text-gray-900 dark:text-indigo-200 flex items-center gap-2">
+              <Search className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
               Busca Rápida de CNPJ (Receita Federal / BrasilAPI)
             </h2>
-            <p className="text-xs text-gray-600 mt-1">
+            <p className="text-xs text-gray-600 dark:text-gray-300 mt-1">
               Consulte seu CNPJ para preencher automaticamente razão social, endereço completo e dados de contato.
             </p>
           </div>
@@ -1274,17 +1274,17 @@ export default function Configuracoes() {
           </div>
 
           {/* SUBSEÇÃO 1: Gerador de Tema com IA */}
-          <div className="bg-gradient-to-r from-purple-50/70 via-indigo-50/50 to-pink-50/60 p-5 rounded-2xl border border-purple-100 space-y-3">
+          <div className="bg-gradient-to-r from-purple-50/70 via-indigo-50/50 to-pink-50/60 dark:from-purple-950/40 dark:via-indigo-950/30 dark:to-pink-950/30 p-5 rounded-2xl border border-purple-100 dark:border-purple-800/40 space-y-3 transition-colors duration-200">
             <div className="flex items-center justify-between flex-wrap gap-2">
               <div className="flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-purple-600" />
-                <h3 className="text-sm font-bold text-gray-900">Gerar Tema com IA</h3>
+                <Sparkles className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                <h3 className="text-sm font-bold text-gray-900 dark:text-purple-200">Gerar Tema com IA</h3>
               </div>
-              <span className="text-[11px] font-medium text-purple-700 bg-purple-100/80 px-2.5 py-0.5 rounded-full">
+              <span className="text-[11px] font-medium text-purple-700 dark:text-purple-300 bg-purple-100/80 dark:bg-purple-900/50 px-2.5 py-0.5 rounded-full border border-purple-200 dark:border-purple-700/50">
                 Motor IA Gemini + WCAG Contrast Validator
               </span>
             </div>
-            <p className="text-xs text-gray-600">
+            <p className="text-xs text-gray-600 dark:text-gray-300">
               Descreva o estilo, nicho ou paleta desejada para seu negócio. A inteligência artificial criará a paleta completa com contraste validado.
             </p>
 

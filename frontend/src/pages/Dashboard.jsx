@@ -564,35 +564,35 @@ export default function Dashboard() {
       descricao: 'Cadastrar contato',
       icone: UserPlus,
       link: '/clientes?novo=true',
-      cor: 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100',
+      cor: 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800/40 dark:hover:bg-blue-900/50',
     },
     {
       titulo: 'Novo Orçamento',
       descricao: 'Emitir proposta',
       icone: FileText,
       link: '/orcamentos?novo=true',
-      cor: 'bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100',
+      cor: 'bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100 dark:bg-indigo-950/40 dark:text-indigo-300 dark:border-indigo-800/40 dark:hover:bg-indigo-900/50',
     },
     {
       titulo: 'Novo Agendamento',
       descricao: 'Marcar atendimento',
       icone: Calendar,
       link: '/agenda?novo=true',
-      cor: 'bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100',
+      cor: 'bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100 dark:bg-purple-950/40 dark:text-purple-300 dark:border-purple-800/40 dark:hover:bg-purple-900/50',
     },
     {
       titulo: 'Nova Cobrança',
       descricao: 'Registrar pagamento',
       icone: CreditCard,
       link: '/cobrancas?novo=true',
-      cor: 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100',
+      cor: 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800/40 dark:hover:bg-emerald-900/50',
     },
     {
       titulo: 'Lançar Despesa',
       descricao: 'Saída no livro caixa',
       icone: ArrowUpRight,
       link: '/caixa?nova_saida=true',
-      cor: 'bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100',
+      cor: 'bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800/40 dark:hover:bg-rose-900/50',
     },
   ];
 
@@ -624,7 +624,7 @@ export default function Dashboard() {
                 className={`p-3.5 rounded-xl border flex flex-col justify-between transition-all duration-150 group ${acao.cor}`}
               >
                 <div className="flex items-center justify-between mb-2">
-                  <div className="p-2 rounded-lg bg-white/80 shadow-xs">
+                  <div className="p-2 rounded-lg bg-white/80 dark:bg-white/10 shadow-xs">
                     <Icon className="w-4 h-4" />
                   </div>
                   <ArrowRight className="w-3.5 h-3.5 opacity-60 group-hover:translate-x-1 group-hover:opacity-100 transition-all" />
