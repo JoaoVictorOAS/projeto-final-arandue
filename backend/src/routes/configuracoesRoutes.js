@@ -1,6 +1,7 @@
 const express = require('express');
 const multer = require('multer');
 const configuracoesController = require('../controllers/configuracoesController');
+const temaController = require('../controllers/temaController');
 const authMiddleware = require('../middlewares/authMiddleware');
 
 const router = express.Router();
@@ -16,6 +17,14 @@ router.use(authMiddleware);
 router.get('/', configuracoesController.obterConfiguracoes);
 router.put('/', configuracoesController.salvarConfiguracoes);
 router.get('/estados', configuracoesController.listarEstados);
+
+// Gestão de Temas Dinâmicos e Aparência
+router.get('/temas', temaController.listarTemas);
+router.put('/temas/:id/ativar', temaController.ativarTema);
+router.post('/temas', temaController.criarTema);
+router.post('/temas/upload', upload.single('tema'), temaController.uploadTema);
+router.post('/temas/gerar-ia', temaController.gerarTemaIA);
+router.delete('/temas/:id', temaController.excluirTema);
 
 // Gestão de Certificado Digital ICP-Brasil A1
 router.get('/certificado', configuracoesController.obterCertificadoStatus);

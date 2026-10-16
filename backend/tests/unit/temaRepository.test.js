@@ -31,7 +31,6 @@ describe('temaRepository - Gestão de Temas no Banco', () => {
       await pool.query('DELETE FROM temas_usuario WHERE usuario_id = ?', [outroUsuarioId]);
       await pool.query('DELETE FROM usuarios WHERE id = ?', [outroUsuarioId]);
     }
-    await pool.end();
   });
 
   test('deve exportar as funções obrigatórias do repositório', () => {

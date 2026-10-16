@@ -118,6 +118,8 @@ const TEMAS_PADRAO = [
   },
 ];
 
+let tabelaVerificada = false;
+
 const temaRepository = {
   /**
    * Retorna cópia dos 5 temas padrão do sistema
@@ -130,6 +132,8 @@ const temaRepository = {
    * Garante a criação da tabela temas_usuario se ainda não existir
    */
   async garantirTabelaExiste() {
+    if (tabelaVerificada) return;
+
     const sql = `
       CREATE TABLE IF NOT EXISTS temas_usuario (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -149,6 +153,7 @@ const temaRepository = {
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
     `;
     await pool.query(sql);
+    tabelaVerificada = true;
   },
 
   /**
@@ -196,20 +201,26 @@ const temaRepository = {
   async ativarTema(usuarioId, temaIdOuSlug) {
     await this.garantirTabelaExiste();
     await this.obterTemasPorUsuario(usuarioId);
-    await pool.query('UPDATE temas_usuario SET eh_ativo = 0 WHERE usuario_id = ?', [usuarioId]);
 
-    const isNumericId = typeof temaIdOuSlug === 'number' || (typeof temaIdOuSlug === 'string' && /^\d+$/.test(temaIdOuSlug.trim()));
-    if (isNumericId) {
-      await pool.query(
-        'UPDATE temas_usuario SET eh_ativo = 1 WHERE usuario_id = ? AND id = ?',
-        [usuarioId, Number(temaIdOuSlug)]
-      );
-    } else {
-      await pool.query(
-        'UPDATE temas_usuario SET eh_ativo = 1 WHERE usuario_id = ? AND slug = ?',
-        [usuarioId, String(temaIdOuSlug)]
-      );
+    const isNumericId = typeof temaIdOuSlug === 'number' || (typeof temaIdOuSlug === 'string' && /^\d+$/.test(String(temaIdOuSlug).trim()));
+    const sqlVerifica = isNumericId
+      ? 'SELECT * FROM temas_usuario WHERE usuario_id = ? AND id = ?'
+      : 'SELECT * FROM temas_usuario WHERE usuario_id = ? AND slug = ?';
+    const paramsVerifica = [usuarioId, isNumericId ? Number(temaIdOuSlug) : String(temaIdOuSlug).trim()];
+
+    const [rows] = await pool.query(sqlVerifica, paramsVerifica);
+    if (!rows || rows.length === 0) {
+      throw new Error(`Tema '${temaIdOuSlug}' não encontrado para este usuário.`);
     }
+
+    const temaParaAtivar = rows[0];
+
+    await pool.query('UPDATE temas_usuario SET eh_ativo = 0 WHERE usuario_id = ?', [usuarioId]);
+    await pool.query('UPDATE temas_usuario SET eh_ativo = 1 WHERE usuario_id = ? AND id = ?', [
+      usuarioId,
+      temaParaAtivar.id,
+    ]);
+
     return this.obterTemaAtivo(usuarioId);
   },
 
