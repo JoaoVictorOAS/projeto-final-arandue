@@ -202,8 +202,8 @@ export function ChatProvider({ children }) {
     if (!texto && !midiaFinal) return;
     if (enviando) return;
 
-    if (!texto && midiaFinal) {
-      texto = tipoMidiaFinal === 'audio' ? 'Áudio gravado' : 'Analise esta imagem enviada.';
+    if (!texto && midiaFinal && tipoMidiaFinal !== 'audio') {
+      texto = 'Analise esta imagem enviada.';
     }
 
     setErro(null);
@@ -219,7 +219,6 @@ export function ChatProvider({ children }) {
 
     setMensagens((prev) => [...prev, msgTemporariaUsuario]);
     setMensagemInput('');
-    setAnexoMidia(null);
     setEnviando(true);
 
     try {
@@ -240,6 +239,7 @@ export function ChatProvider({ children }) {
       const res = await api.post('/assistente/mensagens', payload);
 
       if (res.data?.sucesso) {
+        setAnexoMidia(null);
         const { conversa_id: novoConversaId, mensagem: msgAssistente } = res.data.dados;
 
         if (!conversaAtivaId) {

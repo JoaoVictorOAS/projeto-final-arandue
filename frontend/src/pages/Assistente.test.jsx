@@ -445,22 +445,95 @@ describe('Módulo do Assistente IA', () => {
     }
     window.MediaRecorder = MockMediaRecorder;
 
-    render(<Assistente />);
+    const fakeBase64 = 'data:audio/webm;base64,mockedaudio';
+    class MockFileReader {
+      readAsDataURL() {
+        this.result = fakeBase64;
+        if (this.onloadend) this.onloadend();
+      }
+    }
+    const originalFileReader = window.FileReader;
+    window.FileReader = MockFileReader;
 
-    const btnGravar = screen.getByLabelText(/gravar áudio/i);
-    fireEvent.click(btnGravar);
+    try {
+      render(<Assistente />);
 
-    await waitFor(() => {
-      expect(screen.getByText(/gravando mensagem de voz/i)).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /cancelar/i })).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /concluir/i })).toBeInTheDocument();
+      const btnGravar = screen.getByLabelText(/gravar áudio/i);
+      fireEvent.click(btnGravar);
+
+      await waitFor(() => {
+        expect(screen.getByText(/gravando mensagem de voz/i)).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /cancelar/i })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /concluir/i })).toBeInTheDocument();
+      });
+
+      fireEvent.click(screen.getByRole('button', { name: /cancelar/i }));
+
+      await waitFor(() => {
+        expect(screen.queryByText(/gravando mensagem de voz/i)).not.toBeInTheDocument();
+        expect(screen.queryByText(/áudio gravado pronto para envio/i)).not.toBeInTheDocument();
+      });
+    } finally {
+      window.FileReader = originalFileReader;
+    }
+  });
+
+  test('deve permitir concluir gravação de áudio e anexar para envio', async () => {
+    api.get.mockResolvedValueOnce({
+      data: { sucesso: true, dados: [] },
     });
 
-    fireEvent.click(screen.getByRole('button', { name: /cancelar/i }));
+    const mockStream = {
+      getTracks: vi.fn(() => [{ stop: vi.fn() }]),
+    };
+    navigator.mediaDevices = {
+      getUserMedia: vi.fn().mockResolvedValue(mockStream),
+    };
 
-    await waitFor(() => {
-      expect(screen.queryByText(/gravando mensagem de voz/i)).not.toBeInTheDocument();
-    });
+    class MockMediaRecorder {
+      constructor(stream) {
+        this.stream = stream;
+        this.mimeType = 'audio/webm';
+        this.state = 'recording';
+        this.ondataavailable = null;
+        this.onstop = null;
+      }
+      start() {}
+      stop() {
+        this.state = 'inactive';
+        if (this.onstop) this.onstop();
+      }
+    }
+    window.MediaRecorder = MockMediaRecorder;
+
+    const fakeBase64 = 'data:audio/webm;base64,gravaudio';
+    class MockFileReader {
+      readAsDataURL() {
+        this.result = fakeBase64;
+        if (this.onloadend) this.onloadend();
+      }
+    }
+    const originalFileReader = window.FileReader;
+    window.FileReader = MockFileReader;
+
+    try {
+      render(<Assistente />);
+
+      const btnGravar = screen.getByLabelText(/gravar áudio/i);
+      fireEvent.click(btnGravar);
+
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /concluir/i })).toBeInTheDocument();
+      });
+
+      fireEvent.click(screen.getByRole('button', { name: /concluir/i }));
+
+      await waitFor(() => {
+        expect(screen.getByText(/áudio gravado pronto para envio/i)).toBeInTheDocument();
+      });
+    } finally {
+      window.FileReader = originalFileReader;
+    }
   });
 });
 

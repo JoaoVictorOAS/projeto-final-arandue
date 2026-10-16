@@ -80,15 +80,16 @@ function AssistenteView() {
 
       mr.onstop = () => {
         stream.getTracks().forEach((t) => t.stop());
-        const blob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        const mimeTypeGravado = mr.mimeType || 'audio/webm';
+        const blob = new Blob(audioChunksRef.current, { type: mimeTypeGravado });
         const reader = new FileReader();
         reader.onloadend = () => {
           setAnexoMidia({
             tipo: 'audio',
             dados_base64: reader.result,
-            mime_type: blob.type || 'audio/webm',
+            mime_type: blob.type || mimeTypeGravado,
             previewUrl: null,
-            nomeArquivo: 'mensagem-voz.webm',
+            nomeArquivo: mimeTypeGravado.includes('ogg') ? 'mensagem-voz.ogg' : 'mensagem-voz.webm',
           });
         };
         reader.readAsDataURL(blob);
@@ -123,6 +124,7 @@ function AssistenteView() {
       timerRef.current = null;
     }
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.onstop = null;
       mediaRecorderRef.current.stream?.getTracks().forEach((t) => t.stop());
       mediaRecorderRef.current.stop();
     }
