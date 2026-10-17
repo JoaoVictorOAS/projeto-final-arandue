@@ -29,7 +29,7 @@ async def lifespan(app: FastAPI):
     # 1. Embedder
     embedder = None
     try:
-        embedder = Embedder(model_name=settings.EMBEDDING_MODEL)
+        embedder = Embedder(model_name=settings.EMBEDDING_MODEL, api_key=settings.GEMINI_API_KEY)
     except Exception as e:
         logger.warning(f"Não foi possível inicializar Embedder: {e}. O serviço continuará sem RAG local.")
     state["embedder"] = embedder
