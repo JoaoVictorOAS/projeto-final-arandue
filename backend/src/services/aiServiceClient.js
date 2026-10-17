@@ -1,6 +1,18 @@
-const AI_SERVICE_URL = process.env.AI_SERVICE_URL || 'http://localhost:8001';
 const INTERNAL_SERVICE_SECRET = process.env.INTERNAL_SERVICE_SECRET || 'super_secreto_interno_arandue_2026';
 const AI_SERVICE_TIMEOUT_MS = parseInt(process.env.AI_SERVICE_TIMEOUT_MS, 10) || 130000;
+
+/**
+ * Constrói a URL do serviço de IA a partir da variável injetada pelo Vercel (service binding)
+ * ou do fallback local de desenvolvimento, resolvendo dinamicamente em runtime.
+ * @param {string} endpoint Caminho do recurso (ex: '/chat', '/audio/transcrever')
+ * @returns {string} URL absoluta normalizada
+ */
+function getAiServiceUrl(endpoint) {
+  const base = process.env.AI_SERVICE_URL || 'http://localhost:8001';
+  const cleanBase = base.endsWith('/') ? base : `${base}/`;
+  const cleanEndpoint = endpoint.replace(/^\//, '');
+  return new URL(cleanEndpoint, cleanBase).toString();
+}
 
 const aiServiceClient = {
   /**
@@ -13,7 +25,7 @@ const aiServiceClient = {
    * @returns {Promise<Object>}
    */
   async enviarMensagem({ tenant_id, tenant_token, mensagem, historico = [], midia = null }) {
-    const url = `${AI_SERVICE_URL.replace(/\/$/, '')}/chat`;
+    const url = getAiServiceUrl('/chat');
 
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), AI_SERVICE_TIMEOUT_MS);
@@ -68,7 +80,7 @@ const aiServiceClient = {
    * @returns {Promise<Object>}
    */
   async transcreverAudio({ audio_base64, mime_type = 'audio/ogg' }) {
-    const url = `${AI_SERVICE_URL.replace(/\/$/, '')}/audio/transcrever`;
+    const url = getAiServiceUrl('/audio/transcrever');
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 60000);
 
@@ -116,7 +128,7 @@ const aiServiceClient = {
    * @returns {Promise<Object>}
    */
   async analisarImagem({ imagem_base64, mime_type = 'image/jpeg', instrucao = null }) {
-    const url = `${AI_SERVICE_URL.replace(/\/$/, '')}/imagem/analisar`;
+    const url = getAiServiceUrl('/imagem/analisar');
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 60000);
 
@@ -164,7 +176,7 @@ const aiServiceClient = {
    * @returns {Promise<Object>}
    */
   async extrairDadosNotaFiscal({ imagem_base64, mime_type = 'image/jpeg' }) {
-    const url = `${AI_SERVICE_URL.replace(/\/$/, '')}/ocr/nota-fiscal`;
+    const url = getAiServiceUrl('/ocr/nota-fiscal');
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 45000);
 

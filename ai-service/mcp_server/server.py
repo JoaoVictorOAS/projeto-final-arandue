@@ -61,10 +61,19 @@ def _validar_data_nao_alucinada(
 
 
 def _get_env_config():
-    node_url = os.environ.get("NODE_API_URL", "http://localhost:3001/api").rstrip("/")
+    raw_node_url = os.environ.get("NODE_API_URL") or os.environ.get("BACKEND_URL") or "http://localhost:3001/api"
+    node_url = raw_node_url.rstrip("/")
+    if not node_url.endswith("/api"):
+        node_url = f"{node_url}/api"
     token = os.environ.get("TENANT_TOKEN", "")
     tenant_id = os.environ.get("TENANT_ID", "")
     return node_url, token, tenant_id
+
+
+def _format_url(node_url: str, endpoint: str) -> str:
+    clean_endpoint = "/" + endpoint.lstrip("/")
+    return f"{node_url}{clean_endpoint}"
+
 
 async def _fetch(endpoint: str, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     node_url, token, _ = _get_env_config()
@@ -72,7 +81,7 @@ async def _fetch(endpoint: str, params: Optional[Dict[str, Any]] = None) -> Dict
         "Authorization": f"Bearer {token}",
         "Content-Type": "application/json"
     }
-    url = f"{node_url}{endpoint}"
+    url = _format_url(node_url, endpoint)
     async with httpx.AsyncClient(timeout=10.0) as client:
         try:
             resp = await client.get(url, headers=headers, params=params)
@@ -98,7 +107,7 @@ async def _post(endpoint: str, payload: Dict[str, Any]) -> Dict[str, Any]:
         "Authorization": f"Bearer {token}",
         "Content-Type": "application/json"
     }
-    url = f"{node_url}{endpoint}"
+    url = _format_url(node_url, endpoint)
     async with httpx.AsyncClient(timeout=10.0) as client:
         try:
             resp = await client.post(url, headers=headers, json=payload)
@@ -117,7 +126,7 @@ async def _put(endpoint: str, payload: Dict[str, Any]) -> Dict[str, Any]:
         "Authorization": f"Bearer {token}",
         "Content-Type": "application/json"
     }
-    url = f"{node_url}{endpoint}"
+    url = _format_url(node_url, endpoint)
     async with httpx.AsyncClient(timeout=10.0) as client:
         try:
             resp = await client.put(url, headers=headers, json=payload)
@@ -136,7 +145,7 @@ async def _patch(endpoint: str, payload: Dict[str, Any]) -> Dict[str, Any]:
         "Authorization": f"Bearer {token}",
         "Content-Type": "application/json"
     }
-    url = f"{node_url}{endpoint}"
+    url = _format_url(node_url, endpoint)
     async with httpx.AsyncClient(timeout=10.0) as client:
         try:
             resp = await client.patch(url, headers=headers, json=payload)
@@ -155,7 +164,7 @@ async def _delete(endpoint: str) -> Dict[str, Any]:
         "Authorization": f"Bearer {token}",
         "Content-Type": "application/json"
     }
-    url = f"{node_url}{endpoint}"
+    url = _format_url(node_url, endpoint)
     async with httpx.AsyncClient(timeout=10.0) as client:
         try:
             resp = await client.delete(url, headers=headers)

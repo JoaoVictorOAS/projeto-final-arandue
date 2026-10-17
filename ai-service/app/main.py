@@ -87,7 +87,7 @@ async def lifespan(app: FastAPI):
 
     # 4. MCP Pool
     mcp_pool = TenantMcpPool(
-        node_api_url=settings.NODE_API_URL,
+        node_api_url=settings.node_api_base_url,
         max_pool=settings.MCP_POOL_MAX,
         idle_ttl_s=settings.MCP_IDLE_TTL_S
     )

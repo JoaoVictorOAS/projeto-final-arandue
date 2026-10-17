@@ -1,3 +1,4 @@
+import os
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import Field
 from typing import Optional
@@ -35,7 +36,14 @@ class Settings(BaseSettings):
 
     # Gateway & Segurança
     INTERNAL_SERVICE_SECRET: str = Field(default="super_secreto_interno_arandue_2026")
-    NODE_API_URL: str = Field(default="http://localhost:3001/api")
+    NODE_API_URL: str = Field(
+        default_factory=lambda: os.getenv("NODE_API_URL") or os.getenv("BACKEND_URL") or "http://localhost:3001/api"
+    )
+
+    @property
+    def node_api_base_url(self) -> str:
+        url = (self.NODE_API_URL or "http://localhost:3001/api").rstrip("/")
+        return url if url.endswith("/api") else f"{url}/api"
 
     # MCP Pool
     MCP_POOL_MAX: int = Field(default=50)
