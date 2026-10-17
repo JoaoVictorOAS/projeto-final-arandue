@@ -22,7 +22,9 @@
     "graphify:query": ".venv/bin/graphify query",
     "graphify:update": ".venv/bin/graphify update",
     "mobile:apk": "./scripts/update_apk_drive.sh",
-    "mobile:open": "npx --prefix frontend cap open android"
+    "mobile:open": "npx --prefix frontend cap open android",
+    "whatsapp:qr": "node scripts/whatsapp_qr.js",
+    "whatsapp:reset": "node scripts/whatsapp_qr.js --reset"
   },
   "keywords": [
     "mei",
