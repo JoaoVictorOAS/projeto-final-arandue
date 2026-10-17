@@ -1,22 +1,28 @@
 const crypto = require('crypto');
 
 /**
- * Obtém a chave de segredo de desenvolvedor configurada no ambiente.
- * Utiliza WHATSAPP_DEV_SECRET com fallbacks seguros.
+ * Obtém as chaves de desenvolvedor configuradas estritamente via variáveis de ambiente.
+ * NUNCA utiliza valores padrão em hardcode como fallback.
  */
-function obterDevSecret() {
-  return (
-    process.env.WHATSAPP_DEV_SECRET ||
-    process.env.WHATSAPP_ADMIN_TOKEN ||
-    process.env.INTERNAL_SERVICE_SECRET ||
-    'chave_mestra_secreta_whatsapp_dev_2026'
-  );
+function obterDevSecrets() {
+  const secrets = new Set();
+  if (process.env.WHATSAPP_DEV_SECRET && process.env.WHATSAPP_DEV_SECRET.trim()) {
+    secrets.add(process.env.WHATSAPP_DEV_SECRET.trim());
+  }
+  if (process.env.WHATSAPP_ADMIN_TOKEN && process.env.WHATSAPP_ADMIN_TOKEN.trim()) {
+    secrets.add(process.env.WHATSAPP_ADMIN_TOKEN.trim());
+  }
+  if (process.env.INTERNAL_SERVICE_SECRET && process.env.INTERNAL_SERVICE_SECRET.trim()) {
+    secrets.add(process.env.INTERNAL_SERVICE_SECRET.trim());
+  }
+  return Array.from(secrets);
 }
 
 /**
  * Middleware para proteger e ocultar rotas de infraestrutura e administração do WhatsApp.
  * 
- * Se o token de desenvolvedor for inválido ou ausente, a rota responde imediatamente com 404 Not Found,
+ * Se o token de desenvolvedor for inválido, ausente ou se nenhuma chave tiver sido
+ * configurada nas variáveis de ambiente, a rota responde imediatamente com 404 Not Found,
  * mantendo o endpoint totalmente oculto para scanners, robôs e usuários comuns da aplicação.
  * 
  * Suporta o token via:
@@ -25,7 +31,15 @@ function obterDevSecret() {
  * - Cabeçalho Authorization: 'Bearer <token_secreto>'
  */
 function devAuthMiddleware(req, res, next) {
-  const secretEsperado = String(obterDevSecret()).trim();
+  const secretsValidos = obterDevSecrets();
+
+  // Se nenhuma chave estiver configurada no ambiente (process.env), bloqueia/oculta imediatamente
+  if (secretsValidos.length === 0) {
+    return res.status(404).json({
+      sucesso: false,
+      mensagem: 'Rota não encontrada'
+    });
+  }
 
   // 1. Extração do token fornecido
   let tokenRecebido =
@@ -49,12 +63,19 @@ function devAuthMiddleware(req, res, next) {
   }
 
   const tokenLimpo = tokenRecebido.trim();
-
-  // 3. Validação em tempo constante para proteção estrita contra Timing Attacks
-  const bufEsperado = Buffer.from(secretEsperado);
   const bufRecebido = Buffer.from(tokenLimpo);
 
-  if (bufEsperado.length !== bufRecebido.length || !crypto.timingSafeEqual(bufEsperado, bufRecebido)) {
+  // 3. Validação segura contra Timing Attacks contra cada segredo válido vindo do ambiente
+  let autenticado = false;
+  for (const segredo of secretsValidos) {
+    const bufEsperado = Buffer.from(segredo);
+    if (bufEsperado.length === bufRecebido.length && crypto.timingSafeEqual(bufEsperado, bufRecebido)) {
+      autenticado = true;
+      break;
+    }
+  }
+
+  if (!autenticado) {
     return res.status(404).json({
       sucesso: false,
       mensagem: 'Rota não encontrada'

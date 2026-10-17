@@ -9,12 +9,14 @@ const { normalizarNumeroWhatsApp } = require('../utils/phoneUtils');
 const { converterMarkdownParaWhatsApp } = require('../utils/formatadorWhatsApp');
 
 let baileysPkg = null;
+let baileysLoadError = null;
 function carregarBaileys() {
   if (!baileysPkg) {
     try {
       baileysPkg = require('@whiskeysockets/baileys');
     } catch (e) {
       baileysPkg = {};
+      baileysLoadError = e.message;
     }
   }
   return baileysPkg;
@@ -31,6 +33,7 @@ class WhatsAppService {
     this.qrCode = null;
     this.numeroBot = null;
     this.lidBot = null;
+    this.ultimoErro = null;
     const os = require('os');
     this.authPath =
       process.env.WHATSAPP_AUTH_DIR ||
@@ -57,6 +60,9 @@ class WhatsAppService {
     };
     if (isAdmin) {
       statusObj.qrCode = this.qrCode;
+      if (this.ultimoErro) {
+        statusObj.erro = this.ultimoErro;
+      }
     }
     return statusObj;
   }
@@ -233,7 +239,7 @@ class WhatsAppService {
           this.qrCode = 'mock_qr_code_teste';
           return;
         }
-        throw new Error('Módulo @whiskeysockets/baileys não pôde ser carregado');
+        throw new Error('Módulo @whiskeysockets/baileys não pôde ser carregado: ' + (baileysLoadError || 'funções ausentes'));
       }
 
       // Garante que o diretório de autenticação existe antes de ler/gravar credenciais
@@ -345,6 +351,7 @@ class WhatsAppService {
       });
     } catch (err) {
       this.status = 'erro';
+      this.ultimoErro = err.message || String(err);
       this.inicializado = false;
       console.error('[WhatsApp] Falha ao inicializar socket Baileys:', err);
     }

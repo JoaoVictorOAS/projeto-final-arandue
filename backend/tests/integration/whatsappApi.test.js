@@ -23,6 +23,7 @@ describe('Rotas de WhatsApp do Assistente (/api/assistente/whatsapp)', () => {
   };
 
   beforeAll(async () => {
+    process.env.WHATSAPP_DEV_SECRET = 'chave_teste_dev_whatsapp_2026';
     // Limpa dados de teste prévios
     await pool.execute("DELETE FROM usuarios WHERE email LIKE '%whatsapp@teste.com'");
 
@@ -185,7 +186,7 @@ describe('Rotas de WhatsApp do Assistente (/api/assistente/whatsapp)', () => {
       const res = await request(app)
         .post('/api/assistente/whatsapp/resetar')
         .set('Authorization', `Bearer ${tokenUser1}`)
-        .set('X-Dev-Token', 'chave_mestra_secreta_whatsapp_dev_2026');
+        .set('X-Dev-Token', 'chave_teste_dev_whatsapp_2026');
 
       expect(res.status).toBe(200);
       expect(res.body.sucesso).toBe(true);
@@ -197,7 +198,7 @@ describe('Rotas de WhatsApp do Assistente (/api/assistente/whatsapp)', () => {
   });
 
   describe('Rotas Administrativas Exclusivas de Dev (/api/dev/whatsapp)', () => {
-    const devTokenValido = 'chave_mestra_secreta_whatsapp_dev_2026';
+    const devTokenValido = 'chave_teste_dev_whatsapp_2026';
 
     it('deve responder 404 (oculto) em todas as rotas de dev quando acessadas sem token', async () => {
       const resStatus = await request(app).get('/api/dev/whatsapp/status');
@@ -254,6 +255,27 @@ describe('Rotas de WhatsApp do Assistente (/api/assistente/whatsapp)', () => {
       expect(res.body.dados.qrCode).toBe('novo_qr_apos_reset');
       expect(spyGerar).toHaveBeenCalled();
       spyGerar.mockRestore();
+    });
+
+    it('deve rejeitar e ocultar a rota (404) caso nenhuma chave esteja configurada nas variáveis de ambiente (sem fallback hardcoded)', async () => {
+      const bkpDev = process.env.WHATSAPP_DEV_SECRET;
+      const bkpAdmin = process.env.WHATSAPP_ADMIN_TOKEN;
+      const bkpInternal = process.env.INTERNAL_SERVICE_SECRET;
+
+      delete process.env.WHATSAPP_DEV_SECRET;
+      delete process.env.WHATSAPP_ADMIN_TOKEN;
+      delete process.env.INTERNAL_SERVICE_SECRET;
+
+      const res = await request(app)
+        .get('/api/dev/whatsapp/status')
+        .set('X-Dev-Token', devTokenValido);
+
+      expect(res.status).toBe(404);
+      expect(res.body.mensagem).toBe('Rota não encontrada');
+
+      process.env.WHATSAPP_DEV_SECRET = bkpDev;
+      if (bkpAdmin) process.env.WHATSAPP_ADMIN_TOKEN = bkpAdmin;
+      if (bkpInternal) process.env.INTERNAL_SERVICE_SECRET = bkpInternal;
     });
   });
 });
