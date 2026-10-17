@@ -49,14 +49,26 @@ class TenantMcpPool:
     def _build_safe_env(self, tenant_id: int, tenant_token: str) -> Dict[str, str]:
         """Cria ambiente estritamente isolado sem vazar segredos do processo pai."""
         ai_service_dir = str(Path(__file__).resolve().parent.parent.parent)
+
+        # Repassa o sys.path completo para o subprocesso herdar os pacotes (ex: /tmp/_vc_deps no Vercel)
+        all_paths = [ai_service_dir]
+        for p in sys.path:
+            if p and p not in all_paths:
+                all_paths.append(p)
+        safe_pythonpath = os.pathsep.join(all_paths)
+
         safe_env = {
             "TENANT_ID": str(tenant_id),
             "TENANT_TOKEN": tenant_token,
             "NODE_API_URL": self.node_api_url,
             "PATH": os.environ.get("PATH", "/usr/bin:/bin"),
-            "PYTHONPATH": ai_service_dir,
+            "PYTHONPATH": safe_pythonpath,
             "SYSTEMROOT": os.environ.get("SYSTEMROOT", ""),
-            "VERCEL_AUTOMATION_BYPASS_SECRET": os.environ.get("VERCEL_AUTOMATION_BYPASS_SECRET", "")
+            "VERCEL_AUTOMATION_BYPASS_SECRET": os.environ.get("VERCEL_AUTOMATION_BYPASS_SECRET", ""),
+            "VERCEL_URL": os.environ.get("VERCEL_URL", ""),
+            "VERCEL_PROJECT_PRODUCTION_URL": os.environ.get("VERCEL_PROJECT_PRODUCTION_URL", ""),
+            "VIRTUAL_ENV": os.environ.get("VIRTUAL_ENV", str(sys.prefix) if sys.prefix != sys.base_prefix else ""),
+            "PYTHONHOME": os.environ.get("PYTHONHOME", "")
         }
         return {k: v for k, v in safe_env.items() if v}
 
@@ -91,10 +103,21 @@ class TenantMcpPool:
     async def _spawn_session(self, tenant_id: int, tenant_token: str) -> PoolEntry:
         token_exp = self._extract_token_exp(tenant_token)
         safe_env = self._build_safe_env(tenant_id, tenant_token)
+        ai_service_dir = str(Path(__file__).resolve().parent.parent.parent)
+
+        # Resolve o binário do python do ambiente atual (ex: /tmp/_vc_deps/bin/python ou venv)
+        python_bin = self.python_executable
+        venv_python = Path(sys.prefix) / "bin" / "python"
+        if venv_python.exists():
+            python_bin = str(venv_python)
+        elif not python_bin:
+            python_bin = sys.executable
+
         server_params = StdioServerParameters(
-            command=self.python_executable,
+            command=python_bin,
             args=["-m", "mcp_server.server"],
-            env=safe_env
+            env=safe_env,
+            cwd=ai_service_dir
         )
 
         exit_stack = AsyncExitStack()
