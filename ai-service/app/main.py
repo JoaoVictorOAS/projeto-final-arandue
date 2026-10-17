@@ -27,7 +27,11 @@ async def lifespan(app: FastAPI):
     logger.info("Inicializando ai-service...")
 
     # 1. Embedder
-    embedder = Embedder(model_name=settings.EMBEDDING_MODEL)
+    embedder = None
+    try:
+        embedder = Embedder(model_name=settings.EMBEDDING_MODEL)
+    except Exception as e:
+        logger.warning(f"Não foi possível inicializar Embedder: {e}. O serviço continuará sem RAG local.")
     state["embedder"] = embedder
 
     # 2. Stores de vetores
@@ -58,7 +62,7 @@ async def lifespan(app: FastAPI):
             logger.warning(f"Não foi possível inicializar ChromaStore: {e}")
 
     # Validação no startup de integridade do modelo de embedding
-    if primary_store:
+    if primary_store and embedder:
         p_info = primary_store.info()
         stored_model = p_info.get("embedding_model")
         if stored_model and stored_model != "unknown" and stored_model != settings.EMBEDDING_MODEL:
@@ -148,7 +152,7 @@ async def health_check():
 
     return {
         "status": "ok",
-        "embedding_model": settings.EMBEDDING_MODEL,
+        "embedding_model": settings.EMBEDDING_MODEL if state.get("embedder") else "disabled",
         "primary": primary_info,
         "fallback": fallback_info
     }

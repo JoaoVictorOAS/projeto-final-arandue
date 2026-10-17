@@ -63,6 +63,9 @@ class FallbackRetriever:
         Retorna (lista_trechos, backend_utilizado).
         backend_utilizado pode ser: 'firestore', 'chroma' ou 'none'.
         """
+        if not self.embedder or (not self.primary_store and not self.fallback_store):
+            return [], "none"
+
         query_vec = await asyncio.to_thread(self.embedder.embed_query, pergunta)
 
         # 1. Tenta store primário caso circuit breaker não esteja aberto

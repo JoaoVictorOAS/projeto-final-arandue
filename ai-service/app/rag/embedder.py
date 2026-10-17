@@ -1,4 +1,14 @@
+import os
 from typing import List
+
+# Previne que bibliotecas HuggingFace tentem escrever logs na pasta HOME que e read-only no Vercel/Lambda
+if not os.environ.get("HF_HOME"):
+    os.environ["HF_HOME"] = "/tmp/huggingface"
+if not os.environ.get("FASTEMBED_CACHE_PATH"):
+    os.environ["FASTEMBED_CACHE_PATH"] = "/tmp/fastembed_cache"
+os.environ["HF_HUB_DISABLE_XET"] = "1"
+os.environ["HF_HUB_ENABLE_HF_TRANSFER"] = "0"
+
 from fastembed import TextEmbedding
 from fastembed.common.model_description import PoolingType, ModelSource
 

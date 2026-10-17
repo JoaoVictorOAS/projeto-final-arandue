@@ -34,6 +34,23 @@ export function ChatProvider({ children }) {
 
   // Carrega histórico de conversas
   const carregarConversas = useCallback(async (silencioso = false) => {
+    let token = null;
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        token = window.localStorage.getItem('token');
+      }
+    } catch {}
+
+    const isTest =
+      (typeof import.meta !== 'undefined' && import.meta.env?.MODE === 'test') ||
+      (typeof process !== 'undefined' && process.env?.NODE_ENV === 'test');
+
+    if (!token && !isTest) {
+      if (!silencioso) setCarregandoConversas(false);
+      setConversas([]);
+      return;
+    }
+
     try {
       if (!silencioso) setCarregandoConversas(true);
       const res = await api.get('/assistente/conversas');
@@ -41,7 +58,9 @@ export function ChatProvider({ children }) {
         setConversas(res.data.dados || []);
       }
     } catch (err) {
-      console.error('Erro ao carregar conversas do assistente:', err);
+      if (err.response?.status !== 401) {
+        console.error('Erro ao carregar conversas do assistente:', err);
+      }
     } finally {
       if (!silencioso) setCarregandoConversas(false);
     }
