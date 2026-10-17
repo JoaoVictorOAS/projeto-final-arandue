@@ -69,7 +69,11 @@ def _get_env_config():
         or os.environ.get("VERCEL_PROJECT_PRODUCTION_URL")
     )
     if not raw_node_url or (is_vercel and "localhost" in raw_node_url):
-        target_domain = os.environ.get("VERCEL_PROJECT_PRODUCTION_URL") or os.environ.get("VERCEL_URL")
+        target_domain = (
+            os.environ.get("VERCEL_PROJECT_PRODUCTION_URL") 
+            or os.environ.get("VERCEL_URL") 
+            or ("projeto-final-arandue.vercel.app" if is_vercel else None)
+        )
         if target_domain:
             clean_host = target_domain.replace("http://", "").replace("https://", "").rstrip("/")
             protocol = "http" if "localhost" in clean_host else "https"

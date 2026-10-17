@@ -15,7 +15,11 @@ def _resolve_default_node_api_url() -> str:
     if explicit and not (is_vercel and "localhost" in explicit):
         return explicit.rstrip("/")
 
-    target_domain = os.getenv("VERCEL_PROJECT_PRODUCTION_URL") or os.getenv("VERCEL_URL")
+    target_domain = (
+        os.getenv("VERCEL_PROJECT_PRODUCTION_URL") 
+        or os.getenv("VERCEL_URL")
+        or ("projeto-final-arandue.vercel.app" if is_vercel else None)
+    )
     if target_domain:
         clean_host = target_domain.replace("http://", "").replace("https://", "").rstrip("/")
         protocol = "http" if "localhost" in clean_host else "https"
