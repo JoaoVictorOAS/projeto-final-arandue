@@ -10,13 +10,17 @@ const { converterMarkdownParaWhatsApp } = require('../utils/formatadorWhatsApp')
 
 let baileysPkg = null;
 let baileysLoadError = null;
-function carregarBaileys() {
+async function carregarBaileys() {
   if (!baileysPkg) {
     try {
-      baileysPkg = require('@whiskeysockets/baileys');
+      baileysPkg = await import('@whiskeysockets/baileys');
     } catch (e) {
-      baileysPkg = {};
-      baileysLoadError = e.message;
+      try {
+        baileysPkg = require('@whiskeysockets/baileys');
+      } catch (err) {
+        baileysPkg = {};
+        baileysLoadError = e.message || err.message;
+      }
     }
   }
   return baileysPkg;
@@ -197,7 +201,7 @@ class WhatsAppService {
    */
   async baixarBufferMidia(msg) {
     try {
-      const baileys = carregarBaileys();
+      const baileys = await carregarBaileys();
       const downloadMedia = baileys.downloadMediaMessage;
       if (!downloadMedia || typeof downloadMedia !== 'function') {
         return null;
@@ -228,7 +232,7 @@ class WhatsAppService {
     this.inicializado = true;
 
     try {
-      const baileys = carregarBaileys();
+      const baileys = await carregarBaileys();
       const makeWASocket = baileys.default || baileys.makeWASocket;
       const useMultiFileAuthState = baileys.useMultiFileAuthState;
       const DisconnectReason = baileys.DisconnectReason || { loggedOut: 401 };
