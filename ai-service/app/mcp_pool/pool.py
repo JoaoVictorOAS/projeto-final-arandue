@@ -55,7 +55,8 @@ class TenantMcpPool:
             "NODE_API_URL": self.node_api_url,
             "PATH": os.environ.get("PATH", "/usr/bin:/bin"),
             "PYTHONPATH": ai_service_dir,
-            "SYSTEMROOT": os.environ.get("SYSTEMROOT", "")
+            "SYSTEMROOT": os.environ.get("SYSTEMROOT", ""),
+            "VERCEL_AUTOMATION_BYPASS_SECRET": os.environ.get("VERCEL_AUTOMATION_BYPASS_SECRET", "")
         }
         return {k: v for k, v in safe_env.items() if v}
 

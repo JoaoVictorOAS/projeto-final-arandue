@@ -4,6 +4,17 @@ from pydantic import Field
 from typing import Optional
 from pathlib import Path
 
+def _resolve_default_node_api_url() -> str:
+    explicit = os.getenv("NODE_API_URL") or os.getenv("BACKEND_URL")
+    if explicit:
+        return explicit.rstrip("/")
+    vercel_url = os.getenv("VERCEL_URL") or os.getenv("VERCEL_PROJECT_PRODUCTION_URL")
+    if vercel_url:
+        clean_host = vercel_url.replace("http://", "").replace("https://", "").rstrip("/")
+        protocol = "http" if "localhost" in clean_host else "https"
+        return f"{protocol}://{clean_host}/api"
+    return "http://localhost:3001/api"
+
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=str(Path(__file__).resolve().parent.parent / ".env"),
@@ -37,12 +48,12 @@ class Settings(BaseSettings):
     # Gateway & Segurança
     INTERNAL_SERVICE_SECRET: str = Field(default="super_secreto_interno_arandue_2026")
     NODE_API_URL: str = Field(
-        default_factory=lambda: os.getenv("NODE_API_URL") or os.getenv("BACKEND_URL") or "http://localhost:3001/api"
+        default_factory=_resolve_default_node_api_url
     )
 
     @property
     def node_api_base_url(self) -> str:
-        url = (self.NODE_API_URL or "http://localhost:3001/api").rstrip("/")
+        url = (self.NODE_API_URL or _resolve_default_node_api_url()).rstrip("/")
         return url if url.endswith("/api") else f"{url}/api"
 
     # MCP Pool

@@ -61,7 +61,15 @@ def _validar_data_nao_alucinada(
 
 
 def _get_env_config():
-    raw_node_url = os.environ.get("NODE_API_URL") or os.environ.get("BACKEND_URL") or "http://localhost:3001/api"
+    raw_node_url = os.environ.get("NODE_API_URL") or os.environ.get("BACKEND_URL")
+    if not raw_node_url:
+        vercel_url = os.environ.get("VERCEL_URL") or os.environ.get("VERCEL_PROJECT_PRODUCTION_URL")
+        if vercel_url:
+            clean_host = vercel_url.replace("http://", "").replace("https://", "").rstrip("/")
+            protocol = "http" if "localhost" in clean_host else "https"
+            raw_node_url = f"{protocol}://{clean_host}/api"
+        else:
+            raw_node_url = "http://localhost:3001/api"
     node_url = raw_node_url.rstrip("/")
     if not node_url.endswith("/api"):
         node_url = f"{node_url}/api"
@@ -75,12 +83,20 @@ def _format_url(node_url: str, endpoint: str) -> str:
     return f"{node_url}{clean_endpoint}"
 
 
-async def _fetch(endpoint: str, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
-    node_url, token, _ = _get_env_config()
+def _get_headers(token: str) -> Dict[str, str]:
     headers = {
         "Authorization": f"Bearer {token}",
         "Content-Type": "application/json"
     }
+    bypass_secret = os.environ.get("VERCEL_AUTOMATION_BYPASS_SECRET")
+    if bypass_secret:
+        headers["x-vercel-protection-bypass"] = bypass_secret
+    return headers
+
+
+async def _fetch(endpoint: str, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    node_url, token, _ = _get_env_config()
+    headers = _get_headers(token)
     url = _format_url(node_url, endpoint)
     async with httpx.AsyncClient(timeout=10.0) as client:
         try:
@@ -103,10 +119,7 @@ async def _fetch(endpoint: str, params: Optional[Dict[str, Any]] = None) -> Dict
 
 async def _post(endpoint: str, payload: Dict[str, Any]) -> Dict[str, Any]:
     node_url, token, _ = _get_env_config()
-    headers = {
-        "Authorization": f"Bearer {token}",
-        "Content-Type": "application/json"
-    }
+    headers = _get_headers(token)
     url = _format_url(node_url, endpoint)
     async with httpx.AsyncClient(timeout=10.0) as client:
         try:
@@ -122,10 +135,7 @@ async def _post(endpoint: str, payload: Dict[str, Any]) -> Dict[str, Any]:
 
 async def _put(endpoint: str, payload: Dict[str, Any]) -> Dict[str, Any]:
     node_url, token, _ = _get_env_config()
-    headers = {
-        "Authorization": f"Bearer {token}",
-        "Content-Type": "application/json"
-    }
+    headers = _get_headers(token)
     url = _format_url(node_url, endpoint)
     async with httpx.AsyncClient(timeout=10.0) as client:
         try:
@@ -141,10 +151,7 @@ async def _put(endpoint: str, payload: Dict[str, Any]) -> Dict[str, Any]:
 
 async def _patch(endpoint: str, payload: Dict[str, Any]) -> Dict[str, Any]:
     node_url, token, _ = _get_env_config()
-    headers = {
-        "Authorization": f"Bearer {token}",
-        "Content-Type": "application/json"
-    }
+    headers = _get_headers(token)
     url = _format_url(node_url, endpoint)
     async with httpx.AsyncClient(timeout=10.0) as client:
         try:
@@ -160,10 +167,7 @@ async def _patch(endpoint: str, payload: Dict[str, Any]) -> Dict[str, Any]:
 
 async def _delete(endpoint: str) -> Dict[str, Any]:
     node_url, token, _ = _get_env_config()
-    headers = {
-        "Authorization": f"Bearer {token}",
-        "Content-Type": "application/json"
-    }
+    headers = _get_headers(token)
     url = _format_url(node_url, endpoint)
     async with httpx.AsyncClient(timeout=10.0) as client:
         try:
