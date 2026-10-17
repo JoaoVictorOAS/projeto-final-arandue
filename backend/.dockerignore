@@ -1,0 +1,8 @@
+node_modules
+.env
+.env.local
+.git
+.wweb_auth_baileys
+tests
+npm-debug.log
+dist
