@@ -6,14 +6,22 @@ from pathlib import Path
 
 def _resolve_default_node_api_url() -> str:
     explicit = os.getenv("NODE_API_URL") or os.getenv("BACKEND_URL")
-    if explicit:
+    is_vercel = bool(
+        os.getenv("VERCEL")
+        or os.getenv("VERCEL_ENV")
+        or os.getenv("VERCEL_URL")
+        or os.getenv("VERCEL_PROJECT_PRODUCTION_URL")
+    )
+    if explicit and not (is_vercel and "localhost" in explicit):
         return explicit.rstrip("/")
-    vercel_url = os.getenv("VERCEL_URL") or os.getenv("VERCEL_PROJECT_PRODUCTION_URL")
-    if vercel_url:
-        clean_host = vercel_url.replace("http://", "").replace("https://", "").rstrip("/")
+
+    target_domain = os.getenv("VERCEL_PROJECT_PRODUCTION_URL") or os.getenv("VERCEL_URL")
+    if target_domain:
+        clean_host = target_domain.replace("http://", "").replace("https://", "").rstrip("/")
         protocol = "http" if "localhost" in clean_host else "https"
         return f"{protocol}://{clean_host}/api"
-    return "http://localhost:3001/api"
+
+    return explicit.rstrip("/") if explicit else "http://localhost:3001/api"
 
 def _resolve_chroma_path() -> str:
     service_path = Path(__file__).resolve().parent.parent / "chroma_db"

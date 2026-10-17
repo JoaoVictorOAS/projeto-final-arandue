@@ -62,14 +62,21 @@ def _validar_data_nao_alucinada(
 
 def _get_env_config():
     raw_node_url = os.environ.get("NODE_API_URL") or os.environ.get("BACKEND_URL")
-    if not raw_node_url:
-        vercel_url = os.environ.get("VERCEL_URL") or os.environ.get("VERCEL_PROJECT_PRODUCTION_URL")
-        if vercel_url:
-            clean_host = vercel_url.replace("http://", "").replace("https://", "").rstrip("/")
+    is_vercel = bool(
+        os.environ.get("VERCEL")
+        or os.environ.get("VERCEL_ENV")
+        or os.environ.get("VERCEL_URL")
+        or os.environ.get("VERCEL_PROJECT_PRODUCTION_URL")
+    )
+    if not raw_node_url or (is_vercel and "localhost" in raw_node_url):
+        target_domain = os.environ.get("VERCEL_PROJECT_PRODUCTION_URL") or os.environ.get("VERCEL_URL")
+        if target_domain:
+            clean_host = target_domain.replace("http://", "").replace("https://", "").rstrip("/")
             protocol = "http" if "localhost" in clean_host else "https"
             raw_node_url = f"{protocol}://{clean_host}/api"
-        else:
+        elif not raw_node_url:
             raw_node_url = "http://localhost:3001/api"
+
     node_url = raw_node_url.rstrip("/")
     if not node_url.endswith("/api"):
         node_url = f"{node_url}/api"
@@ -94,17 +101,20 @@ def _get_headers(token: str) -> Dict[str, str]:
     return headers
 
 
-async def _fetch(endpoint: str, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+async def _fetch(endpoint: str, params: Optional[Dict[str, Any]] = None) -> Any:
     node_url, token, _ = _get_env_config()
     headers = _get_headers(token)
     url = _format_url(node_url, endpoint)
-    async with httpx.AsyncClient(timeout=10.0) as client:
+    async with httpx.AsyncClient(timeout=15.0, follow_redirects=True) as client:
         try:
             resp = await client.get(url, headers=headers, params=params)
-            if resp.status_code == 401 or resp.status_code == 403:
-                # Token expirado ou sem permissão
+            if resp.status_code in (401, 403):
+                sys.stderr.write(f"[MCP AUTH] GET {url} -> status {resp.status_code}\n")
+                sys.stderr.flush()
                 return {"erro": "Acesso não autorizado ou sessão expirada no backend"}
             if resp.status_code != 200:
+                sys.stderr.write(f"[MCP ERROR] GET {url} -> status {resp.status_code}: {resp.text[:200]}\n")
+                sys.stderr.flush()
                 try:
                     err_data = resp.json()
                     if isinstance(err_data, dict) and err_data.get("mensagem"):
@@ -113,66 +123,105 @@ async def _fetch(endpoint: str, params: Optional[Dict[str, Any]] = None) -> Dict
                     pass
                 return {"erro": f"Erro do servidor (status {resp.status_code})"}
             data = resp.json()
-            return data.get("dados", {})
+            if isinstance(data, dict):
+                return data.get("dados", data)
+            return data
         except Exception as e:
+            sys.stderr.write(f"[MCP EXCEPTION] GET {url} -> {str(e)}\n")
+            sys.stderr.flush()
             return {"erro": f"Falha de conexão com a API: {str(e)}"}
 
 async def _post(endpoint: str, payload: Dict[str, Any]) -> Dict[str, Any]:
     node_url, token, _ = _get_env_config()
     headers = _get_headers(token)
     url = _format_url(node_url, endpoint)
-    async with httpx.AsyncClient(timeout=10.0) as client:
+    async with httpx.AsyncClient(timeout=15.0, follow_redirects=True) as client:
         try:
             resp = await client.post(url, headers=headers, json=payload)
-            if resp.status_code == 401 or resp.status_code == 403:
+            if resp.status_code in (401, 403):
+                sys.stderr.write(f"[MCP AUTH] POST {url} -> status {resp.status_code}\n")
+                sys.stderr.flush()
                 return {"sucesso": False, "erro": "Acesso não autorizado ou sessão expirada no backend"}
-            data = resp.json()
+            try:
+                data = resp.json()
+            except Exception:
+                data = {}
             if resp.status_code not in (200, 201):
-                return {"sucesso": False, "erro": data.get("mensagem") or f"Erro do servidor (status {resp.status_code})"}
-            return {"sucesso": True, "dados": data.get("dados", {})}
+                sys.stderr.write(f"[MCP ERROR] POST {url} -> status {resp.status_code}: {resp.text[:200]}\n")
+                sys.stderr.flush()
+                msg = data.get("mensagem") if isinstance(data, dict) else None
+                return {"sucesso": False, "erro": msg or f"Erro do servidor (status {resp.status_code})"}
+            retorno = data.get("dados", data) if isinstance(data, dict) else data
+            return {"sucesso": True, "dados": retorno}
         except Exception as e:
+            sys.stderr.write(f"[MCP EXCEPTION] POST {url} -> {str(e)}\n")
+            sys.stderr.flush()
             return {"sucesso": False, "erro": f"Falha de conexão com a API: {str(e)}"}
 
 async def _put(endpoint: str, payload: Dict[str, Any]) -> Dict[str, Any]:
     node_url, token, _ = _get_env_config()
     headers = _get_headers(token)
     url = _format_url(node_url, endpoint)
-    async with httpx.AsyncClient(timeout=10.0) as client:
+    async with httpx.AsyncClient(timeout=15.0, follow_redirects=True) as client:
         try:
             resp = await client.put(url, headers=headers, json=payload)
-            if resp.status_code == 401 or resp.status_code == 403:
+            if resp.status_code in (401, 403):
+                sys.stderr.write(f"[MCP AUTH] PUT {url} -> status {resp.status_code}\n")
+                sys.stderr.flush()
                 return {"sucesso": False, "erro": "Acesso não autorizado ou sessão expirada no backend"}
-            data = resp.json()
+            try:
+                data = resp.json()
+            except Exception:
+                data = {}
             if resp.status_code not in (200, 201):
-                return {"sucesso": False, "erro": data.get("mensagem") or f"Erro do servidor (status {resp.status_code})"}
-            return {"sucesso": True, "dados": data.get("dados", {})}
+                sys.stderr.write(f"[MCP ERROR] PUT {url} -> status {resp.status_code}: {resp.text[:200]}\n")
+                sys.stderr.flush()
+                msg = data.get("mensagem") if isinstance(data, dict) else None
+                return {"sucesso": False, "erro": msg or f"Erro do servidor (status {resp.status_code})"}
+            retorno = data.get("dados", data) if isinstance(data, dict) else data
+            return {"sucesso": True, "dados": retorno}
         except Exception as e:
+            sys.stderr.write(f"[MCP EXCEPTION] PUT {url} -> {str(e)}\n")
+            sys.stderr.flush()
             return {"sucesso": False, "erro": f"Falha de conexão com a API: {str(e)}"}
 
 async def _patch(endpoint: str, payload: Dict[str, Any]) -> Dict[str, Any]:
     node_url, token, _ = _get_env_config()
     headers = _get_headers(token)
     url = _format_url(node_url, endpoint)
-    async with httpx.AsyncClient(timeout=10.0) as client:
+    async with httpx.AsyncClient(timeout=15.0, follow_redirects=True) as client:
         try:
             resp = await client.patch(url, headers=headers, json=payload)
-            if resp.status_code == 401 or resp.status_code == 403:
+            if resp.status_code in (401, 403):
+                sys.stderr.write(f"[MCP AUTH] PATCH {url} -> status {resp.status_code}\n")
+                sys.stderr.flush()
                 return {"sucesso": False, "erro": "Acesso não autorizado ou sessão expirada no backend"}
-            data = resp.json()
+            try:
+                data = resp.json()
+            except Exception:
+                data = {}
             if resp.status_code not in (200, 201):
-                return {"sucesso": False, "erro": data.get("mensagem") or f"Erro do servidor (status {resp.status_code})"}
-            return {"sucesso": True, "dados": data.get("dados", {})}
+                sys.stderr.write(f"[MCP ERROR] PATCH {url} -> status {resp.status_code}: {resp.text[:200]}\n")
+                sys.stderr.flush()
+                msg = data.get("mensagem") if isinstance(data, dict) else None
+                return {"sucesso": False, "erro": msg or f"Erro do servidor (status {resp.status_code})"}
+            retorno = data.get("dados", data) if isinstance(data, dict) else data
+            return {"sucesso": True, "dados": retorno}
         except Exception as e:
+            sys.stderr.write(f"[MCP EXCEPTION] PATCH {url} -> {str(e)}\n")
+            sys.stderr.flush()
             return {"sucesso": False, "erro": f"Falha de conexão com a API: {str(e)}"}
 
 async def _delete(endpoint: str) -> Dict[str, Any]:
     node_url, token, _ = _get_env_config()
     headers = _get_headers(token)
     url = _format_url(node_url, endpoint)
-    async with httpx.AsyncClient(timeout=10.0) as client:
+    async with httpx.AsyncClient(timeout=15.0, follow_redirects=True) as client:
         try:
             resp = await client.delete(url, headers=headers)
-            if resp.status_code == 401 or resp.status_code == 403:
+            if resp.status_code in (401, 403):
+                sys.stderr.write(f"[MCP AUTH] DELETE {url} -> status {resp.status_code}\n")
+                sys.stderr.flush()
                 return {"sucesso": False, "erro": "Acesso não autorizado ou sessão expirada no backend"}
             if resp.status_code == 204:
                 return {"sucesso": True}
@@ -181,9 +230,14 @@ async def _delete(endpoint: str) -> Dict[str, Any]:
             except Exception:
                 data = {}
             if resp.status_code != 200:
-                return {"sucesso": False, "erro": data.get("mensagem") or f"Erro do servidor (status {resp.status_code})"}
+                sys.stderr.write(f"[MCP ERROR] DELETE {url} -> status {resp.status_code}: {resp.text[:200]}\n")
+                sys.stderr.flush()
+                msg = data.get("mensagem") if isinstance(data, dict) else None
+                return {"sucesso": False, "erro": msg or f"Erro do servidor (status {resp.status_code})"}
             return data
         except Exception as e:
+            sys.stderr.write(f"[MCP EXCEPTION] DELETE {url} -> {str(e)}\n")
+            sys.stderr.flush()
             return {"sucesso": False, "erro": f"Falha de conexão com a API: {str(e)}"}
 
 @mcp_server_app.tool()

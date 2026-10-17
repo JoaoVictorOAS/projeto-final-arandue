@@ -4,7 +4,15 @@
     "ai-service": {
       "root": "ai-service",
       "framework": "fastapi",
-      "entrypoint": "app.main:app"
+      "entrypoint": "app.main:app",
+      "bindings": [
+        {
+          "type": "service",
+          "service": "backend",
+          "format": "url",
+          "env": "NODE_API_URL"
+        }
+      ]
     },
     "backend": {
       "root": "backend",

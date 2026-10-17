@@ -233,7 +233,7 @@ class Orchestrator:
                 tool_args = call.args or {}
                 tools_usadas.append(tool_name)
                 calls_count += 1
-                logger.info(f"Executando tool MCP: {tool_name}({tool_args})")
+                logger.info(f"Executando tool MCP '{tool_name}' com parâmetros: {tool_args}")
 
                 tool_result_content = {}
                 if mcp_session:
@@ -253,6 +253,8 @@ class Orchestrator:
                         tool_result_content = {"erro": f"Falha ao executar ferramenta: {str(e)}"}
                 else:
                     tool_result_content = {"erro": "Sessão MCP não disponível"}
+
+                logger.info(f"Retorno tool MCP '{tool_name}': {tool_result_content}")
 
                 if isinstance(tool_result_content, dict) and (
                     "erro" in tool_result_content
