@@ -562,7 +562,7 @@ Esta documentação detalha os padrões arquiteturais, cabeçalhos, autenticaç�
 ### 10.6 Consultar Status da Integração WhatsApp
 - **Método:** `GET`
 - **Rota:** `/api/assistente/whatsapp/status`
-- **Descrição:** Retorna o status da conexão do Gateway WhatsApp Web (Baileys) no servidor e o número de WhatsApp vinculado à conta do MEI autenticado.
+- **Descrição:** Retorna o status operacional da conexão do Gateway WhatsApp Web (Baileys) no servidor e o número de WhatsApp vinculado à conta do MEI autenticado. Por segurança, o `qrCode` é permanentemente omitido para os usuários comuns.
 - **Resposta Sucesso (`200 OK`):**
 ```json
 {
@@ -572,8 +572,7 @@ Esta documentação detalha os padrões arquiteturais, cabeçalhos, autenticaç�
     "bot": {
       "status": "conectado",
       "conectado": true,
-      "numero": "5511999990000",
-      "qrCode": null
+      "numero": "5511999990000"
     },
     "usuario_whatsapp": "5511987654321",
     "usuario_whatsapp_verificado": true
@@ -601,10 +600,11 @@ Esta documentação detalha os padrões arquiteturais, cabeçalhos, autenticaç�
 }
 ```
 
-### 10.8 Reiniciar Sessão do Gateway WhatsApp (Gerar Novo QR Code)
+### 10.8 Reiniciar Sessão do Gateway WhatsApp (Rota Oculta de Desenvolvedor)
 - **Método:** `POST`
 - **Rota:** `/api/assistente/whatsapp/resetar`
-- **Descrição:** Encerra o socket ativo do Baileys, limpa as credenciais locais (`.wweb_auth_baileys`) e reinicia a conexão gerando um novo QR Code no terminal do servidor.
+- **Autenticação:** Requer JWT de usuário comum **e** cabeçalho `X-Dev-Token: <WHATSAPP_DEV_SECRET>`.
+- **Segurança:** Responde `404 Not Found` caso o token de desenvolvedor seja ausente ou incorreto, mantendo a rota invisível para usuários comuns e scanners.
 - **Resposta Sucesso (`200 OK`):**
 ```json
 {
@@ -619,7 +619,15 @@ Esta documentação detalha os padrões arquiteturais, cabeçalhos, autenticaç�
 }
 ```
 
-### 10.9 Transcrever Áudio de Voz
+### 10.9 Rotas Administrativas de Infraestrutura (`/api/dev/whatsapp/*`)
+Rotas protegidas por `devAuthMiddleware` exclusivamente para operadores e desenvolvedores da plataforma. Qualquer requisição sem o token `WHATSAPP_DEV_SECRET` (via cabeçalho `X-Dev-Token` ou query parameter `?dev_token=...`) recebe resposta **`404 Not Found`** para ocultação total.
+
+- **`GET /api/dev/whatsapp/status`:** Consulta o status administrativo completo e o `qrCode` ativo.
+- **`GET /api/dev/whatsapp/qrcode`:** Visualizador do QR Code. Aceita `?format=html` ou requisições do navegador para renderizar uma página HTML interativa pronta para escaneamento com celular.
+- **`POST /api/dev/whatsapp/resetar`:** Força a reinicialização da sessão Baileys e emissão de um novo par de chaves.
+
+
+### 10.10 Transcrever Áudio de Voz
 - **Método:** `POST`
 - **Rota:** `/api/assistente/audio/transcrever`
 - **Descrição:** Realiza a transcrição pontual de um áudio (formato base64) para texto utilizando o motor Gemini multimodal. Também espelhado como ferramenta MCP (`transcrever_audio`).
@@ -643,7 +651,7 @@ Esta documentação detalha os padrões arquiteturais, cabeçalhos, autenticaç�
 }
 ```
 
-### 10.10 Analisar Imagem ou Documento Fiscal
+### 10.11 Analisar Imagem ou Documento Fiscal
 - **Método:** `POST`
 - **Rota:** `/api/assistente/imagem/analisar`
 - **Descrição:** Analisa uma imagem ou comprovante/recibo/documento fiscal via visão computacional do Gemini, extraindo dados ou respondendo ao prompt instrucional. Também espelhado como ferramenta MCP (`analisar_imagem_documento`).

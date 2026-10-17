@@ -1,0 +1,9 @@
+{
+  "appId": "com.arandue.app",
+  "appName": "Aranduê MEI",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https",
+    "cleartext": true
+  }
+}

@@ -62,6 +62,20 @@ describe('Rotas de WhatsApp do Assistente (/api/assistente/whatsapp)', () => {
       expect(res.body.dados).toHaveProperty('usuario_whatsapp');
       expect(res.body.dados.usuario_whatsapp).toBeNull();
       expect(res.body.dados.usuario_whatsapp_verificado).toBe(false);
+      // Garante que o qrCode NUNCA vaza para o MEI comum
+      expect(res.body.dados.bot.qrCode).toBeUndefined();
+    });
+
+    it('nunca deve expor o qrCode na rota comum, mesmo com cabeçalhos arbitrários', async () => {
+      whatsappService.qrCode = 'qr_code_teste_secreto';
+      const res = await request(app)
+        .get('/api/assistente/whatsapp/status')
+        .set('Authorization', `Bearer ${tokenUser1}`)
+        .set('x-platform-admin', 'true');
+
+      expect(res.status).toBe(200);
+      expect(res.body.dados.bot.qrCode).toBeUndefined();
+      whatsappService.qrCode = null;
     });
   });
 
@@ -135,13 +149,33 @@ describe('Rotas de WhatsApp do Assistente (/api/assistente/whatsapp)', () => {
     });
   });
 
-  describe('POST /api/assistente/whatsapp/resetar', () => {
+  describe('POST /api/assistente/whatsapp/resetar (Rota Oculta & Restrita a Devs)', () => {
     it('deve rejeitar se não autenticado', async () => {
       const res = await request(app).post('/api/assistente/whatsapp/resetar');
       expect(res.status).toBe(401);
     });
 
-    it('deve permitir resetar a sessão do WhatsApp e retornar status de reconexão', async () => {
+    it('deve responder 404 (oculta) se acessada por usuário comum sem o token de dev', async () => {
+      const res = await request(app)
+        .post('/api/assistente/whatsapp/resetar')
+        .set('Authorization', `Bearer ${tokenUser1}`);
+
+      expect(res.status).toBe(404);
+      expect(res.body.sucesso).toBe(false);
+      expect(res.body.mensagem).toBe('Rota não encontrada');
+    });
+
+    it('deve responder 404 (oculta) se token de desenvolvedor for inválido', async () => {
+      const res = await request(app)
+        .post('/api/assistente/whatsapp/resetar')
+        .set('Authorization', `Bearer ${tokenUser1}`)
+        .set('X-Dev-Token', 'token_incorreto');
+
+      expect(res.status).toBe(404);
+      expect(res.body.mensagem).toBe('Rota não encontrada');
+    });
+
+    it('deve permitir resetar a sessão se o token de dev válido for fornecido', async () => {
       const spyGerarNovoQrCode = jest.spyOn(whatsappService, 'gerarNovoQrCode').mockResolvedValue({
         status: 'aguardando_qr',
         conectado: false,
@@ -150,7 +184,8 @@ describe('Rotas de WhatsApp do Assistente (/api/assistente/whatsapp)', () => {
 
       const res = await request(app)
         .post('/api/assistente/whatsapp/resetar')
-        .set('Authorization', `Bearer ${tokenUser1}`);
+        .set('Authorization', `Bearer ${tokenUser1}`)
+        .set('X-Dev-Token', 'chave_mestra_secreta_whatsapp_dev_2026');
 
       expect(res.status).toBe(200);
       expect(res.body.sucesso).toBe(true);
@@ -158,6 +193,67 @@ describe('Rotas de WhatsApp do Assistente (/api/assistente/whatsapp)', () => {
 
       expect(spyGerarNovoQrCode).toHaveBeenCalled();
       spyGerarNovoQrCode.mockRestore();
+    });
+  });
+
+  describe('Rotas Administrativas Exclusivas de Dev (/api/dev/whatsapp)', () => {
+    const devTokenValido = 'chave_mestra_secreta_whatsapp_dev_2026';
+
+    it('deve responder 404 (oculto) em todas as rotas de dev quando acessadas sem token', async () => {
+      const resStatus = await request(app).get('/api/dev/whatsapp/status');
+      expect(resStatus.status).toBe(404);
+
+      const resQr = await request(app).get('/api/dev/whatsapp/qrcode');
+      expect(resQr.status).toBe(404);
+
+      const resReset = await request(app).post('/api/dev/whatsapp/resetar');
+      expect(resReset.status).toBe(404);
+    });
+
+    it('deve retornar status e dados administrativos com X-Dev-Token válido', async () => {
+      whatsappService.status = 'aguardando_qr';
+      whatsappService.qrCode = '2@teste_qr_string';
+
+      const res = await request(app)
+        .get('/api/dev/whatsapp/status')
+        .set('X-Dev-Token', devTokenValido);
+
+      expect(res.status).toBe(200);
+      expect(res.body.sucesso).toBe(true);
+      expect(res.body.dados.qrCode).toBe('2@teste_qr_string');
+      expect(res.body.dados.qrCodeUrl).toContain('teste_qr_string');
+    });
+
+    it('deve suportar token via query string ?dev_token=... e responder HTML para browser', async () => {
+      whatsappService.status = 'aguardando_qr';
+      whatsappService.qrCode = '2@teste_qr_string';
+
+      const res = await request(app)
+        .get(`/api/dev/whatsapp/qrcode?dev_token=${devTokenValido}&format=html`);
+
+      expect(res.status).toBe(200);
+      expect(res.headers['content-type']).toContain('text/html');
+      expect(res.text).toContain('Aranduê — Gateway WhatsApp (Dev)');
+      expect(res.text).toContain('Conectar WhatsApp do Aranduê');
+    });
+
+    it('deve permitir resetar a sessão do gateway via POST /api/dev/whatsapp/resetar', async () => {
+      const spyGerar = jest.spyOn(whatsappService, 'gerarNovoQrCode').mockResolvedValue({
+        status: 'aguardando_qr',
+        conectado: false,
+        numero: null,
+        qrCode: 'novo_qr_apos_reset'
+      });
+
+      const res = await request(app)
+        .post('/api/dev/whatsapp/resetar')
+        .set('X-Dev-Token', devTokenValido);
+
+      expect(res.status).toBe(200);
+      expect(res.body.sucesso).toBe(true);
+      expect(res.body.dados.qrCode).toBe('novo_qr_apos_reset');
+      expect(spyGerar).toHaveBeenCalled();
+      spyGerar.mockRestore();
     });
   });
 });

@@ -31,7 +31,12 @@ class WhatsAppService {
     this.qrCode = null;
     this.numeroBot = null;
     this.lidBot = null;
-    this.authPath = process.env.WHATSAPP_AUTH_DIR || path.resolve(__dirname, '../../.wweb_auth_baileys');
+    const os = require('os');
+    this.authPath =
+      process.env.WHATSAPP_AUTH_DIR ||
+      (process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME
+        ? path.join(os.tmpdir(), '.wweb_auth_baileys')
+        : path.resolve(__dirname, '../../.wweb_auth_baileys'));
     this.inicializado = false;
     this.filasPorJid = new Map();
     this.mensagensEnviadasPeloBot = new Set();
@@ -631,7 +636,11 @@ class WhatsAppService {
       }
     }
 
-    fs.mkdirSync(this.authPath, { recursive: true });
+    try {
+      fs.mkdirSync(this.authPath, { recursive: true });
+    } catch (err) {
+      console.warn('[WhatsApp] Erro ao criar authPath:', err.message);
+    }
 
     this.status = 'conectando';
     this.numeroBot = null;
@@ -639,6 +648,21 @@ class WhatsAppService {
     this.qrCode = null;
 
     await this.inicializar();
+
+    // Se estiver conectando ou aguardando QR, aguarda até 5 segundos para o socket emitir o evento qr
+    if (!this.qrCode && this.status !== 'conectado' && process.env.NODE_ENV !== 'test') {
+      await new Promise((resolve) => {
+        const timeout = setTimeout(resolve, 5000);
+        const checkInterval = setInterval(() => {
+          if (this.qrCode || this.status === 'conectado' || this.status === 'erro') {
+            clearInterval(checkInterval);
+            clearTimeout(timeout);
+            resolve();
+          }
+        }, 200);
+      });
+    }
+
     return this.obterStatusAdmin();
   }
 }

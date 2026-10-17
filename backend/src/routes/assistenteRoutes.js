@@ -1,5 +1,6 @@
 const express = require('express');
 const assistenteController = require('../controllers/assistenteController');
+const devAuthMiddleware = require('../middlewares/devAuthMiddleware');
 
 const router = express.Router();
 
@@ -16,6 +17,6 @@ router.post('/imagem/analisar', assistenteController.analisarImagem);
 // Rotas de Integração do WhatsApp
 router.get('/whatsapp/status', assistenteController.obterStatusWhatsApp);
 router.post('/whatsapp/vincular', assistenteController.vincularWhatsApp);
-router.post('/whatsapp/resetar', assistenteController.resetarSessaoWhatsApp);
+router.post('/whatsapp/resetar', devAuthMiddleware, assistenteController.resetarSessaoWhatsApp);
 
 module.exports = router;

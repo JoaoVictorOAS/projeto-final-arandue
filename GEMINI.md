@@ -99,3 +99,33 @@ projeto-final-arandue/
    npm test               # Execução global da suíte completa
    ```
 4. **Execução Local:** O projeto suporta orquestração paralela dos três nós via `npm run dev` na raiz.
+
+---
+
+## 📱 6. Plataforma Mobile (Capacitor) & Pipeline de Atualização de APK
+
+O frontend SPA React foi adaptado para empacotamento mobile nativo utilizando **Capacitor (Ionic)** sob o ID de aplicativo `com.arandue.app`.
+
+### 6.1 Script de Automação de Build e Sincronização Google Drive
+Para compilar um novo APK sempre que houver atualizações na aplicação e enviá-lo diretamente para uma pasta sincronizada do Google Drive:
+
+```bash
+# Uso 1: Compilação e salvamento em dist-apk/
+npm run mobile:apk
+
+# Uso 2: Compilação e upload imediato para o Google Drive
+./scripts/update_apk_drive.sh "/seu/caminho/do/GoogleDrive"
+
+# Uso 3: Via variável de ambiente (ideal para pipelines/aliases)
+export GOOGLE_DRIVE_PATH="/seu/caminho/do/GoogleDrive"
+npm run mobile:apk
+```
+
+### 6.2 Fluxo de Execução do Script (`scripts/update_apk_drive.sh`)
+1. **Ambiente:** Configura automaticamente `JAVA_HOME` (Java 21) e `ANDROID_HOME` (`~/Android/Sdk`).
+2. **Build Web:** Gera os estáticos do React em `frontend/dist`.
+3. **Sync Nativo:** Executa `npx cap sync android` transferindo os assets para a WebView nativa.
+4. **Compilação Gradle:** Executa `./gradlew assembleDebug` dentro de `frontend/android`.
+5. **Organização:** Salva em `dist-apk/` as versões `arandue-mei-latest.apk` e `arandue-mei-YYYYMMDD_HHMMSS.apk`.
+6. **Deploy Google Drive:** Se o diretório de destino for informado e válido, copia automaticamente os APKs.
+

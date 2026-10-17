@@ -1,7 +1,28 @@
 import axios from 'axios';
+import { Capacitor } from '@capacitor/core';
+
+const getBaseURL = () => {
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      const customUrl = window.localStorage.getItem('custom_api_url');
+      if (customUrl) return customUrl;
+    }
+  } catch {}
+
+  const envUrl = import.meta.env.VITE_API_URL;
+  if (envUrl && envUrl !== '/api') {
+    return envUrl;
+  }
+
+  if (typeof Capacitor !== 'undefined' && Capacitor.isNativePlatform && Capacitor.isNativePlatform()) {
+    return 'https://projeto-final-arandue.vercel.app/api';
+  }
+
+  return '/api';
+};
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || '/api',
+  baseURL: getBaseURL(),
   headers: {
     'Content-Type': 'application/json',
   },

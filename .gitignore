@@ -31,3 +31,10 @@ graphify-out/manifest.json
 # Git Worktrees
 .worktrees/
 worktrees/
+
+# Mobile builds e APKs
+dist-apk/
+frontend/android/.gradle/
+frontend/android/app/build/
+frontend/android/build/
+frontend/android/local.properties

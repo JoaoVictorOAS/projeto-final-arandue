@@ -115,13 +115,8 @@ const assistenteController = {
       const usuarioRepository = require('../repositories/usuarioRepository');
       const whatsappService = require('../services/whatsappService');
       const usuario = await usuarioRepository.buscarPorId(req.usuario.id);
-      const ehAdmin = Boolean(
-        req.usuario?.is_admin ||
-        req.usuario?.role === 'admin' ||
-        req.headers['x-platform-admin'] ||
-        req.usuario?.email === 'admin@mei.com'
-      );
-      const statusBot = whatsappService.obterStatus(ehAdmin);
+      // Para usuários normais autenticados, nunca expõe qrCode ou chaves do gateway
+      const statusBot = whatsappService.obterStatus(false);
 
       return res.status(200).json({
         sucesso: true,
