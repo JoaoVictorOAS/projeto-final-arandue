@@ -1,23 +1,37 @@
 from typing import List
-from sentence_transformers import SentenceTransformer
+from fastembed import TextEmbedding
+from fastembed.common.model_description import PoolingType, ModelSource
 
 MODEL_NAME = "intfloat/multilingual-e5-small"
 EMBEDDING_DIM = 384
+
+try:
+    TextEmbedding.add_custom_model(
+        model=MODEL_NAME,
+        pooling=PoolingType.MEAN,
+        normalization=True,
+        sources=ModelSource(hf=MODEL_NAME),
+        dim=EMBEDDING_DIM,
+        model_file="onnx/model.onnx"
+    )
+except ValueError:
+    pass
+
 
 class Embedder:
     def __init__(self, model_name: str = MODEL_NAME):
         self.model_name = model_name
         self.dim = EMBEDDING_DIM
-        self._model = SentenceTransformer(self.model_name)
+        self._model = TextEmbedding(model_name=self.model_name)
 
     def embed_query(self, text: str) -> List[float]:
         """Gera embedding normalizado para uma consulta do usuário (prefixo query: )."""
         formatted = f"query: {text.strip()}"
-        embedding = self._model.encode(formatted, normalize_embeddings=True)
-        return embedding.tolist()
+        embeddings = list(self._model.embed([formatted]))
+        return embeddings[0].tolist()
 
     def embed_passages(self, texts: List[str]) -> List[List[float]]:
         """Gera embeddings normalizados para fragmentos de documentos (prefixo passage: )."""
         formatted = [f"passage: {t.strip()}" for t in texts]
-        embeddings = self._model.encode(formatted, normalize_embeddings=True)
+        embeddings = list(self._model.embed(formatted))
         return [e.tolist() for e in embeddings]
