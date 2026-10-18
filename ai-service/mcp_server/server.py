@@ -105,144 +105,165 @@ def _get_headers(token: str) -> Dict[str, str]:
     return headers
 
 
+_HTTP_CLIENTS: Dict[int, httpx.AsyncClient] = {}
+
+
+def _get_shared_http_client() -> httpx.AsyncClient:
+    """Retorna um httpx.AsyncClient persistente com pool de conexões Keep-Alive vinculado ao event loop atual."""
+    import asyncio
+    try:
+        loop_id = id(asyncio.get_running_loop())
+    except RuntimeError:
+        loop_id = 0
+    client = _HTTP_CLIENTS.get(loop_id)
+    if client is None or client.is_closed:
+        client = httpx.AsyncClient(
+            timeout=15.0,
+            follow_redirects=True,
+            limits=httpx.Limits(max_keepalive_connections=30, max_connections=100, keepalive_expiry=30.0)
+        )
+        _HTTP_CLIENTS[loop_id] = client
+    return client
+
+
 async def _fetch(endpoint: str, params: Optional[Dict[str, Any]] = None) -> Any:
     node_url, token, _ = _get_env_config()
     headers = _get_headers(token)
     url = _format_url(node_url, endpoint)
-    async with httpx.AsyncClient(timeout=15.0, follow_redirects=True) as client:
-        try:
-            resp = await client.get(url, headers=headers, params=params)
-            if resp.status_code in (401, 403):
-                sys.stderr.write(f"[MCP AUTH] GET {url} -> status {resp.status_code}\n")
-                sys.stderr.flush()
-                return {"erro": "Acesso não autorizado ou sessão expirada no backend"}
-            if resp.status_code != 200:
-                sys.stderr.write(f"[MCP ERROR] GET {url} -> status {resp.status_code}: {resp.text[:200]}\n")
-                sys.stderr.flush()
-                try:
-                    err_data = resp.json()
-                    if isinstance(err_data, dict) and err_data.get("mensagem"):
-                        return {"erro": err_data.get("mensagem")}
-                except Exception:
-                    pass
-                return {"erro": f"Erro do servidor (status {resp.status_code})"}
-            data = resp.json()
-            if isinstance(data, dict):
-                return data.get("dados", data)
-            return data
-        except Exception as e:
-            sys.stderr.write(f"[MCP EXCEPTION] GET {url} -> {str(e)}\n")
+    client = _get_shared_http_client()
+    try:
+        resp = await client.get(url, headers=headers, params=params)
+        if resp.status_code in (401, 403):
+            sys.stderr.write(f"[MCP AUTH] GET {url} -> status {resp.status_code}\n")
             sys.stderr.flush()
-            return {"erro": f"Falha de conexão com a API: {str(e)}"}
+            return {"erro": "Acesso não autorizado ou sessão expirada no backend"}
+        if resp.status_code != 200:
+            sys.stderr.write(f"[MCP ERROR] GET {url} -> status {resp.status_code}: {resp.text[:200]}\n")
+            sys.stderr.flush()
+            try:
+                err_data = resp.json()
+                if isinstance(err_data, dict) and err_data.get("mensagem"):
+                    return {"erro": err_data.get("mensagem")}
+            except Exception:
+                pass
+            return {"erro": f"Erro do servidor (status {resp.status_code})"}
+        data = resp.json()
+        if isinstance(data, dict):
+            return data.get("dados", data)
+        return data
+    except Exception as e:
+        sys.stderr.write(f"[MCP EXCEPTION] GET {url} -> {str(e)}\n")
+        sys.stderr.flush()
+        return {"erro": f"Falha de conexão com a API: {str(e)}"}
 
 async def _post(endpoint: str, payload: Dict[str, Any]) -> Dict[str, Any]:
     node_url, token, _ = _get_env_config()
     headers = _get_headers(token)
     url = _format_url(node_url, endpoint)
-    async with httpx.AsyncClient(timeout=15.0, follow_redirects=True) as client:
-        try:
-            resp = await client.post(url, headers=headers, json=payload)
-            if resp.status_code in (401, 403):
-                sys.stderr.write(f"[MCP AUTH] POST {url} -> status {resp.status_code}\n")
-                sys.stderr.flush()
-                return {"sucesso": False, "erro": "Acesso não autorizado ou sessão expirada no backend"}
-            try:
-                data = resp.json()
-            except Exception:
-                data = {}
-            if resp.status_code not in (200, 201):
-                sys.stderr.write(f"[MCP ERROR] POST {url} -> status {resp.status_code}: {resp.text[:200]}\n")
-                sys.stderr.flush()
-                msg = data.get("mensagem") if isinstance(data, dict) else None
-                return {"sucesso": False, "erro": msg or f"Erro do servidor (status {resp.status_code})"}
-            retorno = data.get("dados", data) if isinstance(data, dict) else data
-            return {"sucesso": True, "dados": retorno}
-        except Exception as e:
-            sys.stderr.write(f"[MCP EXCEPTION] POST {url} -> {str(e)}\n")
+    client = _get_shared_http_client()
+    try:
+        resp = await client.post(url, headers=headers, json=payload)
+        if resp.status_code in (401, 403):
+            sys.stderr.write(f"[MCP AUTH] POST {url} -> status {resp.status_code}\n")
             sys.stderr.flush()
-            return {"sucesso": False, "erro": f"Falha de conexão com a API: {str(e)}"}
+            return {"sucesso": False, "erro": "Acesso não autorizado ou sessão expirada no backend"}
+        try:
+            data = resp.json()
+        except Exception:
+            data = {}
+        if resp.status_code not in (200, 201):
+            sys.stderr.write(f"[MCP ERROR] POST {url} -> status {resp.status_code}: {resp.text[:200]}\n")
+            sys.stderr.flush()
+            msg = data.get("mensagem") if isinstance(data, dict) else None
+            return {"sucesso": False, "erro": msg or f"Erro do servidor (status {resp.status_code})"}
+        retorno = data.get("dados", data) if isinstance(data, dict) else data
+        return {"sucesso": True, "dados": retorno}
+    except Exception as e:
+        sys.stderr.write(f"[MCP EXCEPTION] POST {url} -> {str(e)}\n")
+        sys.stderr.flush()
+        return {"sucesso": False, "erro": f"Falha de conexão com a API: {str(e)}"}
 
 async def _put(endpoint: str, payload: Dict[str, Any]) -> Dict[str, Any]:
     node_url, token, _ = _get_env_config()
     headers = _get_headers(token)
     url = _format_url(node_url, endpoint)
-    async with httpx.AsyncClient(timeout=15.0, follow_redirects=True) as client:
-        try:
-            resp = await client.put(url, headers=headers, json=payload)
-            if resp.status_code in (401, 403):
-                sys.stderr.write(f"[MCP AUTH] PUT {url} -> status {resp.status_code}\n")
-                sys.stderr.flush()
-                return {"sucesso": False, "erro": "Acesso não autorizado ou sessão expirada no backend"}
-            try:
-                data = resp.json()
-            except Exception:
-                data = {}
-            if resp.status_code not in (200, 201):
-                sys.stderr.write(f"[MCP ERROR] PUT {url} -> status {resp.status_code}: {resp.text[:200]}\n")
-                sys.stderr.flush()
-                msg = data.get("mensagem") if isinstance(data, dict) else None
-                return {"sucesso": False, "erro": msg or f"Erro do servidor (status {resp.status_code})"}
-            retorno = data.get("dados", data) if isinstance(data, dict) else data
-            return {"sucesso": True, "dados": retorno}
-        except Exception as e:
-            sys.stderr.write(f"[MCP EXCEPTION] PUT {url} -> {str(e)}\n")
+    client = _get_shared_http_client()
+    try:
+        resp = await client.put(url, headers=headers, json=payload)
+        if resp.status_code in (401, 403):
+            sys.stderr.write(f"[MCP AUTH] PUT {url} -> status {resp.status_code}\n")
             sys.stderr.flush()
-            return {"sucesso": False, "erro": f"Falha de conexão com a API: {str(e)}"}
+            return {"sucesso": False, "erro": "Acesso não autorizado ou sessão expirada no backend"}
+        try:
+            data = resp.json()
+        except Exception:
+            data = {}
+        if resp.status_code not in (200, 201):
+            sys.stderr.write(f"[MCP ERROR] PUT {url} -> status {resp.status_code}: {resp.text[:200]}\n")
+            sys.stderr.flush()
+            msg = data.get("mensagem") if isinstance(data, dict) else None
+            return {"sucesso": False, "erro": msg or f"Erro do servidor (status {resp.status_code})"}
+        retorno = data.get("dados", data) if isinstance(data, dict) else data
+        return {"sucesso": True, "dados": retorno}
+    except Exception as e:
+        sys.stderr.write(f"[MCP EXCEPTION] PUT {url} -> {str(e)}\n")
+        sys.stderr.flush()
+        return {"sucesso": False, "erro": f"Falha de conexão com a API: {str(e)}"}
 
 async def _patch(endpoint: str, payload: Dict[str, Any]) -> Dict[str, Any]:
     node_url, token, _ = _get_env_config()
     headers = _get_headers(token)
     url = _format_url(node_url, endpoint)
-    async with httpx.AsyncClient(timeout=15.0, follow_redirects=True) as client:
-        try:
-            resp = await client.patch(url, headers=headers, json=payload)
-            if resp.status_code in (401, 403):
-                sys.stderr.write(f"[MCP AUTH] PATCH {url} -> status {resp.status_code}\n")
-                sys.stderr.flush()
-                return {"sucesso": False, "erro": "Acesso não autorizado ou sessão expirada no backend"}
-            try:
-                data = resp.json()
-            except Exception:
-                data = {}
-            if resp.status_code not in (200, 201):
-                sys.stderr.write(f"[MCP ERROR] PATCH {url} -> status {resp.status_code}: {resp.text[:200]}\n")
-                sys.stderr.flush()
-                msg = data.get("mensagem") if isinstance(data, dict) else None
-                return {"sucesso": False, "erro": msg or f"Erro do servidor (status {resp.status_code})"}
-            retorno = data.get("dados", data) if isinstance(data, dict) else data
-            return {"sucesso": True, "dados": retorno}
-        except Exception as e:
-            sys.stderr.write(f"[MCP EXCEPTION] PATCH {url} -> {str(e)}\n")
+    client = _get_shared_http_client()
+    try:
+        resp = await client.patch(url, headers=headers, json=payload)
+        if resp.status_code in (401, 403):
+            sys.stderr.write(f"[MCP AUTH] PATCH {url} -> status {resp.status_code}\n")
             sys.stderr.flush()
-            return {"sucesso": False, "erro": f"Falha de conexão com a API: {str(e)}"}
+            return {"sucesso": False, "erro": "Acesso não autorizado ou sessão expirada no backend"}
+        try:
+            data = resp.json()
+        except Exception:
+            data = {}
+        if resp.status_code not in (200, 201):
+            sys.stderr.write(f"[MCP ERROR] PATCH {url} -> status {resp.status_code}: {resp.text[:200]}\n")
+            sys.stderr.flush()
+            msg = data.get("mensagem") if isinstance(data, dict) else None
+            return {"sucesso": False, "erro": msg or f"Erro do servidor (status {resp.status_code})"}
+        retorno = data.get("dados", data) if isinstance(data, dict) else data
+        return {"sucesso": True, "dados": retorno}
+    except Exception as e:
+        sys.stderr.write(f"[MCP EXCEPTION] PATCH {url} -> {str(e)}\n")
+        sys.stderr.flush()
+        return {"sucesso": False, "erro": f"Falha de conexão com a API: {str(e)}"}
 
 async def _delete(endpoint: str) -> Dict[str, Any]:
     node_url, token, _ = _get_env_config()
     headers = _get_headers(token)
     url = _format_url(node_url, endpoint)
-    async with httpx.AsyncClient(timeout=15.0, follow_redirects=True) as client:
-        try:
-            resp = await client.delete(url, headers=headers)
-            if resp.status_code in (401, 403):
-                sys.stderr.write(f"[MCP AUTH] DELETE {url} -> status {resp.status_code}\n")
-                sys.stderr.flush()
-                return {"sucesso": False, "erro": "Acesso não autorizado ou sessão expirada no backend"}
-            if resp.status_code == 204:
-                return {"sucesso": True}
-            try:
-                data = resp.json()
-            except Exception:
-                data = {}
-            if resp.status_code != 200:
-                sys.stderr.write(f"[MCP ERROR] DELETE {url} -> status {resp.status_code}: {resp.text[:200]}\n")
-                sys.stderr.flush()
-                msg = data.get("mensagem") if isinstance(data, dict) else None
-                return {"sucesso": False, "erro": msg or f"Erro do servidor (status {resp.status_code})"}
-            return data
-        except Exception as e:
-            sys.stderr.write(f"[MCP EXCEPTION] DELETE {url} -> {str(e)}\n")
+    client = _get_shared_http_client()
+    try:
+        resp = await client.delete(url, headers=headers)
+        if resp.status_code in (401, 403):
+            sys.stderr.write(f"[MCP AUTH] DELETE {url} -> status {resp.status_code}\n")
             sys.stderr.flush()
-            return {"sucesso": False, "erro": f"Falha de conexão com a API: {str(e)}"}
+            return {"sucesso": False, "erro": "Acesso não autorizado ou sessão expirada no backend"}
+        if resp.status_code == 204:
+            return {"sucesso": True}
+        try:
+            data = resp.json()
+        except Exception:
+            data = {}
+        if resp.status_code != 200:
+            sys.stderr.write(f"[MCP ERROR] DELETE {url} -> status {resp.status_code}: {resp.text[:200]}\n")
+            sys.stderr.flush()
+            msg = data.get("mensagem") if isinstance(data, dict) else None
+            return {"sucesso": False, "erro": msg or f"Erro do servidor (status {resp.status_code})"}
+        return data
+    except Exception as e:
+        sys.stderr.write(f"[MCP EXCEPTION] DELETE {url} -> {str(e)}\n")
+        sys.stderr.flush()
+        return {"sucesso": False, "erro": f"Falha de conexão com a API: {str(e)}"}
 
 @mcp_server_app.tool()
 async def obter_configuracoes_mei() -> Dict[str, Any]:
@@ -1626,5 +1647,237 @@ async def analisar_imagem_documento(
     return await _post("/assistente/imagem/analisar", payload)
 
 
+# ==========================================
+# MÓDULO: AGENTE PESSOAL DE ATENDIMENTO AO CLIENTE (PARIDADE REST ↔ MCP)
+# ==========================================
+
+@mcp_server_app.tool()
+async def obter_configuracoes_atendente() -> Dict[str, Any]:
+    """Consulta as configurações atuais do Agente Pessoal de Atendimento ao Cliente do MEI (nome, tom de voz, capacidades MCP liberadas e limites em R$ de orçamento e desconto)."""
+    return await _fetch("/atendente/config")
+
+
+@mcp_server_app.tool()
+async def configurar_atendente_cliente(
+    nome_atendente: Optional[str] = None,
+    tom_voz: Optional[str] = None,
+    instrucoes_customizadas: Optional[str] = None,
+    mensagem_boas_vindas: Optional[str] = None,
+    ativo: Optional[bool] = None,
+    permite_agendar: Optional[bool] = None,
+    permite_consultar_catalogo: Optional[bool] = None,
+    permite_gerar_orcamento: Optional[bool] = None,
+    permite_fechar_orcamento: Optional[bool] = None,
+    permite_gerar_cobranca_pix: Optional[bool] = None,
+    orcamento_min_valor: Optional[float] = None,
+    orcamento_max_valor: Optional[float] = None,
+    desconto_max_percentual: Optional[float] = None,
+    horario_inicio: Optional[str] = None,
+    horario_fim: Optional[str] = None,
+    antecedencia_minima_dias: Optional[int] = None,
+    antecedencia_maxima_dias: Optional[int] = None,
+    transbordo_automatico: Optional[bool] = None,
+    condicoes_retorno_humano: Optional[str] = None,
+    alcadas_por_servico: Optional[List[Dict[str, Any]]] = None,
+) -> Dict[str, Any]:
+    """Configura ou altera os limites e o comportamento do Agente Pessoal de Atendimento ao Cliente do MEI.
+
+    Parâmetros opcionais (envie apenas o que o MEI pediu para alterar):
+    - nome_atendente: Nome do atendente virtual (ex: 'Lia', 'Atendente da Oficina').
+    - tom_voz: 'FORMAL', 'AMIGAVEL', 'DESCONTRAIDO', 'CONSULTIVO' ou 'DIRETO'.
+    - instrucoes_customizadas: Regras extras de atendimento definidas pelo MEI.
+    - mensagem_boas_vindas: Saudação inicial exibida aos clientes.
+    - ativo: Ativa (True) ou pausa (False) o atendente.
+    - permite_agendar: Libera/bloqueia agendamento pelo atendente.
+    - permite_consultar_catalogo: Libera/bloqueia consulta de preços do catálogo.
+    - permite_gerar_orcamento: Libera/bloqueia envio de propostas de orçamento.
+    - permite_fechar_orcamento: Libera/bloqueia fechamento automático (APROVADO) de orçamentos dentro da faixa de dinheiro permitida.
+    - orcamento_min_valor: Valor mínimo em R$ aceito para fechamento automático pelo atendente (faixa geral).
+    - orcamento_max_valor: Valor máximo em R$ aceito para fechamento automático pelo atendente (faixa geral).
+    - desconto_max_percentual: Percentual máximo de desconto (0 a 100) que o atendente pode conceder (faixa geral).
+    - antecedencia_minima_dias: Antecedência mínima em dias exigida para aceitar agendamentos (ex: 1 dia, 3 dias).
+    - antecedencia_maxima_dias: Antecedência máxima em dias para aceitar agendamentos (ex: 30, 60 dias).
+    - transbordo_automatico: Se True, qualquer pedido fora da capacidade/horário/limite do atendente retorna ao humano gerando alerta 'Atendimento pendente'.
+    - condicoes_retorno_humano: Regras específicas definidas pelo MEI de quando retornar ao atendimento humano.
+    - alcadas_por_servico: Lista opcional de alçadas determinísticas específicas por serviço (servico_id, orcamento_min_valor, orcamento_max_valor, desconto_max_percentual, permite_fechar_orcamento).
+    """
+    payload: Dict[str, Any] = {}
+    if nome_atendente is not None:
+        payload["nome_atendente"] = str(nome_atendente).strip()
+    if tom_voz is not None:
+        payload["tom_voz"] = str(tom_voz).strip().upper()
+    if instrucoes_customizadas is not None:
+        payload["instrucoes_customizadas"] = str(instrucoes_customizadas).strip()
+    if mensagem_boas_vindas is not None:
+        payload["mensagem_boas_vindas"] = str(mensagem_boas_vindas).strip()
+    if ativo is not None:
+        payload["ativo"] = bool(ativo)
+    if permite_agendar is not None:
+        payload["permite_agendar"] = bool(permite_agendar)
+    if permite_consultar_catalogo is not None:
+        payload["permite_consultar_catalogo"] = bool(permite_consultar_catalogo)
+    if permite_gerar_orcamento is not None:
+        payload["permite_gerar_orcamento"] = bool(permite_gerar_orcamento)
+    if permite_fechar_orcamento is not None:
+        payload["permite_fechar_orcamento"] = bool(permite_fechar_orcamento)
+    if permite_gerar_cobranca_pix is not None:
+        payload["permite_gerar_cobranca_pix"] = bool(permite_gerar_cobranca_pix)
+    if orcamento_min_valor is not None:
+        payload["orcamento_min_valor"] = float(orcamento_min_valor)
+    if orcamento_max_valor is not None:
+        payload["orcamento_max_valor"] = float(orcamento_max_valor)
+    if desconto_max_percentual is not None:
+        payload["desconto_max_percentual"] = float(desconto_max_percentual)
+    if horario_inicio is not None:
+        payload["horario_inicio"] = str(horario_inicio).strip()
+    if horario_fim is not None:
+        payload["horario_fim"] = str(horario_fim).strip()
+    if antecedencia_minima_dias is not None:
+        payload["antecedencia_minima_dias"] = int(antecedencia_minima_dias)
+    if antecedencia_maxima_dias is not None:
+        payload["antecedencia_maxima_dias"] = int(antecedencia_maxima_dias)
+    if transbordo_automatico is not None:
+        payload["transbordo_automatico"] = bool(transbordo_automatico)
+    if condicoes_retorno_humano is not None:
+        payload["condicoes_retorno_humano"] = str(condicoes_retorno_humano).strip()
+    if alcadas_por_servico is not None:
+        payload["alcadas_por_servico"] = alcadas_por_servico
+
+    return await _put("/atendente/config", payload)
+
+
+@mcp_server_app.tool()
+async def configurar_alcada_servico_atendente(
+    servico_id: int,
+    orcamento_min_valor: float = 0.0,
+    orcamento_max_valor: float = 500.0,
+    desconto_max_percentual: float = 0.0,
+    permite_fechar_orcamento: bool = True,
+    nome_servico: Optional[str] = None,
+    remover: bool = False,
+) -> Dict[str, Any]:
+    """Configura ou remove a Alçada de Fechamento Automático de Orçamento (Guardrail Determinístico) para um serviço específico do catálogo do MEI."""
+    payload: Dict[str, Any] = {
+        "servico_id": int(servico_id),
+        "orcamento_min_valor": float(orcamento_min_valor),
+        "orcamento_max_valor": float(orcamento_max_valor),
+        "desconto_max_percentual": float(desconto_max_percentual),
+        "permite_fechar_orcamento": bool(permite_fechar_orcamento),
+        "nome_servico": str(nome_servico or "").strip(),
+        "remover": bool(remover),
+    }
+    return await _put(f"/atendente/config/servico/{int(servico_id)}", payload)
+
+
+@mcp_server_app.tool()
+async def listar_atendimentos_pendentes(status: Optional[str] = "PENDENTE") -> Dict[str, Any]:
+    """Lista os atendimentos de clientes que foram transferidos pelo atendente virtual para o MEI humano ('Atendimento pendente')."""
+    params: Dict[str, Any] = {}
+    if status:
+        params["status"] = str(status).strip().upper()
+    return await _fetch("/atendente/pendencias", params=params)
+
+
+@mcp_server_app.tool()
+async def resolver_atendimento_pendente(atendimento_id: int, status: str = "CONCLUIDO") -> Dict[str, Any]:
+    """Atualiza o status de um atendimento pendente de cliente (ex: 'EM_ATENDIMENTO' ou 'CONCLUIDO') e marca a notificação mobile como lida."""
+    payload = {
+        "status": str(status or "CONCLUIDO").strip().upper(),
+        "lido_mobile": True,
+    }
+    return await _patch(f"/atendente/pendencias/{int(atendimento_id)}/status", payload)
+
+
+@mcp_server_app.tool()
+async def atendente_consultar_catalogo(
+    busca: Optional[str] = None,
+    categoria: Optional[str] = None
+) -> Any:
+    """[Exclusivo Atendente do Cliente] Consulta os serviços e produtos disponíveis no catálogo do estabelecimento com seus preços oficiais."""
+    params: Dict[str, Any] = {}
+    if busca:
+        params["busca"] = str(busca).strip()
+    if categoria:
+        params["categoria"] = str(categoria).strip()
+    return await _fetch("/atendente/operacional/catalogo", params=params)
+
+
+@mcp_server_app.tool()
+async def atendente_verificar_disponibilidade(data: str) -> Dict[str, Any]:
+    """[Exclusivo Atendente do Cliente] Verifica os horários livres na agenda do estabelecimento para uma data específica (YYYY-MM-DD), respeitando a antecedência mínima exigida."""
+    data_valida, erro = _validar_data_nao_alucinada(data, "data de disponibilidade")
+    if erro:
+        return {"sucesso": False, "erro": erro}
+    return await _fetch("/atendente/operacional/disponibilidade", params={"data": data_valida[:10]})
+
+
+@mcp_server_app.tool()
+async def atendente_fechar_orcamento_cliente(
+    nome_cliente: str,
+    itens: List[Dict[str, Any]],
+    telefone_cliente: Optional[str] = None,
+    desconto: float = 0.0,
+    fechar_automaticamente: bool = False,
+    observacoes: Optional[str] = None
+) -> Dict[str, Any]:
+    """[Exclusivo Atendente do Cliente] Gera uma proposta de orçamento ou fecha automaticamente o negócio com o cliente, respeitando os limites financeiros (de R$ mín a R$ máx e % de desconto) configurados pelo dono do negócio."""
+    payload: Dict[str, Any] = {
+        "nome_cliente": str(nome_cliente or "Cliente").strip(),
+        "telefone_cliente": str(telefone_cliente or "").strip(),
+        "itens": itens,
+        "desconto": float(desconto or 0.0),
+        "fechar_automaticamente": bool(fechar_automaticamente),
+    }
+    if observacoes:
+        payload["observacoes"] = str(observacoes).strip()
+    return await _post("/atendente/operacional/orcamento", payload)
+
+
+@mcp_server_app.tool()
+async def atendente_realizar_agendamento(
+    nome_cliente: str,
+    data_hora: str,
+    servico_id: Optional[int] = None,
+    orcamento_id: Optional[int] = None,
+    telefone_cliente: Optional[str] = None,
+    observacoes: Optional[str] = None
+) -> Dict[str, Any]:
+    """[Exclusivo Atendente do Cliente] Agenda um horário de atendimento para o cliente final em um horário livre que respeite a antecedência mínima."""
+    data_valida, erro = _validar_data_nao_alucinada(data_hora, "data_hora do agendamento")
+    if erro:
+        return {"sucesso": False, "erro": erro}
+
+    payload: Dict[str, Any] = {
+        "nome_cliente": str(nome_cliente or "Cliente").strip(),
+        "telefone_cliente": str(telefone_cliente or "").strip(),
+        "data_hora": data_valida,
+    }
+    if servico_id is not None:
+        payload["servico_id"] = int(servico_id)
+    if orcamento_id is not None:
+        payload["orcamento_id"] = int(orcamento_id)
+    if observacoes:
+        payload["observacoes"] = str(observacoes).strip()
+    return await _post("/atendente/operacional/agendar", payload)
+
+
+@mcp_server_app.tool()
+async def atendente_solicitar_humano(
+    nome_cliente: str,
+    motivo: str,
+    resumo_conversa: Optional[str] = None,
+    telefone_cliente: Optional[str] = None,
+) -> Dict[str, Any]:
+    """[Exclusivo Atendente do Cliente] Transfere o atendimento para o responsável humano e gera notificação mobile ('Atendimento pendente') sempre que o pedido fugir da capacidade do agente (ex: agendar fora dos horários disponíveis, menor que a antecedência mínima, serviço personalizado ou pedido para falar com humano)."""
+    payload: Dict[str, Any] = {
+        "nome_cliente": str(nome_cliente or "Cliente").strip(),
+        "telefone_cliente": str(telefone_cliente or "").strip(),
+        "motivo": str(motivo or "Solicitação encaminhada ao atendimento humano").strip(),
+        "resumo_conversa": str(resumo_conversa or "").strip(),
+    }
+    return await _post("/atendente/operacional/solicitar-humano", payload)
+
+
 if __name__ == "__main__":
     mcp_server_app.run()
+

@@ -135,12 +135,34 @@ def synthesize_theme(description: str, mode: str = "dark", base_color: Optional[
     if cr_text < 7.0:
         neutrals["textMain"] = "#ffffff" if modo_final == "dark" else "#000000"
 
+    action_card_bg = neutrals["bgSurfaceHover"]
+    action_card_text = (
+        neutrals["textMain"]
+        if calculate_contrast_ratio(neutrals["textMain"], action_card_bg) >= 4.5
+        else ("#ffffff" if modo_final == "dark" else "#0f172a")
+    )
+
+    insights_bg = neutrals["bgSurface"]
+    insights_text = (
+        neutrals["textMain"]
+        if calculate_contrast_ratio(neutrals["textMain"], insights_bg) >= 4.5
+        else ("#ffffff" if modo_final == "dark" else "#0f172a")
+    )
+
     cores = {
         **neutrals,
         "primary": primary,
         "primaryHover": primary_hover,
         "primaryText": primary_text,
         "accent": accent,
+        "actionCardBg": action_card_bg,
+        "actionCardText": action_card_text,
+        "buttonSecondaryBg": action_card_bg,
+        "buttonSecondaryText": action_card_text,
+        "insightsBg": insights_bg,
+        "insightsCardBg": neutrals["bgSurfaceHover"],
+        "insightsBorder": neutrals["border"],
+        "insightsText": insights_text,
         "status": {
             "success": "#34d399" if modo_final == "dark" else "#10b981",
             "danger": "#f87171" if modo_final == "dark" else "#ef4444",

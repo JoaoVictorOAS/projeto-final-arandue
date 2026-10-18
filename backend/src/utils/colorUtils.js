@@ -78,6 +78,52 @@ function validarTemaTokens(tokens) {
     );
   }
 
+  // Regras adicionais de contraste para Painel de Insights e Botões de Ação Rápida (quando informados)
+  if (tokens.insightsBg !== undefined || tokens.insightsText !== undefined) {
+    const iBg = tokens.insightsBg || tokens.bgSurface;
+    const iText = tokens.insightsText || tokens.textMain;
+    if (!validarHex(iBg) || !validarHex(iText)) {
+      erros.push("Campos 'insightsBg' e 'insightsText' devem ser cores hexadecimais válidas no formato #RRGGBB");
+    } else {
+      const crInsights = calcularContraste(iText, iBg);
+      if (parseFloat(crInsights.toFixed(1)) < 4.5) {
+        erros.push(
+          `Contraste insuficiente no Painel de Insights entre 'insightsText' (${iText}) e 'insightsBg' (${iBg}): ${crInsights.toFixed(1)}:1 (contraste mínimo exigido: 4.5:1)`
+        );
+      }
+    }
+  }
+
+  if (tokens.actionCardBg !== undefined || tokens.actionCardText !== undefined) {
+    const aBg = tokens.actionCardBg || tokens.bgSurfaceHover || tokens.bgSurface;
+    const aText = tokens.actionCardText || tokens.textMain;
+    if (!validarHex(aBg) || !validarHex(aText)) {
+      erros.push("Campos 'actionCardBg' e 'actionCardText' devem ser cores hexadecimais válidas no formato #RRGGBB");
+    } else {
+      const crAction = calcularContraste(aText, aBg);
+      if (parseFloat(crAction.toFixed(1)) < 4.5) {
+        erros.push(
+          `Contraste insuficiente nos botões de ação rápida entre 'actionCardText' (${aText}) e 'actionCardBg' (${aBg}): ${crAction.toFixed(1)}:1 (contraste mínimo exigido: 4.5:1)`
+        );
+      }
+    }
+  }
+
+  if (tokens.buttonSecondaryBg !== undefined || tokens.buttonSecondaryText !== undefined) {
+    const bBg = tokens.buttonSecondaryBg || tokens.bgSurfaceHover || tokens.bgSurface;
+    const bText = tokens.buttonSecondaryText || tokens.textMain;
+    if (!validarHex(bBg) || !validarHex(bText)) {
+      erros.push("Campos 'buttonSecondaryBg' e 'buttonSecondaryText' devem ser cores hexadecimais válidas no formato #RRGGBB");
+    } else {
+      const crSec = calcularContraste(bText, bBg);
+      if (parseFloat(crSec.toFixed(1)) < 4.5) {
+        erros.push(
+          `Contraste insuficiente no botão secundário entre 'buttonSecondaryText' (${bText}) e 'buttonSecondaryBg' (${bBg}): ${crSec.toFixed(1)}:1 (contraste mínimo exigido: 4.5:1)`
+        );
+      }
+    }
+  }
+
   return {
     valido: erros.length === 0,
     erros,

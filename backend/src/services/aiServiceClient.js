@@ -73,6 +73,63 @@ const aiServiceClient = {
   },
 
   /**
+   * Envia uma mensagem do Cliente Final para o Agente Pessoal de Atendimento do MEI no ai-service.
+   * @param {Object} payload
+   * @returns {Promise<Object>}
+   */
+  async enviarMensagemAtendente({
+    tenant_id,
+    tenant_token,
+    mensagem,
+    historico = [],
+    config_atendente = {},
+    cliente_contexto = {}
+  }) {
+    const url = getAiServiceUrl('/chat/atendente');
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), AI_SERVICE_TIMEOUT_MS);
+
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Internal-Secret': INTERNAL_SERVICE_SECRET
+        },
+        body: JSON.stringify({
+          tenant_id,
+          tenant_token,
+          mensagem,
+          historico,
+          config_atendente,
+          cliente_contexto
+        }),
+        signal: controller.signal
+      });
+
+      clearTimeout(timeout);
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        const erro = new Error(errorData.detail || `Falha no atendente IA (status ${response.status})`);
+        erro.statusCode = response.status === 401 ? 500 : (response.status || 503);
+        throw erro;
+      }
+
+      return await response.json();
+    } catch (err) {
+      clearTimeout(timeout);
+      if (err.name === 'AbortError') {
+        const erroTimeout = new Error('Tempo limite excedido ao comunicar com o atendente virtual');
+        erroTimeout.statusCode = 504;
+        throw erroTimeout;
+      }
+      throw err;
+    }
+  },
+
+  /**
    * Transcreve áudio com alta fidelidade usando o modelo de IA.
    * @param {Object} payload
    * @param {string} payload.audio_base64

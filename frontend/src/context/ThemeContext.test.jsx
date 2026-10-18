@@ -308,4 +308,29 @@ describe('ThemeContext', () => {
     expect(screen.getByTestId('nome-tema').textContent).toBe('Escuro Aranduê');
     expect(document.documentElement.classList.contains('dark')).toBe(true);
   });
+
+  it('deve injetar variáveis de contraste para botões novos, ações rápidas e painel de insights corrigindo contraste insuficiente', () => {
+    applyThemeToDOM({
+      modo: 'dark',
+      tokens: {
+        bgApp: '#0f172a',
+        bgSurface: '#1e293b',
+        bgSurfaceHover: '#334155',
+        border: '#475569',
+        textMain: '#f8fafc',
+        textSecondary: '#94a3b8',
+        primary: '#facc15', // Amarelo claro (exige texto escuro para contraste >= 4.5:1)
+        primaryText: '#ffffff', // Contraste insuficiente com #facc15, deve ser corrigido para #0f172a
+        insightsBg: '#1e293b',
+        insightsText: '#1e293b', // Sem contraste, deve ser corrigido para #f8fafc
+      },
+    });
+
+    expect(document.documentElement.style.getPropertyValue('--btn-primary-bg')).toBe('#facc15');
+    expect(document.documentElement.style.getPropertyValue('--btn-primary-text')).toBe('#0f172a');
+    expect(document.documentElement.style.getPropertyValue('--action-card-bg')).toBe('#334155');
+    expect(document.documentElement.style.getPropertyValue('--action-card-text')).toBe('#f8fafc');
+    expect(document.documentElement.style.getPropertyValue('--insights-bg')).toBe('#1e293b');
+    expect(document.documentElement.style.getPropertyValue('--insights-text')).toBe('#f8fafc');
+  });
 });

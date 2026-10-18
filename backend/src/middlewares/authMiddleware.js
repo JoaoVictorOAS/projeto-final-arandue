@@ -57,6 +57,20 @@ function authMiddleware(req, res, next) {
           mensagem: 'Acesso negado: operação não permitida para o operador do assistente'
         });
       }
+    } else if (decodificado.scope === 'atendente:customer') {
+      const baseUrl = req.baseUrl || '';
+      const path = req.path || '';
+      const fullPath = `${baseUrl}${path}`;
+      const isAllowedCustomerRoute =
+        fullPath.startsWith('/api/atendente/operacional') ||
+        path.startsWith('/operacional');
+
+      if (!isAllowedCustomerRoute) {
+        return res.status(403).json({
+          sucesso: false,
+          mensagem: 'Acesso negado: token de atendimento ao cliente possui acesso restrito às capacidades autorizadas pelo MEI'
+        });
+      }
     }
 
     req.usuario = {

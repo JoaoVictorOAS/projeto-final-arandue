@@ -159,18 +159,31 @@ const temaController = {
       const corPrimaria = cor_base || (isDark ? '#6366f1' : '#059669');
       const corAccent = isDark ? '#f59e0b' : '#d97706';
 
+      const primaryText = calcularContraste('#ffffff', corPrimaria) >= 4.5 ? '#ffffff' : '#0f172a';
+      const bgSurface = isDark ? '#1e293b' : '#ffffff';
+      const bgSurfaceHover = isDark ? '#334155' : '#f1f5f9';
+      const textMain = isDark ? '#f8fafc' : '#0f172a';
+
       const tokens = {
         bgApp: isDark ? '#0f172a' : '#f8fafc',
-        bgSurface: isDark ? '#1e293b' : '#ffffff',
-        bgSurfaceHover: isDark ? '#334155' : '#f1f5f9',
+        bgSurface,
+        bgSurfaceHover,
         border: isDark ? '#334155' : '#e2e8f0',
-        textMain: isDark ? '#f8fafc' : '#0f172a',
+        textMain,
         textSecondary: isDark ? '#94a3b8' : '#64748b',
         textMuted: isDark ? '#64748b' : '#94a3b8',
         primary: corPrimaria,
         primaryHover: isDark ? '#4f46e5' : '#047857',
-        primaryText: '#ffffff',
+        primaryText,
         accent: corAccent,
+        actionCardBg: bgSurfaceHover,
+        actionCardText: textMain,
+        buttonSecondaryBg: bgSurfaceHover,
+        buttonSecondaryText: textMain,
+        insightsBg: bgSurface,
+        insightsCardBg: bgSurfaceHover,
+        insightsBorder: isDark ? '#334155' : '#e2e8f0',
+        insightsText: textMain,
         status: {
           success: '#10b981',
           danger: '#ef4444',

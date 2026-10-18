@@ -7,10 +7,25 @@ from google import genai
 from google.genai import types
 
 from app.rag.stores.base import Trecho
-from app.llm.prompts import SYSTEM_PROMPT, _get_now_br, build_system_prompt, build_context_prompt
+from app.llm.prompts import (
+    SYSTEM_PROMPT,
+    _get_now_br,
+    build_system_prompt,
+    build_attendant_system_prompt,
+    build_context_prompt,
+)
 from mcp.client.session import ClientSession
 
 logger = logging.getLogger(__name__)
+
+# Ferramentas exclusivas do Atendente do Cliente (nunca devem poluir o Assistente interno se filtradas, e vice-versa)
+ATTENDANT_ONLY_TOOLS = {
+    "atendente_consultar_catalogo",
+    "atendente_verificar_disponibilidade",
+    "atendente_fechar_orcamento_cliente",
+    "atendente_realizar_agendamento",
+    "atendente_solicitar_humano",
+}
 
 @dataclass
 class RespostaLLM:
@@ -68,12 +83,24 @@ class Orchestrator:
                     out["required"] = prop["required"]
         return out
 
-    async def _mcp_tools_to_declarations(self, session: Optional[ClientSession]) -> List[types.FunctionDeclaration]:
+    async def _mcp_tools_to_declarations(
+        self,
+        session: Optional[ClientSession],
+        allowed_tools: Optional[set] = None
+    ) -> List[types.FunctionDeclaration]:
         if not session:
             return []
         tools_list = await session.list_tools()
         declarations = []
         for t in tools_list.tools:
+            if allowed_tools is not None:
+                if t.name not in allowed_tools:
+                    continue
+            else:
+                # No modo Assistente do MEI padrão, oculta as tools exclusivas do atendente público
+                if t.name in ATTENDANT_ONLY_TOOLS:
+                    continue
+
             raw_schema = getattr(t, "input_schema", None) or getattr(t, "inputSchema", None) or {}
             if hasattr(raw_schema, "model_dump"):
                 schema = raw_schema.model_dump()
@@ -127,7 +154,9 @@ class Orchestrator:
         trechos: List[Trecho],
         rag_backend: str,
         mcp_session: Optional[ClientSession] = None,
-        midia: Optional[Dict[str, Any]] = None
+        midia: Optional[Dict[str, Any]] = None,
+        allowed_tools: Optional[set] = None,
+        custom_system_prompt: Optional[str] = None,
     ) -> RespostaLLM:
         if not self._client:
             raise RuntimeError("GEMINI_API_KEY não configurada no serviço de IA.")
@@ -173,10 +202,10 @@ class Orchestrator:
             parts=user_parts
         ))
 
-        # Prepara tools do MCP
-        function_decls = await self._mcp_tools_to_declarations(mcp_session)
+        # Prepara tools do MCP (com filtro determinístico de allowlist se aplicável)
+        function_decls = await self._mcp_tools_to_declarations(mcp_session, allowed_tools=allowed_tools)
         tools = [types.Tool(function_declarations=function_decls)] if function_decls else None
-        system_prompt_dinamico = build_system_prompt(now=now_br)
+        system_prompt_dinamico = custom_system_prompt or build_system_prompt(now=now_br)
 
         config = types.GenerateContentConfig(
             system_instruction=system_prompt_dinamico,

@@ -12,6 +12,7 @@ const assistenteRoutes = require('./routes/assistenteRoutes');
 const notaFiscalRoutes = require('./routes/notaFiscalRoutes');
 const estoqueRoutes = require('./routes/estoqueRoutes');
 const configuracoesRoutes = require('./routes/configuracoesRoutes');
+const atendenteRoutes = require('./routes/atendenteRoutes');
 const authMiddleware = require('./middlewares/authMiddleware');
 const devAuthMiddleware = require('./middlewares/devAuthMiddleware');
 const devWhatsappRoutes = require('./routes/devWhatsappRoutes');
@@ -54,6 +55,7 @@ app.use('/api/assistente', authMiddleware, assistenteRoutes);
 app.use('/api/notas-fiscais', authMiddleware, notaFiscalRoutes);
 app.use('/api/estoque', authMiddleware, estoqueRoutes);
 app.use('/api/configuracoes', authMiddleware, configuracoesRoutes);
+app.use('/api/atendente', atendenteRoutes);
 
 // Rotas exclusivas de desenvolvedores (protegidas e ocultas por padrão)
 app.use('/api/dev/whatsapp', devAuthMiddleware, devWhatsappRoutes);

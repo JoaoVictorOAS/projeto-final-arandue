@@ -668,6 +668,63 @@ describe('Módulo Dashboard - Visão Consolidada com Indicadores', () => {
     Object.defineProperty(window, 'innerWidth', { writable: true, configurable: true, value: 1024 });
     fireEvent(window, new Event('resize'));
   });
+
+  test('deve aplicar variáveis dinâmicas de tema e contraste nos botões novos (Ações Rápidas) e no Painel de Insights', async () => {
+    api.get.mockImplementation((url) => {
+      if (url === '/dashboard/insights') {
+        return Promise.resolve({
+          data: {
+            sucesso: true,
+            dados: {
+              total_insights: 1,
+              resumo_saude: 'ATENCAO',
+              insights: [
+                {
+                  id: 'ins-1',
+                  severidade: 'alerta',
+                  categoria: 'Caixa',
+                  titulo: 'Cobranças prestes a vencer',
+                  descricao: 'Existem 2 cobranças vencendo amanhã.',
+                  valor_associado: 450,
+                  acao_rota: '/cobrancas',
+                  acao_label: 'Ver Cobranças',
+                },
+              ],
+            },
+          },
+        });
+      }
+      if (url === '/dashboard/resumo') {
+        return Promise.resolve({ data: { sucesso: true, dados: mockResumoDashboard } });
+      }
+      if (url === '/dashboards') {
+        return Promise.resolve({ data: { sucesso: true, dados: mockDashboards } });
+      }
+      if (url === '/dashboards/1') {
+        return Promise.resolve({ data: { sucesso: true, dados: mockDashboards[0] } });
+      }
+      return Promise.resolve({ data: { dados: [] } });
+    });
+
+    render(
+      <MemoryRouter>
+        <Dashboard />
+      </MemoryRouter>
+    );
+
+    const painelInsights = await screen.findByTestId('painel-insights-ia');
+    expect(painelInsights).toHaveClass('theme-insights-panel');
+    expect(painelInsights.style.backgroundColor).toBe('var(--insights-bg)');
+    expect(painelInsights.style.color).toBe('var(--insights-text)');
+
+    const btnNovoCliente = screen.getByText('Novo Cliente').closest('a');
+    expect(btnNovoCliente).toHaveClass('theme-action-btn');
+    expect(btnNovoCliente.style.backgroundColor).toBe('var(--action-card-bg)');
+    expect(btnNovoCliente.style.color).toBe('var(--action-card-text)');
+
+    const btnVerCobrancas = await screen.findByText('Ver Cobranças');
+    expect(btnVerCobrancas.closest('a')).toHaveClass('theme-btn-primary');
+  });
 });
 
 

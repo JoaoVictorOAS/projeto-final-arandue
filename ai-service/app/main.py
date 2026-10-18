@@ -216,6 +216,83 @@ async def chat_endpoint(payload: ChatRequest):
     )
 
 
+class AtendenteChatRequest(BaseModel):
+    tenant_id: int
+    tenant_token: str
+    mensagem: str = Field(..., min_length=1, max_length=2000)
+    historico: List[HistoricoItem] = Field(default_factory=list)
+    config_atendente: Dict[str, Any] = Field(default_factory=dict)
+    cliente_contexto: Dict[str, Any] = Field(default_factory=dict)
+
+
+@app.post("/chat/atendente", response_model=ChatResponse, dependencies=[Depends(verify_internal_secret)])
+async def chat_atendente_endpoint(payload: AtendenteChatRequest):
+    """Endpoint ultra-rápido para o Agente Pessoal de Atendimento ao Cliente do MEI.
+    Não executa RAG de legislação fiscal (zero latência vetorial) e filtra estritamente as tools MCP autorizadas.
+    """
+    from app.llm.prompts import build_attendant_system_prompt
+
+    inicio = time.time()
+    mcp_pool: TenantMcpPool = state["mcp_pool"]
+    orchestrator: Orchestrator = state["orchestrator"]
+
+    cfg = payload.config_atendente or {}
+    allowed_tools = set()
+    if cfg.get("permite_consultar_catalogo", True):
+        allowed_tools.add("atendente_consultar_catalogo")
+    if cfg.get("permite_agendar", True):
+        allowed_tools.add("atendente_verificar_disponibilidade")
+        allowed_tools.add("atendente_realizar_agendamento")
+    if cfg.get("permite_gerar_orcamento", True) or cfg.get("permite_fechar_orcamento", False):
+        allowed_tools.add("atendente_fechar_orcamento_cliente")
+    if cfg.get("transbordo_automatico", True):
+        allowed_tools.add("atendente_solicitar_humano")
+
+    custom_prompt = build_attendant_system_prompt(
+        config_atendente=cfg,
+        cliente_contexto=payload.cliente_contexto,
+    )
+
+    # Usa chave de pool segregada (negativa) para nunca colidir o token atendente:customer com o token assistente:operator do dono
+    attendant_pool_key = -abs(int(payload.tenant_id)) - 100000
+
+    try:
+        async with mcp_pool.session(attendant_pool_key, payload.tenant_token) as mcp_session:
+            resposta_llm = await asyncio.wait_for(
+                orchestrator.responder(
+                    mensagem=payload.mensagem,
+                    historico=[h.model_dump() for h in payload.historico],
+                    trechos=[],
+                    rag_backend="attendant_direct",
+                    mcp_session=mcp_session,
+                    allowed_tools=allowed_tools,
+                    custom_system_prompt=custom_prompt,
+                ),
+                timeout=settings.LLM_TIMEOUT_S,
+            )
+    except asyncio.TimeoutError:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Tempo limite excedido no atendente virtual."
+        )
+    except Exception as e:
+        logger.error(f"Erro no atendente virtual do tenant {payload.tenant_id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"Atendente virtual temporariamente indisponível: {str(e)}"
+        )
+
+    latencia_ms = int((time.time() - inicio) * 1000)
+    return ChatResponse(
+        resposta=resposta_llm.resposta,
+        fontes=[],
+        tools_usadas=resposta_llm.tools_usadas,
+        rag_backend="attendant_direct",
+        modelo=resposta_llm.modelo,
+        latencia_ms=latencia_ms,
+    )
+
+
 class OcrItem(BaseModel):
     nome: str
     quantidade: float = 1.0
