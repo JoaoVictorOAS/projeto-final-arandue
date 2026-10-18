@@ -239,6 +239,78 @@ const assistenteController = {
         mensagem: error.message || 'Erro ao analisar imagem'
       });
     }
+  },
+
+  async lancarComprovanteCaixa(req, res) {
+    try {
+      const usuario_id = req.usuario.id;
+      const { imagem_base64, mime_type, tipo, valor, categoria, descricao, data_movimentacao } = req.body;
+
+      let valorFinal = Number(valor);
+      let tipoFinal = tipo ? tipo.toString().trim().toUpperCase() : 'SAIDA';
+      let categoriaFinal = categoria || 'Comprovante / Despesa';
+      let descricaoFinal = descricao;
+      let dataFinal = data_movimentacao;
+
+      if (!valorFinal || isNaN(valorFinal) || valorFinal <= 0) {
+        if (!imagem_base64) {
+          return res.status(400).json({
+            sucesso: false,
+            mensagem: 'Informe o valor ou envie a imagem base64 do comprovante'
+          });
+        }
+        const aiServiceClient = require('../services/aiServiceClient');
+        const analise = await aiServiceClient.analisarImagem({
+          imagem_base64,
+          mime_type: mime_type || 'image/jpeg',
+          instrucao: 'Extraia os dados financeiros deste comprovante: valor numérico, tipo (SAIDA ou ENTRADA), categoria, descricao e data (YYYY-MM-DD).'
+        });
+
+        const dadosEst = analise?.dados_estruturados || {};
+        valorFinal = Number(dadosEst.valor || analise?.valor || 0);
+        if (!valorFinal || valorFinal <= 0) {
+          return res.status(400).json({
+            sucesso: false,
+            mensagem: 'Não foi possível identificar um valor válido na imagem do comprovante. Por favor, informe o valor manualmente.'
+          });
+        }
+
+        if (dadosEst.tipo) tipoFinal = dadosEst.tipo.toUpperCase();
+        if (dadosEst.categoria) categoriaFinal = dadosEst.categoria;
+        if (!descricaoFinal) {
+          descricaoFinal = analise?.descricao || dadosEst.estabelecimento_ou_pessoa || 'Lançamento automático de comprovante via IA';
+        }
+        if (!dataFinal && dadosEst.data) {
+          dataFinal = dadosEst.data;
+        }
+      }
+
+      if (!descricaoFinal) {
+        descricaoFinal = 'Lançamento de comprovante / despesa';
+      }
+
+      const financeiroService = require('../services/financeiroService');
+      const movimentacaoCriada = await financeiroService.registrarMovimentacao({
+        usuario_id,
+        tipo: tipoFinal,
+        categoria: categoriaFinal,
+        valor: valorFinal,
+        descricao: descricaoFinal,
+        data_movimentacao: dataFinal
+      });
+
+      return res.status(201).json({
+        sucesso: true,
+        mensagem: 'Comprovante lançado no Livro Caixa com sucesso!',
+        dados: movimentacaoCriada
+      });
+    } catch (error) {
+      const status = error.statusCode || 500;
+      return res.status(status).json({
+        sucesso: false,
+        mensagem: error.message || 'Erro ao lançar comprovante no Livro Caixa'
+      });
+    }
   }
 };
 

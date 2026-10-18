@@ -6,6 +6,7 @@ const router = express.Router();
 // Rotas específicas / estáticas primeiro para evitar colisões com :id
 router.get('/resumo', dashboardController.obterResumo);
 router.get('/metricas/catalogo', dashboardController.obterCatalogoMetricas);
+router.get('/insights', dashboardController.obterInsightsProativos);
 
 // Rota raiz: Mantém retrocompatibilidade total com /api/dashboard (resumo)
 // e atende /api/dashboards (listagem e auto-provisionamento)

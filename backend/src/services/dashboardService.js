@@ -1430,6 +1430,165 @@ const dashboardService = {
     );
 
     return { sucesso: true, mensagem: 'Widget excluído com sucesso' };
+  },
+
+  /**
+   * Obtém insights proativos de IA (cobranças vencidas, assinaturas, estoque crítico, limite MEI, orçamentos).
+   * @param {number} usuario_id
+   * @returns {Promise<Object>}
+   */
+  async obterInsightsProativos(usuario_id) {
+    if (!usuario_id) {
+      const erro = new Error('Identificação do usuário é obrigatória');
+      erro.statusCode = 401;
+      throw erro;
+    }
+
+    const insights = [];
+
+    // 1. Cobranças Vencidas / Inadimplência
+    try {
+      const [rows] = await pool.execute(
+        `SELECT COUNT(*) AS total, COALESCE(SUM(valor), 0) AS soma 
+         FROM cobrancas 
+         WHERE usuario_id = ? 
+           AND (status = 'ATRASADO' OR (status = 'PENDENTE' AND vencimento < CURDATE()))`,
+        [usuario_id]
+      );
+      const total = Number(rows[0]?.total || 0);
+      const soma = Number(rows[0]?.soma || 0);
+      if (total > 0) {
+        const severidade = (total > 3 || soma > 500) ? 'critico' : 'alerta';
+        insights.push({
+          id: 'cobrancas_vencidas',
+          categoria: 'financeiro',
+          severidade,
+          titulo: 'Cobranças Vencidas / Inadimplência',
+          descricao: `Existem ${total} cobranças vencidas ou em atraso totalizando R$ ${soma.toFixed(2)}.`,
+          valor_associado: soma,
+          acao_rota: '/cobrancas',
+          acao_label: 'Ver Cobranças'
+        });
+      }
+    } catch (err) {}
+
+    // 2. Assinaturas com Ciclo Vencido
+    try {
+      const [rows] = await pool.execute(
+        `SELECT COUNT(*) AS total, COALESCE(SUM(valor), 0) AS soma 
+         FROM assinaturas 
+         WHERE usuario_id = ? 
+           AND status = 'ATIVA' 
+           AND proximo_vencimento <= CURDATE()`,
+        [usuario_id]
+      );
+      const total = Number(rows[0]?.total || 0);
+      const soma = Number(rows[0]?.soma || 0);
+      if (total > 0) {
+        insights.push({
+          id: 'assinaturas_ciclo_vencido',
+          categoria: 'financeiro',
+          severidade: 'alerta',
+          titulo: 'Assinaturas com Ciclo Vencido',
+          descricao: `Existem ${total} assinaturas ativas com vencimento vencido ou para hoje. Sugestão: gerar as cobranças recorrentes do ciclo.`,
+          valor_associado: soma,
+          acao_rota: '/assinaturas',
+          acao_label: 'Gerar Cobranças'
+        });
+      }
+    } catch (err) {}
+
+    // 3. Estoque Crítico de Insumos
+    try {
+      const [rows] = await pool.execute(
+        `SELECT COUNT(*) AS total 
+         FROM estoque_insumos 
+         WHERE usuario_id = ? 
+           AND quantidade_atual <= estoque_minimo 
+           AND estoque_minimo > 0`,
+        [usuario_id]
+      );
+      const total = Number(rows[0]?.total || 0);
+      if (total > 0) {
+        insights.push({
+          id: 'estoque_critico',
+          categoria: 'estoque',
+          severidade: 'alerta',
+          titulo: 'Estoque Crítico de Insumos',
+          descricao: `${total} insumos estão com quantidade abaixo ou igual ao estoque mínimo e precisam de reposição.`,
+          valor_associado: total,
+          acao_rota: '/estoque',
+          acao_label: 'Ver Estoque'
+        });
+      }
+    } catch (err) {}
+
+    // 4. Termômetro do Limite Anual MEI (R$ 81.000,00)
+    try {
+      const limiteMei = await this.calcularLimiteMei(usuario_id);
+      const { faturamento_anual, percentual, saldo_restante } = limiteMei;
+      if (percentual >= 70) {
+        insights.push({
+          id: 'limite_mei_critico',
+          categoria: 'fiscal',
+          severidade: percentual >= 90 ? 'critico' : 'alerta',
+          titulo: 'Alerta: Limite Anual MEI Próximo ao Teto',
+          descricao: `Seu faturamento anual atingiu ${percentual}% do teto MEI (R$ 81.000,00). Faltam R$ ${saldo_restante.toFixed(2)} para o desenquadramento.`,
+          valor_associado: faturamento_anual,
+          acao_rota: '/fiscal',
+          acao_label: 'Ver Fiscal'
+        });
+      } else {
+        insights.push({
+          id: 'limite_mei_info',
+          categoria: 'fiscal',
+          severidade: 'info',
+          titulo: 'Termômetro do Limite Anual MEI',
+          descricao: `Faturamento anual em ${percentual}% do teto (R$ 81.000,00). Margem restante disponível de R$ ${saldo_restante.toFixed(2)}.`,
+          valor_associado: faturamento_anual,
+          acao_rota: '/fiscal',
+          acao_label: 'Ver Fiscal'
+        });
+      }
+    } catch (err) {}
+
+    // 5. Orçamentos Pendentes de Aprovação
+    try {
+      const [rows] = await pool.execute(
+        `SELECT COUNT(*) AS total, COALESCE(SUM(total), 0) AS soma 
+         FROM orcamentos 
+         WHERE usuario_id = ? 
+           AND status IN ('RASCUNHO', 'ENVIADO')`,
+        [usuario_id]
+      );
+      const total = Number(rows[0]?.total || 0);
+      const soma = Number(rows[0]?.soma || 0);
+      if (total > 0) {
+        insights.push({
+          id: 'orcamentos_pendentes',
+          categoria: 'vendas',
+          severidade: 'info',
+          titulo: 'Orçamentos Pendentes de Aprovação',
+          descricao: `Você possui ${total} orçamentos em aberto (rascunho ou enviados) totalizando R$ ${soma.toFixed(2)}.`,
+          valor_associado: soma,
+          acao_rota: '/orcamentos',
+          acao_label: 'Ver Orçamentos'
+        });
+      }
+    } catch (err) {}
+
+    let resumo_saude = 'EXCELENTE';
+    if (insights.some(i => i.severidade === 'critico')) {
+      resumo_saude = 'CRITICO';
+    } else if (insights.some(i => i.severidade === 'alerta')) {
+      resumo_saude = 'ATENCAO';
+    }
+
+    return {
+      total_insights: insights.length,
+      resumo_saude,
+      insights
+    };
   }
 };
 

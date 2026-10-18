@@ -223,6 +223,28 @@ const dashboardController = {
         mensagem: error.message || 'Erro ao excluir widget'
       });
     }
+  },
+
+  /**
+   * GET /api/dashboard/insights
+   * Retorna insights proativos da IA para o dashboard.
+   */
+  async obterInsightsProativos(req, res) {
+    try {
+      const usuario_id = req.usuario.id;
+      const dados = await dashboardService.obterInsightsProativos(usuario_id);
+      return res.status(200).json({
+        sucesso: true,
+        mensagem: 'Insights proativos obtidos com sucesso',
+        dados
+      });
+    } catch (error) {
+      const status = error.statusCode || 500;
+      return res.status(status).json({
+        sucesso: false,
+        mensagem: error.message || 'Erro ao obter insights proativos'
+      });
+    }
   }
 };
 

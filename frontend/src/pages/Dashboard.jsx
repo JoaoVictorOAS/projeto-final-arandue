@@ -90,6 +90,27 @@ export default function Dashboard() {
   const [dashboardParaExcluir, setDashboardParaExcluir] = useState(null);
   const [excluindoDashboard, setExcluindoDashboard] = useState(false);
   const [isMobile, setIsMobile] = useState(isMobileEnvironment);
+  const [insightsIA, setInsightsIA] = useState({ total_insights: 0, resumo_saude: 'EXCELENTE', insights: [] });
+  const [loadingInsights, setLoadingInsights] = useState(false);
+
+  const fetchInsights = useCallback(async () => {
+    setLoadingInsights(true);
+    try {
+      const res = await api.get('/dashboard/insights');
+      const dados = res?.data?.dados || res?.data;
+      if (dados && Array.isArray(dados.insights)) {
+        setInsightsIA({
+          total_insights: Number(dados.total_insights ?? dados.insights.length),
+          resumo_saude: dados.resumo_saude || 'EXCELENTE',
+          insights: dados.insights,
+        });
+      }
+    } catch (err) {
+      console.error('Erro ao buscar insights proativos:', err);
+    } finally {
+      setLoadingInsights(false);
+    }
+  }, []);
 
   useEffect(() => {
     const handleResize = () => {
@@ -237,6 +258,7 @@ export default function Dashboard() {
   useEffect(() => {
     fetchDashboard();
     fetchDashboards();
+    fetchInsights();
 
     api
       .get('/dashboards/metricas/catalogo')
@@ -247,7 +269,7 @@ export default function Dashboard() {
         }
       })
       .catch(() => {});
-  }, []);
+  }, [fetchInsights]);
 
   const handleSelectDashboard = async (id) => {
     setActiveDashboardId(id);
@@ -1101,6 +1123,94 @@ export default function Dashboard() {
           </ResponsiveGridLayout>
         )}
 
+      </div>
+
+      {/* Seção Insights & Alertas Proativos da IA */}
+      <div
+        className="theme-card bg-gradient-to-r from-indigo-900 via-indigo-800 to-slate-900 text-white rounded-2xl shadow-md p-6 relative overflow-hidden mb-6"
+      >
+        <div className="absolute right-0 top-0 translate-x-6 -translate-y-6 w-48 h-48 bg-indigo-500/20 rounded-full blur-2xl pointer-events-none"></div>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4 relative z-10">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-md flex items-center justify-center text-indigo-200 border border-white/10">
+              <Activity className="w-5 h-5 text-indigo-300 animate-pulse" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h2 className="text-base font-bold text-white">Insights & Alertas Proativos da IA</h2>
+                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                  insightsIA.resumo_saude === 'CRITICO' ? 'bg-rose-500/80 text-white' :
+                  insightsIA.resumo_saude === 'ATENCAO' ? 'bg-amber-500/80 text-white' : 'bg-emerald-500/80 text-white'
+                }`}>
+                  Saúde: {insightsIA.resumo_saude}
+                </span>
+              </div>
+              <p className="text-xs text-indigo-200/80 mt-0.5">
+                Monitoramento inteligente de caixa, inadimplência, estoque e teto MEI em tempo real
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={fetchInsights}
+            disabled={loadingInsights}
+            className="self-start sm:self-center inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white text-xs font-semibold rounded-xl backdrop-blur-md transition border border-white/10"
+          >
+            <RotateCcw className={`w-3.5 h-3.5 ${loadingInsights ? 'animate-spin' : ''}`} />
+            Atualizar Insights
+          </button>
+        </div>
+
+        {loadingInsights ? (
+          <div className="py-6 text-center text-indigo-200 text-xs">
+            <Loader2 className="w-5 h-5 animate-spin mx-auto mb-2 text-indigo-300" />
+            Analisando indicadores do negócio...
+          </div>
+        ) : !Array.isArray(insightsIA?.insights) || insightsIA.insights.length === 0 ? (
+          <div className="bg-white/5 rounded-xl p-4 text-center border border-white/10">
+            <CheckCircle2 className="w-6 h-6 text-emerald-400 mx-auto mb-1.5" />
+            <p className="text-xs font-semibold text-white">Tudo em ordem por aqui!</p>
+            <p className="text-[11px] text-indigo-200/70 mt-0.5">Nenhum alerta crítico ou pendência detectada no momento.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 relative z-10">
+            {(insightsIA?.insights || []).map((item) => {
+              const bgBadge = 
+                item.severidade === 'critico' ? 'bg-rose-500/20 text-rose-300 border-rose-500/30' :
+                item.severidade === 'alerta' ? 'bg-amber-500/20 text-amber-300 border-amber-500/30' :
+                'bg-sky-500/20 text-sky-300 border-sky-500/30';
+              
+              return (
+                <div key={item.id} className="bg-white/10 backdrop-blur-md rounded-xl p-4 border border-white/10 flex flex-col justify-between hover:bg-white/15 transition">
+                  <div>
+                    <div className="flex items-center justify-between gap-2 mb-2">
+                      <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider border ${bgBadge}`}>
+                        {item.severidade} • {item.categoria}
+                      </span>
+                      {item.valor_associado !== undefined && item.valor_associado !== null && (
+                        <span className="text-xs font-bold text-white">
+                          {typeof item.valor_associado === 'number' && item.valor_associado > 10 ? formatMoney(item.valor_associado) : item.valor_associado}
+                        </span>
+                      )}
+                    </div>
+                    <h3 className="text-sm font-bold text-white mb-1">{item.titulo}</h3>
+                    <p className="text-xs text-indigo-100/90 leading-relaxed mb-3">{item.descricao}</p>
+                  </div>
+                  {item.acao_rota && (
+                    <div className="pt-2 border-t border-white/10 flex justify-end">
+                      <Link
+                        to={item.acao_rota}
+                        className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-white text-indigo-900 hover:bg-indigo-50 text-xs font-bold transition shadow-sm"
+                      >
+                        <span>{item.acao_label || 'Ver Detalhes'}</span>
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </Link>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* Seção Próximos Atendimentos */}

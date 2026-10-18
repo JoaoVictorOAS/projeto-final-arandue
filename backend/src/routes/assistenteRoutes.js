@@ -13,6 +13,7 @@ router.delete('/conversas/:id', assistenteController.excluirConversa);
 // Rotas Multimodais (Paridade MCP)
 router.post('/audio/transcrever', assistenteController.transcreverAudio);
 router.post('/imagem/analisar', assistenteController.analisarImagem);
+router.post('/imagem/lancar-comprovante', assistenteController.lancarComprovanteCaixa);
 
 // Rotas de Integração do WhatsApp
 router.get('/whatsapp/status', assistenteController.obterStatusWhatsApp);
