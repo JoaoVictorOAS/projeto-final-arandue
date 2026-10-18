@@ -536,7 +536,7 @@ export default function Cobrancas() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <CreditCard className="w-7 h-7 text-indigo-600" />
+            <CreditCard className="w-7 h-7 text-theme-primary" />
             Controle de Cobranças
           </h1>
           <p className="text-sm text-gray-500 mt-1">
@@ -569,7 +569,7 @@ export default function Cobrancas() {
               setErrosFormNova({});
               setModalNovaAberta(true);
             }}
-            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl shadow-sm transition"
+            className="btn-theme-primary inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-xl shadow-sm transition"
           >
             <Plus className="w-4 h-4" />
             Nova Cobrança
@@ -657,7 +657,7 @@ export default function Cobrancas() {
               onClick={() => setFiltroStatus(item.id)}
               className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition whitespace-nowrap ${
                 filtroStatus === item.id
-                  ? 'bg-indigo-600 text-white shadow-sm'
+                  ? 'tab-theme-active shadow-sm'
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
             >
@@ -670,13 +670,13 @@ export default function Cobrancas() {
       {/* Main Content: Table / Cards */}
       {loading ? (
         <div className="bg-white rounded-2xl border border-gray-200/80 p-12 text-center shadow-sm">
-          <Loader2 className="w-8 h-8 text-indigo-600 animate-spin mx-auto mb-3" />
+          <Loader2 className="w-8 h-8 text-theme-primary animate-spin mx-auto mb-3" />
           <p className="text-sm font-medium text-gray-600">Carregando cobranças...</p>
         </div>
       ) : cobrancasFiltradas.length === 0 ? (
         <div className="bg-white rounded-2xl border border-gray-200/80 p-12 text-center shadow-sm">
-          <div className="w-16 h-16 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <CreditCard className="w-8 h-8" />
+          <div className="w-16 h-16 badge-theme-subtle rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <CreditCard className="w-8 h-8 text-theme-primary" />
           </div>
           <h3 className="text-lg font-bold text-gray-900">
             {cobrancas.length === 0 ? 'Nenhuma cobrança registrada' : 'Nenhuma cobrança encontrada'}
@@ -700,7 +700,7 @@ export default function Cobrancas() {
                 setErrosFormNova({});
                 setModalNovaAberta(true);
               }}
-              className="inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl shadow-sm transition"
+              className="btn-theme-primary inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-xl shadow-sm transition"
             >
               <Plus className="w-4 h-4" />
               Lançar Primeira Cobrança
@@ -753,7 +753,7 @@ export default function Cobrancas() {
                           {(item.agendamento_id || item.orcamento_id) && (
                             <div className="flex items-center gap-1.5 mt-1 flex-wrap">
                               {item.agendamento_id && (
-                                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold badge-theme-subtle">
                                   Atendimento #{item.agendamento_id}
                                 </span>
                               )}
@@ -827,11 +827,11 @@ export default function Cobrancas() {
                               <button
                                 type="button"
                                 onClick={() => handleGerarPix(item)}
-                                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-indigo-50 text-indigo-700 hover:bg-indigo-100 font-medium text-xs border border-indigo-200 transition"
+                                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg badge-theme-subtle hover:brightness-95 font-medium text-xs transition"
                                 title="Gerar e copiar Pix Copia e Cola"
                                 aria-label={`Pix Copia e Cola cobrança ${item.id}`}
                               >
-                                <Copy className="w-3.5 h-3.5 text-indigo-600" />
+                                <Copy className="w-3.5 h-3.5 text-theme-primary" />
                                 <span className="hidden md:inline">Pix</span>
                               </button>
 
@@ -1056,7 +1056,7 @@ export default function Cobrancas() {
               type="submit"
               form="form-nova-cobranca"
               disabled={salvandoNova}
-              className="inline-flex items-center gap-2 px-5 py-2 text-sm font-semibold text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 transition shadow-sm disabled:opacity-50"
+              className="btn-theme-primary inline-flex items-center gap-2 px-5 py-2 text-sm font-semibold rounded-xl transition shadow-sm disabled:opacity-50"
             >
               {salvandoNova ? (
                 <>

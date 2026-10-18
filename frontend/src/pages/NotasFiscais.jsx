@@ -319,7 +319,7 @@ export default function NotasFiscais() {
         <div>
           <div className="flex items-center gap-3">
             <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-              <Receipt className="w-7 h-7 text-indigo-600" />
+              <Receipt className="w-7 h-7 text-theme-primary" />
               Notas Fiscais (NFS-e / NF-e / NFC-e)
             </h1>
             <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-200" title="Chaves de acesso e protocolos com cálculo oficial em ambiente de homologação">
@@ -334,7 +334,7 @@ export default function NotasFiscais() {
         <button
           type="button"
           onClick={() => setModalEmissaoAberto(true)}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700 transition-colors shadow-sm"
+          className="btn-theme-primary inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition shadow-sm"
         >
           <Plus className="w-4 h-4" />
           Emitir Nova Nota
@@ -358,8 +358,8 @@ export default function NotasFiscais() {
             <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Notas Emitidas</p>
             <p className="text-2xl font-bold text-gray-900 mt-1">{totalNotas}</p>
           </div>
-          <div className="p-3 bg-indigo-50 text-indigo-600 rounded-lg">
-            <FileText className="w-6 h-6" />
+          <div className="p-3 badge-theme-subtle rounded-lg">
+            <FileText className="w-6 h-6 text-theme-primary" />
           </div>
         </div>
 
@@ -426,7 +426,7 @@ export default function NotasFiscais() {
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
         {loading ? (
           <div className="p-12 text-center text-gray-500 flex flex-col items-center justify-center gap-2">
-            <Loader2 className="w-6 h-6 animate-spin text-indigo-600" />
+            <Loader2 className="w-6 h-6 animate-spin text-theme-primary" />
             <p className="text-sm">Carregando documentos fiscais...</p>
           </div>
         ) : notas.length === 0 ? (
@@ -439,7 +439,7 @@ export default function NotasFiscais() {
             <button
               type="button"
               onClick={() => setModalEmissaoAberto(true)}
-              className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700"
+              className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-lg btn-theme-primary text-sm font-medium"
             >
               <Plus className="w-4 h-4" />
               Emitir Primeira Nota
@@ -514,7 +514,7 @@ export default function NotasFiscais() {
                         <button
                           type="button"
                           onClick={() => handleVerDanfe(n)}
-                          className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors"
+                          className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium badge-theme-subtle hover:brightness-95 rounded-lg transition-colors"
                           title="Visualizar DANFE"
                         >
                           <Eye className="w-3.5 h-3.5" />
@@ -732,7 +732,7 @@ export default function NotasFiscais() {
                     itens: [...formEmissao.itens, { descricao: '', quantidade: 1, valor_unitario: '' }],
                   })
                 }
-                className="text-xs text-indigo-600 font-semibold hover:underline flex items-center gap-1"
+                className="text-xs text-theme-primary font-semibold hover:underline flex items-center gap-1"
               >
                 <Plus className="w-3.5 h-3.5" /> Adicionar Outro Item
               </button>
@@ -765,7 +765,7 @@ export default function NotasFiscais() {
             <button
               type="submit"
               disabled={emitindo}
-              className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg disabled:opacity-50 flex items-center gap-2"
+              className="px-4 py-2 text-sm font-medium btn-theme-primary rounded-lg disabled:opacity-50 flex items-center gap-2"
             >
               {emitindo && <Loader2 className="w-4 h-4 animate-spin" />}
               Autorizar e Emitir Nota
@@ -793,7 +793,7 @@ export default function NotasFiscais() {
 
           {loadingDanfe ? (
             <div className="py-12 text-center text-gray-500 flex flex-col items-center justify-center gap-2">
-              <Loader2 className="w-6 h-6 animate-spin text-indigo-600" />
+              <Loader2 className="w-6 h-6 animate-spin text-theme-primary" />
               <p className="text-sm">Carregando layout oficial do DANFE...</p>
             </div>
           ) : danfeHtml ? (

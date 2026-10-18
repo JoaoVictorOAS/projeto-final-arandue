@@ -325,7 +325,7 @@ export default function Caixa() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <Wallet className="w-7 h-7 text-indigo-600" />
+            <Wallet className="w-7 h-7 text-theme-primary" />
             Livro Caixa & Finanças
           </h1>
           <p className="text-sm text-gray-500 mt-1">
@@ -404,7 +404,7 @@ export default function Caixa() {
             </span>
             <p
               className={`text-2xl font-bold mt-1 ${
-                totais.saldo >= 0 ? 'text-indigo-600' : 'text-rose-600'
+                totais.saldo >= 0 ? 'text-theme-primary' : 'text-rose-600'
               }`}
             >
               {formatMoney(totais.saldo)}
@@ -413,8 +413,8 @@ export default function Caixa() {
               <span>Posição consolidada líquida</span>
             </div>
           </div>
-          <div className="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center flex-shrink-0">
-            <Wallet className="w-6 h-6" />
+          <div className="w-12 h-12 rounded-xl badge-theme-subtle flex items-center justify-center flex-shrink-0">
+            <Wallet className="w-6 h-6 text-theme-primary" />
           </div>
         </div>
       </div>
@@ -492,7 +492,7 @@ export default function Caixa() {
       {/* Extrato Cronológico Detalhado */}
       {loading ? (
         <div className="bg-white rounded-2xl border border-gray-200/80 p-12 text-center shadow-sm">
-          <Loader2 className="w-8 h-8 text-indigo-600 animate-spin mx-auto mb-3" />
+          <Loader2 className="w-8 h-8 text-theme-primary animate-spin mx-auto mb-3" />
           <p className="text-sm font-medium text-gray-600">Carregando extrato do caixa...</p>
         </div>
       ) : movimentacoesFiltradas.length === 0 ? (
@@ -527,7 +527,7 @@ export default function Caixa() {
         <div className="bg-white rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
             <h2 className="text-base font-bold text-gray-900 flex items-center gap-2">
-              <FileText className="w-4 h-4 text-indigo-600" />
+              <FileText className="w-4 h-4 text-theme-primary" />
               Extrato Detalhado de Movimentações
             </h2>
             <span className="text-xs font-semibold text-gray-500">
@@ -570,7 +570,7 @@ export default function Caixa() {
                         <div className="flex flex-col">
                           <span>{item.descricao}</span>
                           {item.cobranca_id && (
-                            <span className="text-xs text-indigo-600 font-medium inline-flex items-center gap-1 mt-0.5">
+                            <span className="text-xs text-theme-primary font-medium inline-flex items-center gap-1 mt-0.5">
                               Origem: Cobrança #{String(item.cobranca_id).padStart(4, '0')}
                               {item.agendamento_id && ` (Agendamento #${item.agendamento_id})`}
                               {item.orcamento_id && ` [Orçamento #${item.orcamento_id}]`}
