@@ -129,3 +129,13 @@ npm run mobile:apk
 5. **Organização:** Salva em `dist-apk/` as versões `arandue-mei-latest.apk` e `arandue-mei-YYYYMMDD_HHMMSS.apk`.
 6. **Deploy Google Drive:** Se o diretório de destino for informado e válido, copia automaticamente os APKs.
 
+---
+
+## 📐 7. Regras de Interface e Responsividade Adaptativa (Parágrafos & Popovers)
+
+1. **Regra de Quebra de Parágrafos (`<AdaptiveParagraph />`):**
+   - Se qualquer texto de parágrafo descritivo (`<p className="text-sm ...">`) quebrar para **3 ou mais linhas** devido à largura reduzida do dispositivo (smartphones, telas compactas ou split-screen), ele deve se transformar automaticamente em um **Popover interativo compacto**.
+   - Em telas maiores onde o texto ocupa 1 ou 2 linhas, ele se renderiza normalmente como texto contínuo.
+   - Utilize sempre o componente canônico [`frontend/src/components/AdaptiveParagraph.jsx`](file:///home/joaovictor/Documents/repositorios/recode-projeto-final/frontend/src/components/AdaptiveParagraph.jsx) nos cabeçalhos e seções informativas do sistema para manter a consistência e evitar que blocos de texto altos empurrem a interface móvel para baixo.
+
+

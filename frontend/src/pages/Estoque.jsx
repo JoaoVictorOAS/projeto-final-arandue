@@ -27,6 +27,7 @@ import Modal from '../components/Modal';
 import FormField from '../components/FormField';
 import StatusBadge from '../components/StatusBadge';
 import CameraCaptureModal from '../components/CameraCaptureModal';
+import AdaptiveParagraph from '../components/AdaptiveParagraph';
 
 export const formatCurrency = (val) => {
   const num = typeof val === 'number' ? val : parseFloat(val) || 0;
@@ -664,9 +665,9 @@ export default function Estoque() {
             <Package className="w-7 h-7 text-theme-primary shrink-0" />
             <span>Estoque & Produção</span>
           </h1>
-          <p className="text-sm text-gray-500 mt-1">
+          <AdaptiveParagraph className="text-sm text-gray-500 mt-1">
             Controle de insumos, receitas técnicas (CMV), simulação de rendimento e baixas automáticas.
-          </p>
+          </AdaptiveParagraph>
         </div>
 
         {/* Ações Rápidas em Linha Única no Web (sem scroll) */}

@@ -24,6 +24,7 @@ import {
   Trash2,
 } from 'lucide-react';
 import api from '../services/api';
+import AdaptiveParagraph from '../components/AdaptiveParagraph';
 
 const TONS_DE_VOZ = [
   { id: 'FORMAL', label: 'Formal & Corporativo', desc: 'Vocabulário polido, respeitoso e estruturado.' },
@@ -389,9 +390,9 @@ export default function AtendenteIA({ publicMode = false }) {
             <Bot className="w-7 h-7 text-theme-primary" />
             <span>Atendente Pessoal do Cliente (B2B2C)</span>
           </h1>
-          <p className="text-sm opacity-75 mt-1">
+          <AdaptiveParagraph className="text-sm opacity-75 mt-1">
             Configure o tom de voz, limites de agendamento, alçada de orçamento (geral e por serviço) e regras de retorno ao humano.
-          </p>
+          </AdaptiveParagraph>
         </div>
 
         {config.slug_publico && (
