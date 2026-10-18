@@ -386,7 +386,7 @@ export default function AtendenteIA({ publicMode = false }) {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2.5">
-            <Bot className="w-7 h-7 text-indigo-500" />
+            <Bot className="w-7 h-7 text-theme-primary" />
             <span>Atendente Pessoal do Cliente (B2B2C)</span>
           </h1>
           <p className="text-sm opacity-75 mt-1">
@@ -398,11 +398,7 @@ export default function AtendenteIA({ publicMode = false }) {
           <button
             type="button"
             onClick={copiarLinkPublico}
-            className="theme-btn-primary inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold transition-colors shadow-sm self-start"
-            style={{
-              backgroundColor: 'var(--btn-primary-bg)',
-              color: 'var(--btn-primary-text)',
-            }}
+            className="btn-theme-primary inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold transition-colors shadow-sm self-start"
           >
             {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
             <span>{copied ? 'Link Copiado!' : 'Copiar Link Público do Cliente'}</span>
@@ -516,7 +512,7 @@ export default function AtendenteIA({ publicMode = false }) {
             >
               <div className="flex items-center justify-between">
                 <h2 className="text-base font-bold flex items-center gap-2">
-                  <Sliders className="w-5 h-5 text-indigo-500" />
+                  <Sliders className="w-5 h-5 text-theme-primary" />
                   <span>Identidade & Tom de Voz</span>
                 </h2>
                 <label className="inline-flex items-center gap-2 text-xs font-semibold cursor-pointer">
@@ -972,11 +968,7 @@ export default function AtendenteIA({ publicMode = false }) {
                 <button
                   type="submit"
                   disabled={saving}
-                  className="theme-btn-primary inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold disabled:opacity-50 transition-colors"
-                  style={{
-                    backgroundColor: 'var(--btn-primary-bg)',
-                    color: 'var(--btn-primary-text)',
-                  }}
+                  className="btn-theme-primary inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold disabled:opacity-50 transition-colors shadow-sm"
                 >
                   <Save className="w-4 h-4" />
                   <span>{saving ? 'Salvando...' : 'Salvar Configurações'}</span>

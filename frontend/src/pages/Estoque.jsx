@@ -669,13 +669,13 @@ export default function Estoque() {
           </p>
         </div>
 
-        {/* Ações Rápidas em Linha Única */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 flex-nowrap">
+        {/* Ações Rápidas em Duas Linhas */}
+        <div className="grid grid-cols-2 gap-2 w-full sm:w-auto">
           <button
             type="button"
             onClick={() => setModalNotaFiscalAberto(true)}
             aria-label="Entrada por Nota Fiscal ou Foto"
-            className="badge-theme-subtle hover:brightness-95 inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold transition whitespace-nowrap shadow-xs"
+            className="badge-theme-subtle hover:brightness-95 inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition whitespace-nowrap shadow-xs"
             title="Importar Insumos por Foto da Câmera, Galeria ou XML de NF-e"
           >
             <Camera className="w-4 h-4 text-theme-primary" />
@@ -686,7 +686,7 @@ export default function Estoque() {
             type="button"
             onClick={() => setModalEntradaAberto(true)}
             aria-label="Registrar compra / entrada de insumo"
-            className="badge-theme-subtle hover:brightness-95 inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold transition whitespace-nowrap shadow-xs"
+            className="badge-theme-subtle hover:brightness-95 inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition whitespace-nowrap shadow-xs"
             title="Registrar compra avulsa de insumos"
           >
             <ArrowDownRight className="w-4 h-4 text-theme-primary" />
@@ -696,7 +696,8 @@ export default function Estoque() {
           <button
             type="button"
             onClick={() => setModalProducaoAberto(true)}
-            className="badge-theme-subtle hover:brightness-95 inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold transition whitespace-nowrap shadow-xs"
+            aria-label="Registrar Produção"
+            className="badge-theme-subtle hover:brightness-95 inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition whitespace-nowrap shadow-xs"
             title="Registrar produção de lote de produtos"
           >
             <ChefHat className="w-4 h-4 text-theme-primary" />
@@ -706,7 +707,8 @@ export default function Estoque() {
           <button
             type="button"
             onClick={() => setModalInsumoAberto(true)}
-            className="btn-theme-primary inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition whitespace-nowrap shadow-sm"
+            aria-label="Novo Insumo"
+            className="btn-theme-primary inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition whitespace-nowrap shadow-sm"
             title="Cadastrar nova matéria-prima ou insumo"
           >
             <Plus className="w-4 h-4" />
@@ -750,13 +752,13 @@ export default function Estoque() {
         </div>
       </div>
 
-      {/* Navegação por Abas Responsiva */}
+      {/* Navegação por Abas Responsiva em 2 Linhas */}
       <div className="bg-gray-100/80 p-1.5 rounded-2xl border border-gray-200/60 shadow-xs">
-        <nav className="grid grid-cols-2 lg:grid-cols-4 gap-1.5" aria-label="Abas de Estoque">
+        <nav className="grid grid-cols-2 gap-2" aria-label="Abas de Estoque">
           <button
             type="button"
             onClick={() => setActiveTab('insumos')}
-            className={`py-2.5 px-3 rounded-xl font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 transition ${
+            className={`py-2.5 px-4 rounded-xl font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 transition ${
               activeTab === 'insumos'
                 ? 'tab-theme-active shadow-xs'
                 : 'text-gray-600 hover:text-gray-900 hover:bg-gray-200/50'
@@ -769,21 +771,21 @@ export default function Estoque() {
           <button
             type="button"
             onClick={() => setActiveTab('receitas')}
-            className={`py-2.5 px-3 rounded-xl font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 transition ${
+            className={`py-2.5 px-4 rounded-xl font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 transition ${
               activeTab === 'receitas'
                 ? 'tab-theme-active shadow-xs'
                 : 'text-gray-600 hover:text-gray-900 hover:bg-gray-200/50'
             }`}
           >
             <ChefHat className="w-4 h-4 shrink-0" />
-            <span className="truncate">Fichas Técnicas</span>
+            <span className="truncate">Fichas Técnicas & CMV</span>
           </button>
 
           <button
             type="button"
             onClick={() => setActiveTab('simulador')}
             aria-label="Simulador de Capacidade"
-            className={`py-2.5 px-3 rounded-xl font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 transition ${
+            className={`py-2.5 px-4 rounded-xl font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 transition ${
               activeTab === 'simulador'
                 ? 'tab-theme-active shadow-xs'
                 : 'text-gray-600 hover:text-gray-900 hover:bg-gray-200/50'
@@ -796,7 +798,7 @@ export default function Estoque() {
           <button
             type="button"
             onClick={() => setActiveTab('movimentacoes')}
-            className={`py-2.5 px-3 rounded-xl font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 transition ${
+            className={`py-2.5 px-4 rounded-xl font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 transition ${
               activeTab === 'movimentacoes'
                 ? 'tab-theme-active shadow-xs'
                 : 'text-gray-600 hover:text-gray-900 hover:bg-gray-200/50'
