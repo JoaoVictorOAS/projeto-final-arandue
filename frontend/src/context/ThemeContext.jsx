@@ -1,7 +1,9 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { StatusBar, Style } from '@capacitor/status-bar';
-import { Capacitor } from '@capacitor/core';
+import { Capacitor, registerPlugin } from '@capacitor/core';
 import api from '../services/api';
+
+const NativeThemeBar = registerPlugin('NativeThemeBar');
 
 const TEMA_PADRAO_FALLBACK = {
   id: 'padrao-claro',
@@ -97,6 +99,8 @@ export function applyThemeToDOM(tema) {
   root.style.setProperty('--color-primary-hover', primaryHover);
   root.style.setProperty('--color-primary-text', primaryText);
   root.style.setProperty('--color-accent', accent);
+  const logoBg = tokens.logoBg || primary;
+  root.style.setProperty('--logo-bg', logoBg);
 
   // Novas Regras de Tema e Contraste para Botões, Ações Rápidas ("Botões Novos") e Painel de Insights
   const btnPrimaryBg = tokens.buttonPrimaryBg || primary;
@@ -170,6 +174,7 @@ export async function sincronizarStatusBarComTema(tema) {
   const modo = tema?.modo || 'light';
   const tokens = tema?.tokens || tema?.cores || {};
   const corFundo = tokens.bgSurface || tokens.bgApp || (modo === 'dark' ? '#0f172a' : '#ffffff');
+  const isDark = modo === 'dark';
 
   // 1. Atualiza tag <meta name="theme-color"> no HTML
   if (typeof document !== 'undefined') {
@@ -182,14 +187,24 @@ export async function sincronizarStatusBarComTema(tema) {
     metaTheme.setAttribute('content', corFundo);
   }
 
-  // 2. No Capacitor nativo (Android / iOS): sincroniza cor e estilo da Status Bar
+  // 2. Plugin Nativo Customizado: Atualiza windowBackground + statusBarColor + ícones diretamente na UI thread
+  if (typeof window !== 'undefined' && typeof Capacitor !== 'undefined' && Capacitor.isNativePlatform()) {
+    try {
+      if (NativeThemeBar && typeof NativeThemeBar.setBarTheme === 'function') {
+        await NativeThemeBar.setBarTheme({ color: corFundo, isDark });
+      }
+    } catch {
+      // Ignora se não for suportado
+    }
+  }
+
+  // 3. Plugin Capacitor StatusBar (iOS e compatibilidade)
   if (typeof window !== 'undefined' && typeof Capacitor !== 'undefined' && Capacitor.isNativePlatform()) {
     try {
       await StatusBar.setBackgroundColor({ color: corFundo });
       await StatusBar.setStyle({
-        style: modo === 'dark' ? Style.Dark : Style.Light,
+        style: isDark ? Style.Dark : Style.Light,
       });
-      await StatusBar.setOverlaysWebView({ overlay: false });
     } catch {
       // Ignora silenciosamente em caso de erro na plataforma nativa
     }
