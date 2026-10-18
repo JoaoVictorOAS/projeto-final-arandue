@@ -373,6 +373,22 @@ export default function Orcamentos() {
     window.print();
   };
 
+  const handleCompartilharWhatsApp = async (orcamento) => {
+    try {
+      const res = await api.get(`/orcamentos/${orcamento.id}/compartilhar`);
+      const dados = res.data?.dados;
+      if (dados && dados.whatsapp_link) {
+        window.open(dados.whatsapp_link, '_blank');
+        showFeedback('success', 'Orçamento pronto para envio no WhatsApp!');
+      } else {
+        handleOpenProposta(orcamento);
+      }
+    } catch (err) {
+      console.error('Erro ao compartilhar orçamento:', err);
+      handleOpenProposta(orcamento);
+    }
+  };
+
   // Helper para buscar objeto de cliente por ID
   const getCliente = (clienteId) => {
     return clientes.find((c) => String(c.id) === String(clienteId));
@@ -620,6 +636,17 @@ export default function Orcamentos() {
                             aria-label={`Ver proposta do orçamento ${orc.id}`}
                           >
                             <Eye className="w-4 h-4" />
+                          </button>
+
+                          {/* Compartilhar WhatsApp */}
+                          <button
+                            type="button"
+                            onClick={() => handleCompartilharWhatsApp(orc)}
+                            className="p-1.5 rounded-lg text-gray-500 hover:text-green-600 hover:bg-green-50 transition"
+                            title="Compartilhar no WhatsApp"
+                            aria-label={`Compartilhar orçamento ${orc.id} no WhatsApp`}
+                          >
+                            <Share2 className="w-4 h-4" />
                           </button>
 
                           {/* Ação do Fluxo Integrado: Agendar Atendimento */}

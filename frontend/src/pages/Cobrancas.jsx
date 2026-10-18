@@ -321,6 +321,38 @@ export default function Cobrancas() {
     setModalWhatsAberta(true);
   };
 
+  const handleGerarPix = async (cobranca) => {
+    try {
+      const res = await api.get(`/cobrancas/${cobranca.id}/pix`);
+      const payloadPix = res.data?.dados?.pix_copia_e_cola;
+      if (payloadPix) {
+        await navigator.clipboard.writeText(payloadPix);
+        showFeedback('success', `Pix Copia e Cola da cobrança #${cobranca.id} copiado para a área de transferência!`);
+      } else {
+        showFeedback('error', 'Não foi possível gerar o payload Pix.');
+      }
+    } catch (err) {
+      console.error('Erro ao gerar Pix:', err);
+      showFeedback('error', err?.response?.data?.message || 'Falha ao gerar Pix da cobrança.');
+    }
+  };
+
+  const handleCobrarWhatsApp = async (cobranca) => {
+    try {
+      const res = await api.post(`/cobrancas/${cobranca.id}/lembrete-whatsapp`);
+      const dados = res.data?.dados;
+      if (dados && dados.whatsapp_link) {
+        window.open(dados.whatsapp_link, '_blank');
+        showFeedback('success', 'Lembrete de cobrança preparado e WhatsApp aberto com sucesso!');
+      } else {
+        handleAbrirWhatsApp(cobranca);
+      }
+    } catch (err) {
+      console.error('Erro ao preparar lembrete WhatsApp:', err);
+      handleAbrirWhatsApp(cobranca);
+    }
+  };
+
   // Generate WhatsApp friendly message
   const gerarMensagemWhatsApp = (cobranca) => {
     if (!cobranca) return '';
@@ -791,10 +823,22 @@ export default function Cobrancas() {
                                 Dar Baixa
                               </button>
 
+                              {/* Pix Copia e Cola */}
+                              <button
+                                type="button"
+                                onClick={() => handleGerarPix(item)}
+                                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-indigo-50 text-indigo-700 hover:bg-indigo-100 font-medium text-xs border border-indigo-200 transition"
+                                title="Gerar e copiar Pix Copia e Cola"
+                                aria-label={`Pix Copia e Cola cobrança ${item.id}`}
+                              >
+                                <Copy className="w-3.5 h-3.5 text-indigo-600" />
+                                <span className="hidden md:inline">Pix</span>
+                              </button>
+
                               {/* Cobrar WhatsApp */}
                               <button
                                 type="button"
-                                onClick={() => handleAbrirWhatsApp(item)}
+                                onClick={() => handleCobrarWhatsApp(item)}
                                 className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-green-50 text-green-700 hover:bg-green-100 font-medium text-xs border border-green-200 transition"
                                 title="Enviar lembrete pelo WhatsApp"
                                 aria-label={`Cobrar via WhatsApp cobrança ${item.id}`}

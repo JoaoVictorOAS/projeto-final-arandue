@@ -6,6 +6,8 @@ const router = express.Router();
 router.get('/', cobrancaController.listar);
 router.post('/', cobrancaController.criar);
 router.get('/:id', cobrancaController.buscarPorId);
+router.get('/:id/pix', cobrancaController.gerarPix);
+router.post('/:id/lembrete-whatsapp', cobrancaController.enviarLembreteWhatsapp);
 router.put('/:id', cobrancaController.atualizar);
 router.patch('/:id/pagar', cobrancaController.darBaixa);
 router.put('/:id/pagar', cobrancaController.darBaixa);

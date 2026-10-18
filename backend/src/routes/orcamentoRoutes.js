@@ -6,6 +6,7 @@ const router = express.Router();
 router.get('/', orcamentoController.listar);
 router.post('/', orcamentoController.criar);
 router.get('/:id', orcamentoController.buscarPorId);
+router.get('/:id/compartilhar', orcamentoController.compartilhar);
 router.patch('/:id/status', orcamentoController.atualizarStatus);
 router.put('/:id/status', orcamentoController.atualizarStatus);
 router.delete('/:id', orcamentoController.excluir);

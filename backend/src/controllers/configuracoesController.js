@@ -48,6 +48,7 @@ const configuracoesController = {
             serie_nfse: Number(config.serie_nfse) || 1,
             serie_nfe: Number(config.serie_nfe) || 1,
             serie_nfce: Number(config.serie_nfce) || 1,
+            chave_pix: config.chave_pix || config.cnpj || config.email_comercial || config.telefone_comercial || '',
             configurado: true,
             criado_em: config.criado_em,
             atualizado_em: config.atualizado_em
@@ -82,6 +83,7 @@ const configuracoesController = {
           serie_nfse: 1,
           serie_nfe: 1,
           serie_nfce: 1,
+          chave_pix: usuario.email || '',
           configurado: false
         }
       });
@@ -119,8 +121,11 @@ const configuracoesController = {
         ambiente_fiscal,
         serie_nfse,
         serie_nfe,
-        serie_nfce
+        serie_nfce,
+        chave_pix
       } = req.body;
+
+      const chavePixFinal = chave_pix ? String(chave_pix).trim() : null;
 
       // Validação: Razão Social
       if (!razao_social || typeof razao_social !== 'string' || !razao_social.trim()) {
@@ -175,12 +180,12 @@ const configuracoesController = {
       const snfe = parseInt(serie_nfe, 10) || 1;
       const snfce = parseInt(serie_nfce, 10) || 1;
 
-      const queryUpsert = `
+      const queryUpsertComChave = `
         INSERT INTO mei_configuracoes (
           usuario_id, razao_social, nome_fantasia, cnpj, inscricao_estadual, inscricao_municipal,
           cep, logradouro, numero, complemento, bairro, municipio, uf, codigo_municipio_ibge,
-          email_comercial, telefone_comercial, ambiente_fiscal, serie_nfse, serie_nfe, serie_nfce
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          email_comercial, telefone_comercial, ambiente_fiscal, serie_nfse, serie_nfe, serie_nfce, chave_pix
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ON DUPLICATE KEY UPDATE
           razao_social = VALUES(razao_social),
           nome_fantasia = VALUES(nome_fantasia),
@@ -201,31 +206,117 @@ const configuracoesController = {
           serie_nfse = VALUES(serie_nfse),
           serie_nfe = VALUES(serie_nfe),
           serie_nfce = VALUES(serie_nfce),
+          chave_pix = VALUES(chave_pix),
           atualizado_em = NOW()
       `;
 
-      await pool.execute(queryUpsert, [
-        usuario_id,
-        razao_social.trim(),
-        nome_fantasia ? String(nome_fantasia).trim() : null,
-        cnpjLimpo,
-        ieFinal,
-        inscricao_municipal ? String(inscricao_municipal).trim() : null,
-        cepLimpo,
-        logradouro ? String(logradouro).trim() : '',
-        numFinal,
-        complemento ? String(complemento).trim() : null,
-        bairro ? String(bairro).trim() : '',
-        municipio.trim(),
-        ufUpper,
-        ibgeFinal,
-        email_comercial ? String(email_comercial).trim() : null,
-        telefone_comercial ? String(telefone_comercial).trim() : null,
-        ambFinal,
-        snfse,
-        snfe,
-        snfce
-      ]);
+      try {
+        await pool.execute(queryUpsertComChave, [
+          usuario_id,
+          razao_social.trim(),
+          nome_fantasia ? String(nome_fantasia).trim() : null,
+          cnpjLimpo,
+          ieFinal,
+          inscricao_municipal ? String(inscricao_municipal).trim() : null,
+          cepLimpo,
+          logradouro ? String(logradouro).trim() : '',
+          numFinal,
+          complemento ? String(complemento).trim() : null,
+          bairro ? String(bairro).trim() : '',
+          municipio.trim(),
+          ufUpper,
+          ibgeFinal,
+          email_comercial ? String(email_comercial).trim() : null,
+          telefone_comercial ? String(telefone_comercial).trim() : null,
+          ambFinal,
+          snfse,
+          snfe,
+          snfce,
+          chavePixFinal
+        ]);
+      } catch (err) {
+        if (err.code === 'ER_BAD_FIELD_ERROR' || err.message?.includes('Unknown column')) {
+          try {
+            await pool.execute('ALTER TABLE mei_configuracoes ADD COLUMN chave_pix VARCHAR(180) NULL');
+            await pool.execute(queryUpsertComChave, [
+              usuario_id,
+              razao_social.trim(),
+              nome_fantasia ? String(nome_fantasia).trim() : null,
+              cnpjLimpo,
+              ieFinal,
+              inscricao_municipal ? String(inscricao_municipal).trim() : null,
+              cepLimpo,
+              logradouro ? String(logradouro).trim() : '',
+              numFinal,
+              complemento ? String(complemento).trim() : null,
+              bairro ? String(bairro).trim() : '',
+              municipio.trim(),
+              ufUpper,
+              ibgeFinal,
+              email_comercial ? String(email_comercial).trim() : null,
+              telefone_comercial ? String(telefone_comercial).trim() : null,
+              ambFinal,
+              snfse,
+              snfe,
+              snfce,
+              chavePixFinal
+            ]);
+          } catch {
+            const queryUpsertSemChave = `
+              INSERT INTO mei_configuracoes (
+                usuario_id, razao_social, nome_fantasia, cnpj, inscricao_estadual, inscricao_municipal,
+                cep, logradouro, numero, complemento, bairro, municipio, uf, codigo_municipio_ibge,
+                email_comercial, telefone_comercial, ambiente_fiscal, serie_nfse, serie_nfe, serie_nfce
+              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+              ON DUPLICATE KEY UPDATE
+                razao_social = VALUES(razao_social),
+                nome_fantasia = VALUES(nome_fantasia),
+                cnpj = VALUES(cnpj),
+                inscricao_estadual = VALUES(inscricao_estadual),
+                inscricao_municipal = VALUES(inscricao_municipal),
+                cep = VALUES(cep),
+                logradouro = VALUES(logradouro),
+                numero = VALUES(numero),
+                complemento = VALUES(complemento),
+                bairro = VALUES(bairro),
+                municipio = VALUES(municipio),
+                uf = VALUES(uf),
+                codigo_municipio_ibge = VALUES(codigo_municipio_ibge),
+                email_comercial = VALUES(email_comercial),
+                telefone_comercial = VALUES(telefone_comercial),
+                ambiente_fiscal = VALUES(ambiente_fiscal),
+                serie_nfse = VALUES(serie_nfse),
+                serie_nfe = VALUES(serie_nfe),
+                serie_nfce = VALUES(serie_nfce),
+                atualizado_em = NOW()
+            `;
+            await pool.execute(queryUpsertSemChave, [
+              usuario_id,
+              razao_social.trim(),
+              nome_fantasia ? String(nome_fantasia).trim() : null,
+              cnpjLimpo,
+              ieFinal,
+              inscricao_municipal ? String(inscricao_municipal).trim() : null,
+              cepLimpo,
+              logradouro ? String(logradouro).trim() : '',
+              numFinal,
+              complemento ? String(complemento).trim() : null,
+              bairro ? String(bairro).trim() : '',
+              municipio.trim(),
+              ufUpper,
+              ibgeFinal,
+              email_comercial ? String(email_comercial).trim() : null,
+              telefone_comercial ? String(telefone_comercial).trim() : null,
+              ambFinal,
+              snfse,
+              snfe,
+              snfce
+            ]);
+          }
+        } else {
+          throw err;
+        }
+      }
 
       const [rows] = await pool.execute(
         'SELECT * FROM mei_configuracoes WHERE usuario_id = ?',
@@ -258,6 +349,7 @@ const configuracoesController = {
           serie_nfse: Number(salvo.serie_nfse) || 1,
           serie_nfe: Number(salvo.serie_nfe) || 1,
           serie_nfce: Number(salvo.serie_nfce) || 1,
+          chave_pix: salvo.chave_pix || chavePixFinal || salvo.cnpj || salvo.email_comercial || salvo.telefone_comercial || '',
           configurado: true,
           criado_em: salvo.criado_em,
           atualizado_em: salvo.atualizado_em
