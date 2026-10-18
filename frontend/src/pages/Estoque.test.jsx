@@ -16,8 +16,34 @@ vi.mock('../services/api', () => {
 });
 
 describe('Módulo de Estoque & Produção', () => {
+  const mockTrack = { stop: vi.fn() };
+  const mockStream = {
+    getTracks: vi.fn(() => [mockTrack]),
+  };
+
   beforeEach(() => {
     vi.clearAllMocks();
+
+    Object.defineProperty(navigator, 'mediaDevices', {
+      value: {
+        getUserMedia: vi.fn().mockResolvedValue(mockStream),
+      },
+      writable: true,
+      configurable: true,
+    });
+
+    if (typeof HTMLVideoElement !== 'undefined') {
+      HTMLVideoElement.prototype.play = vi.fn().mockResolvedValue(undefined);
+    }
+
+    if (typeof HTMLCanvasElement !== 'undefined') {
+      HTMLCanvasElement.prototype.getContext = vi.fn().mockReturnValue({
+        drawImage: vi.fn(),
+      });
+      HTMLCanvasElement.prototype.toDataURL = vi
+        .fn()
+        .mockReturnValue('data:image/jpeg;base64,mockedphotofromcamera');
+    }
   });
 
   test('deve renderizar a listagem de insumos com saldos e status', async () => {
@@ -148,7 +174,7 @@ describe('Módulo de Estoque & Produção', () => {
     });
   });
 
-  test('deve abrir o modal de entrada por nota fiscal / foto / xml ao clicar no botao', async () => {
+  test('deve abrir o modal de entrada por nota fiscal / foto / xml e exibir opções separadas de Câmera e Galeria', async () => {
     api.get.mockResolvedValue({ data: { sucesso: true, dados: [] } });
 
     render(<Estoque />);
@@ -163,5 +189,206 @@ describe('Módulo de Estoque & Produção', () => {
     expect(screen.getByRole('heading', { name: /entrada de insumos por nota fiscal \(foto ou xml\)/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /foto do cupom \/ nota/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /arquivo xml da nf-e/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /tirar foto agora \(câmera\)/i })).toBeInTheDocument();
+    expect(screen.getByText(/escolher da galeria \/ pdf/i)).toBeInTheDocument();
+  });
+
+  test('deve abrir a câmera integrada direto pelo botão do cabeçalho e enviar foto para OCR', async () => {
+    api.get.mockResolvedValue({ data: { sucesso: true, dados: [] } });
+    api.post.mockResolvedValue({
+      data: {
+        sucesso: true,
+        dados: {
+          fornecedor: 'Distribuidora Alimentos S/A',
+          numero_documento: 'NF-12345',
+          valor_total: 150.0,
+          itens: [
+            { nome: 'Açúcar Cristal', quantidade: 10, unidade: 'kg', valor_total: 45.0 },
+          ],
+        },
+      },
+    });
+
+    render(<Estoque />);
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /tirar foto de insumo \/ nota/i })).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /tirar foto de insumo \/ nota/i }));
+
+    // Modal de câmera aberto
+    expect(screen.getByRole('heading', { name: /fotografar nota \/ cupom de insumos/i })).toBeInTheDocument();
+    const btnCapturar = await screen.findByRole('button', { name: /capturar foto/i });
+    await waitFor(() => {
+      expect(btnCapturar).not.toBeDisabled();
+    });
+
+    // Clicar em Tirar Foto
+    fireEvent.click(btnCapturar);
+
+    // Verifica chamada ao OCR
+    await waitFor(() => {
+      expect(api.post).toHaveBeenCalledWith(
+        '/estoque/insumos/ocr-foto',
+        expect.objectContaining({
+          imagem_base64: expect.stringContaining('data:image/jpeg;base64,'),
+        })
+      );
+    });
+
+    // Modal de nota fiscal deve abrir com itens identificados
+    await waitFor(() => {
+      expect(screen.getByText(/Distribuidora Alimentos S\/A/i)).toBeInTheDocument();
+      expect(screen.getByDisplayValue('Açúcar Cristal')).toBeInTheDocument();
+    });
+  });
+
+  test('deve abrir a câmera a partir da opção Tirar Foto Agora dentro do modal de nota fiscal', async () => {
+    api.get.mockResolvedValue({ data: { sucesso: true, dados: [] } });
+    api.post.mockResolvedValue({
+      data: {
+        sucesso: true,
+        dados: {
+          fornecedor: 'Hortifruti Central',
+          numero_documento: 'CUPOM-987',
+          valor_total: 30.0,
+          itens: [
+            { nome: 'Tomate Italiano', quantidade: 3, unidade: 'kg', valor_total: 15.0 },
+          ],
+        },
+      },
+    });
+
+    render(<Estoque />);
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /entrada por nota \/ foto \/ xml/i })).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /entrada por nota \/ foto \/ xml/i }));
+
+    const btnTirarFotoModal = screen.getByRole('button', { name: /tirar foto agora \(câmera\)/i });
+    fireEvent.click(btnTirarFotoModal);
+
+    expect(screen.getByRole('heading', { name: /fotografar nota \/ cupom de insumos/i })).toBeInTheDocument();
+    const btnCapturar = await screen.findByRole('button', { name: /capturar foto/i });
+    await waitFor(() => {
+      expect(btnCapturar).not.toBeDisabled();
+    });
+    fireEvent.click(btnCapturar);
+
+    await waitFor(() => {
+      expect(screen.getByText(/Hortifruti Central/i)).toBeInTheDocument();
+      expect(screen.getByDisplayValue('Tomate Italiano')).toBeInTheDocument();
+    });
+  });
+
+  test('deve preencher formulário de Novo Insumo via foto da câmera', async () => {
+    api.get.mockResolvedValue({ data: { sucesso: true, dados: [] } });
+    api.post.mockResolvedValue({
+      data: {
+        sucesso: true,
+        dados: {
+          itens: [
+            { nome: 'Leite Condensado Piracanjuba', quantidade: 1, unidade: 'kg', valor_total: 10.0 },
+          ],
+        },
+      },
+    });
+
+    render(<Estoque />);
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /novo insumo/i })).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /novo insumo/i }));
+
+    expect(screen.getByRole('button', { name: /preencher por foto \(câmera\)/i })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /preencher por foto \(câmera\)/i }));
+
+    // Modal de câmera para novo insumo
+    expect(screen.getByRole('heading', { name: /fotografar rótulo \/ insumo/i })).toBeInTheDocument();
+
+    const btnCapturar = await screen.findByRole('button', { name: /capturar foto/i });
+    await waitFor(() => {
+      expect(btnCapturar).not.toBeDisabled();
+    });
+    fireEvent.click(btnCapturar);
+
+    await waitFor(() => {
+      expect(screen.getByDisplayValue('Leite Condensado Piracanjuba')).toBeInTheDocument();
+      expect(screen.getByDisplayValue('0.0100')).toBeInTheDocument(); // 10 / 1000g = 0.0100
+    });
+  });
+
+  test('deve preencher formulário de Registrar Compra / Entrada via foto da câmera', async () => {
+    const mockInsumos = [
+      { id: 1, nome: 'Farinha de Trigo', unidade_base: 'g', quantidade_atual: 5000, estoque_minimo: 1000 },
+    ];
+    api.get.mockImplementation((url) => {
+      if (url.includes('/estoque/insumos')) {
+        return Promise.resolve({ data: { sucesso: true, dados: mockInsumos } });
+      }
+      return Promise.resolve({ data: { sucesso: true, dados: [] } });
+    });
+
+    api.post.mockResolvedValue({
+      data: {
+        sucesso: true,
+        dados: {
+          itens: [
+            { nome: 'Farinha de Trigo', quantidade: 5, unidade: 'kg', valor_total: 25.0 },
+          ],
+        },
+      },
+    });
+
+    render(<Estoque />);
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /registrar compra \/ entrada/i })).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /registrar compra \/ entrada/i }));
+
+    expect(screen.getByRole('button', { name: /preencher por foto \(câmera\)/i })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /preencher por foto \(câmera\)/i }));
+
+    expect(screen.getByRole('heading', { name: /fotografar comprovante \/ insumo comprado/i })).toBeInTheDocument();
+    const btnCapturar = await screen.findByRole('button', { name: /capturar foto/i });
+    await waitFor(() => {
+      expect(btnCapturar).not.toBeDisabled();
+    });
+    fireEvent.click(btnCapturar);
+
+    await waitFor(() => {
+      expect(screen.getByDisplayValue('5')).toBeInTheDocument();
+      expect(screen.getByDisplayValue('25')).toBeInTheDocument();
+    });
+  });
+
+  test('deve exibir aviso amigável e opção de galeria quando câmera for bloqueada ou indisponível', async () => {
+    api.get.mockResolvedValue({ data: { sucesso: true, dados: [] } });
+
+    navigator.mediaDevices.getUserMedia = vi.fn().mockRejectedValue({
+      name: 'NotAllowedError',
+      message: 'Permission denied',
+    });
+
+    render(<Estoque />);
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /tirar foto de insumo \/ nota/i })).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /tirar foto de insumo \/ nota/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText(/permissão de acesso à câmera negada/i)).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /abrir câmera nativa \/ galeria/i })).toBeInTheDocument();
+    });
   });
 });

@@ -26,6 +26,7 @@ import api from '../services/api';
 import Modal from '../components/Modal';
 import FormField from '../components/FormField';
 import StatusBadge from '../components/StatusBadge';
+import CameraCaptureModal from '../components/CameraCaptureModal';
 
 export const formatCurrency = (val) => {
   const num = typeof val === 'number' ? val : parseFloat(val) || 0;
@@ -75,6 +76,9 @@ export default function Estoque() {
   const [modalNotaFiscalAberto, setModalNotaFiscalAberto] = useState(false);
   const [modalReceitaAberto, setModalReceitaAberto] = useState(false);
   const [modalProducaoAberto, setModalProducaoAberto] = useState(false);
+  const [cameraModalAberto, setCameraModalAberto] = useState(false);
+  const [cameraDestino, setCameraDestino] = useState('nota'); // 'nota', 'novo_insumo', 'entrada'
+  const [analisandoFotoOcr, setAnalisandoFotoOcr] = useState(false);
 
   // Importação por Nota Fiscal (Foto ou XML)
   const [modoImportacao, setModoImportacao] = useState('foto'); // 'foto' ou 'xml'
@@ -300,18 +304,17 @@ export default function Estoque() {
     reader.readAsDataURL(file);
   };
 
-  // Handler: Analisar Foto com IA
-  const handleAnalisarFoto = async () => {
-    if (!fotoBase64) {
-      showFeedback('error', 'Selecione ou tire uma foto da nota fiscal primeiro.');
-      return;
-    }
+  // Função compartilhada: Analisar imagem com OCR multimodal
+  const executarOcrFoto = async (imagemB64) => {
+    if (!imagemB64) return null;
     setProcessandoNota(true);
     try {
-      const mime = fotoBase64.startsWith('data:') ? fotoBase64.split(';')[0].replace('data:', '') : 'image/jpeg';
+      const mime = imagemB64.startsWith('data:')
+        ? imagemB64.split(';')[0].replace('data:', '')
+        : 'image/jpeg';
       const res = await api.post('/estoque/insumos/ocr-foto', {
-        imagem_base64: fotoBase64,
-        mime_type: mime
+        imagem_base64: imagemB64,
+        mime_type: mime,
       });
       const dados = res.data?.dados;
       if (dados && dados.sucesso !== false) {
@@ -324,17 +327,146 @@ export default function Estoque() {
             quantidade: it.quantidade || 1,
             unidade: it.unidade || 'un',
             custo_total: it.valor_total || 0,
-          }))
+          })),
         });
         showFeedback('success', 'Foto analisada com sucesso pela IA! Confira os itens abaixo.');
+        return dados;
       } else {
         showFeedback('error', dados?.mensagem || 'Não foi possível extrair dados da imagem.');
+        return null;
       }
     } catch (err) {
       const msg = err.response?.data?.mensagem || 'Erro ao processar imagem da nota.';
       showFeedback('error', msg);
+      return null;
     } finally {
       setProcessandoNota(false);
+    }
+  };
+
+  // Handler: Analisar Foto com IA
+  const handleAnalisarFoto = async () => {
+    if (!fotoBase64) {
+      showFeedback('error', 'Selecione ou tire uma foto da nota fiscal primeiro.');
+      return;
+    }
+    await executarOcrFoto(fotoBase64);
+  };
+
+  // Handler: Foto capturada pela câmera do app
+  const handleFotoCapturada = async (fotoB64) => {
+    if (!fotoB64) return;
+
+    if (cameraDestino === 'nota') {
+      setFotoBase64(fotoB64);
+      setFotoPreview(fotoB64);
+      setModoImportacao('foto');
+      setModalNotaFiscalAberto(true);
+      await executarOcrFoto(fotoB64);
+    } else if (cameraDestino === 'novo_insumo') {
+      setAnalisandoFotoOcr(true);
+      try {
+        const mime = fotoB64.startsWith('data:')
+          ? fotoB64.split(';')[0].replace('data:', '')
+          : 'image/jpeg';
+        const res = await api.post('/estoque/insumos/ocr-foto', {
+          imagem_base64: fotoB64,
+          mime_type: mime,
+        });
+        const dados = res.data?.dados;
+        if (dados && dados.itens && dados.itens.length > 0) {
+          const primeiro = dados.itens[0];
+          let unidBase = 'un';
+          const u = (primeiro.unidade || '').toLowerCase();
+          if (['g', 'kg', 'quilo', 'quilos'].includes(u)) unidBase = 'g';
+          else if (['ml', 'l', 'litro', 'litros'].includes(u)) unidBase = 'ml';
+
+          let custo = '';
+          const qtdNum = parseFloat(primeiro.quantidade) || 1;
+          const valTotal = parseFloat(primeiro.valor_total) || 0;
+          if (valTotal > 0) {
+            let divisor = qtdNum;
+            if (u === 'kg') divisor *= 1000;
+            else if (u === 'l') divisor *= 1000;
+            custo = (valTotal / (divisor > 0 ? divisor : 1)).toFixed(4);
+          }
+
+          setFormInsumo((prev) => ({
+            ...prev,
+            nome: primeiro.nome || prev.nome,
+            unidade_base: unidBase,
+            custo_unitario: custo || prev.custo_unitario,
+          }));
+          setModalInsumoAberto(true);
+          showFeedback('success', `Insumo "${primeiro.nome}" preenchido a partir da foto!`);
+        } else {
+          setModalInsumoAberto(true);
+          showFeedback('error', 'Não foi possível identificar itens na foto capturada.');
+        }
+      } catch (err) {
+        setModalInsumoAberto(true);
+        const msg = err.response?.data?.mensagem || 'Erro ao analisar foto do insumo.';
+        showFeedback('error', msg);
+      } finally {
+        setAnalisandoFotoOcr(false);
+      }
+    } else if (cameraDestino === 'entrada') {
+      setAnalisandoFotoOcr(true);
+      try {
+        const mime = fotoB64.startsWith('data:')
+          ? fotoB64.split(';')[0].replace('data:', '')
+          : 'image/jpeg';
+        const res = await api.post('/estoque/insumos/ocr-foto', {
+          imagem_base64: fotoB64,
+          mime_type: mime,
+        });
+        const dados = res.data?.dados;
+        if (dados && dados.itens && dados.itens.length > 0) {
+          const primeiro = dados.itens[0];
+          const insumoExistente = insumos.find(
+            (i) =>
+              i.nome.toLowerCase() === primeiro.nome.toLowerCase() ||
+              i.nome.toLowerCase().includes(primeiro.nome.toLowerCase()) ||
+              primeiro.nome.toLowerCase().includes(i.nome.toLowerCase())
+          );
+
+          let unid = 'kg';
+          const u = (primeiro.unidade || '').toLowerCase();
+          if (['kg', 'g', 'l', 'ml', 'un'].includes(u)) unid = u;
+
+          setFormEntrada((prev) => ({
+            ...prev,
+            insumo_id: insumoExistente ? String(insumoExistente.id) : '',
+            nome: insumoExistente ? '' : primeiro.nome || prev.nome,
+            quantidade: primeiro.quantidade ? String(primeiro.quantidade) : prev.quantidade,
+            unidade: unid,
+            custo_total: primeiro.valor_total
+              ? String(primeiro.valor_total)
+              : dados.valor_total
+              ? String(dados.valor_total)
+              : prev.custo_total,
+          }));
+          setModalEntradaAberto(true);
+
+          if (dados.itens.length > 1) {
+            showFeedback(
+              'success',
+              `Preenchido com o 1º item da foto ("${primeiro.nome}"). Foram detectados ${dados.itens.length} itens no total.`
+            );
+          } else {
+            showFeedback('success', `Entrada de compra preenchida a partir da foto: "${primeiro.nome}".`);
+          }
+        } else {
+          setModalEntradaAberto(true);
+          showFeedback('error', 'Nenhum insumo identificado na foto.');
+        }
+      } catch (err) {
+        setModalEntradaAberto(true);
+        const msg = err.response?.data?.mensagem || 'Erro ao processar imagem para entrada.';
+        showFeedback('error', msg);
+      } finally {
+        setAnalisandoFotoOcr(false);
+      }
     }
   };
 
@@ -539,6 +671,19 @@ export default function Estoque() {
 
         {/* Ações Rápidas */}
         <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              setCameraDestino('nota');
+              setCameraModalAberto(true);
+            }}
+            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-sky-600 text-white text-sm font-semibold hover:bg-sky-700 transition-colors shadow-sm"
+            title="Tirar foto com a câmera direto do app"
+          >
+            <Camera className="w-4 h-4" />
+            Tirar Foto de Insumo / Nota
+          </button>
+
           <button
             type="button"
             onClick={() => setModalNotaFiscalAberto(true)}
@@ -1091,6 +1236,39 @@ export default function Estoque() {
         title="Novo Insumo / Matéria-Prima"
       >
         <form onSubmit={handleCadastrarInsumo} className="space-y-4">
+          <div className="bg-indigo-50/70 border border-indigo-200 rounded-lg p-3 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5">
+              <div className="p-2 bg-indigo-600 text-white rounded-lg">
+                <Camera className="w-4 h-4" />
+              </div>
+              <div>
+                <p className="text-xs font-bold text-indigo-950">Preenchimento Rápido com IA</p>
+                <p className="text-[11px] text-indigo-700">Fotografe a embalagem ou rótulo do insumo</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              disabled={analisandoFotoOcr}
+              onClick={() => {
+                setCameraDestino('novo_insumo');
+                setCameraModalAberto(true);
+              }}
+              className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-lg shadow-sm flex items-center gap-1.5 transition-colors disabled:opacity-50"
+            >
+              {analisandoFotoOcr ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  Lendo Foto...
+                </>
+              ) : (
+                <>
+                  <Camera className="w-3.5 h-3.5" />
+                  Preencher por Foto (Câmera)
+                </>
+              )}
+            </button>
+          </div>
+
           <FormField
             label="Nome do Insumo (ex: Farinha de Trigo, Frango, Embalagem)"
             id="nome-insumo"
@@ -1164,6 +1342,39 @@ export default function Estoque() {
         title="Registrar Compra / Entrada de Insumo"
       >
         <form onSubmit={handleRegistrarEntrada} className="space-y-4">
+          <div className="bg-emerald-50/70 border border-emerald-200 rounded-lg p-3 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5">
+              <div className="p-2 bg-emerald-600 text-white rounded-lg">
+                <Camera className="w-4 h-4" />
+              </div>
+              <div>
+                <p className="text-xs font-bold text-emerald-950">Preencher Dados por Foto</p>
+                <p className="text-[11px] text-emerald-700">Fotografe o cupom ou embalagem comprada</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              disabled={analisandoFotoOcr}
+              onClick={() => {
+                setCameraDestino('entrada');
+                setCameraModalAberto(true);
+              }}
+              className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg shadow-sm flex items-center gap-1.5 transition-colors disabled:opacity-50"
+            >
+              {analisandoFotoOcr ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  Lendo Foto...
+                </>
+              ) : (
+                <>
+                  <Camera className="w-3.5 h-3.5" />
+                  Preencher por Foto (Câmera)
+                </>
+              )}
+            </button>
+          </div>
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Selecionar Insumo Cadastrado:
@@ -1463,26 +1674,54 @@ export default function Estoque() {
           </div>
 
           {modoImportacao === 'foto' ? (
-            <div className="space-y-3">
+            <div className="space-y-4">
               <label className="block text-xs font-semibold text-gray-700">
-                Selecione ou tire a foto da nota / cupom fiscal:
+                Selecione como deseja importar a foto da nota fiscal / cupom:
               </label>
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:bg-gray-50 transition-colors">
-                <input
-                  type="file"
-                  id="input-foto-nota"
-                  accept="image/*,application/pdf"
-                  capture="environment"
-                  onChange={handleSelecionarFoto}
-                  className="hidden"
-                />
-                <label htmlFor="input-foto-nota" className="cursor-pointer block">
-                  <UploadCloud className="w-8 h-8 text-blue-500 mx-auto mb-1" />
-                  <span className="text-xs font-semibold text-blue-600 hover:underline">
-                    Clique para selecionar imagem ou tirar foto
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {/* Opção 1: Câmera Direta do App */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCameraDestino('nota');
+                    setCameraModalAberto(true);
+                  }}
+                  className="flex flex-col items-center justify-center p-4 border-2 border-dashed border-blue-400 bg-blue-50/60 hover:bg-blue-50 rounded-xl text-center transition-all group shadow-sm hover:border-blue-500"
+                >
+                  <div className="w-11 h-11 rounded-full bg-blue-600 text-white flex items-center justify-center mb-2 shadow-sm group-hover:scale-105 transition-transform">
+                    <Camera className="w-5 h-5" />
+                  </div>
+                  <span className="text-xs font-bold text-blue-900">
+                    Tirar Foto Agora (Câmera)
                   </span>
-                  <p className="text-[11px] text-gray-400 mt-0.5">PNG, JPG, JPEG ou PDF</p>
-                </label>
+                  <p className="text-[11px] text-blue-700 mt-0.5">
+                    Visor direto no app para fotografar
+                  </p>
+                </button>
+
+                {/* Opção 2: Galeria / Seletor de Arquivos / PDF */}
+                <div className="border-2 border-dashed border-gray-300 hover:border-gray-400 bg-gray-50/60 hover:bg-gray-50 rounded-xl p-4 text-center transition-colors flex flex-col items-center justify-center">
+                  <input
+                    type="file"
+                    id="input-foto-nota"
+                    accept="image/*,application/pdf"
+                    capture="environment"
+                    onChange={handleSelecionarFoto}
+                    className="hidden"
+                  />
+                  <label htmlFor="input-foto-nota" className="cursor-pointer block w-full">
+                    <div className="w-11 h-11 rounded-full bg-gray-200 text-gray-700 flex items-center justify-center mb-2 mx-auto">
+                      <UploadCloud className="w-5 h-5" />
+                    </div>
+                    <span className="text-xs font-bold text-gray-800 hover:underline">
+                      Escolher da Galeria / PDF
+                    </span>
+                    <p className="text-[11px] text-gray-500 mt-0.5">
+                      PNG, JPG, JPEG ou PDF
+                    </p>
+                  </label>
+                </div>
               </div>
 
               {fotoPreview && (
@@ -1656,6 +1895,27 @@ export default function Estoque() {
           )}
         </div>
       </Modal>
+
+      {/* MODAL DE CÂMERA INTEGRADA DIRETO NO APP */}
+      <CameraCaptureModal
+        isOpen={cameraModalAberto}
+        onClose={() => setCameraModalAberto(false)}
+        onCapture={handleFotoCapturada}
+        title={
+          cameraDestino === 'novo_insumo'
+            ? 'Fotografar Rótulo / Insumo'
+            : cameraDestino === 'entrada'
+            ? 'Fotografar Comprovante / Insumo Comprado'
+            : 'Fotografar Nota / Cupom de Insumos'
+        }
+        subtitle={
+          cameraDestino === 'novo_insumo'
+            ? 'Aponte para a embalagem para preencher os campos do insumo automaticamente com IA'
+            : cameraDestino === 'entrada'
+            ? 'Aponte para o comprovante ou produto para preencher a compra com IA'
+            : 'Aponte para a nota fiscal impressa ou cupom para extrair todos os itens'
+        }
+      />
     </div>
   );
 }
