@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import {
   Settings,
   Search,
@@ -28,6 +29,9 @@ import {
   Check,
   Sun,
   Moon,
+  HelpCircle,
+  Bot,
+  ArrowRight,
 } from 'lucide-react';
 import api from '../services/api';
 import { useTheme } from '../context/ThemeContext';
@@ -137,7 +141,7 @@ export default function Configuracoes() {
   const [telefoneWhatsApp, setTelefoneWhatsApp] = useState('');
   const [vinculandoWpp, setVinculandoWpp] = useState(false);
 
-  // Estados e Ações do Sistema de Temas Dinâmicos & IA
+  // Estados e Ações do Sistema de Temas Dinâmicos
   const {
     temaAtual,
     temas = [],
@@ -145,17 +149,29 @@ export default function Configuracoes() {
     carregarTemas,
     ativarTema,
     uploadTema,
-    gerarTemaIA,
     excluirTema,
     exportarTema,
   } = useTheme() || {};
 
-  const [iaDescricao, setIaDescricao] = useState('');
-  const [iaModo, setIaModo] = useState('dark');
-  const [gerandoTemaIA, setGerandoTemaIA] = useState(false);
+  const [mostrarPopoverTema, setMostrarPopoverTema] = useState(false);
+  const popoverTemaRef = useRef(null);
   const [temaUploadando, setTemaUploadando] = useState(false);
   const [temaAtivandoId, setTemaAtivandoId] = useState(null);
   const [temaExcluindoId, setTemaExcluindoId] = useState(null);
+
+  useEffect(() => {
+    const handleClickFora = (e) => {
+      if (popoverTemaRef.current && !popoverTemaRef.current.contains(e.target)) {
+        setMostrarPopoverTema(false);
+      }
+    };
+    if (mostrarPopoverTema) {
+      document.addEventListener('mousedown', handleClickFora);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickFora);
+    };
+  }, [mostrarPopoverTema]);
 
   const showFeedback = (type, message) => {
     setFeedback({ type, message });
@@ -255,29 +271,6 @@ export default function Configuracoes() {
     }
   };
 
-  const handleGerarTemaIA = async (e) => {
-    e?.preventDefault();
-    if (!iaDescricao.trim()) {
-      showFeedback('error', 'Informe uma descrição para gerar o tema com IA.');
-      return;
-    }
-    if (!gerarTemaIA) return;
-
-    try {
-      setGerandoTemaIA(true);
-      const res = await gerarTemaIA(iaDescricao.trim(), iaModo);
-      if (res?.sucesso) {
-        showFeedback('success', `Tema "${res.dados?.nome || 'IA'}" gerado com sucesso!`);
-        setIaDescricao('');
-      } else {
-        showFeedback('error', res?.erro || 'Falha ao gerar tema com IA.');
-      }
-    } catch (err) {
-      showFeedback('error', 'Erro ao processar solicitação de tema com IA.');
-    } finally {
-      setGerandoTemaIA(false);
-    }
-  };
 
   const handleExcluirTema = async (id, nome) => {
     if (!window.confirm(`Deseja realmente excluir o tema "${nome}"?`)) {
@@ -1235,10 +1228,65 @@ export default function Configuracoes() {
         <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-6">
           <div className="border-b border-gray-100 pb-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
-              <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                <Palette className="w-5 h-5 text-theme-primary" />
-                Aparência & Temas do Sistema
-              </h2>
+              <div className="flex items-center gap-2.5 flex-wrap">
+                <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                  <Palette className="w-5 h-5 text-theme-primary" />
+                  Aparência & Temas do Sistema
+                </h2>
+
+                {/* Popover Informativo: Instruindo que o usuário pode usar o Assistente IA para alterar/criar o tema */}
+                <div className="relative inline-block" ref={popoverTemaRef}>
+                  <button
+                    type="button"
+                    onClick={() => setMostrarPopoverTema(!mostrarPopoverTema)}
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 dark:bg-indigo-950/40 dark:hover:bg-indigo-900/50 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 transition-colors cursor-pointer"
+                    aria-label="Como alterar o tema pelo assistente"
+                    title="Dica: use o Assistente IA para mudar o tema"
+                  >
+                    <Sparkles className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+                    <span>Alterar pelo Assistente</span>
+                    <HelpCircle className="w-3.5 h-3.5 opacity-70" />
+                  </button>
+
+                  {mostrarPopoverTema && (
+                    <div
+                      className="absolute left-0 mt-2 z-50 w-80 p-4 bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-indigo-100 dark:border-indigo-800 text-left animate-fade-in"
+                      role="tooltip"
+                    >
+                      <div className="flex items-start justify-between gap-2 mb-2">
+                        <div className="flex items-center gap-1.5 text-indigo-700 dark:text-indigo-300 font-bold text-xs">
+                          <Bot className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                          <span>Altere o tema com o Assistente IA</span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setMostrarPopoverTema(false)}
+                          className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 rounded-md"
+                          aria-label="Fechar aviso de tema"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                      <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed mb-3">
+                        Você pode pedir diretamente ao <strong>Assistente IA</strong> para alterar ou criar temas sob medida para seu negócio!
+                      </p>
+                      <div className="bg-indigo-50/70 dark:bg-indigo-950/50 p-2.5 rounded-lg border border-indigo-100 dark:border-indigo-900/60 text-[11px] text-indigo-800 dark:text-indigo-200 space-y-1 mb-3">
+                        <p className="font-semibold text-indigo-900 dark:text-indigo-100">Exemplos de pedidos no chat:</p>
+                        <p className="italic">"Mude o tema para verde esmeralda"</p>
+                        <p className="italic">"Crie um tema noturno moderno para minha barbearia"</p>
+                      </div>
+                      <Link
+                        to="/assistente"
+                        className="inline-flex items-center justify-center gap-1.5 w-full py-1.5 px-3 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors shadow-xs"
+                      >
+                        <span>Abrir Assistente IA</span>
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </Link>
+                    </div>
+                  )}
+                </div>
+              </div>
+
               <p className="text-xs text-gray-500 mt-0.5">
                 Personalize as cores, modo visual e estilo de todo o ERP Aranduê com contraste WCAG garantido.
               </p>
@@ -1273,89 +1321,7 @@ export default function Configuracoes() {
             </div>
           </div>
 
-          {/* SUBSEÇÃO 1: Gerador de Tema com IA */}
-          <div className="bg-gradient-to-r from-purple-50/70 via-indigo-50/50 to-pink-50/60 dark:from-purple-950/40 dark:via-indigo-950/30 dark:to-pink-950/30 p-5 rounded-2xl border border-purple-100 dark:border-purple-800/40 space-y-3 transition-colors duration-200">
-            <div className="flex items-center justify-between flex-wrap gap-2">
-              <div className="flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-                <h3 className="text-sm font-bold text-gray-900 dark:text-purple-200">Gerar Tema com IA</h3>
-              </div>
-              <span className="text-[11px] font-medium text-purple-700 dark:text-purple-300 bg-purple-100/80 dark:bg-purple-900/50 px-2.5 py-0.5 rounded-full border border-purple-200 dark:border-purple-700/50">
-                Motor IA Gemini + WCAG Contrast Validator
-              </span>
-            </div>
-            <p className="text-xs text-gray-600 dark:text-gray-300">
-              Descreva o estilo, nicho ou paleta desejada para seu negócio. A inteligência artificial criará a paleta completa com contraste validado.
-            </p>
-
-            <div className="flex flex-col sm:flex-row items-stretch gap-3 pt-1">
-              <div className="relative flex-1">
-                <input
-                  type="text"
-                  value={iaDescricao}
-                  onChange={(e) => setIaDescricao(e.target.value)}
-                  placeholder="Quero um tema escuro sofisticado com detalhes em cobre para uma barbearia retrô"
-                  className="w-full px-3.5 py-2.5 text-xs sm:text-sm bg-white rounded-xl border border-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-500 shadow-sm"
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      handleGerarTemaIA(e);
-                    }
-                  }}
-                />
-              </div>
-
-              {/* Seletor de Modo Claro / Escuro */}
-              <div className="inline-flex bg-white rounded-xl border border-purple-200 p-1 shadow-sm shrink-0">
-                <button
-                  type="button"
-                  onClick={() => setIaModo('light')}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors ${
-                    iaModo === 'light'
-                      ? 'bg-purple-600 text-white shadow-xs'
-                      : 'text-gray-600 hover:text-gray-900'
-                  }`}
-                >
-                  <Sun className="w-3.5 h-3.5" />
-                  Claro
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setIaModo('dark')}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors ${
-                    iaModo === 'dark'
-                      ? 'bg-purple-600 text-white shadow-xs'
-                      : 'text-gray-600 hover:text-gray-900'
-                  }`}
-                >
-                  <Moon className="w-3.5 h-3.5" />
-                  Escuro
-                </button>
-              </div>
-
-              {/* Botão Gerar com IA */}
-              <button
-                type="button"
-                onClick={handleGerarTemaIA}
-                disabled={gerandoTemaIA || !iaDescricao.trim()}
-                className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-purple-600 hover:bg-purple-700 text-white text-xs sm:text-sm font-semibold rounded-xl shadow-sm transition-colors disabled:opacity-50 shrink-0"
-              >
-                {gerandoTemaIA ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>Criando Paleta...</span>
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="w-4 h-4" />
-                    <span>Gerar com IA</span>
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-
-          {/* SUBSEÇÃO 2: Catálogo de Temas */}
+          {/* Catálogo de Temas */}
           <div>
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">

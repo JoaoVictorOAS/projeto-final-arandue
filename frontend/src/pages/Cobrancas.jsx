@@ -708,8 +708,15 @@ export default function Cobrancas() {
           )}
         </div>
       ) : (
-        <div className="bg-white rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden">
-          <div className="overflow-x-auto">
+        <div
+          className="bg-white rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden"
+          style={{
+            backgroundColor: 'var(--bg-surface, #ffffff)',
+            borderColor: 'var(--border-color, #e5e7eb)',
+          }}
+        >
+          {/* DESKTOP TABLE VIEW: Exibida em telas médias e grandes (md+) */}
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-gray-50/80 border-b border-gray-200 text-xs font-semibold text-gray-500 uppercase tracking-wider">
@@ -815,7 +822,7 @@ export default function Cobrancas() {
                               <button
                                 type="button"
                                 onClick={() => handleAbrirBaixa(item)}
-                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 font-medium text-xs border border-emerald-200 transition"
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 font-medium text-xs border border-emerald-200 transition cursor-pointer"
                                 title="Confirmar recebimento / Dar Baixa"
                                 aria-label={`Dar baixa na cobrança ${item.id}`}
                               >
@@ -827,7 +834,7 @@ export default function Cobrancas() {
                               <button
                                 type="button"
                                 onClick={() => handleGerarPix(item)}
-                                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg badge-theme-subtle hover:brightness-95 font-medium text-xs transition"
+                                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg badge-theme-subtle hover:brightness-95 font-medium text-xs transition cursor-pointer"
                                 title="Gerar e copiar Pix Copia e Cola"
                                 aria-label={`Pix Copia e Cola cobrança ${item.id}`}
                               >
@@ -839,7 +846,7 @@ export default function Cobrancas() {
                               <button
                                 type="button"
                                 onClick={() => handleCobrarWhatsApp(item)}
-                                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-green-50 text-green-700 hover:bg-green-100 font-medium text-xs border border-green-200 transition"
+                                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-green-50 text-green-700 hover:bg-green-100 font-medium text-xs border border-green-200 transition cursor-pointer"
                                 title="Enviar lembrete pelo WhatsApp"
                                 aria-label={`Cobrar via WhatsApp cobrança ${item.id}`}
                               >
@@ -861,6 +868,197 @@ export default function Cobrancas() {
                 })}
               </tbody>
             </table>
+          </div>
+
+          {/* MOBILE CARDS VIEW: Exibida em smartphones e telas estreitas (< md) */}
+          <div
+            className="block md:hidden divide-y divide-gray-100"
+            style={{ borderColor: 'var(--border-color, #f3f4f6)' }}
+          >
+            {cobrancasFiltradas.map((item) => {
+              const status = computeStatus(item);
+              const cliInfo = getClienteInfo(item);
+              const vencimentoFmt = formatDate(item.vencimento || item.data_vencimento);
+              const pagamentoFmt = formatDate(item.data_pagamento);
+              const isPago = status === 'PAGO';
+
+              return (
+                <div
+                  key={item.id}
+                  className="p-4 space-y-3.5 transition-colors"
+                  style={{ backgroundColor: 'var(--bg-surface, #ffffff)' }}
+                  data-testid={`cobranca-card-${item.id}`}
+                >
+                  {/* Topo do Card: Identificação do Cliente, ID e Status */}
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-xs text-gray-400 font-medium shrink-0">
+                          #{String(item.id).padStart(4, '0')}
+                        </span>
+                        <h4
+                          className="font-semibold text-gray-900 truncate text-sm"
+                          style={{ color: 'var(--text-main, #111827)' }}
+                        >
+                          {cliInfo.nome}
+                        </h4>
+                      </div>
+                      {cliInfo.telefone && (
+                        <span
+                          className="text-xs text-gray-500 block mt-0.5"
+                          style={{ color: 'var(--text-secondary, #6b7280)' }}
+                        >
+                          {cliInfo.telefone}
+                        </span>
+                      )}
+                      {(item.agendamento_id || item.orcamento_id) && (
+                        <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+                          {item.agendamento_id && (
+                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold badge-theme-subtle">
+                              Atendimento #{item.agendamento_id}
+                            </span>
+                          )}
+                          {item.orcamento_id && (
+                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                              Orçamento #{item.orcamento_id}
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                    <div className="shrink-0">
+                      <StatusBadge status={status} />
+                    </div>
+                  </div>
+
+                  {/* Micro-grid de Dados: Chave-Valor legível em 2 colunas */}
+                  <div
+                    className="grid grid-cols-2 gap-2.5 p-3 rounded-xl border text-xs"
+                    style={{
+                      backgroundColor: 'var(--bg-surface-hover, #f9fafb)',
+                      borderColor: 'var(--border-color, #f3f4f6)',
+                    }}
+                  >
+                    <div>
+                      <span
+                        className="text-[10px] uppercase font-semibold text-gray-400 tracking-wider block"
+                        style={{ color: 'var(--text-muted, #9ca3af)' }}
+                      >
+                        Valor a Receber
+                      </span>
+                      <span
+                        className="font-bold text-sm text-gray-900 block mt-0.5"
+                        style={{ color: 'var(--text-main, #111827)' }}
+                      >
+                        {formatMoney(item.valor)}
+                      </span>
+                    </div>
+
+                    <div>
+                      <span
+                        className="text-[10px] uppercase font-semibold text-gray-400 tracking-wider block"
+                        style={{ color: 'var(--text-muted, #9ca3af)' }}
+                      >
+                        Vencimento
+                      </span>
+                      <span
+                        className={`inline-flex items-center gap-1 mt-0.5 font-medium ${
+                          status === 'ATRASADO' ? 'text-rose-600 font-semibold' : 'text-gray-700'
+                        }`}
+                        style={status === 'ATRASADO' ? {} : { color: 'var(--text-secondary, #374151)' }}
+                      >
+                        <Calendar className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                        <span className="truncate">{vencimentoFmt}</span>
+                      </span>
+                    </div>
+
+                    {isPago && (
+                      <div
+                        className="col-span-2 pt-2 border-t"
+                        style={{ borderColor: 'var(--border-color, #e5e7eb)' }}
+                      >
+                        <span
+                          className="text-[10px] uppercase font-semibold text-gray-400 tracking-wider block"
+                          style={{ color: 'var(--text-muted, #9ca3af)' }}
+                        >
+                          Data de Pagamento
+                        </span>
+                        <span className="text-emerald-700 font-medium inline-flex items-center gap-1.5 mt-0.5">
+                          <CheckCircle className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                          <span>{pagamentoFmt}</span>
+                        </span>
+                      </div>
+                    )}
+
+                    {item.observacoes && (
+                      <div
+                        className="col-span-2 pt-2 border-t text-gray-500 italic text-[11px]"
+                        style={{ borderColor: 'var(--border-color, #e5e7eb)' }}
+                      >
+                        Obs: {item.observacoes}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Ações Tácteis Mobile: Área de clique ampla (mínimo 42px) */}
+                  <div className="pt-0.5">
+                    {!isPago && status !== 'CANCELADO' ? (
+                      <div className="grid grid-cols-3 gap-2">
+                        {/* Dar Baixa */}
+                        <button
+                          type="button"
+                          onClick={() => handleAbrirBaixa(item)}
+                          className="inline-flex items-center justify-center gap-1.5 py-2.5 px-2 rounded-xl bg-emerald-50 text-emerald-700 hover:bg-emerald-100 font-semibold text-xs border border-emerald-200 transition min-h-[42px] cursor-pointer"
+                          title="Confirmar recebimento / Dar Baixa"
+                          aria-label={`Dar baixa na cobrança ${item.id}`}
+                        >
+                          <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0" />
+                          <span>Baixar</span>
+                        </button>
+
+                        {/* Pix Copia e Cola */}
+                        <button
+                          type="button"
+                          onClick={() => handleGerarPix(item)}
+                          className="inline-flex items-center justify-center gap-1.5 py-2.5 px-2 rounded-xl badge-theme-subtle hover:brightness-95 font-semibold text-xs transition min-h-[42px] cursor-pointer"
+                          title="Gerar e copiar Pix Copia e Cola"
+                          aria-label={`Pix Copia e Cola cobrança ${item.id}`}
+                        >
+                          <Copy className="w-4 h-4 text-theme-primary shrink-0" />
+                          <span>Pix</span>
+                        </button>
+
+                        {/* Cobrar WhatsApp */}
+                        <button
+                          type="button"
+                          onClick={() => handleCobrarWhatsApp(item)}
+                          className="inline-flex items-center justify-center gap-1.5 py-2.5 px-2 rounded-xl bg-green-50 text-green-700 hover:bg-green-100 font-semibold text-xs border border-green-200 transition min-h-[42px] cursor-pointer"
+                          title="Enviar lembrete pelo WhatsApp"
+                          aria-label={`Cobrar via WhatsApp cobrança ${item.id}`}
+                        >
+                          <MessageCircle className="w-4 h-4 text-green-600 shrink-0" />
+                          <span>WhatsApp</span>
+                        </button>
+                      </div>
+                    ) : isPago ? (
+                      <div className="flex items-center justify-between py-2 px-3 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-100 text-xs font-semibold">
+                        <span className="inline-flex items-center gap-1.5">
+                          <CheckCircle className="w-4 h-4 text-emerald-600" />
+                          Cobrança Liquidada
+                        </span>
+                        <span className="text-[11px] font-normal text-emerald-600">
+                          {pagamentoFmt}
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="text-center py-2 text-xs text-gray-400 bg-gray-50 rounded-xl">
+                        Cobrança Cancelada
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}

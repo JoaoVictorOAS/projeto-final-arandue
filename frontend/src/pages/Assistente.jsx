@@ -188,22 +188,22 @@ function AssistenteView() {
         color: 'var(--text-main)',
       }}
     >
-      {/* Backdrop para fechar o drawer de conversas no mobile */}
+      {/* Backdrop para fechar o drawer de conversas no mobile / telas <= 1180px */}
       {sidebarConversasAberta && (
         <div
-          className="fixed inset-0 bg-black/50 backdrop-blur-xs z-40 md:hidden transition-opacity"
+          className="fixed inset-0 bg-black/50 backdrop-blur-xs z-40 min-[1181px]:hidden transition-opacity"
           onClick={() => setSidebarConversasAberta(false)}
           aria-hidden="true"
         />
       )}
 
-      {/* Sidebar de Histórico de Conversas (Off-canvas responsivo no mobile, estático no desktop) */}
+      {/* Sidebar de Histórico de Conversas (Off-canvas responsivo <= 1180px, estático > 1180px) */}
       <aside
         role="complementary"
         className={`
           fixed inset-y-0 left-0 z-50 w-72 sm:w-80 max-w-[85vw] flex flex-col transition-transform duration-200 ease-in-out border-r
-          md:static md:translate-x-0 md:z-auto md:flex-shrink-0 md:w-80
-          ${sidebarConversasAberta ? 'translate-x-0 shadow-2xl' : '-translate-x-full md:translate-x-0'}
+          min-[1181px]:static min-[1181px]:translate-x-0 min-[1181px]:z-auto min-[1181px]:flex-shrink-0 min-[1181px]:w-80
+          ${sidebarConversasAberta ? 'translate-x-0 shadow-2xl' : '-translate-x-full min-[1181px]:translate-x-0'}
         `}
         style={{
           backgroundColor: 'var(--bg-surface)',
@@ -242,7 +242,7 @@ function AssistenteView() {
             <button
               type="button"
               onClick={() => setSidebarConversasAberta(false)}
-              className="p-1.5 rounded-lg md:hidden transition-colors hover:opacity-80"
+              className="p-1.5 rounded-lg min-[1181px]:hidden transition-colors hover:opacity-80"
               style={{ color: 'var(--text-secondary)' }}
               aria-label="Fechar histórico"
             >
@@ -323,8 +323,8 @@ function AssistenteView() {
         className="flex-1 flex flex-col h-full min-w-0 relative overflow-hidden transition-colors duration-200"
         style={{ backgroundColor: 'var(--bg-app)', color: 'var(--text-main)' }}
       >
-        {/* Botão Flutuante Mobile: Somente o ícone de conversas para máxima imersão */}
-        <div className="md:hidden absolute top-3 left-3 z-20">
+        {/* Botão Flutuante Mobile / Telas <= 1180px: Somente o ícone de conversas para máxima imersão */}
+        <div className="min-[1181px]:hidden absolute top-3 left-3 z-20">
           <button
             type="button"
             onClick={() => setSidebarConversasAberta(true)}
@@ -341,9 +341,9 @@ function AssistenteView() {
           </button>
         </div>
 
-        {/* Header do Chat (visível apenas em telas médias/desktop) */}
+        {/* Header do Chat (visível apenas em telas desktop > 1180px) */}
         <header
-          className="hidden md:flex h-14 border-b px-6 items-center justify-between flex-shrink-0 transition-colors duration-200"
+          className="hidden min-[1181px]:flex h-14 border-b px-6 items-center justify-between flex-shrink-0 transition-colors duration-200"
           style={{
             backgroundColor: 'var(--bg-surface)',
             borderColor: 'var(--border-color)',
@@ -362,14 +362,11 @@ function AssistenteView() {
                 Canal WhatsApp
               </span>
             )}
-            <span className="inline-flex text-[11px] px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 font-medium border border-indigo-100 flex-shrink-0">
-              RAG Oficial MEI + Dados do Negócio
-            </span>
           </div>
         </header>
 
         {/* Mensagens ou Sugestões Iniciais */}
-        <div className="flex-1 overflow-y-auto p-3 sm:p-6 space-y-4 pt-14 md:pt-6">
+        <div className="flex-1 overflow-y-auto p-3 sm:p-6 space-y-4 pt-14 min-[1181px]:pt-6">
           {carregandoMensagens ? (
             <div className="flex items-center justify-center h-full text-sm" style={{ color: 'var(--text-muted)' }}>
               <Loader2 className="w-6 h-6 animate-spin mr-2" style={{ color: 'var(--color-primary)' }} />

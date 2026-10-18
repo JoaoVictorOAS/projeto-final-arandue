@@ -894,18 +894,8 @@ export default function Dashboard() {
             >
               Visão Geral
             </h1>
-            <span
-              className="font-hand text-xs sm:text-sm px-2.5 py-0.5 rounded-full border border-dashed text-amber-600 dark:text-amber-400 rotate-1 inline-flex items-center gap-1 select-none"
-              style={{ borderColor: 'currentColor' }}
-            >
-              dia a dia MEI ☕
-            </span>
           </div>
           <div className="flex items-center gap-2 mt-1">
-            <SketchUnderline className="w-28 h-2 text-indigo-500 opacity-80" />
-            <p className="font-hand text-xs sm:text-sm" style={{ color: 'var(--text-secondary)' }}>
-              seu corre organizado sem burocracia ✎
-            </p>
           </div>
         </div>
       </div>

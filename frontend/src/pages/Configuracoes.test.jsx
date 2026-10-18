@@ -404,7 +404,7 @@ describe('Módulo de Configurações — MEI & SEFAZ Multi-Estado', () => {
     );
 
     expect(await screen.findByText(/Aparência & Temas do Sistema/i)).toBeInTheDocument();
-    expect(screen.getByText(/Gerar Tema com IA/i)).toBeInTheDocument();
+    expect(screen.getByText(/Alterar pelo Assistente/i)).toBeInTheDocument();
     expect(screen.getByText(/Importar Tema \(\.json\)/i)).toBeInTheDocument();
     expect(screen.getByText(/Exportar Tema Ativo/i)).toBeInTheDocument();
     expect(screen.getByText('Claro Aranduê')).toBeInTheDocument();
@@ -495,7 +495,7 @@ describe('Módulo de Configurações — MEI & SEFAZ Multi-Estado', () => {
     });
   });
 
-  it('deve permitir gerar tema com IA via prompt e modo selecionado', async () => {
+  it('deve exibir popover orientando o usuário a alterar o tema via Assistente IA', async () => {
     api.get.mockImplementation((url) => {
       if (url === '/configuracoes') return Promise.resolve({ data: mockConfigInicial });
       if (url === '/configuracoes/temas') {
@@ -524,31 +524,6 @@ describe('Módulo de Configurações — MEI & SEFAZ Multi-Estado', () => {
       return Promise.resolve({ data: { sucesso: true, dados: [] } });
     });
 
-    api.post.mockImplementation((url, body) => {
-      if (url === '/configuracoes/temas/gerar-ia') {
-        return Promise.resolve({
-          data: {
-            sucesso: true,
-            mensagem: 'Tema gerado com IA com sucesso!',
-            dados: {
-              id: 99,
-              nome: 'Cafeteria Aconchegante',
-              slug: 'cafeteria-aconchegante',
-              modo: body.modo || 'dark',
-              origem: 'IA',
-              tokens: {
-                bgApp: '#271c19',
-                bgSurface: '#3e2723',
-                primary: '#d7ccc8',
-                accent: '#ffb74d',
-              },
-            },
-          },
-        });
-      }
-      return Promise.resolve({ data: { sucesso: true } });
-    });
-
     render(
       <BrowserRouter>
         <ThemeProvider>
@@ -557,19 +532,14 @@ describe('Módulo de Configurações — MEI & SEFAZ Multi-Estado', () => {
       </BrowserRouter>
     );
 
-    expect(await screen.findByText(/Gerar Tema com IA/i)).toBeInTheDocument();
+    const btnPopover = await screen.findByRole('button', { name: /Como alterar o tema pelo assistente/i });
+    expect(btnPopover).toBeInTheDocument();
 
-    const inputDesc = screen.getByPlaceholderText(/Quero um tema escuro sofisticado/i);
-    fireEvent.change(inputDesc, { target: { value: 'Tema para cafeteria vintage tons terrosos' } });
+    fireEvent.click(btnPopover);
 
-    const btnGerar = screen.getByRole('button', { name: /Gerar com IA/i });
-    fireEvent.click(btnGerar);
-
-    await waitFor(() => {
-      expect(api.post).toHaveBeenCalledWith('/configuracoes/temas/gerar-ia', expect.objectContaining({
-        descricao: 'Tema para cafeteria vintage tons terrosos',
-      }));
-    });
+    expect(await screen.findByText(/Altere o tema com o Assistente IA/i)).toBeInTheDocument();
+    expect(screen.getByText(/Você pode pedir diretamente ao/i)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /Abrir Assistente IA/i })).toBeInTheDocument();
   });
 
   it('deve permitir importar tema através de upload de arquivo .json', async () => {

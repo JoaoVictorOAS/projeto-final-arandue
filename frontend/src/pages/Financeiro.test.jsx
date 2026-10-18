@@ -152,24 +152,24 @@ describe('Módulo Financeiro - Cobranças e Livro Caixa', () => {
 
       // Aguarda listagem
       await waitFor(() => {
-        expect(screen.getByText('#0101')).toBeInTheDocument();
-        expect(screen.getByText('#0102')).toBeInTheDocument();
+        expect(screen.getAllByText('#0101').length).toBeGreaterThan(0);
+        expect(screen.getAllByText('#0102').length).toBeGreaterThan(0);
       });
 
       // Verifica nomes de clientes
-      expect(screen.getByText('Mariana Lima')).toBeInTheDocument();
-      expect(screen.getByText('Roberto Dias')).toBeInTheDocument();
+      expect(screen.getAllByText('Mariana Lima').length).toBeGreaterThan(0);
+      expect(screen.getAllByText('Roberto Dias').length).toBeGreaterThan(0);
 
       // Formatação BRL (1.200,00 e 450,00)
       expect(screen.getAllByText(/1\.200,00/).length).toBeGreaterThan(0);
       expect(screen.getAllByText(/450,00/).length).toBeGreaterThan(0);
 
       // Botão "Dar Baixa" presente para a cobrança pendente
-      const btnDarBaixa = screen.getByLabelText(/dar baixa na cobrança 101/i);
+      const btnDarBaixa = screen.getAllByLabelText(/dar baixa na cobrança 101/i)[0];
       expect(btnDarBaixa).toBeInTheDocument();
 
       // Cobrança paga deve exibir badge ou indicação de recebido
-      expect(screen.getByText(/recebido/i)).toBeInTheDocument();
+      expect(screen.getAllByText(/recebido/i).length).toBeGreaterThan(0);
     });
 
     test('deve abrir o modal de Dar Baixa e confirmar o recebimento integrando com Livro Caixa', async () => {
@@ -180,11 +180,11 @@ describe('Módulo Financeiro - Cobranças e Livro Caixa', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByLabelText(/dar baixa na cobrança 101/i)).toBeInTheDocument();
+        expect(screen.getAllByLabelText(/dar baixa na cobrança 101/i).length).toBeGreaterThan(0);
       });
 
       // Clica no botão Dar Baixa
-      fireEvent.click(screen.getByLabelText(/dar baixa na cobrança 101/i));
+      fireEvent.click(screen.getAllByLabelText(/dar baixa na cobrança 101/i)[0]);
 
       // Modal de Dar Baixa abre
       await waitFor(() => {
@@ -218,10 +218,10 @@ describe('Módulo Financeiro - Cobranças e Livro Caixa', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByLabelText(/cobrar via whatsapp cobrança 101/i)).toBeInTheDocument();
+        expect(screen.getAllByLabelText(/cobrar via whatsapp cobrança 101/i).length).toBeGreaterThan(0);
       });
 
-      fireEvent.click(screen.getByLabelText(/cobrar via whatsapp cobrança 101/i));
+      fireEvent.click(screen.getAllByLabelText(/cobrar via whatsapp cobrança 101/i)[0]);
 
       await waitFor(() => {
         expect(screen.getByRole('heading', { name: /cobrar via whatsapp/i })).toBeInTheDocument();
@@ -302,8 +302,8 @@ describe('Módulo Financeiro - Cobranças e Livro Caixa', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByText('Atendimento #50')).toBeInTheDocument();
-        expect(screen.getByText('Orçamento #200')).toBeInTheDocument();
+        expect(screen.getAllByText('Atendimento #50').length).toBeGreaterThan(0);
+        expect(screen.getAllByText('Orçamento #200').length).toBeGreaterThan(0);
       });
     });
   });
