@@ -136,39 +136,8 @@ export default function LandingPage() {
         color: 'var(--text-main, #18181b)',
       }}
     >
-      {/* 1. Barra Flutuante de Experimentação de Temas ao Vivo */}
-      <div className="sticky top-0 z-50 backdrop-blur-md bg-white/80 dark:bg-slate-900/80 border-b-2 border-current/20 px-4 py-2.5 flex flex-wrap items-center justify-between gap-3 shadow-sm">
-        <div className="flex items-center gap-2">
-          <span className="font-hand text-lg sm:text-xl font-bold text-indigo-700 dark:text-indigo-400">
-            🎨 Provador de Temas do Aranduê (Mesmo Estilo Desenhado à Mão):
-          </span>
-        </div>
-        <div className="flex flex-wrap items-center gap-2 text-xs">
-          {PRESET_TEMAS.map((preset) => {
-            const isSelected = temaAtivoId === preset.id || temaAtivoId === preset.slug;
-            return (
-              <button
-                key={preset.id}
-                type="button"
-                onClick={() => handleMudarTema(preset)}
-                className={`sketch-btn px-3 py-1.5 rounded-full font-bold transition-transform ${
-                  isSelected ? 'ring-2 ring-indigo-500 scale-105' : 'hover:scale-102'
-                }`}
-                style={{
-                  backgroundColor: preset.tokens.bgApp,
-                  color: preset.tokens.textMain,
-                  borderColor: preset.tokens.border,
-                }}
-              >
-                {preset.nome}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      <div className="max-w-6xl mx-auto px-4 sm:px-8 py-8">
-        {/* 2. Header Editorial Sketch */}
+      <div className="max-w-[1720px] 2xl:max-w-[1920px] w-full mx-auto px-4 sm:px-8 py-8">
+        {/* 1. Header Editorial Sketch */}
         <header className="flex flex-wrap items-center justify-between gap-4 pb-6 border-b-2 border-dashed border-current/30">
           <div className="flex items-center gap-3">
             <Link to="/" className="font-display font-extrabold text-3xl tracking-tighter">
@@ -487,8 +456,39 @@ export default function LandingPage() {
           </div>
         </section>
 
+        {/* Seletor de Temas (Discreto e Integrado ao Caderno) */}
+        <section className="mt-16 py-6 border-t-2 border-dashed border-current/20 flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <span className="font-hand text-xl font-bold">
+              🎨 Escolha o clima do seu caderno de gestão:
+            </span>
+          </div>
+          <div className="flex flex-wrap items-center gap-2 text-xs">
+            {PRESET_TEMAS.map((preset) => {
+              const isSelected = temaAtivoId === preset.id || temaAtivoId === preset.slug;
+              return (
+                <button
+                  key={preset.id}
+                  type="button"
+                  onClick={() => handleMudarTema(preset)}
+                  className={`sketch-btn px-3.5 py-1.5 rounded-full font-bold transition-transform ${
+                    isSelected ? 'ring-2 ring-indigo-500 scale-105' : 'hover:scale-102'
+                  }`}
+                  style={{
+                    backgroundColor: preset.tokens.bgApp,
+                    color: preset.tokens.textMain,
+                    borderColor: preset.tokens.border,
+                  }}
+                >
+                  {preset.nome}
+                </button>
+              );
+            })}
+          </div>
+        </section>
+
         {/* 6. Footer */}
-        <footer className="mt-20 border-t-2 border-dashed border-current/25 py-10 max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-6 text-sm">
+        <footer className="mt-8 border-t-2 border-dashed border-current/25 py-10 w-full flex flex-col sm:flex-row items-center justify-between gap-6 text-sm">
           <div className="flex items-center gap-3">
             <span className="font-display font-black text-2xl tracking-tighter">ARANDUÊ</span>
             <CartoonEyes className="w-8 h-5 text-current inline-block" />

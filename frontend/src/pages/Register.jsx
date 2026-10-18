@@ -100,57 +100,56 @@ export default function Register() {
         <div>
           <Logo size="md" showText={true} />
 
-          <div className="mt-10 lg:mt-14 max-w-xl">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 mb-4 border border-emerald-200/60">
-              <Sparkles className="w-3.5 h-3.5" />
-              Simplicidade que acompanha sua rotina
-            </span>
-            <h1 className="text-3xl sm:text-4xl font-bold text-stone-900 tracking-tight leading-snug">
+          <div className="mt-8 lg:mt-10 max-w-xl">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-sm font-bold bg-amber-200 text-stone-900 border-2 border-stone-800 shadow-[2px_2px_0px_#292524] mb-3 transform -rotate-1 font-hand">
+              ✎ Caderno de Gestão Descomplicada
+            </div>
+            <h1 className="text-3xl sm:text-4xl font-display font-extrabold text-stone-900 tracking-tight leading-snug">
               Gestão modular feita para o microempreendedor.
             </h1>
             <p className="text-stone-600 text-sm sm:text-base mt-3 leading-relaxed">
-              Controle financeiro, emissão de notas e suporte com inteligência artificial reunidos em uma experiência limpa, intuitiva e sem ruídos.
+              Controle financeiro, emissão de notas e suporte prático reunidos em uma experiência sem enrolação.
             </p>
           </div>
 
-          {/* Cards Modulares Bento (Cores sólidas, sem gradientes) */}
+          {/* Cards Modulares Bento (Estilo Desenhado à Mão, Bordas Sólidas de Nanquim) */}
           <div className="mt-8 lg:mt-10 grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-xl">
             {/* Bloco 1: Livro Caixa */}
-            <div className="bg-white border border-stone-200 rounded-2xl p-5 shadow-sm hover:border-stone-300 transition-colors">
-              <div className="w-9 h-9 rounded-xl bg-stone-100 text-stone-800 flex items-center justify-center mb-3">
+            <div className="bg-white border-2 border-stone-800 rounded-2xl p-5 shadow-[3px_3px_0px_#292524] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-transform">
+              <div className="w-9 h-9 rounded-xl bg-amber-100 border-2 border-stone-800 text-stone-900 flex items-center justify-center mb-3 shadow-[1.5px_1.5px_0px_#292524]">
                 <TrendingUp className="w-4 h-4" />
               </div>
-              <h3 className="text-sm font-semibold text-stone-900">Livro Caixa</h3>
-              <p className="text-xs text-stone-500 mt-1 leading-relaxed">
+              <h3 className="text-sm font-bold text-stone-900">Livro Caixa</h3>
+              <p className="text-xs text-stone-600 mt-1 leading-relaxed">
                 Acompanhamento ágil de entradas, saídas e previsão de faturamento sem planilhas complexas.
               </p>
             </div>
 
             {/* Bloco 2: Notas Fiscais */}
-            <div className="bg-white border border-stone-200 rounded-2xl p-5 shadow-sm hover:border-stone-300 transition-colors">
-              <div className="w-9 h-9 rounded-xl bg-stone-100 text-stone-800 flex items-center justify-center mb-3">
+            <div className="bg-white border-2 border-stone-800 rounded-2xl p-5 shadow-[3px_3px_0px_#292524] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-transform">
+              <div className="w-9 h-9 rounded-xl bg-sky-100 border-2 border-stone-800 text-stone-900 flex items-center justify-center mb-3 shadow-[1.5px_1.5px_0px_#292524]">
                 <FileText className="w-4 h-4" />
               </div>
-              <h3 className="text-sm font-semibold text-stone-900">Notas Fiscais</h3>
-              <p className="text-xs text-stone-500 mt-1 leading-relaxed">
+              <h3 className="text-sm font-bold text-stone-900">Notas Fiscais</h3>
+              <p className="text-xs text-stone-600 mt-1 leading-relaxed">
                 Emissão simplificada e cálculo tributário automático no padrão oficial do MEI.
               </p>
             </div>
 
             {/* Bloco 3: Assistente IA */}
-            <div className="sm:col-span-2 bg-white border border-stone-200 rounded-2xl p-5 shadow-sm hover:border-stone-300 transition-colors">
+            <div className="sm:col-span-2 bg-white border-2 border-stone-800 rounded-2xl p-5 shadow-[3px_3px_0px_#292524] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-transform">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center">
+                  <div className="w-9 h-9 rounded-xl bg-lime-200 border-2 border-stone-800 text-stone-900 flex items-center justify-center shadow-[1.5px_1.5px_0px_#292524]">
                     <Sparkles className="w-4 h-4" />
                   </div>
-                  <h3 className="text-sm font-semibold text-stone-900">Assistente Virtual Aranduê</h3>
+                  <h3 className="text-sm font-bold text-stone-900">Assistente Virtual Aranduê</h3>
                 </div>
-                <span className="text-[11px] font-medium text-emerald-800 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full">
-                  Suporte Ativo
+                <span className="font-hand text-sm font-bold text-stone-900 bg-lime-300 border-2 border-stone-800 px-3 py-0.5 rounded-md shadow-[1.5px_1.5px_0px_#292524] rotate-2">
+                  24h no Zap ✎
                 </span>
               </div>
-              <p className="text-xs text-stone-500 leading-relaxed mt-1">
+              <p className="text-xs text-stone-600 leading-relaxed mt-1">
                 Tire dúvidas com base no manual oficial do MEI e consulte relatórios diretamente pelo chat.
               </p>
             </div>

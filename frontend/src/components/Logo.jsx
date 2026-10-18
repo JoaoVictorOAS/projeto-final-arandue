@@ -13,19 +13,19 @@ export default function Logo({
   className = '',
 }) {
   const sizeMap = {
-    sm: { icon: 'w-8 h-8', text: 'text-base', sub: 'text-[10px]' },
-    md: { icon: 'w-10 h-10', text: 'text-lg', sub: 'text-xs' },
+    sm: { icon: 'w-8 h-8', text: 'text-base', sub: 'text-[11px]' },
+    md: { icon: 'w-10 h-10', text: 'text-xl', sub: 'text-xs' },
     lg: { icon: 'w-14 h-14', text: 'text-2xl', sub: 'text-sm' },
-    xl: { icon: 'w-20 h-20', text: 'text-3xl', sub: 'text-base' },
+    xl: { icon: 'w-20 h-20', text: 'text-4xl', sub: 'text-base' },
   };
 
   const currentSize = sizeMap[size] || sizeMap.md;
 
   return (
     <div className={`flex items-center gap-3 ${className}`}>
-      {/* Ícone Vetorial */}
+      {/* Ícone Vetorial Estilo Desenhado à Mão (Hand-Drawn Inked Box) */}
       <div
-        className={`${currentSize.icon} relative flex-shrink-0 rounded-2xl bg-gradient-to-br from-indigo-600 via-indigo-700 to-indigo-900 p-2 shadow-md shadow-indigo-200/60 flex items-center justify-center`}
+        className={`${currentSize.icon} relative flex-shrink-0 rounded-xl bg-indigo-600 text-white border-2 border-zinc-900 dark:border-white shadow-[2.5px_2.5px_0px_#18181b] dark:shadow-[2.5px_2.5px_0px_#ffffff] p-1.5 flex items-center justify-center transform -rotate-2 hover:rotate-0 transition-transform`}
       >
         <svg
           viewBox="0 0 100 100"
@@ -33,64 +33,59 @@ export default function Logo({
           xmlns="http://www.w3.org/2000/svg"
           className="w-full h-full"
         >
-          <defs>
-            <linearGradient id="arandueGrad" x1="15%" y1="90%" x2="85%" y2="10%">
-              <stop offset="0%" stopColor="#818CF8" />
-              <stop offset="50%" stopColor="#38BDF8" />
-              <stop offset="100%" stopColor="#34D399" />
-            </linearGradient>
-            <linearGradient id="glowGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#ffffff" stopOpacity="0.9" />
-              <stop offset="100%" stopColor="#818CF8" stopOpacity="0.4" />
-            </linearGradient>
-          </defs>
-
-          {/* Haste Esquerda do 'A' */}
+          {/* Haste do 'A' estilo Nanquim artesanal com leve assimetria */}
           <path
-            d="M 24 82 L 48 20 Q 50 15 52 20 L 76 82"
-            stroke="url(#arandueGrad)"
+            d="M 22 84 L 47 18 C 49 14, 53 14, 55 18 L 80 84"
+            stroke="#ffffff"
             strokeWidth="9"
             strokeLinecap="round"
             strokeLinejoin="round"
           />
 
-          {/* Seta de Crescimento Ascendente Cruzando a Trave do 'A' */}
+          {/* Trave transversal do 'A' rabiscada à mão com seta ascendente */}
           <path
-            d="M 28 62 C 40 62, 46 54, 58 42 L 72 26"
-            stroke="#10B981"
-            strokeWidth="7"
+            d="M 24 62 Q 50 58 76 62"
+            stroke="#fde047"
+            strokeWidth="8"
             strokeLinecap="round"
           />
-          {/* Ponta da Seta */}
-          <polygon
-            points="70,16 84,24 74,38"
-            fill="#10B981"
-          />
 
-          {/* Folha Orgânica / Sabedoria (Arandu) */}
+          {/* Olho cartoon expressivo (Aranduê / Sabedoria da Coruja no topo do A) */}
+          <ellipse
+            cx="51"
+            cy="42"
+            rx="11"
+            ry="11"
+            fill="#ffffff"
+            stroke="#18181b"
+            strokeWidth="3.5"
+          />
+          <circle cx="53" cy="42" r="4.5" fill="#18181b" />
+          <circle cx="55" cy="40" r="1.5" fill="#ffffff" />
+
+          {/* Penacho / sobrancelha rabiscada da coruja */}
           <path
-            d="M 50 48 Q 66 38 68 56 Q 66 70 48 64"
-            fill="none"
-            stroke="url(#glowGrad)"
+            d="M 38 31 Q 50 25 64 31"
+            stroke="#fde047"
             strokeWidth="4"
             strokeLinecap="round"
           />
         </svg>
       </div>
 
-      {/* Tipografia */}
+      {/* Tipografia Hand-Crafted Display */}
       {showText && (
         <div className="flex flex-col leading-tight select-none">
           <span
-            className={`${currentSize.text} font-black tracking-tight bg-gradient-to-r from-gray-900 via-indigo-950 to-indigo-800 bg-clip-text text-transparent`}
+            className={`${currentSize.text} font-display font-extrabold tracking-tight text-zinc-900 dark:text-zinc-100 flex items-center gap-1`}
           >
             Aranduê
           </span>
           {subtitle && (
             <span
-              className={`${currentSize.sub} font-semibold text-indigo-600 uppercase tracking-wider`}
+              className={`${currentSize.sub} font-hand font-bold text-amber-600 dark:text-amber-400 tracking-wide`}
             >
-              {subtitle}
+              {subtitle} ✎
             </span>
           )}
         </div>
