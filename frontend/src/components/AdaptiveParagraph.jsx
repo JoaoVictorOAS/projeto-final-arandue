@@ -81,7 +81,7 @@ export default function AdaptiveParagraph({
 
   if (!isBrokenToThreeLines) {
     return (
-      <div ref={containerRef} className="max-w-full">
+      <div ref={containerRef} className="w-full max-w-full">
         <p ref={measurerRef} className={className} {...props}>
           {children}
         </p>
@@ -90,7 +90,7 @@ export default function AdaptiveParagraph({
   }
 
   return (
-    <div ref={containerRef} className="relative inline-block max-w-full">
+    <div ref={containerRef} className="relative w-full max-w-full">
       {/* Elemento oculto para medição dinâmica de quebra de linha quando em modo popover */}
       <p
         ref={measurerRef}

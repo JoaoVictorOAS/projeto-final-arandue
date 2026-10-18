@@ -659,8 +659,8 @@ export default function Estoque() {
       )}
 
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="min-w-0 md:max-w-md lg:max-w-lg">
+      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4">
+        <div className="min-w-0 max-w-2xl">
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
             <Package className="w-7 h-7 text-theme-primary shrink-0" />
             <span>Estoque & Produção</span>
