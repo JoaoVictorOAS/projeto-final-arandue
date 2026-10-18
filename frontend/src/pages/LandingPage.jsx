@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { useTheme, applyThemeToDOM } from '../context/ThemeContext';
 import {
   CartoonEyes,
   OwlMascotDoodle,
@@ -15,118 +14,8 @@ import {
   SketchStickerBadge,
 } from '../components/SketchDoodles';
 
-const PRESET_TEMAS = [
-  {
-    id: 'padrao-claro',
-    slug: 'claro-arandue',
-    nome: 'Claro Aranduê',
-    modo: 'light',
-    tokens: {
-      bgApp: '#f8fafc',
-      bgSurface: '#ffffff',
-      bgSurfaceHover: '#f1f5f9',
-      border: '#e2e8f0',
-      textMain: '#0f172a',
-      textSecondary: '#64748b',
-      textMuted: '#94a3b8',
-      primary: '#4f46e5',
-      primaryHover: '#4338ca',
-      primaryText: '#ffffff',
-      accent: '#f59e0b',
-    },
-  },
-  {
-    id: 'ambar-cafe',
-    slug: 'ambar-cafe',
-    nome: 'Âmbar & Café',
-    modo: 'light',
-    tokens: {
-      bgApp: '#faf5ee',
-      bgSurface: '#ffffff',
-      bgSurfaceHover: '#f5ebe0',
-      border: '#e6ccb2',
-      textMain: '#43281c',
-      textSecondary: '#7f4f24',
-      textMuted: '#a68a72',
-      primary: '#b45309',
-      primaryHover: '#92400e',
-      primaryText: '#ffffff',
-      accent: '#0284c7',
-    },
-  },
-  {
-    id: 'esmeralda-mei',
-    slug: 'esmeralda-mei',
-    nome: 'Esmeralda MEI',
-    modo: 'light',
-    tokens: {
-      bgApp: '#f0fdf4',
-      bgSurface: '#ffffff',
-      bgSurfaceHover: '#dcfce7',
-      border: '#bbf7d0',
-      textMain: '#064e3b',
-      textSecondary: '#047857',
-      textMuted: '#6ee7b7',
-      primary: '#059669',
-      primaryHover: '#047857',
-      primaryText: '#ffffff',
-      accent: '#d97706',
-    },
-  },
-  {
-    id: 'noturno-corporativo',
-    slug: 'noturno-corporativo',
-    nome: 'Noturno Corporativo',
-    modo: 'dark',
-    tokens: {
-      bgApp: '#0f172a',
-      bgSurface: '#1e293b',
-      bgSurfaceHover: '#334155',
-      border: '#334155',
-      textMain: '#f8fafc',
-      textSecondary: '#94a3b8',
-      textMuted: '#64748b',
-      primary: '#6366f1',
-      primaryHover: '#4f46e5',
-      primaryText: '#ffffff',
-      accent: '#38bdf8',
-    },
-  },
-  {
-    id: 'oceano-indigo',
-    slug: 'oceano-indigo',
-    nome: 'Oceano Índigo',
-    modo: 'dark',
-    tokens: {
-      bgApp: '#0b1329',
-      bgSurface: '#152244',
-      bgSurfaceHover: '#1e3260',
-      border: '#1e3260',
-      textMain: '#f1f5f9',
-      textSecondary: '#94a3b8',
-      textMuted: '#64748b',
-      primary: '#3b82f6',
-      primaryHover: '#2563eb',
-      primaryText: '#ffffff',
-      accent: '#f97316',
-    },
-  },
-];
-
 export default function LandingPage() {
   const { estaAutenticado } = useAuth();
-  const { temaAtual, ativarTema } = useTheme();
-  const [temaAtivoId, setTemaAtivoId] = useState(
-    temaAtual?.id || temaAtual?.slug || 'padrao-claro'
-  );
-
-  const handleMudarTema = (preset) => {
-    setTemaAtivoId(preset.id);
-    applyThemeToDOM(preset);
-    if (typeof ativarTema === 'function') {
-      ativarTema(preset.slug || preset.id).catch(() => {});
-    }
-  };
 
   return (
     <div
@@ -456,39 +345,8 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* Seletor de Temas (Discreto e Integrado ao Caderno) */}
-        <section className="mt-16 py-6 border-t-2 border-dashed border-current/20 flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <span className="font-hand text-xl font-bold">
-              🎨 Escolha o clima do seu caderno de gestão:
-            </span>
-          </div>
-          <div className="flex flex-wrap items-center gap-2 text-xs">
-            {PRESET_TEMAS.map((preset) => {
-              const isSelected = temaAtivoId === preset.id || temaAtivoId === preset.slug;
-              return (
-                <button
-                  key={preset.id}
-                  type="button"
-                  onClick={() => handleMudarTema(preset)}
-                  className={`sketch-btn px-3.5 py-1.5 rounded-full font-bold transition-transform ${
-                    isSelected ? 'ring-2 ring-indigo-500 scale-105' : 'hover:scale-102'
-                  }`}
-                  style={{
-                    backgroundColor: preset.tokens.bgApp,
-                    color: preset.tokens.textMain,
-                    borderColor: preset.tokens.border,
-                  }}
-                >
-                  {preset.nome}
-                </button>
-              );
-            })}
-          </div>
-        </section>
-
         {/* 6. Footer */}
-        <footer className="mt-8 border-t-2 border-dashed border-current/25 py-10 w-full flex flex-col sm:flex-row items-center justify-between gap-6 text-sm">
+        <footer className="mt-20 border-t-2 border-dashed border-current/25 py-10 w-full flex flex-col sm:flex-row items-center justify-between gap-6 text-sm">
           <div className="flex items-center gap-3">
             <span className="font-display font-black text-2xl tracking-tighter">ARANDUÊ</span>
             <CartoonEyes className="w-8 h-5 text-current inline-block" />

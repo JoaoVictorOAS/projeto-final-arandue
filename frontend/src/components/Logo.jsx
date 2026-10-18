@@ -23,9 +23,9 @@ export default function Logo({
 
   return (
     <div className={`flex items-center gap-3 ${className}`}>
-      {/* Ícone Vetorial Estilo Desenhado à Mão (Hand-Drawn Inked Box) */}
+      {/* Ícone Vetorial Estilo Desenhado à Mão — Gatinho Estilo PKLS (Hand-Drawn Cat) */}
       <div
-        className={`${currentSize.icon} relative flex-shrink-0 rounded-xl bg-indigo-600 text-white border-2 border-zinc-900 dark:border-white shadow-[2.5px_2.5px_0px_#18181b] dark:shadow-[2.5px_2.5px_0px_#ffffff] p-1.5 flex items-center justify-center transform -rotate-2 hover:rotate-0 transition-transform`}
+        className={`${currentSize.icon} relative flex-shrink-0 rounded-2xl bg-amber-200 text-zinc-900 border-2 border-zinc-900 dark:border-white shadow-[3px_3px_0px_#18181b] dark:shadow-[3px_3px_0px_#ffffff] p-1 flex items-center justify-center transform -rotate-3 hover:rotate-0 transition-transform`}
       >
         <svg
           viewBox="0 0 100 100"
@@ -33,41 +33,88 @@ export default function Logo({
           xmlns="http://www.w3.org/2000/svg"
           className="w-full h-full"
         >
-          {/* Haste do 'A' estilo Nanquim artesanal com leve assimetria */}
+          {/* Silhueta da Cabeça e Orelhas do Gatinho em traço grosso */}
           <path
-            d="M 22 84 L 47 18 C 49 14, 53 14, 55 18 L 80 84"
-            stroke="#ffffff"
-            strokeWidth="9"
+            d="M 22 45 L 18 16 C 17 12, 23 11, 27 15 L 40 28 C 46 25, 54 25, 60 28 L 73 15 C 77 11, 83 12, 82 16 L 78 45 C 84 54, 84 68, 78 78 C 70 90, 30 90, 22 78 C 16 68, 16 54, 22 45 Z"
+            fill="#ffffff"
+            stroke="#18181b"
+            strokeWidth="4"
             strokeLinecap="round"
             strokeLinejoin="round"
           />
 
-          {/* Trave transversal do 'A' rabiscada à mão com seta ascendente */}
+          {/* Orelhas internas */}
           <path
-            d="M 24 62 Q 50 58 76 62"
-            stroke="#fde047"
-            strokeWidth="8"
+            d="M 24 24 L 28 34 M 76 24 L 72 34"
+            stroke="#f59e0b"
+            strokeWidth="3"
             strokeLinecap="round"
           />
 
-          {/* Olho cartoon expressivo (Aranduê / Sabedoria da Coruja no topo do A) */}
-          <ellipse
-            cx="51"
-            cy="42"
-            rx="11"
-            ry="11"
-            fill="#ffffff"
+          {/* Óculos Escuros Estilo PKLS (Cool Cat Sunglasses) */}
+          <rect
+            x="24"
+            y="42"
+            width="22"
+            height="14"
+            rx="4"
+            fill="#18181b"
+            stroke="#18181b"
+            strokeWidth="2"
+          />
+          <rect
+            x="54"
+            y="42"
+            width="22"
+            height="14"
+            rx="4"
+            fill="#18181b"
+            stroke="#18181b"
+            strokeWidth="2"
+          />
+          {/* Ponte dos óculos */}
+          <line
+            x1="44"
+            y1="48"
+            x2="54"
+            y2="48"
             stroke="#18181b"
             strokeWidth="3.5"
+            strokeLinecap="round"
           />
-          <circle cx="53" cy="42" r="4.5" fill="#18181b" />
-          <circle cx="55" cy="40" r="1.5" fill="#ffffff" />
+          {/* Brilho reflexo branco na lente esquerda */}
+          <line
+            x1="27"
+            y1="45"
+            x2="33"
+            y2="45"
+            stroke="#ffffff"
+            strokeWidth="2"
+            strokeLinecap="round"
+          />
 
-          {/* Penacho / sobrancelha rabiscada da coruja */}
+          {/* Narizinho de Gato */}
           <path
-            d="M 38 31 Q 50 25 64 31"
-            stroke="#fde047"
-            strokeWidth="4"
+            d="M 47 62 L 53 62 L 50 66 Z"
+            fill="#18181b"
+            stroke="#18181b"
+            strokeWidth="1.5"
+            strokeLinejoin="round"
+          />
+
+          {/* Focinho / Boquinha de Gato */}
+          <path
+            d="M 44 69 Q 50 73 50 66 Q 50 73 56 69"
+            stroke="#18181b"
+            strokeWidth="3"
+            strokeLinecap="round"
+          />
+
+          {/* Bigodes do Gatinho */}
+          <path
+            d="M 12 56 L 22 58 M 10 64 L 21 63 M 78 58 L 88 56 M 79 63 L 90 64"
+            stroke="#18181b"
+            strokeWidth="2.5"
             strokeLinecap="round"
           />
         </svg>

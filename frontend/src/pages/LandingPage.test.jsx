@@ -57,7 +57,7 @@ describe('LandingPage - Estilo Desenhado à Mão', () => {
     expect(screen.getAllByRole('link', { name: /começar grátis|criar conta/i }).length).toBeGreaterThan(0);
   });
 
-  test('deve permitir testar temas diferentes ao vivo na vitrine da landing page', () => {
+  test('deve renderizar os links editoriais de navegação e demonstração na landing page', () => {
     render(
       <MemoryRouter>
         <ThemeProvider>
@@ -68,11 +68,9 @@ describe('LandingPage - Estilo Desenhado à Mão', () => {
       </MemoryRouter>
     );
 
-    const botaoAmbar = screen.getByRole('button', { name: /Âmbar & Café/i });
-    act(() => {
-      fireEvent.click(botaoAmbar);
-    });
-    expect(document.documentElement.getAttribute('data-theme-id')).toBe('ambar-cafe');
+    expect(screen.getAllByRole('link', { name: /como funciona/i }).length).toBeGreaterThan(0);
+    expect(screen.getByRole('link', { name: /superpoderes ia/i })).toBeInTheDocument();
+    expect(screen.getAllByRole('link', { name: /demonstração atendente ia/i }).length).toBeGreaterThan(0);
   });
 
   test('visitante não autenticado acessando a raiz / deve visualizar a LandingPage diretamente', async () => {

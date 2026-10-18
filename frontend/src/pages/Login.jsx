@@ -113,7 +113,7 @@ export default function Login() {
 
   return (
     <div
-      className="min-h-screen w-full flex flex-col lg:flex-row bg-white theme-isolated"
+      className="h-screen w-full flex flex-col lg:flex-row bg-white theme-isolated overflow-y-auto lg:overflow-hidden"
       style={{
         backgroundColor: '#ffffff',
         color: '#1c1917',
@@ -121,9 +121,9 @@ export default function Login() {
       }}
     >
       {/* Lado Esquerdo: Vitrine Modular (Oculto no mobile, visível apenas a partir de lg) */}
-      <div className="hidden lg:flex lg:w-1/2 bg-stone-100/70 border-r border-stone-200 p-8 sm:p-12 lg:p-16 flex-col justify-between">
+      <div className="hidden lg:flex lg:w-1/2 bg-stone-100/70 border-r border-stone-200 p-6 lg:p-8 xl:p-10 flex-col justify-between h-full overflow-hidden">
         <div>
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-2">
             <Link
               to="/landing"
               className="inline-flex items-center gap-1.5 text-xs font-semibold text-stone-600 hover:text-stone-900 hover:underline transition-colors"
@@ -140,70 +140,70 @@ export default function Login() {
             <CartoonEyes className="w-8 h-5 opacity-80" />
           </div>
 
-          <div className="mt-8 lg:mt-10 max-w-xl">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-sm font-bold bg-amber-200 text-stone-900 border-2 border-stone-800 shadow-[2px_2px_0px_#292524] mb-3 transform -rotate-1 font-hand">
+          <div className="mt-4 max-w-xl">
+            <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-md text-xs font-bold bg-amber-200 text-stone-900 border-2 border-stone-800 shadow-[2px_2px_0px_#292524] mb-2 transform -rotate-1 font-hand">
               ✎ Caderno de Gestão Descomplicada
             </div>
-            <h1 className="text-3xl sm:text-4xl font-display font-extrabold text-stone-900 tracking-tight leading-snug">
+            <h1 className="text-2xl sm:text-3xl font-display font-extrabold text-stone-900 tracking-tight leading-snug">
               Gestão modular feita para o microempreendedor.
             </h1>
-            <SketchUnderline className="w-36 h-2.5 text-amber-500 opacity-80 mt-1" />
-            <p className="text-stone-600 text-sm sm:text-base mt-3 leading-relaxed">
+            <SketchUnderline className="w-32 h-2 text-amber-500 opacity-80 mt-0.5" />
+            <p className="text-stone-600 text-xs sm:text-sm mt-2 leading-relaxed">
               Controle financeiro, emissão de notas e suporte prático reunidos em uma experiência sem enrolação.
             </p>
           </div>
 
           {/* Destaque do Mascote Aranduê com anotação manuscrita */}
-          <div className="mt-6 flex items-center gap-4 p-4 bg-white rounded-2xl border-2 border-stone-800 shadow-[3px_3px_0px_#292524]">
-            <OwlMascotDoodle variant="cool" className="w-16 h-16 flex-shrink-0" />
+          <div className="mt-4 flex items-center gap-3 p-3 bg-white rounded-xl border-2 border-stone-800 shadow-[2.5px_2.5px_0px_#292524]">
+            <OwlMascotDoodle variant="cool" className="w-12 h-12 flex-shrink-0" />
             <div>
-              <p className="font-hand text-lg text-stone-900 font-bold leading-tight">
+              <p className="font-hand text-base text-stone-900 font-bold leading-tight">
                 "Você foca no seu corre, o Aranduê cuida da burocracia!"
               </p>
-              <p className="text-xs text-stone-500 font-sans mt-0.5">
+              <p className="text-[11px] text-stone-500 font-sans mt-0.5">
                 Coruja Aranduê — sua parceira no financeiro e no WhatsApp
               </p>
             </div>
           </div>
 
           {/* Cards Modulares Bento (Estilo Desenhado à Mão, Bordas Sólidas de Nanquim) */}
-          <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-xl">
+          <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-xl">
             {/* Bloco 1: Livro Caixa */}
-            <div className="bg-white border-2 border-stone-800 rounded-2xl p-5 shadow-[3px_3px_0px_#292524] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-transform">
-              <div className="w-9 h-9 rounded-xl bg-amber-100 border-2 border-stone-800 text-stone-900 flex items-center justify-center mb-3 shadow-[1.5px_1.5px_0px_#292524]">
-                <TrendingUp className="w-4 h-4" />
+            <div className="bg-white border-2 border-stone-800 rounded-xl p-3.5 shadow-[2.5px_2.5px_0px_#292524]">
+              <div className="w-8 h-8 rounded-lg bg-amber-100 border-2 border-stone-800 text-stone-900 flex items-center justify-center mb-2 shadow-[1px_1px_0px_#292524]">
+                <TrendingUp className="w-3.5 h-3.5" />
               </div>
-              <h3 className="text-sm font-bold text-stone-900">Livro Caixa</h3>
-              <p className="text-xs text-stone-600 mt-1 leading-relaxed">
-                Acompanhamento ágil de entradas, saídas e previsão de faturamento sem planilhas complexas.
+              <h3 className="text-xs font-bold text-stone-900">Livro Caixa</h3>
+              <p className="text-[11px] text-stone-600 mt-0.5 leading-relaxed">
+                Acompanhamento ágil de entradas, saídas e faturamento sem planilhas complexas.
               </p>
             </div>
 
             {/* Bloco 2: Notas Fiscais */}
-            <div className="bg-white border-2 border-stone-800 rounded-2xl p-5 shadow-[3px_3px_0px_#292524] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-transform">
-              <div className="w-9 h-9 rounded-xl bg-sky-100 border-2 border-stone-800 text-stone-900 flex items-center justify-center mb-3 shadow-[1.5px_1.5px_0px_#292524]">
-                <FileText className="w-4 h-4" />
+            <div className="bg-white border-2 border-stone-800 rounded-xl p-3.5 shadow-[2.5px_2.5px_0px_#292524]">
+              <div className="w-8 h-8 rounded-lg bg-sky-100 border-2 border-stone-800 text-stone-900 flex items-center justify-center mb-2 shadow-[1px_1px_0px_#292524]">
+                <FileText className="w-3.5 h-3.5" />
               </div>
-              <h3 className="text-sm font-bold text-stone-900">Notas Fiscais</h3>
-              <p className="text-xs text-stone-600 mt-1 leading-relaxed">
+              <h3 className="text-xs font-bold text-stone-900">Notas Fiscais</h3>
+              <p className="text-[11px] text-stone-600 mt-0.5 leading-relaxed">
                 Emissão simplificada e cálculo tributário automático no padrão oficial do MEI.
               </p>
             </div>
 
             {/* Bloco 3: Assistente IA */}
-            <div className="sm:col-span-2 bg-white border-2 border-stone-800 rounded-2xl p-5 shadow-[3px_3px_0px_#292524] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-transform">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-9 h-9 rounded-xl bg-lime-200 border-2 border-stone-800 text-stone-900 flex items-center justify-center shadow-[1.5px_1.5px_0px_#292524]">
-                    <Sparkles className="w-4 h-4" />
+            <div className="sm:col-span-2 bg-white border-2 border-stone-800 rounded-xl p-3.5 shadow-[2.5px_2.5px_0px_#292524]">
+              <div className="flex items-center justify-between mb-1.5">
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-lg bg-lime-200 border-2 border-stone-800 text-stone-900 flex items-center justify-center shadow-[1px_1px_0px_#292524]">
+                    <Sparkles className="w-3.5 h-3.5" />
                   </div>
-                  <h3 className="text-sm font-bold text-stone-900">Assistente Virtual Aranduê</h3>
+                  <h3 className="text-xs font-bold text-stone-900">Assistente Virtual Aranduê</h3>
                 </div>
-                <span className="font-hand text-sm font-bold text-stone-900 bg-lime-300 border-2 border-stone-800 px-3 py-0.5 rounded-md shadow-[1.5px_1.5px_0px_#292524] rotate-2">
+                <span className="font-hand text-xs font-bold text-stone-900 bg-lime-300 border-2 border-stone-800 px-2.5 py-0.5 rounded-md shadow-[1px_1px_0px_#292524] rotate-1">
                   24h no Zap ✎
                 </span>
               </div>
-              <p className="text-xs text-stone-600 leading-relaxed mt-1">
+              <p className="text-[11px] text-stone-600 leading-relaxed">
                 Tire dúvidas com base no manual oficial do MEI e consulte relatórios diretamente pelo chat.
               </p>
             </div>
@@ -211,7 +211,7 @@ export default function Login() {
         </div>
 
         {/* Rodapé do painel de apresentação */}
-        <div className="mt-10 pt-6 border-t border-stone-200 flex items-center justify-between text-xs text-stone-500">
+        <div className="mt-4 pt-3 border-t border-stone-200 flex items-center justify-between text-xs text-stone-500">
           <span className="flex items-center gap-1.5">
             <ShieldCheck className="w-4 h-4 text-emerald-600" />
             Isolamento de dados e segurança
@@ -221,10 +221,10 @@ export default function Login() {
       </div>
 
       {/* Lado Direito: Formulário de Autenticação (100% da tela no mobile, 50% em desktop) */}
-      <div className="w-full lg:w-1/2 min-h-screen flex items-center justify-center p-6 sm:p-12 lg:p-16 bg-white">
-        <div className="w-full max-w-md">
+      <div className="w-full lg:w-1/2 h-full flex items-center justify-center p-6 sm:p-8 lg:p-10 xl:p-12 bg-white overflow-y-auto lg:overflow-hidden">
+        <div className="w-full max-w-md my-auto">
           {/* Logo exibido no topo do formulário em dispositivos móveis */}
-          <div className="lg:hidden mb-8 flex flex-col items-center gap-2">
+          <div className="lg:hidden mb-4 flex flex-col items-center gap-1.5">
             <Logo size="md" showText={true} />
             <Link
               to="/landing"
@@ -235,30 +235,30 @@ export default function Login() {
           </div>
 
           {/* Cabeçalho do formulário */}
-          <div className="mb-8 text-center">
-            <h2 className="text-2xl sm:text-3xl font-bold text-stone-900 tracking-tight flex items-center justify-center gap-2">
+          <div className="mb-5 text-center">
+            <h2 className="text-2xl sm:text-3xl font-display font-extrabold text-stone-900 tracking-tight flex items-center justify-center gap-2">
               <span>Bem-vindo de volta</span>
               <CartoonEyes className="w-7 h-5 inline-block opacity-85" />
             </h2>
-            <p className="text-sm text-stone-500 mt-1.5">
+            <p className="text-xs sm:text-sm text-stone-500 mt-1">
               Acesse sua conta para continuar gerenciando seu negócio.
             </p>
           </div>
 
           {erro && (
-            <div className="mb-6 p-4 rounded-xl bg-rose-50 border border-rose-200/80 flex items-start gap-3 text-rose-800 text-sm">
-              <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5 text-rose-600" />
+            <div className="mb-4 p-3 rounded-xl bg-rose-50 border border-rose-200/80 flex items-start gap-2.5 text-rose-800 text-xs sm:text-sm">
+              <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5 text-rose-600" />
               <div className="leading-relaxed">{erro}</div>
             </div>
           )}
 
           {/* Botão de Login com Google via Firebase */}
-          <div className="space-y-4">
+          <div className="space-y-3">
             <button
               type="button"
               onClick={handleGoogleLogin}
               disabled={submetendoGoogle || submetendo}
-              className="w-full py-3.5 px-4 rounded-xl border border-stone-300 hover:border-stone-400 bg-white hover:bg-stone-50 text-stone-800 font-semibold text-sm transition-colors flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm focus:outline-none focus:ring-2 focus:ring-stone-900/10"
+              className="w-full py-2.5 px-4 rounded-xl border border-stone-300 hover:border-stone-400 bg-white hover:bg-stone-50 text-stone-800 font-semibold text-xs sm:text-sm transition-colors flex items-center justify-center gap-2.5 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm focus:outline-none focus:ring-2 focus:ring-stone-900/10"
             >
               {submetendoGoogle ? (
                 <>
@@ -292,19 +292,19 @@ export default function Login() {
             </button>
 
             {/* Divisor Visual */}
-            <div className="relative flex items-center justify-center my-6">
+            <div className="relative flex items-center justify-center my-4">
               <div className="border-t border-stone-200 w-full" />
-              <span className="bg-white px-3 text-xs uppercase tracking-wider text-stone-400 font-medium absolute">
+              <span className="bg-white px-3 text-[11px] uppercase tracking-wider text-stone-400 font-medium absolute">
                 ou entre com seu e-mail
               </span>
             </div>
 
             {/* Formulário Tradicional */}
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-3">
               <div>
                 <label
                   htmlFor="email"
-                  className="block text-xs font-semibold uppercase tracking-wider text-stone-700 mb-1.5"
+                  className="block text-xs font-semibold uppercase tracking-wider text-stone-700 mb-1"
                 >
                   E-mail
                 </label>
@@ -317,12 +317,12 @@ export default function Login() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="seu.email@exemplo.com"
-                  className="w-full px-4 py-3 rounded-xl border border-stone-300 bg-white text-stone-900 text-sm focus:outline-none focus:border-stone-900 focus:ring-1 focus:ring-stone-900 transition-colors placeholder:text-stone-400"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 bg-white text-stone-900 text-sm focus:outline-none focus:border-stone-900 focus:ring-1 focus:ring-stone-900 transition-colors placeholder:text-stone-400"
                 />
               </div>
 
               <div>
-                <div className="flex items-center justify-between mb-1.5">
+                <div className="flex items-center justify-between mb-1">
                   <label
                     htmlFor="senha"
                     className="block text-xs font-semibold uppercase tracking-wider text-stone-700"
@@ -340,13 +340,13 @@ export default function Login() {
                     value={senha}
                     onChange={(e) => setSenha(e.target.value)}
                     placeholder="••••••••"
-                    className="w-full px-4 py-3 pr-11 rounded-xl border border-stone-300 bg-white text-stone-900 text-sm focus:outline-none focus:border-stone-900 focus:ring-1 focus:ring-stone-900 transition-colors placeholder:text-stone-400"
+                    className="w-full px-3.5 py-2.5 pr-11 rounded-xl border border-stone-300 bg-white text-stone-900 text-sm focus:outline-none focus:border-stone-900 focus:ring-1 focus:ring-stone-900 transition-colors placeholder:text-stone-400"
                   />
                   <button
                     type="button"
                     onClick={() => setMostrarSenha(!mostrarSenha)}
                     aria-label={mostrarSenha ? 'Ocultar caracteres' : 'Exibir caracteres'}
-                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600 p-1 focus:outline-none"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600 p-1 focus:outline-none"
                   >
                     {mostrarSenha ? (
                       <EyeOff className="w-4 h-4" />
@@ -361,7 +361,7 @@ export default function Login() {
               <button
                 type="submit"
                 disabled={submetendo || submetendoGoogle}
-                className="w-full mt-2 py-3.5 px-4 bg-stone-900 hover:bg-black disabled:opacity-50 text-white font-semibold rounded-xl shadow-sm transition-colors flex items-center justify-center gap-2 text-sm focus:outline-none focus:ring-2 focus:ring-stone-900 focus:ring-offset-2"
+                className="w-full mt-2 py-3 px-4 bg-stone-900 hover:bg-black disabled:opacity-50 text-white font-semibold rounded-xl shadow-sm transition-colors flex items-center justify-center gap-2 text-sm focus:outline-none focus:ring-2 focus:ring-stone-900 focus:ring-offset-2"
               >
                 {submetendo ? (
                   <>
@@ -379,8 +379,8 @@ export default function Login() {
           </div>
 
           {/* Rodapé do Form */}
-          <div className="mt-8 pt-6 border-t border-stone-100 text-center">
-            <p className="text-sm text-stone-500">
+          <div className="mt-4 pt-3 border-t border-stone-100 text-center">
+            <p className="text-xs text-stone-500">
               Ainda não tem conta no Aranduê?{' '}
               <Link
                 to="/register"
