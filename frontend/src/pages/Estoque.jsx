@@ -661,7 +661,7 @@ export default function Estoque() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <Package className="w-7 h-7 text-indigo-600" />
+            <Package className="w-7 h-7 text-theme-primary" />
             Estoque & Produção
           </h1>
           <p className="text-sm text-gray-500 mt-1">
@@ -669,55 +669,48 @@ export default function Estoque() {
           </p>
         </div>
 
-        {/* Ações Rápidas */}
-        <div className="flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            onClick={() => {
-              setCameraDestino('nota');
-              setCameraModalAberto(true);
-            }}
-            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-sky-600 text-white text-sm font-semibold hover:bg-sky-700 transition-colors shadow-sm"
-            title="Tirar foto com a câmera direto do app"
-          >
-            <Camera className="w-4 h-4" />
-            Tirar Foto de Insumo / Nota
-          </button>
-
+        {/* Ações Rápidas em Linha Única */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 flex-nowrap">
           <button
             type="button"
             onClick={() => setModalNotaFiscalAberto(true)}
-            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors shadow-sm"
+            aria-label="Entrada por Nota Fiscal ou Foto"
+            className="badge-theme-subtle hover:brightness-95 inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold transition whitespace-nowrap shadow-xs"
+            title="Importar Insumos por Foto da Câmera, Galeria ou XML de NF-e"
           >
-            <Camera className="w-4 h-4" />
-            Entrada por Nota / Foto / XML
+            <Camera className="w-4 h-4 text-theme-primary" />
+            <span>Foto / Nota</span>
           </button>
 
           <button
             type="button"
             onClick={() => setModalEntradaAberto(true)}
-            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700 transition-colors shadow-sm"
+            aria-label="Registrar compra / entrada de insumo"
+            className="badge-theme-subtle hover:brightness-95 inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold transition whitespace-nowrap shadow-xs"
+            title="Registrar compra avulsa de insumos"
           >
-            <ArrowDownRight className="w-4 h-4" />
-            Registrar Compra / Entrada
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setModalInsumoAberto(true)}
-            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 transition-colors shadow-sm"
-          >
-            <Plus className="w-4 h-4" />
-            Novo Insumo
+            <ArrowDownRight className="w-4 h-4 text-theme-primary" />
+            <span>Nova Compra</span>
           </button>
 
           <button
             type="button"
             onClick={() => setModalProducaoAberto(true)}
-            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-purple-600 text-white text-sm font-medium hover:bg-purple-700 transition-colors shadow-sm"
+            className="badge-theme-subtle hover:brightness-95 inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold transition whitespace-nowrap shadow-xs"
+            title="Registrar produção de lote de produtos"
           >
-            <ChefHat className="w-4 h-4" />
-            Registrar Produção
+            <ChefHat className="w-4 h-4 text-theme-primary" />
+            <span>Produzir</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setModalInsumoAberto(true)}
+            className="btn-theme-primary inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition whitespace-nowrap shadow-sm"
+            title="Cadastrar nova matéria-prima ou insumo"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Novo Insumo</span>
           </button>
         </div>
       </div>
@@ -729,8 +722,8 @@ export default function Estoque() {
             <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Total de Insumos</p>
             <p className="text-2xl font-bold text-gray-900 mt-1">{totalInsumos}</p>
           </div>
-          <div className="p-3 bg-indigo-50 text-indigo-600 rounded-lg">
-            <Boxes className="w-6 h-6" />
+          <div className="p-3 badge-theme-subtle rounded-xl">
+            <Boxes className="w-6 h-6 text-theme-primary" />
           </div>
         </div>
 
@@ -751,65 +744,66 @@ export default function Estoque() {
             <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Produtos com Receita</p>
             <p className="text-2xl font-bold text-gray-900 mt-1">{servicos.length}</p>
           </div>
-          <div className="p-3 bg-purple-50 text-purple-600 rounded-lg">
-            <ChefHat className="w-6 h-6" />
+          <div className="p-3 badge-theme-subtle rounded-xl">
+            <ChefHat className="w-6 h-6 text-theme-primary" />
           </div>
         </div>
       </div>
 
-      {/* Navegação por Abas */}
-      <div className="border-b border-gray-200">
-        <nav className="flex space-x-8" aria-label="Abas de Estoque">
+      {/* Navegação por Abas Responsiva */}
+      <div className="bg-gray-100/80 p-1.5 rounded-2xl border border-gray-200/60 shadow-xs">
+        <nav className="grid grid-cols-2 lg:grid-cols-4 gap-1.5" aria-label="Abas de Estoque">
           <button
             type="button"
             onClick={() => setActiveTab('insumos')}
-            className={`py-3 px-1 border-b-2 font-medium text-sm flex items-center gap-2 transition-colors ${
+            className={`py-2.5 px-3 rounded-xl font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 transition ${
               activeTab === 'insumos'
-                ? 'border-indigo-600 text-indigo-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                ? 'tab-theme-active shadow-xs'
+                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-200/50'
             }`}
           >
-            <Boxes className="w-4 h-4" />
-            Matérias-Primas & Insumos
+            <Boxes className="w-4 h-4 shrink-0" />
+            <span className="truncate">Insumos & Estoque</span>
           </button>
 
           <button
             type="button"
             onClick={() => setActiveTab('receitas')}
-            className={`py-3 px-1 border-b-2 font-medium text-sm flex items-center gap-2 transition-colors ${
+            className={`py-2.5 px-3 rounded-xl font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 transition ${
               activeTab === 'receitas'
-                ? 'border-indigo-600 text-indigo-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                ? 'tab-theme-active shadow-xs'
+                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-200/50'
             }`}
           >
-            <ChefHat className="w-4 h-4" />
-            Fichas Técnicas (Receitas)
+            <ChefHat className="w-4 h-4 shrink-0" />
+            <span className="truncate">Fichas Técnicas</span>
           </button>
 
           <button
             type="button"
             onClick={() => setActiveTab('simulador')}
-            className={`py-3 px-1 border-b-2 font-medium text-sm flex items-center gap-2 transition-colors ${
+            aria-label="Simulador de Capacidade"
+            className={`py-2.5 px-3 rounded-xl font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 transition ${
               activeTab === 'simulador'
-                ? 'border-indigo-600 text-indigo-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                ? 'tab-theme-active shadow-xs'
+                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-200/50'
             }`}
           >
-            <Calculator className="w-4 h-4" />
-            Simulador de Capacidade
+            <Calculator className="w-4 h-4 shrink-0" />
+            <span className="truncate">Simulador de Capacidade</span>
           </button>
 
           <button
             type="button"
             onClick={() => setActiveTab('movimentacoes')}
-            className={`py-3 px-1 border-b-2 font-medium text-sm flex items-center gap-2 transition-colors ${
+            className={`py-2.5 px-3 rounded-xl font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 transition ${
               activeTab === 'movimentacoes'
-                ? 'border-indigo-600 text-indigo-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                ? 'tab-theme-active shadow-xs'
+                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-200/50'
             }`}
           >
-            <History className="w-4 h-4" />
-            Histórico de Movimentações
+            <History className="w-4 h-4 shrink-0" />
+            <span className="truncate">Histórico de Movimentações</span>
           </button>
         </nav>
       </div>
@@ -856,7 +850,7 @@ export default function Estoque() {
           <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
             {loading ? (
               <div className="p-12 text-center text-gray-500 flex flex-col items-center justify-center gap-2">
-                <Loader2 className="w-6 h-6 animate-spin text-indigo-600" />
+                <Loader2 className="w-6 h-6 animate-spin text-theme-primary" />
                 <p className="text-sm">Carregando estoque de matérias-primas...</p>
               </div>
             ) : insumos.length === 0 ? (
@@ -869,7 +863,7 @@ export default function Estoque() {
                 <button
                   type="button"
                   onClick={() => setModalInsumoAberto(true)}
-                  className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700"
+                  className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-xl btn-theme-primary text-sm font-semibold shadow-sm transition"
                 >
                   <Plus className="w-4 h-4" />
                   Cadastrar Primeiro Insumo
@@ -965,7 +959,7 @@ export default function Estoque() {
                 <button
                   type="button"
                   onClick={() => setModalReceitaAberto(true)}
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 transition-colors"
+                  className="btn-theme-primary inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold shadow-sm transition"
                 >
                   <ChefHat className="w-4 h-4" />
                   Editar / Montar Receita
@@ -976,17 +970,17 @@ export default function Estoque() {
             {/* Conteúdo da Ficha Técnica */}
             {loadingFicha ? (
               <div className="py-8 text-center text-gray-500">
-                <Loader2 className="w-6 h-6 animate-spin text-indigo-600 mx-auto mb-2" />
+                <Loader2 className="w-6 h-6 animate-spin text-theme-primary mx-auto mb-2" />
                 <p className="text-sm">Buscando ingredientes e CMV...</p>
               </div>
             ) : servicoSelecionadoId ? (
               <div className="space-y-4 pt-4 border-t border-gray-100">
-                <div className="bg-indigo-50/70 p-4 rounded-xl border border-indigo-100 flex items-center justify-between">
+                <div className="badge-theme-subtle p-4 rounded-xl flex items-center justify-between">
                   <div>
-                    <p className="text-xs font-semibold text-indigo-700 uppercase">
+                    <p className="text-xs font-semibold text-theme-primary uppercase">
                       Custo Médio de Confecção (CMV dos Insumos)
                     </p>
-                    <p className="text-2xl font-bold text-indigo-900 mt-0.5">
+                    <p className="text-2xl font-bold text-theme-primary mt-0.5">
                       {formatCurrency(fichaAtual.custo_ingredientes)}
                     </p>
                   </div>
@@ -1004,7 +998,7 @@ export default function Estoque() {
                     <button
                       type="button"
                       onClick={() => setModalReceitaAberto(true)}
-                      className="mt-3 text-sm text-indigo-600 font-semibold hover:underline"
+                      className="mt-3 text-sm text-theme-primary font-semibold hover:underline"
                     >
                       Cadastrar ingredientes agora &rarr;
                     </button>
@@ -1061,7 +1055,7 @@ export default function Estoque() {
           <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm space-y-4">
             <div>
               <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                <Calculator className="w-5 h-5 text-indigo-600" />
+                <Calculator className="w-5 h-5 text-theme-primary" />
                 Simulador Produtivo ("Com meu estoque atual, quanto consigo fazer?")
               </h2>
               <p className="text-sm text-gray-500 mt-1">
@@ -1092,7 +1086,7 @@ export default function Estoque() {
               <button
                 type="submit"
                 disabled={simulando || !simulacaoServicoId}
-                className="px-5 py-2 rounded-lg bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700 disabled:opacity-50 transition-colors flex items-center gap-2"
+                className="btn-theme-primary px-5 py-2 rounded-xl text-sm font-semibold transition flex items-center gap-2 shadow-sm disabled:opacity-50"
               >
                 {simulando ? <Loader2 className="w-4 h-4 animate-spin" /> : <Calculator className="w-4 h-4" />}
                 Simular Agora
@@ -1236,14 +1230,14 @@ export default function Estoque() {
         title="Novo Insumo / Matéria-Prima"
       >
         <form onSubmit={handleCadastrarInsumo} className="space-y-4">
-          <div className="bg-indigo-50/70 border border-indigo-200 rounded-lg p-3 flex items-center justify-between gap-3">
+          <div className="badge-theme-subtle rounded-xl p-3 flex items-center justify-between gap-3">
             <div className="flex items-center gap-2.5">
-              <div className="p-2 bg-indigo-600 text-white rounded-lg">
+              <div className="p-2 btn-theme-primary rounded-lg">
                 <Camera className="w-4 h-4" />
               </div>
               <div>
-                <p className="text-xs font-bold text-indigo-950">Preenchimento Rápido com IA</p>
-                <p className="text-[11px] text-indigo-700">Fotografe a embalagem ou rótulo do insumo</p>
+                <p className="text-xs font-bold text-gray-900">Preenchimento Rápido com IA</p>
+                <p className="text-[11px] text-gray-600">Fotografe a embalagem ou rótulo do insumo</p>
               </div>
             </div>
             <button
@@ -1253,7 +1247,7 @@ export default function Estoque() {
                 setCameraDestino('novo_insumo');
                 setCameraModalAberto(true);
               }}
-              className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-lg shadow-sm flex items-center gap-1.5 transition-colors disabled:opacity-50"
+              className="btn-theme-primary px-3 py-1.5 text-xs font-semibold rounded-lg shadow-sm flex items-center gap-1.5 transition-colors disabled:opacity-50"
             >
               {analisandoFotoOcr ? (
                 <>
@@ -1326,7 +1320,7 @@ export default function Estoque() {
             <button
               type="submit"
               disabled={salvando}
-              className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg disabled:opacity-50 flex items-center gap-2"
+              className="btn-theme-primary px-4 py-2 text-sm font-semibold rounded-xl disabled:opacity-50 flex items-center gap-2 shadow-sm transition"
             >
               {salvando && <Loader2 className="w-4 h-4 animate-spin" />}
               Salvar Insumo
@@ -1342,14 +1336,14 @@ export default function Estoque() {
         title="Registrar Compra / Entrada de Insumo"
       >
         <form onSubmit={handleRegistrarEntrada} className="space-y-4">
-          <div className="bg-emerald-50/70 border border-emerald-200 rounded-lg p-3 flex items-center justify-between gap-3">
+          <div className="badge-theme-subtle rounded-xl p-3 flex items-center justify-between gap-3">
             <div className="flex items-center gap-2.5">
-              <div className="p-2 bg-emerald-600 text-white rounded-lg">
+              <div className="p-2 btn-theme-primary rounded-lg">
                 <Camera className="w-4 h-4" />
               </div>
               <div>
-                <p className="text-xs font-bold text-emerald-950">Preencher Dados por Foto</p>
-                <p className="text-[11px] text-emerald-700">Fotografe o cupom ou embalagem comprada</p>
+                <p className="text-xs font-bold text-gray-900">Preencher Dados por Foto</p>
+                <p className="text-[11px] text-gray-600">Fotografe o cupom ou embalagem comprada</p>
               </div>
             </div>
             <button
@@ -1359,7 +1353,7 @@ export default function Estoque() {
                 setCameraDestino('entrada');
                 setCameraModalAberto(true);
               }}
-              className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg shadow-sm flex items-center gap-1.5 transition-colors disabled:opacity-50"
+              className="btn-theme-primary px-3 py-1.5 text-xs font-semibold rounded-lg shadow-sm flex items-center gap-1.5 transition-colors disabled:opacity-50"
             >
               {analisandoFotoOcr ? (
                 <>
@@ -1467,7 +1461,7 @@ export default function Estoque() {
             <button
               type="submit"
               disabled={salvando}
-              className="px-4 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg disabled:opacity-50 flex items-center gap-2"
+              className="btn-theme-primary px-4 py-2 text-sm font-medium rounded-lg disabled:opacity-50 flex items-center gap-2 shadow-xs"
             >
               {salvando && <Loader2 className="w-4 h-4 animate-spin" />}
               Confirmar Entrada
@@ -1548,7 +1542,7 @@ export default function Estoque() {
           <button
             type="button"
             onClick={() => setIngredientesForm([...ingredientesForm, { insumo_id: '', quantidade_necessaria: '' }])}
-            className="inline-flex items-center gap-1.5 text-xs text-indigo-600 font-semibold hover:text-indigo-800"
+            className="inline-flex items-center gap-1.5 text-xs text-theme-primary font-semibold hover:opacity-80"
           >
             <Plus className="w-3.5 h-3.5" />
             Adicionar Ingrediente à Receita
@@ -1565,7 +1559,7 @@ export default function Estoque() {
             <button
               type="submit"
               disabled={salvando}
-              className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg disabled:opacity-50 flex items-center gap-2"
+              className="btn-theme-primary px-4 py-2 text-sm font-medium rounded-lg disabled:opacity-50 flex items-center gap-2 shadow-xs"
             >
               {salvando && <Loader2 className="w-4 h-4 animate-spin" />}
               Salvar Receita
@@ -1611,7 +1605,7 @@ export default function Estoque() {
             required
           />
 
-          <p className="text-xs text-gray-500 bg-purple-50 p-3 rounded-lg border border-purple-100">
+          <p className="text-xs text-gray-600 badge-theme-subtle p-3 rounded-lg border border-gray-200/60">
             💡 Ao registrar a produção, os insumos da ficha técnica serão abatidos proporcionalmente do seu estoque de matérias-primas.
           </p>
 
@@ -1626,7 +1620,7 @@ export default function Estoque() {
             <button
               type="submit"
               disabled={salvando}
-              className="px-4 py-2 text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 rounded-lg disabled:opacity-50 flex items-center gap-2"
+              className="btn-theme-primary px-4 py-2 text-sm font-medium rounded-lg disabled:opacity-50 flex items-center gap-2 shadow-xs"
             >
               {salvando && <Loader2 className="w-4 h-4 animate-spin" />}
               Confirmar Produção
@@ -1654,7 +1648,7 @@ export default function Estoque() {
               onClick={() => setModoImportacao('foto')}
               className={`py-2 px-3 text-xs font-bold rounded-lg border text-center transition-all flex items-center justify-center gap-1.5 ${
                 modoImportacao === 'foto'
-                  ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
+                  ? 'tab-theme-active shadow-xs border-transparent'
                   : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
               }`}
             >
@@ -1665,7 +1659,7 @@ export default function Estoque() {
               onClick={() => setModoImportacao('xml')}
               className={`py-2 px-3 text-xs font-bold rounded-lg border text-center transition-all flex items-center justify-center gap-1.5 ${
                 modoImportacao === 'xml'
-                  ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
+                  ? 'tab-theme-active shadow-xs border-transparent'
                   : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
               }`}
             >
@@ -1687,15 +1681,15 @@ export default function Estoque() {
                     setCameraDestino('nota');
                     setCameraModalAberto(true);
                   }}
-                  className="flex flex-col items-center justify-center p-4 border-2 border-dashed border-blue-400 bg-blue-50/60 hover:bg-blue-50 rounded-xl text-center transition-all group shadow-sm hover:border-blue-500"
+                  className="flex flex-col items-center justify-center p-4 border-2 border-dashed border-gray-300 hover:border-gray-400 badge-theme-subtle rounded-xl text-center transition-all group shadow-xs"
                 >
-                  <div className="w-11 h-11 rounded-full bg-blue-600 text-white flex items-center justify-center mb-2 shadow-sm group-hover:scale-105 transition-transform">
+                  <div className="w-11 h-11 rounded-full btn-theme-primary flex items-center justify-center mb-2 shadow-sm group-hover:scale-105 transition-transform">
                     <Camera className="w-5 h-5" />
                   </div>
-                  <span className="text-xs font-bold text-blue-900">
+                  <span className="text-xs font-bold text-gray-900">
                     Tirar Foto Agora (Câmera)
                   </span>
-                  <p className="text-[11px] text-blue-700 mt-0.5">
+                  <p className="text-[11px] text-gray-500 mt-0.5">
                     Visor direto no app para fotografar
                   </p>
                 </button>
@@ -1737,7 +1731,7 @@ export default function Estoque() {
                     type="button"
                     onClick={handleAnalisarFoto}
                     disabled={processandoNota}
-                    className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg transition-colors flex items-center gap-1.5 disabled:opacity-50"
+                    className="btn-theme-primary px-3 py-1.5 text-xs font-bold rounded-lg transition-colors flex items-center gap-1.5 disabled:opacity-50 shadow-xs"
                   >
                     {processandoNota ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
                     Analisar com IA
@@ -1759,8 +1753,8 @@ export default function Estoque() {
                   className="hidden"
                 />
                 <label htmlFor="input-xml-nota" className="cursor-pointer block">
-                  <FileCode className="w-8 h-8 text-indigo-500 mx-auto mb-1" />
-                  <span className="text-xs font-semibold text-indigo-600 hover:underline">
+                  <FileCode className="w-8 h-8 text-theme-primary mx-auto mb-1" />
+                  <span className="text-xs font-semibold text-theme-primary hover:underline">
                     {arquivoXmlNome || 'Clique para carregar o arquivo .XML'}
                   </span>
                   <p className="text-[11px] text-gray-400 mt-0.5">Layout oficial NF-e SEFAZ 4.00</p>
@@ -1772,12 +1766,12 @@ export default function Estoque() {
           {/* Prévia / Conferência dos Itens Extraídos */}
           {dadosNotaImportada && (
             <div className="mt-4 pt-4 border-t border-gray-200 space-y-3">
-              <div className="p-3 bg-blue-50/70 border border-blue-200 rounded-lg flex items-center justify-between text-xs">
+              <div className="p-3 badge-theme-subtle border border-gray-200/60 rounded-lg flex items-center justify-between text-xs">
                 <div>
-                  <p className="font-semibold text-blue-900">
+                  <p className="font-semibold text-gray-900">
                     Fornecedor: {dadosNotaImportada.fornecedor || 'Identificado na nota'}
                   </p>
-                  <p className="text-blue-700 mt-0.5">
+                  <p className="text-gray-500 mt-0.5">
                     Doc / NF: #{dadosNotaImportada.numero_documento || 'S/N'}
                   </p>
                 </div>
@@ -1867,7 +1861,7 @@ export default function Estoque() {
                     type="checkbox"
                     checked={lancarCaixaNota}
                     onChange={(e) => setLancarCaixaNota(e.target.checked)}
-                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
                   />
                   <span className="font-semibold">Lançar valor total como despesa no Livro Caixa</span>
                 </label>
@@ -1885,7 +1879,7 @@ export default function Estoque() {
                   type="button"
                   onClick={handleConfirmarEntradaNota}
                   disabled={salvando || (dadosNotaImportada.itens || []).length === 0}
-                  className="px-4 py-2 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg disabled:opacity-50 flex items-center gap-1.5 shadow-sm"
+                  className="btn-theme-primary px-4 py-2 text-xs font-bold rounded-lg disabled:opacity-50 flex items-center gap-1.5 shadow-sm"
                 >
                   {salvando && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                   Confirmar Entrada de Insumos

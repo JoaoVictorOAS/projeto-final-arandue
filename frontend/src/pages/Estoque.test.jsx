@@ -180,10 +180,10 @@ describe('Módulo de Estoque & Produção', () => {
     render(<Estoque />);
 
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: /entrada por nota \/ foto \/ xml/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /entrada por nota fiscal ou foto|foto \/ nota/i })).toBeInTheDocument();
     });
 
-    const btnNota = screen.getByRole('button', { name: /entrada por nota \/ foto \/ xml/i });
+    const btnNota = screen.getByRole('button', { name: /entrada por nota fiscal ou foto|foto \/ nota/i });
     fireEvent.click(btnNota);
 
     expect(screen.getByRole('heading', { name: /entrada de insumos por nota fiscal \(foto ou xml\)/i })).toBeInTheDocument();
@@ -193,7 +193,7 @@ describe('Módulo de Estoque & Produção', () => {
     expect(screen.getByText(/escolher da galeria \/ pdf/i)).toBeInTheDocument();
   });
 
-  test('deve abrir a câmera integrada direto pelo botão do cabeçalho e enviar foto para OCR', async () => {
+  test('deve abrir a câmera integrada via opção Foto / Nota e enviar foto para OCR', async () => {
     api.get.mockResolvedValue({ data: { sucesso: true, dados: [] } });
     api.post.mockResolvedValue({
       data: {
@@ -212,10 +212,13 @@ describe('Módulo de Estoque & Produção', () => {
     render(<Estoque />);
 
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: /tirar foto de insumo \/ nota/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /entrada por nota fiscal ou foto|foto \/ nota/i })).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByRole('button', { name: /tirar foto de insumo \/ nota/i }));
+    fireEvent.click(screen.getByRole('button', { name: /entrada por nota fiscal ou foto|foto \/ nota/i }));
+
+    const btnTirarFotoModal = screen.getByRole('button', { name: /tirar foto agora \(câmera\)/i });
+    fireEvent.click(btnTirarFotoModal);
 
     // Modal de câmera aberto
     expect(screen.getByRole('heading', { name: /fotografar nota \/ cupom de insumos/i })).toBeInTheDocument();
@@ -244,44 +247,22 @@ describe('Módulo de Estoque & Produção', () => {
     });
   });
 
-  test('deve abrir a câmera a partir da opção Tirar Foto Agora dentro do modal de nota fiscal', async () => {
+  test('deve alternar para aba XML no modal de nota fiscal e exibir instruções de upload', async () => {
     api.get.mockResolvedValue({ data: { sucesso: true, dados: [] } });
-    api.post.mockResolvedValue({
-      data: {
-        sucesso: true,
-        dados: {
-          fornecedor: 'Hortifruti Central',
-          numero_documento: 'CUPOM-987',
-          valor_total: 30.0,
-          itens: [
-            { nome: 'Tomate Italiano', quantidade: 3, unidade: 'kg', valor_total: 15.0 },
-          ],
-        },
-      },
-    });
 
     render(<Estoque />);
 
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: /entrada por nota \/ foto \/ xml/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /entrada por nota fiscal ou foto|foto \/ nota/i })).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByRole('button', { name: /entrada por nota \/ foto \/ xml/i }));
+    fireEvent.click(screen.getByRole('button', { name: /entrada por nota fiscal ou foto|foto \/ nota/i }));
 
-    const btnTirarFotoModal = screen.getByRole('button', { name: /tirar foto agora \(câmera\)/i });
-    fireEvent.click(btnTirarFotoModal);
+    const btnXmlTab = screen.getByRole('button', { name: /arquivo xml da nf-e/i });
+    fireEvent.click(btnXmlTab);
 
-    expect(screen.getByRole('heading', { name: /fotografar nota \/ cupom de insumos/i })).toBeInTheDocument();
-    const btnCapturar = await screen.findByRole('button', { name: /capturar foto/i });
-    await waitFor(() => {
-      expect(btnCapturar).not.toBeDisabled();
-    });
-    fireEvent.click(btnCapturar);
-
-    await waitFor(() => {
-      expect(screen.getByText(/Hortifruti Central/i)).toBeInTheDocument();
-      expect(screen.getByDisplayValue('Tomate Italiano')).toBeInTheDocument();
-    });
+    expect(screen.getByText(/anexe o arquivo xml da nf-e emitida pelo fornecedor/i)).toBeInTheDocument();
+    expect(screen.getByText(/clique para carregar o arquivo \.xml/i)).toBeInTheDocument();
   });
 
   test('deve preencher formulário de Novo Insumo via foto da câmera', async () => {
@@ -381,10 +362,13 @@ describe('Módulo de Estoque & Produção', () => {
     render(<Estoque />);
 
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: /tirar foto de insumo \/ nota/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /entrada por nota fiscal ou foto|foto \/ nota/i })).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByRole('button', { name: /tirar foto de insumo \/ nota/i }));
+    fireEvent.click(screen.getByRole('button', { name: /entrada por nota fiscal ou foto|foto \/ nota/i }));
+
+    const btnTirarFotoModal = screen.getByRole('button', { name: /tirar foto agora \(câmera\)/i });
+    fireEvent.click(btnTirarFotoModal);
 
     await waitFor(() => {
       expect(screen.getByText(/permissão de acesso à câmera negada/i)).toBeInTheDocument();
