@@ -483,6 +483,8 @@ async def listar_cobrancas(status: Optional[str] = None, limite: int = 20) -> Di
     itens = []
     for item in lista[:limite]:
         itens.append({
+            "id": item.get("id"),
+            "cliente_nome": item.get("cliente_nome"),
             "valor": float(item.get("valor", 0)),
             "vencimento": item.get("vencimento"),
             "status": item.get("status"),
@@ -493,6 +495,272 @@ async def listar_cobrancas(status: Optional[str] = None, limite: int = 20) -> Di
         "total": len(lista),
         "cobrancas": itens
     }
+
+@mcp_server_app.tool()
+async def registrar_pagamento_cobranca(cobranca_id: int, data_pagamento: Optional[str] = None, gerar_movimentacao_caixa: bool = True) -> Dict[str, Any]:
+    """Registra a baixa/pagamento de uma cobrança emitida, podendo opcionalmente gerar movimentação de caixa de entrada."""
+    hoje = _obter_data_atual_br()
+    data_efetiva = data_pagamento
+    if data_efetiva:
+        valida, erro_val = _validar_data_nao_alucinada(data_efetiva, "data_pagamento")
+        if erro_val:
+            return {"sucesso": False, "erro": erro_val}
+        data_efetiva = valida
+    else:
+        data_efetiva = hoje.isoformat()
+
+    payload = {
+        "data_pagamento": data_efetiva,
+        "gerar_movimentacao_caixa": bool(gerar_movimentacao_caixa)
+    }
+    res = await _patch(f"/cobrancas/{int(cobranca_id)}/pagar", payload)
+    if res.get("sucesso"):
+        return {
+            "sucesso": True,
+            "mensagem": f"Cobrança ID {cobranca_id} paga com sucesso em {data_efetiva}.",
+            "dados": res.get("dados", res)
+        }
+    return res
+
+@mcp_server_app.tool()
+async def excluir_cobranca(cobranca_id: int) -> Dict[str, Any]:
+    """Exclui uma cobrança pendente ou emitida do sistema do MEI."""
+    res = await _delete(f"/cobrancas/{int(cobranca_id)}")
+    if res.get("sucesso"):
+        return {
+            "sucesso": True,
+            "mensagem": f"Cobrança ID {cobranca_id} excluída com sucesso."
+        }
+    return res
+
+@mcp_server_app.tool()
+async def listar_agendamentos(status: Optional[str] = None, data_inicio: Optional[str] = None, data_fim: Optional[str] = None, limite: int = 20) -> Dict[str, Any]:
+    """Lista agendamentos de serviços com filtros opcionais de status e período."""
+    limite = min(max(1, limite), 50)
+    params = {}
+    if status:
+        params["status"] = str(status).strip()
+    if data_inicio:
+        v_ini, err_ini = _validar_data_nao_alucinada(data_inicio, "data_inicio")
+        if err_ini:
+            return {"erro": err_ini}
+        params["data_inicio"] = v_ini
+    if data_fim:
+        v_fim, err_fim = _validar_data_nao_alucinada(data_fim, "data_fim")
+        if err_fim:
+            return {"erro": err_fim}
+        params["data_fim"] = v_fim
+
+    dados = await _fetch("/agendamentos", params=params)
+    if isinstance(dados, dict) and "erro" in dados:
+        return dados
+
+    lista = dados if isinstance(dados, list) else []
+    itens = []
+    for item in lista[:limite]:
+        itens.append({
+            "id": item.get("id"),
+            "cliente_id": item.get("cliente_id"),
+            "cliente_nome": item.get("cliente_nome"),
+            "servico_id": item.get("servico_id"),
+            "servico_nome": item.get("servico_nome"),
+            "data_hora": item.get("data_hora"),
+            "status": item.get("status"),
+            "observacoes": item.get("observacoes")
+        })
+
+    return {
+        "total": len(lista),
+        "agendamentos": itens
+    }
+
+@mcp_server_app.tool()
+async def atualizar_status_agendamento(agendamento_id: int, status: str) -> Dict[str, Any]:
+    """Atualiza o status de um agendamento (PENDENTE, CONFIRMADO, CONCLUIDO, CANCELADO)."""
+    status_limpo = str(status).strip().upper()
+    validos = ["PENDENTE", "CONFIRMADO", "CONCLUIDO", "CANCELADO"]
+    if status_limpo not in validos:
+        return {"sucesso": False, "erro": f"Status inválido '{status}'. Use um dos seguintes: {', '.join(validos)}."}
+
+    payload = {"status": status_limpo}
+    res = await _patch(f"/agendamentos/{int(agendamento_id)}/status", payload)
+    if res.get("sucesso"):
+        return {
+            "sucesso": True,
+            "status": status_limpo,
+            "mensagem": f"Status do agendamento ID {agendamento_id} alterado para '{status_limpo}' com sucesso.",
+            "dados": res.get("dados", res)
+        }
+    return res
+
+@mcp_server_app.tool()
+async def registrar_movimentacao_caixa(tipo: str, valor: float, descricao: str, categoria: str = "Geral", data_movimentacao: Optional[str] = None) -> Dict[str, Any]:
+    """Registra uma movimentação financeira (ENTRADA ou SAIDA) no fluxo de caixa do MEI."""
+    tipo_limpo = str(tipo).strip().upper()
+    if tipo_limpo not in ["ENTRADA", "SAIDA"]:
+        return {"sucesso": False, "erro": f"Tipo de movimentação inválido '{tipo}'. Deve ser 'ENTRADA' ou 'SAIDA'."}
+    if float(valor) <= 0:
+        return {"sucesso": False, "erro": "O valor da movimentação financeira deve ser maior que zero."}
+
+    hoje = _obter_data_atual_br()
+    data_efetiva = data_movimentacao
+    if data_efetiva:
+        v_data, err_data = _validar_data_nao_alucinada(data_efetiva, "data_movimentacao")
+        if err_data:
+            return {"sucesso": False, "erro": err_data}
+        data_efetiva = v_data
+    else:
+        data_efetiva = hoje.isoformat()
+
+    payload = {
+        "tipo": tipo_limpo,
+        "valor": float(valor),
+        "descricao": str(descricao).strip(),
+        "categoria": str(categoria).strip(),
+        "data_movimentacao": data_efetiva
+    }
+    return await _post("/movimentacoes", payload)
+
+@mcp_server_app.tool()
+async def atualizar_cliente(cliente_id: int, nome: str, telefone: Optional[str] = "", email: Optional[str] = "", endereco: Optional[str] = "", observacoes: Optional[str] = "") -> Dict[str, Any]:
+    """Atualiza os dados cadastrais de um cliente existente."""
+    payload = {
+        "nome": str(nome).strip(),
+        "telefone": str(telefone or "").strip(),
+        "email": str(email or "").strip(),
+        "endereco": str(endereco or "").strip(),
+        "observacoes": str(observacoes or "").strip()
+    }
+    res = await _put(f"/clientes/{int(cliente_id)}", payload)
+    if res.get("sucesso"):
+        return {
+            "sucesso": True,
+            "mensagem": f"Cliente ID {cliente_id} ({nome}) atualizado com sucesso.",
+            "dados": res.get("dados", res)
+        }
+    return res
+
+@mcp_server_app.tool()
+async def inativar_cliente(cliente_id: int) -> Dict[str, Any]:
+    """Inativa ou remove um cliente da base do MEI."""
+    res = await _delete(f"/clientes/{int(cliente_id)}")
+    if res.get("sucesso"):
+        return {
+            "sucesso": True,
+            "mensagem": f"Cliente ID {cliente_id} inativado com sucesso."
+        }
+    return res
+
+@mcp_server_app.tool()
+async def atualizar_servico(servico_id: int, nome: str, preco: float, categoria: Optional[str] = "Geral", descricao: Optional[str] = "") -> Dict[str, Any]:
+    """Atualiza os dados ou preço de um serviço ou produto no catálogo do MEI."""
+    if float(preco) < 0:
+        return {"sucesso": False, "erro": "O preço do serviço não pode ser negativo."}
+    payload = {
+        "nome": str(nome).strip(),
+        "preco": float(preco),
+        "categoria": str(categoria or "Geral").strip(),
+        "descricao": str(descricao or "").strip()
+    }
+    res = await _put(f"/servicos/{int(servico_id)}", payload)
+    if res.get("sucesso"):
+        return {
+            "sucesso": True,
+            "mensagem": f"Serviço ID {servico_id} ({nome}) atualizado com sucesso.",
+            "dados": res.get("dados", res)
+        }
+    return res
+
+@mcp_server_app.tool()
+async def inativar_servico(servico_id: int) -> Dict[str, Any]:
+    """Inativa ou remove um serviço do catálogo do MEI."""
+    res = await _delete(f"/servicos/{int(servico_id)}")
+    if res.get("sucesso"):
+        return {
+            "sucesso": True,
+            "mensagem": f"Serviço ID {servico_id} inativado com sucesso."
+        }
+    return res
+
+@mcp_server_app.tool()
+async def gerar_relatorio_receitas_mei(ano: Optional[int] = None, mes: Optional[int] = None) -> Dict[str, Any]:
+    """Gera relatório de receitas brutas do MEI separando Comércio vs Serviços e indicando limites para DASN-SIMEI."""
+    params = {}
+    if ano is not None:
+        params["ano"] = int(ano)
+    if mes is not None:
+        params["mes"] = int(mes)
+    return await _fetch("/notas-fiscais/relatorio-receitas", params=params)
+
+@mcp_server_app.tool()
+async def consultar_guias_das(ano: Optional[int] = None) -> Dict[str, Any]:
+    """Consulta o status das Guias DAS mensais obrigatórias do MEI para o ano informado."""
+    params = {}
+    if ano is not None:
+        params["ano"] = int(ano)
+    return await _fetch("/notas-fiscais/das", params=params)
+
+@mcp_server_app.tool()
+async def registrar_pagamento_das(mes: int, ano: Optional[int] = None, valor: Optional[float] = None) -> Dict[str, Any]:
+    """Registra o pagamento de uma Guia DAS mensal do MEI."""
+    hoje = _obter_data_atual_br()
+    payload = {
+        "mes": int(mes),
+        "ano": int(ano) if ano is not None else hoje.year
+    }
+    if valor is not None:
+        payload["valor"] = float(valor)
+    return await _post("/notas-fiscais/das/pagar", payload)
+
+@mcp_server_app.tool()
+async def gerar_pix_cobranca(cobranca_id: int) -> Dict[str, Any]:
+    """Gera o QR Code Pix e o código Copia e Cola para pagamento de uma cobrança específica."""
+    return await _fetch(f"/cobrancas/{int(cobranca_id)}/pix")
+
+@mcp_server_app.tool()
+async def enviar_lembrete_cobranca_whatsapp(cobranca_id: int) -> Dict[str, Any]:
+    """Dispara um lembrete de cobrança amigável via WhatsApp para o cliente responsável pela cobrança."""
+    return await _post(f"/cobrancas/{int(cobranca_id)}/lembrete-whatsapp", {})
+
+@mcp_server_app.tool()
+async def compartilhar_orcamento(orcamento_id: int) -> Dict[str, Any]:
+    """Gera o link de compartilhamento ou mensagem formatada para envio de um orçamento ao cliente."""
+    return await _fetch(f"/orcamentos/{int(orcamento_id)}/compartilhar")
+
+@mcp_server_app.tool()
+async def obter_insights_proativos() -> Dict[str, Any]:
+    """Obtém insights financeiros, fiscais e operacionais proativos gerados pelo sistema para o MEI."""
+    return await _fetch("/dashboard/insights")
+
+@mcp_server_app.tool()
+async def lancar_comprovante_caixa(valor: float, descricao: str, tipo: str = "SAIDA", categoria: str = "Geral", data_movimentacao: Optional[str] = None, imagem_base64: Optional[str] = None) -> Dict[str, Any]:
+    """Lança uma despesa ou receita no caixa a partir de um comprovante (com opcional imagem em base64 para OCR e auditoria)."""
+    tipo_limpo = str(tipo).strip().upper()
+    if tipo_limpo not in ["ENTRADA", "SAIDA"]:
+        return {"sucesso": False, "erro": f"Tipo inválido '{tipo}'. Use 'ENTRADA' ou 'SAIDA'."}
+    if float(valor) <= 0:
+        return {"sucesso": False, "erro": "O valor do comprovante deve ser maior que zero."}
+
+    hoje = _obter_data_atual_br()
+    data_efetiva = data_movimentacao
+    if data_efetiva:
+        v_data, err_data = _validar_data_nao_alucinada(data_efetiva, "data_movimentacao")
+        if err_data:
+            return {"sucesso": False, "erro": err_data}
+        data_efetiva = v_data
+    else:
+        data_efetiva = hoje.isoformat()
+
+    payload = {
+        "valor": float(valor),
+        "descricao": str(descricao).strip(),
+        "tipo": tipo_limpo,
+        "categoria": str(categoria).strip(),
+        "data_movimentacao": data_efetiva
+    }
+    if imagem_base64:
+        payload["imagem_base64"] = str(imagem_base64).strip()
+    return await _post("/assistente/imagem/lancar-comprovante", payload)
 
 @mcp_server_app.tool()
 async def listar_servicos() -> Dict[str, Any]:
