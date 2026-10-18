@@ -659,26 +659,26 @@ export default function Estoque() {
 
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
+        <div className="min-w-0 md:max-w-md lg:max-w-lg">
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <Package className="w-7 h-7 text-theme-primary" />
-            Estoque & Produção
+            <Package className="w-7 h-7 text-theme-primary shrink-0" />
+            <span>Estoque & Produção</span>
           </h1>
           <p className="text-sm text-gray-500 mt-1">
             Controle de insumos, receitas técnicas (CMV), simulação de rendimento e baixas automáticas.
           </p>
         </div>
 
-        {/* Ações Rápidas em Duas Linhas */}
-        <div className="grid grid-cols-2 gap-2 w-full sm:w-auto">
+        {/* Ações Rápidas em Linha Única no Web (sem scroll) */}
+        <div className="grid grid-cols-2 sm:flex sm:items-center sm:flex-nowrap gap-2 shrink-0">
           <button
             type="button"
             onClick={() => setModalNotaFiscalAberto(true)}
             aria-label="Entrada por Nota Fiscal ou Foto"
-            className="badge-theme-subtle hover:brightness-95 inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition whitespace-nowrap shadow-xs"
+            className="badge-theme-subtle hover:brightness-95 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold transition whitespace-nowrap shadow-xs"
             title="Importar Insumos por Foto da Câmera, Galeria ou XML de NF-e"
           >
-            <Camera className="w-4 h-4 text-theme-primary" />
+            <Camera className="w-4 h-4 text-theme-primary shrink-0" />
             <span>Foto / Nota</span>
           </button>
 
@@ -686,10 +686,10 @@ export default function Estoque() {
             type="button"
             onClick={() => setModalEntradaAberto(true)}
             aria-label="Registrar compra / entrada de insumo"
-            className="badge-theme-subtle hover:brightness-95 inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition whitespace-nowrap shadow-xs"
+            className="badge-theme-subtle hover:brightness-95 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold transition whitespace-nowrap shadow-xs"
             title="Registrar compra avulsa de insumos"
           >
-            <ArrowDownRight className="w-4 h-4 text-theme-primary" />
+            <ArrowDownRight className="w-4 h-4 text-theme-primary shrink-0" />
             <span>Nova Compra</span>
           </button>
 
@@ -697,10 +697,10 @@ export default function Estoque() {
             type="button"
             onClick={() => setModalProducaoAberto(true)}
             aria-label="Registrar Produção"
-            className="badge-theme-subtle hover:brightness-95 inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition whitespace-nowrap shadow-xs"
+            className="badge-theme-subtle hover:brightness-95 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold transition whitespace-nowrap shadow-xs"
             title="Registrar produção de lote de produtos"
           >
-            <ChefHat className="w-4 h-4 text-theme-primary" />
+            <ChefHat className="w-4 h-4 text-theme-primary shrink-0" />
             <span>Produzir</span>
           </button>
 
@@ -711,7 +711,7 @@ export default function Estoque() {
             className="btn-theme-primary inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition whitespace-nowrap shadow-sm"
             title="Cadastrar nova matéria-prima ou insumo"
           >
-            <Plus className="w-4 h-4" />
+            <Plus className="w-4 h-4 shrink-0" />
             <span>Novo Insumo</span>
           </button>
         </div>
@@ -752,9 +752,9 @@ export default function Estoque() {
         </div>
       </div>
 
-      {/* Navegação por Abas Responsiva em 2 Linhas */}
+      {/* Navegação por Abas Responsiva: 1 linha no Web, 2x2 no Mobile */}
       <div className="bg-gray-100/80 p-1.5 rounded-2xl border border-gray-200/60 shadow-xs">
-        <nav className="grid grid-cols-2 gap-2" aria-label="Abas de Estoque">
+        <nav className="grid grid-cols-2 lg:grid-cols-4 gap-1.5" aria-label="Abas de Estoque">
           <button
             type="button"
             onClick={() => setActiveTab('insumos')}
