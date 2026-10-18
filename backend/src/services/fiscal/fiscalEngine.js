@@ -1176,6 +1176,243 @@ async function listarNotasFiscais(usuarioId, { tipo, status, data_inicio, data_f
   return rows;
 }
 
+/**
+ * Gera o Relatório Mensal de Receitas Brutas (e subsídio para a DASN-SIMEI).
+ *
+ * @param {number} usuarioId
+ * @param {Object} [filtros={}] { ano, mes }
+ * @returns {Promise<Object>}
+ */
+async function gerarRelatorioReceitasBrutas(usuarioId, { ano, mes } = {}) {
+  if (!usuarioId) {
+    const erro = new Error('Identificação do usuário é obrigatória');
+    erro.statusCode = 401;
+    throw erro;
+  }
+
+  const anoCorrente = Number(ano) || new Date().getFullYear();
+  const mesNum = mes !== undefined && mes !== null && mes !== '' ? Number(mes) : null;
+
+  let sqlNotas = `
+    SELECT tipo, valor_total, valor_liquido, data_emissao
+    FROM notas_fiscais
+    WHERE usuario_id = ? AND status != 'CANCELADA' AND YEAR(data_emissao) = ?
+  `;
+  const paramsNotas = [usuarioId, anoCorrente];
+
+  if (mesNum && !isNaN(mesNum) && mesNum >= 1 && mesNum <= 12) {
+    sqlNotas += ' AND MONTH(data_emissao) = ?';
+    paramsNotas.push(mesNum);
+  }
+
+  const [notasRows] = await pool.query(sqlNotas, paramsNotas);
+
+  let comercioComNota = 0;
+  let servicosComNota = 0;
+
+  for (const nota of notasRows) {
+    const tipo = (nota.tipo || '').toUpperCase();
+    if (tipo === 'NFE' || tipo === 'NFCE') {
+      comercioComNota += Number(nota.valor_total || 0);
+    } else if (tipo === 'NFSE') {
+      servicosComNota += Number(nota.valor_liquido !== undefined && nota.valor_liquido !== null ? nota.valor_liquido : nota.valor_total || 0);
+    } else {
+      comercioComNota += Number(nota.valor_total || 0);
+    }
+  }
+
+  // Consulta movimentações do tipo ENTRADA no caixa para apurar receitas totais
+  let sqlMov = `
+    SELECT valor, data_movimentacao
+    FROM movimentacoes
+    WHERE usuario_id = ? AND tipo = 'ENTRADA' AND YEAR(data_movimentacao) = ?
+  `;
+  const paramsMov = [usuarioId, anoCorrente];
+
+  if (mesNum && !isNaN(mesNum) && mesNum >= 1 && mesNum <= 12) {
+    sqlMov += ' AND MONTH(data_movimentacao) = ?';
+    paramsMov.push(mesNum);
+  }
+
+  const [movRows] = await pool.query(sqlMov, paramsMov);
+
+  let totalEntradasCaixa = 0;
+  for (const mov of movRows) {
+    totalEntradasCaixa += Number(mov.valor || 0);
+  }
+
+  const totalComNota = comercioComNota + servicosComNota;
+  const receitasSemNota = Math.max(0, totalEntradasCaixa - totalComNota);
+  const totalReceitaBruta = totalComNota + receitasSemNota;
+
+  const limiteAnualMei = 81000.00;
+  const percentualLimiteAnual = Number(((totalReceitaBruta / limiteAnualMei) * 100).toFixed(2));
+
+  let alertaLimite = 'NORMAL';
+  if (totalReceitaBruta > limiteAnualMei) {
+    alertaLimite = 'ESTOURO';
+  } else if (percentualLimiteAnual >= 90) {
+    alertaLimite = 'CRITICO';
+  } else if (percentualLimiteAnual >= 70) {
+    alertaLimite = 'ATENCAO';
+  }
+
+  return {
+    ano: anoCorrente,
+    mes: mesNum || 'TODOS',
+    comercio_com_nota: Number(comercioComNota.toFixed(2)),
+    servicos_com_nota: Number(servicosComNota.toFixed(2)),
+    total_com_nota: Number(totalComNota.toFixed(2)),
+    total_entradas_caixa: Number(totalEntradasCaixa.toFixed(2)),
+    receitas_sem_nota: Number(receitasSemNota.toFixed(2)),
+    total_receita_bruta: Number(totalReceitaBruta.toFixed(2)),
+    limite_anual_mei: limiteAnualMei,
+    percentual_limite_anual: percentualLimiteAnual,
+    alerta_limite: alertaLimite,
+    detalhes_notas_emitidas: notasRows.length
+  };
+}
+
+/**
+ * Consulta o status das 12 competências da Guia DAS do MEI para um determinado ano.
+ *
+ * @param {number} usuarioId
+ * @param {Object} [filtros={}] { ano }
+ * @returns {Promise<Object>}
+ */
+async function consultarGuiasDas(usuarioId, { ano } = {}) {
+  if (!usuarioId) {
+    const erro = new Error('Identificação do usuário é obrigatória');
+    erro.statusCode = 401;
+    throw erro;
+  }
+
+  const anoCorrente = Number(ano) || new Date().getFullYear();
+  const valorEstimadoDas = 81.90;
+
+  const [movRows] = await pool.query(
+    `SELECT id, valor, data_movimentacao, descricao, categoria
+     FROM movimentacoes
+     WHERE usuario_id = ? AND tipo = 'SAIDA' 
+       AND (categoria LIKE '%DAS%' OR categoria LIKE '%Imposto%' OR descricao LIKE '%DAS%')
+       AND (YEAR(data_movimentacao) = ? OR descricao LIKE ?)`,
+    [usuarioId, anoCorrente, `%/${anoCorrente}%`]
+  );
+
+  const guias = [];
+  let totalPago = 0;
+  let totalAberto = 0;
+  let guiasVencidas = 0;
+
+  const hoje = new Date();
+
+  for (let mes = 1; mes <= 12; mes++) {
+    const mesStr = String(mes).padStart(2, '0');
+    const competencia = `${mesStr}/${anoCorrente}`;
+    const vencMes = mes === 12 ? 1 : mes + 1;
+    const vencAno = mes === 12 ? anoCorrente + 1 : anoCorrente;
+    const vencimento = `${vencAno}-${String(vencMes).padStart(2, '0')}-20`;
+
+    const movEncontrada = movRows.find(m => {
+      const desc = (m.descricao || '').toUpperCase();
+      const cat = (m.categoria || '').toUpperCase();
+      const matchCompetencia = desc.includes(competencia) || desc.includes(`${mesStr}/${anoCorrente}`) || desc.includes(`COMPETÊNCIA ${mes}`);
+      const dataMov = new Date(m.data_movimentacao);
+      const matchAnoMes = dataMov.getFullYear() === vencAno && (dataMov.getMonth() + 1) === vencMes;
+      return matchCompetencia || (cat.includes('DAS') && matchAnoMes);
+    });
+
+    let status = 'A_VENCER';
+    let movimentacaoId = null;
+    let valorPago = 0;
+
+    if (movEncontrada) {
+      status = 'PAGO';
+      movimentacaoId = movEncontrada.id;
+      valorPago = Number(movEncontrada.valor || valorEstimadoDas);
+      totalPago += valorPago;
+    } else {
+      const dataVencObj = new Date(`${vencimento}T23:59:59`);
+      if (hoje > dataVencObj) {
+        status = 'VENCIDO';
+        guiasVencidas++;
+        totalAberto += valorEstimadoDas;
+      } else {
+        totalAberto += valorEstimadoDas;
+      }
+    }
+
+    guias.push({
+      mes,
+      ano: anoCorrente,
+      competencia,
+      vencimento,
+      valor_estimado: valorEstimadoDas,
+      valor_pago: valorPago,
+      status,
+      movimentacao_id: movimentacaoId
+    });
+  }
+
+  return {
+    ano: anoCorrente,
+    resumo: {
+      total_pago: Number(totalPago.toFixed(2)),
+      total_aberto: Number(totalAberto.toFixed(2)),
+      guias_vencidas: guiasVencidas
+    },
+    guias
+  };
+}
+
+/**
+ * Registra o pagamento da Guia DAS do MEI para uma competência específica.
+ *
+ * @param {number} usuarioId
+ * @param {Object} payload { mes, ano, valor, data_pagamento }
+ * @returns {Promise<Object>}
+ */
+async function registrarPagamentoDas(usuarioId, { mes, ano, valor, data_pagamento } = {}) {
+  if (!usuarioId) {
+    const erro = new Error('Identificação do usuário é obrigatória');
+    erro.statusCode = 401;
+    throw erro;
+  }
+
+  const mesNum = Number(mes);
+  if (isNaN(mesNum) || mesNum < 1 || mesNum > 12) {
+    const erro = new Error('Mês da competência inválido (deve ser entre 1 e 12)');
+    erro.statusCode = 400;
+    throw erro;
+  }
+
+  const anoCorrente = Number(ano) || new Date().getFullYear();
+  const mesStr = String(mesNum).padStart(2, '0');
+  const competencia = `${mesStr}/${anoCorrente}`;
+  const valorDas = Number(valor !== undefined && valor !== null && valor !== '' ? valor : 81.90);
+  const dataPag = data_pagamento ? data_pagamento.slice(0, 10) : new Date().toISOString().slice(0, 10);
+  const descricao = `Pagamento Guia DAS MEI - Competência ${competencia}`;
+  const categoria = 'Impostos / DAS MEI';
+
+  const [result] = await pool.execute(
+    `INSERT INTO movimentacoes (usuario_id, tipo, categoria, valor, data_movimentacao, descricao)
+     VALUES (?, 'SAIDA', ?, ?, ?, ?)`,
+    [usuarioId, categoria, valorDas, dataPag, descricao]
+  );
+
+  return {
+    id: result.insertId,
+    usuario_id: usuarioId,
+    mes: mesNum,
+    ano: anoCorrente,
+    competencia,
+    valor: valorDas,
+    data_pagamento: dataPag,
+    descricao,
+    categoria
+  };
+}
+
 module.exports = {
   emitirNfse,
   emitirNfe,
@@ -1183,5 +1420,8 @@ module.exports = {
   cancelarNotaFiscal,
   consultarNotaFiscal,
   listarNotasFiscais,
-  obterDadosEmitente
+  obterDadosEmitente,
+  gerarRelatorioReceitasBrutas,
+  consultarGuiasDas,
+  registrarPagamentoDas
 };

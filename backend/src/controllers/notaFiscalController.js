@@ -194,6 +194,75 @@ const notaFiscalController = {
         mensagem: error.message || 'Erro ao cancelar nota fiscal'
       });
     }
+  },
+
+  /**
+   * GET /api/notas-fiscais/relatorio-receitas
+   * Retorna o Relatório Mensal de Receitas Brutas (DASN-SIMEI).
+   */
+  async obterRelatorioReceitas(req, res) {
+    try {
+      const usuarioId = req.usuario.id;
+      const relatorio = await fiscalEngine.gerarRelatorioReceitasBrutas(usuarioId, req.query);
+
+      return res.status(200).json({
+        sucesso: true,
+        mensagem: 'Relatório de receitas brutas gerado com sucesso',
+        dados: relatorio
+      });
+    } catch (error) {
+      const status = error.statusCode || 500;
+      return res.status(status).json({
+        sucesso: false,
+        mensagem: error.message || 'Erro ao gerar relatório de receitas brutas'
+      });
+    }
+  },
+
+  /**
+   * GET /api/notas-fiscais/das
+   * Retorna o status das 12 competências da Guia DAS do MEI.
+   */
+  async listarGuiasDas(req, res) {
+    try {
+      const usuarioId = req.usuario.id;
+      const resultado = await fiscalEngine.consultarGuiasDas(usuarioId, req.query);
+
+      return res.status(200).json({
+        sucesso: true,
+        mensagem: 'Guias DAS consultadas com sucesso',
+        dados: resultado
+      });
+    } catch (error) {
+      const status = error.statusCode || 500;
+      return res.status(status).json({
+        sucesso: false,
+        mensagem: error.message || 'Erro ao consultar guias DAS'
+      });
+    }
+  },
+
+  /**
+   * POST /api/notas-fiscais/das/pagar
+   * Registra o pagamento da Guia DAS do MEI.
+   */
+  async pagarGuiaDas(req, res) {
+    try {
+      const usuarioId = req.usuario.id;
+      const pagamento = await fiscalEngine.registrarPagamentoDas(usuarioId, req.body);
+
+      return res.status(201).json({
+        sucesso: true,
+        mensagem: 'Pagamento da Guia DAS registrado com sucesso',
+        dados: pagamento
+      });
+    } catch (error) {
+      const status = error.statusCode || 500;
+      return res.status(status).json({
+        sucesso: false,
+        mensagem: error.message || 'Erro ao registrar pagamento da Guia DAS'
+      });
+    }
   }
 };
 

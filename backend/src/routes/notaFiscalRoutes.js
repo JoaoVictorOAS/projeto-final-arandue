@@ -3,6 +3,11 @@ const notaFiscalController = require('../controllers/notaFiscalController');
 
 const router = express.Router();
 
+// Rotas de Obrigações MEI (Devem vir ANTES de /:id para evitar colisão com parâmetro dinâmico)
+router.get('/relatorio-receitas', notaFiscalController.obterRelatorioReceitas);
+router.get('/das', notaFiscalController.listarGuiasDas);
+router.post('/das/pagar', notaFiscalController.pagarGuiaDas);
+
 // Emissão de documentos fiscais
 router.post('/nfse', notaFiscalController.emitirNfse);
 router.post('/nfe', notaFiscalController.emitirNfe);
