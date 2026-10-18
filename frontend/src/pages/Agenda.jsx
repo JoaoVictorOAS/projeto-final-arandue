@@ -361,7 +361,7 @@ export default function Agenda() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <CalendarIcon className="w-7 h-7 text-indigo-600" />
+            <CalendarIcon className="w-7 h-7 text-theme-primary" />
             Agenda de Atendimentos
           </h1>
           <p className="text-sm text-gray-500 mt-1">
@@ -384,7 +384,7 @@ export default function Agenda() {
           <button
             type="button"
             onClick={handleOpenCreateModal}
-            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white text-sm font-semibold rounded-xl shadow-sm transition"
+            className="btn-theme-primary inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-xl shadow-sm transition"
           >
             <Plus className="w-4 h-4" />
             Novo Agendamento
@@ -443,7 +443,7 @@ export default function Agenda() {
               onClick={() => setFiltroData('HOJE')}
               className={`px-3 py-1.5 rounded-lg transition ${
                 filtroData === 'HOJE'
-                  ? 'bg-white text-indigo-700 shadow-xs font-bold'
+                  ? 'bg-white text-theme-primary shadow-xs font-bold'
                   : 'text-gray-600 hover:text-gray-900'
               }`}
             >
@@ -454,7 +454,7 @@ export default function Agenda() {
               onClick={() => setFiltroData('SEMANA')}
               className={`px-3 py-1.5 rounded-lg transition ${
                 filtroData === 'SEMANA'
-                  ? 'bg-white text-indigo-700 shadow-xs font-bold'
+                  ? 'bg-white text-theme-primary shadow-xs font-bold'
                   : 'text-gray-600 hover:text-gray-900'
               }`}
             >
@@ -465,7 +465,7 @@ export default function Agenda() {
               onClick={() => setFiltroData('TODOS')}
               className={`px-3 py-1.5 rounded-lg transition ${
                 filtroData === 'TODOS'
-                  ? 'bg-white text-indigo-700 shadow-xs font-bold'
+                  ? 'bg-white text-theme-primary shadow-xs font-bold'
                   : 'text-gray-600 hover:text-gray-900'
               }`}
             >
@@ -484,7 +484,7 @@ export default function Agenda() {
               onClick={() => setFiltroStatus(st)}
               className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition whitespace-nowrap ${
                 filtroStatus === st
-                  ? 'bg-indigo-600 text-white shadow-xs'
+                  ? 'tab-theme-active shadow-xs'
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
             >
@@ -497,7 +497,7 @@ export default function Agenda() {
       {/* Conteúdo Principal: Cards de Atendimento */}
       {loading ? (
         <div className="bg-white rounded-2xl border border-gray-200/80 p-12 text-center shadow-sm">
-          <Loader2 className="w-8 h-8 text-indigo-600 animate-spin mx-auto mb-3" />
+          <Loader2 className="w-8 h-8 text-theme-primary animate-spin mx-auto mb-3" />
           <p className="text-sm font-medium text-gray-600">Carregando agendamentos...</p>
         </div>
       ) : agendamentosFiltrados.length === 0 ? (
@@ -518,7 +518,7 @@ export default function Agenda() {
           <button
             type="button"
             onClick={handleOpenCreateModal}
-            className="inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl shadow-sm transition"
+            className="btn-theme-primary inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-xl shadow-sm transition"
           >
             <Plus className="w-4 h-4" />
             Agendar Primeiro Atendimento
@@ -544,8 +544,8 @@ export default function Agenda() {
                 <div className="space-y-3">
                   {/* Cabeçalho do Card: Horário e StatusBadge */}
                   <div className="flex items-start justify-between gap-2">
-                    <div className="flex items-center gap-2 text-indigo-700 font-semibold text-sm">
-                      <Clock className="w-4 h-4 text-indigo-600 flex-shrink-0" />
+                    <div className="flex items-center gap-2 text-theme-primary font-semibold text-sm">
+                      <Clock className="w-4 h-4 text-theme-primary flex-shrink-0" />
                       <span>{formatDateTime(ag.data_hora)}</span>
                     </div>
                     <StatusBadge status={statusAtual} />
@@ -567,7 +567,7 @@ export default function Agenda() {
 
                   {/* Serviço / Procedimento */}
                   <div className="flex items-center gap-2 text-sm text-gray-700 bg-gray-50 p-2.5 rounded-xl border border-gray-100">
-                    <Wrench className="w-4 h-4 text-indigo-500 flex-shrink-0" />
+                    <Wrench className="w-4 h-4 text-theme-primary flex-shrink-0" />
                     <span className="font-medium truncate">{nomeServico}</span>
                   </div>
 
@@ -584,7 +584,7 @@ export default function Agenda() {
                   <div className="flex items-center gap-1.5">
                     <span className="text-xs font-mono text-gray-400">#{ag.id}</span>
                     {ag.orcamento_id && (
-                      <span className="text-[10px] font-mono font-medium text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-100">
+                      <span className="text-[10px] font-mono font-medium badge-theme-subtle px-1.5 py-0.5 rounded">
                         Orc #{ag.orcamento_id}
                       </span>
                     )}
@@ -693,7 +693,7 @@ export default function Agenda() {
               type="submit"
               form="form-novo-agendamento"
               disabled={submitting}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition shadow-sm disabled:opacity-50"
+              className="btn-theme-primary w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2 text-sm font-semibold rounded-xl transition shadow-sm disabled:opacity-50"
             >
               {submitting ? (
                 <>

@@ -413,7 +413,7 @@ export default function Orcamentos() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <FileText className="w-7 h-7 text-indigo-600" />
+            <FileText className="w-7 h-7 text-theme-primary" />
             Orçamentos
           </h1>
           <p className="text-sm text-gray-500 mt-1">
@@ -436,7 +436,7 @@ export default function Orcamentos() {
           <button
             type="button"
             onClick={handleOpenCreateModal}
-            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white text-sm font-semibold rounded-xl shadow-sm transition"
+            className="btn-theme-primary inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-xl shadow-sm transition"
           >
             <Plus className="w-4 h-4" />
             Novo Orçamento
@@ -495,7 +495,7 @@ export default function Orcamentos() {
               onClick={() => setStatusFiltro(st)}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition whitespace-nowrap ${
                 statusFiltro === st
-                  ? 'bg-indigo-600 text-white shadow-xs'
+                  ? 'tab-theme-active shadow-xs'
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
             >
@@ -508,7 +508,7 @@ export default function Orcamentos() {
       {/* Conteúdo Principal: Tabela ou Estado Vazio */}
       {loading ? (
         <div className="bg-white rounded-2xl border border-gray-200/80 p-12 text-center shadow-sm">
-          <Loader2 className="w-8 h-8 text-indigo-600 animate-spin mx-auto mb-3" />
+          <Loader2 className="w-8 h-8 text-theme-primary animate-spin mx-auto mb-3" />
           <p className="text-sm font-medium text-gray-600">Carregando orçamentos...</p>
         </div>
       ) : orcamentosFiltrados.length === 0 ? (
@@ -529,7 +529,7 @@ export default function Orcamentos() {
           <button
             type="button"
             onClick={handleOpenCreateModal}
-            className="inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl shadow-sm transition"
+            className="btn-theme-primary inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-xl shadow-sm transition"
           >
             <Plus className="w-4 h-4" />
             Emitir Primeiro Orçamento
@@ -566,7 +566,7 @@ export default function Orcamentos() {
                     >
                       {/* Número / ID */}
                       <td className="px-5 py-4 whitespace-nowrap">
-                        <span className="font-mono font-bold text-indigo-600">
+                        <span className="font-mono font-bold text-theme-primary">
                           #{String(orc.id).padStart(4, '0')}
                         </span>
                       </td>
@@ -631,7 +631,7 @@ export default function Orcamentos() {
                           <button
                             type="button"
                             onClick={() => handleOpenProposta(orc)}
-                            className="p-1.5 rounded-lg text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 transition"
+                            className="p-1.5 rounded-lg text-gray-500 hover:text-theme-primary transition"
                             title="Visualizar Proposta Comercial"
                             aria-label={`Ver proposta do orçamento ${orc.id}`}
                           >
@@ -654,7 +654,7 @@ export default function Orcamentos() {
                             <button
                               type="button"
                               onClick={() => navigate(`/agenda?orcamento_id=${orc.id}&cliente_id=${orc.cliente_id}`)}
-                              className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-indigo-50 text-indigo-700 hover:bg-indigo-100 transition inline-flex items-center gap-1"
+                              className="px-2.5 py-1 text-xs font-semibold rounded-lg badge-theme-subtle hover:brightness-95 transition inline-flex items-center gap-1"
                               title="Agendar Atendimento para este Orçamento"
                             >
                               <Calendar className="w-3.5 h-3.5" />
@@ -740,7 +740,7 @@ export default function Orcamentos() {
               type="submit"
               form="form-novo-orcamento"
               disabled={submitting}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition shadow-sm disabled:opacity-50"
+              className="btn-theme-primary w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2 text-sm font-semibold rounded-xl transition shadow-sm disabled:opacity-50"
             >
               {submitting ? (
                 <>
@@ -822,7 +822,7 @@ export default function Orcamentos() {
               <button
                 type="button"
                 onClick={handleAddItem}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg text-xs font-semibold transition"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 badge-theme-subtle rounded-lg text-xs font-semibold transition hover:brightness-95"
               >
                 <Plus className="w-3.5 h-3.5" />
                 Adicionar Item
@@ -978,7 +978,7 @@ export default function Orcamentos() {
             </div>
             <div className="pt-2 border-t border-indigo-200/60 flex justify-between items-center">
               <span className="text-base font-bold text-gray-900">Total Líquido:</span>
-              <span className="text-xl font-mono font-bold text-indigo-700">
+              <span className="text-xl font-mono font-bold text-theme-primary">
                 {formatBRL(totalAtual)}
               </span>
             </div>
@@ -1022,7 +1022,7 @@ export default function Orcamentos() {
                 <button
                   type="button"
                   onClick={handleCopyProposal}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-2 text-sm font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 rounded-xl transition"
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 text-sm font-semibold badge-theme-subtle hover:brightness-95 rounded-xl transition"
                   title="Copiar texto para WhatsApp"
                 >
                   {copied ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
@@ -1032,7 +1032,7 @@ export default function Orcamentos() {
                 <button
                   type="button"
                   onClick={handlePrintProposal}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition shadow-sm"
+                  className="btn-theme-primary inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-xl transition shadow-sm"
                   title="Imprimir ou Salvar PDF"
                 >
                   <Printer className="w-4 h-4" />
@@ -1046,7 +1046,7 @@ export default function Orcamentos() {
             {/* Header Proposta */}
             <div className="flex flex-col sm:flex-row justify-between items-start gap-4 pb-4 border-b border-gray-100">
               <div>
-                <span className="text-xs uppercase tracking-wider text-indigo-600 font-bold">
+                <span className="text-xs uppercase tracking-wider text-theme-primary font-bold">
                   Proposta Comercial MEI
                 </span>
                 <h2 className="text-2xl font-bold text-gray-900 mt-0.5">
@@ -1160,7 +1160,7 @@ export default function Orcamentos() {
                 )}
                 <div className="pt-2 border-t border-indigo-200 flex justify-between items-center text-base font-bold text-gray-900">
                   <span>Total Final:</span>
-                  <span className="text-xl font-mono text-indigo-700">
+                  <span className="text-xl font-mono text-theme-primary">
                     {formatBRL(selectedOrcamento.total)}
                   </span>
                 </div>
