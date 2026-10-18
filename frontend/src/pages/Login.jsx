@@ -15,6 +15,12 @@ import { signInWithPopup } from 'firebase/auth';
 import Logo from '../components/Logo';
 import { useAuth } from '../context/AuthContext';
 import { auth, googleProvider } from '../services/firebase';
+import {
+  OwlMascotDoodle,
+  CartoonEyes,
+  SketchUnderline,
+  SketchStickerBadge,
+} from '../components/SketchDoodles';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -117,23 +123,52 @@ export default function Login() {
       {/* Lado Esquerdo: Vitrine Modular (Oculto no mobile, visível apenas a partir de lg) */}
       <div className="hidden lg:flex lg:w-1/2 bg-stone-100/70 border-r border-stone-200 p-8 sm:p-12 lg:p-16 flex-col justify-between">
         <div>
-          <Logo size="md" showText={true} />
+          <div className="flex items-center justify-between mb-4">
+            <Link
+              to="/landing"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-stone-600 hover:text-stone-900 hover:underline transition-colors"
+            >
+              ← Explorar Landing Page
+            </Link>
+            <SketchStickerBadge rotate="-2deg" className="bg-amber-100 text-amber-900 border-amber-300">
+              FEITO À MÃO ✎
+            </SketchStickerBadge>
+          </div>
 
-          <div className="mt-10 lg:mt-14 max-w-xl">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 mb-4 border border-emerald-200/60">
+          <div className="flex items-center gap-3">
+            <Logo size="md" showText={true} />
+            <CartoonEyes className="w-8 h-5 opacity-80" />
+          </div>
+
+          <div className="mt-8 lg:mt-10 max-w-xl">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 mb-3 border border-emerald-200/60">
               <Sparkles className="w-3.5 h-3.5" />
               Simplicidade que acompanha sua rotina
             </span>
             <h1 className="text-3xl sm:text-4xl font-bold text-stone-900 tracking-tight leading-snug">
               Gestão modular feita para o microempreendedor.
             </h1>
+            <SketchUnderline className="w-36 h-2.5 text-amber-500 opacity-80 mt-1" />
             <p className="text-stone-600 text-sm sm:text-base mt-3 leading-relaxed">
               Controle financeiro, emissão de notas e suporte com inteligência artificial reunidos em uma experiência limpa, intuitiva e sem ruídos.
             </p>
           </div>
 
+          {/* Destaque do Mascote Aranduê com anotação manuscrita */}
+          <div className="mt-6 flex items-center gap-4 p-3.5 bg-white/90 rounded-2xl border border-dashed border-stone-300 shadow-xs">
+            <OwlMascotDoodle variant="cool" className="w-16 h-16 flex-shrink-0" />
+            <div>
+              <p className="font-hand text-base text-stone-800 leading-tight">
+                "Você foca no seu corre, o Aranduê cuida da burocracia!"
+              </p>
+              <p className="text-[11px] text-stone-400 font-sans mt-0.5">
+                Coruja Aranduê — sua parceira no financeiro e no WhatsApp
+              </p>
+            </div>
+          </div>
+
           {/* Cards Modulares Bento (Cores sólidas, sem gradientes) */}
-          <div className="mt-8 lg:mt-10 grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-xl">
+          <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-xl">
             {/* Bloco 1: Livro Caixa */}
             <div className="bg-white border border-stone-200 rounded-2xl p-5 shadow-sm hover:border-stone-300 transition-colors">
               <div className="w-9 h-9 rounded-xl bg-stone-100 text-stone-800 flex items-center justify-center mb-3">
@@ -190,14 +225,21 @@ export default function Login() {
       <div className="w-full lg:w-1/2 min-h-screen flex items-center justify-center p-6 sm:p-12 lg:p-16 bg-white">
         <div className="w-full max-w-md">
           {/* Logo exibido no topo do formulário em dispositivos móveis */}
-          <div className="lg:hidden mb-8 flex justify-center">
+          <div className="lg:hidden mb-8 flex flex-col items-center gap-2">
             <Logo size="md" showText={true} />
+            <Link
+              to="/landing"
+              className="text-xs font-semibold text-stone-500 hover:text-stone-900 transition-colors"
+            >
+              ← Explorar Landing Page
+            </Link>
           </div>
 
           {/* Cabeçalho do formulário */}
           <div className="mb-8 text-center">
-            <h2 className="text-2xl sm:text-3xl font-bold text-stone-900 tracking-tight">
-              Bem-vindo de volta
+            <h2 className="text-2xl sm:text-3xl font-bold text-stone-900 tracking-tight flex items-center justify-center gap-2">
+              <span>Bem-vindo de volta</span>
+              <CartoonEyes className="w-7 h-5 inline-block opacity-85" />
             </h2>
             <p className="text-sm text-stone-500 mt-1.5">
               Acesse sua conta para continuar gerenciando seu negócio.

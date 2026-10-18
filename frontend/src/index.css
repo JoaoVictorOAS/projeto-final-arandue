@@ -15,6 +15,28 @@
   --color-primary-hover: #4338ca;
   --color-primary-text: #ffffff;
   --color-accent: #f59e0b;
+  --btn-primary-bg: #4f46e5;
+  --btn-primary-hover: #4338ca;
+  --btn-primary-text: #ffffff;
+  --btn-secondary-bg: #f1f5f9;
+  --btn-secondary-border: #e2e8f0;
+  --btn-secondary-text: #0f172a;
+  --action-card-bg: #f1f5f9;
+  --action-card-hover: #e2e8f0;
+  --action-card-border: #e2e8f0;
+  --action-card-text: #0f172a;
+  --action-card-subtext: #64748b;
+  --action-icon-bg: #ffffff;
+  --action-icon-text: #4f46e5;
+  --insights-bg: #ffffff;
+  --insights-card-bg: #f1f5f9;
+  --insights-border: #e2e8f0;
+  --insights-text: #0f172a;
+  --insights-text-secondary: #64748b;
+  --insights-card-text: #0f172a;
+  --insights-card-subtext: #64748b;
+  --sketch-ink: #18181b;
+  --sketch-shadow: rgba(15, 23, 42, 0.85);
 }
 
 body {
@@ -127,12 +149,101 @@ body {
 
 
 /* =========================================================================
+   IDENTIDADE VISUAL FEITO À MÃO (SKETCH & HAND-DRAWN TOKENS)
+   ========================================================================= */
+
+.font-hand {
+  font-family: 'Caveat', cursive;
+}
+
+.font-display {
+  font-family: 'Syne', sans-serif;
+}
+
+.dark,
+[data-theme-mode="dark"] {
+  --sketch-ink: var(--border-color, #475569);
+  --sketch-shadow: rgba(0, 0, 0, 0.65);
+}
+
+.sketch-paper-bg {
+  background-image: radial-gradient(rgba(100, 116, 139, 0.16) 1.25px, transparent 1.25px);
+  background-size: 22px 22px;
+}
+
+.dark .sketch-paper-bg,
+[data-theme-mode="dark"] .sketch-paper-bg {
+  background-image: radial-gradient(rgba(148, 163, 184, 0.12) 1.25px, transparent 1.25px);
+}
+
+.sketch-card {
+  border: 2px solid var(--border-color);
+  box-shadow: 4px 4px 0px var(--border-color);
+  border-radius: 18px 14px 20px 15px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.sketch-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 6px 6px 0px var(--border-color);
+}
+
+.sketch-btn {
+  border: 2px solid var(--sketch-ink);
+  box-shadow: 3px 3px 0px var(--sketch-ink);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.sketch-btn:active {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0px var(--sketch-ink);
+}
+
+.sketch-sticker {
+  border: 2px dashed currentColor;
+  box-shadow: 3px 3px 0px rgba(0, 0, 0, 0.2);
+  font-family: 'Caveat', cursive;
+}
+
+.sketch-dashed-ring {
+  border: 2.5px dashed var(--border-color);
+  border-radius: 9999px;
+}
+
+.sketch-tape {
+  position: relative;
+}
+
+.sketch-tape::before {
+  content: "";
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%) rotate(-1deg);
+  width: 80px;
+  height: 20px;
+  background: rgba(254, 240, 138, 0.65);
+  backdrop-filter: blur(1px);
+  border-left: 2px dashed rgba(202, 138, 4, 0.4);
+  border-right: 2px dashed rgba(202, 138, 4, 0.4);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* =========================================================================
    SISTEMA DE TEMAS DINÂMICOS — MAPEAMENTO DE SUPERFÍCIES, CARDS E WIDGETS
    Garante que todos os cards, widgets, inputs e tabelas herdem as cores
    do tema ativo (inclusive temas escuros e customizados).
    ========================================================================= */
 
 /* 1. Mapeamento Universal de Superfície (Cards e Superfícies Brancas) */
+.theme-card {
+  border: 2px solid var(--border-color);
+  box-shadow: 3px 3px 0px var(--border-color);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
 .theme-card:not([class*="bg-gradient-"]),
 .theme-app-wrapper .bg-white:not([class*="bg-gradient-"]):not([class*="bg-white/"]),
 .dark .bg-white:not([class*="bg-gradient-"]):not([class*="bg-white/"]),
@@ -558,6 +669,72 @@ body {
 [data-theme-mode="dark"] .shadow-xl,
 [data-theme-mode="dark"] .shadow-2xl {
   box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.45) !important;
+}
+
+/* =========================================================================
+   12.1 REGRAS DE BOTÕES, AÇÕES RÁPIDAS E PAINEL DE INSIGHTS (CONTRASTE WCAG)
+   ========================================================================= */
+.theme-btn-primary {
+  background-color: var(--btn-primary-bg) !important;
+  color: var(--btn-primary-text) !important;
+  border-color: var(--btn-primary-bg) !important;
+}
+
+.theme-btn-primary:hover:not(:disabled) {
+  background-color: var(--btn-primary-hover) !important;
+  border-color: var(--btn-primary-hover) !important;
+}
+
+.theme-btn-secondary {
+  background-color: var(--btn-secondary-bg) !important;
+  color: var(--btn-secondary-text) !important;
+  border-color: var(--btn-secondary-border) !important;
+}
+
+.theme-btn-secondary:hover:not(:disabled) {
+  background-color: var(--action-card-hover) !important;
+}
+
+.theme-action-btn {
+  background-color: var(--action-card-bg) !important;
+  border: 2px solid var(--action-card-border) !important;
+  color: var(--action-card-text) !important;
+  box-shadow: 2px 2px 0px var(--border-color);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.theme-action-btn:hover {
+  background-color: var(--action-card-hover) !important;
+  border-color: var(--color-primary) !important;
+  transform: translateY(-1px);
+  box-shadow: 3px 3px 0px var(--color-primary);
+}
+
+.theme-action-btn:active {
+  transform: translate(2px, 2px);
+  box-shadow: 0px 0px 0px var(--border-color);
+}
+
+.theme-action-btn .theme-action-icon {
+  background-color: var(--action-icon-bg) !important;
+  color: var(--action-icon-text) !important;
+  border-color: var(--action-card-border) !important;
+}
+
+.theme-action-btn .theme-action-subtext {
+  color: var(--action-card-subtext) !important;
+}
+
+.theme-insights-panel {
+  background-color: var(--insights-bg) !important;
+  border-color: var(--insights-border) !important;
+  color: var(--insights-text) !important;
+}
+
+.theme-insights-card {
+  background-color: var(--insights-card-bg) !important;
+  border-color: var(--insights-border) !important;
+  color: var(--insights-card-text) !important;
 }
 
 /* =========================================================================

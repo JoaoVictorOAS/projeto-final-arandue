@@ -7,6 +7,11 @@ export default {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        hand: ['"Caveat"', 'cursive'],
+        display: ['"Syne"', 'sans-serif'],
+        sans: ['"Plus Jakarta Sans"', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+      },
       colors: {
         theme: {
           app: 'var(--bg-app)',

@@ -32,6 +32,7 @@ import DynamicWidgetCard from '../components/dashboard/DynamicWidgetCard';
 import ModalNovoDashboard from '../components/dashboard/ModalNovoDashboard';
 import ModalNovoWidget from '../components/dashboard/ModalNovoWidget';
 import { isMobileEnvironment } from '../utils/device';
+import { SketchUnderline } from '../components/SketchDoodles';
 
 const ResponsiveGridLayout = WidthProvider(Responsive);
 
@@ -854,40 +855,61 @@ export default function Dashboard() {
       descricao: 'Cadastrar contato',
       icone: UserPlus,
       link: '/clientes?novo=true',
-      cor: 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800/40 dark:hover:bg-blue-900/50',
     },
     {
       titulo: 'Novo Orçamento',
       descricao: 'Emitir proposta',
       icone: FileText,
       link: '/orcamentos?novo=true',
-      cor: 'bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100 dark:bg-indigo-950/40 dark:text-indigo-300 dark:border-indigo-800/40 dark:hover:bg-indigo-900/50',
     },
     {
       titulo: 'Novo Agendamento',
       descricao: 'Marcar atendimento',
       icone: Calendar,
       link: '/agenda?novo=true',
-      cor: 'bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100 dark:bg-purple-950/40 dark:text-purple-300 dark:border-purple-800/40 dark:hover:bg-purple-900/50',
     },
     {
       titulo: 'Nova Cobrança',
       descricao: 'Registrar pagamento',
       icone: CreditCard,
       link: '/cobrancas?novo=true',
-      cor: 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800/40 dark:hover:bg-emerald-900/50',
     },
     {
       titulo: 'Lançar Despesa',
       descricao: 'Saída no livro caixa',
       icone: ArrowUpRight,
       link: '/caixa?nova_saida=true',
-      cor: 'bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800/40 dark:hover:bg-rose-900/50',
     },
   ];
 
   return (
     <div className="space-y-6">
+      {/* Cabeçalho acolhedor com toque manuscrito */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div>
+          <div className="flex items-center gap-2.5">
+            <h1
+              className="text-2xl sm:text-3xl font-bold tracking-tight"
+              style={{ color: 'var(--text-main)' }}
+            >
+              Visão Geral
+            </h1>
+            <span
+              className="font-hand text-xs sm:text-sm px-2.5 py-0.5 rounded-full border border-dashed text-amber-600 dark:text-amber-400 rotate-1 inline-flex items-center gap-1 select-none"
+              style={{ borderColor: 'currentColor' }}
+            >
+              dia a dia MEI ☕
+            </span>
+          </div>
+          <div className="flex items-center gap-2 mt-1">
+            <SketchUnderline className="w-28 h-2 text-indigo-500 opacity-80" />
+            <p className="font-hand text-xs sm:text-sm" style={{ color: 'var(--text-secondary)' }}>
+              seu corre organizado sem burocracia ✎
+            </p>
+          </div>
+        </div>
+      </div>
+
       {/* Seção de Ações Rápidas */}
       <div
         className="theme-card bg-white rounded-2xl p-5 border border-gray-200/80 shadow-sm transition-colors duration-200"
@@ -901,7 +923,7 @@ export default function Dashboard() {
           className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-3 flex items-center gap-2"
           style={{ color: 'var(--text-main)' }}
         >
-          <Activity className="w-4 h-4 text-indigo-600" />
+          <Activity className="w-4 h-4" style={{ color: 'var(--color-primary)' }} />
           Ações Rápidas
         </h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
@@ -911,17 +933,36 @@ export default function Dashboard() {
               <Link
                 key={acao.titulo}
                 to={acao.link}
-                className={`p-3.5 rounded-xl border flex flex-col justify-between transition-all duration-150 group ${acao.cor}`}
+                className="theme-action-btn p-3.5 rounded-xl border flex flex-col justify-between transition-all duration-150 group"
+                style={{
+                  backgroundColor: 'var(--action-card-bg)',
+                  borderColor: 'var(--action-card-border)',
+                  color: 'var(--action-card-text)',
+                }}
               >
                 <div className="flex items-center justify-between mb-2">
-                  <div className="p-2 rounded-lg bg-white/80 dark:bg-white/10 shadow-xs">
+                  <div
+                    className="theme-action-icon p-2 rounded-lg border shadow-xs"
+                    style={{
+                      backgroundColor: 'var(--action-icon-bg)',
+                      color: 'var(--action-icon-text)',
+                      borderColor: 'var(--action-card-border)',
+                    }}
+                  >
                     <Icon className="w-4 h-4" />
                   </div>
                   <ArrowRight className="w-3.5 h-3.5 opacity-60 group-hover:translate-x-1 group-hover:opacity-100 transition-all" />
                 </div>
                 <div>
-                  <p className="font-bold text-xs leading-snug">{acao.titulo}</p>
-                  <p className="text-[11px] opacity-80 mt-0.5">{acao.descricao}</p>
+                  <p className="font-bold text-xs leading-snug" style={{ color: 'var(--action-card-text)' }}>
+                    {acao.titulo}
+                  </p>
+                  <p
+                    className="theme-action-subtext text-[11px] mt-0.5"
+                    style={{ color: 'var(--action-card-subtext)' }}
+                  >
+                    {acao.descricao}
+                  </p>
                 </div>
               </Link>
             );
@@ -969,7 +1010,10 @@ export default function Dashboard() {
                 style={{ borderColor: 'var(--border-color)' }}
               >
                 <span className="truncate">{kpi.desc}</span>
-                <span className="text-indigo-600 font-semibold group-hover:translate-x-0.5 transition-transform inline-flex items-center gap-0.5 ml-2 flex-shrink-0">
+                <span
+                  className="font-semibold group-hover:translate-x-0.5 transition-transform inline-flex items-center gap-0.5 ml-2 flex-shrink-0"
+                  style={{ color: 'var(--color-primary)' }}
+                >
                   Ver <ArrowRight className="w-3 h-3" />
                 </span>
               </div>
@@ -990,7 +1034,13 @@ export default function Dashboard() {
         >
           {/* Abas */}
           <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
-            <div className="flex items-center gap-1.5 p-1 bg-gray-100/80 rounded-xl">
+            <div
+              className="flex items-center gap-1.5 p-1 rounded-xl border"
+              style={{
+                backgroundColor: 'var(--bg-surface-hover)',
+                borderColor: 'var(--border-color)',
+              }}
+            >
               {dashboards.map((dash) => {
                 const isActive = dash.id === activeDashboardId;
                 const podeArrastar = dashboards.length > 1;
@@ -1003,13 +1053,22 @@ export default function Dashboard() {
                     onDragStart={(e) => handleDragStartTab(e, dash)}
                     onDragEnd={handleDragEndTab}
                     onClick={() => handleSelectDashboard(dash.id)}
-                    className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap select-none ${
+                    className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap select-none border ${
                       podeArrastar ? 'cursor-grab active:cursor-grabbing' : ''
                     } ${
-                      isActive
-                        ? 'bg-white text-indigo-700 shadow-xs border border-gray-200/70'
-                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-200/60'
+                      isActive ? 'theme-btn-primary shadow-xs' : 'border-transparent'
                     }`}
+                    style={
+                      isActive
+                        ? {
+                            backgroundColor: 'var(--btn-primary-bg)',
+                            color: 'var(--btn-primary-text)',
+                            borderColor: 'var(--btn-primary-bg)',
+                          }
+                        : {
+                            color: 'var(--text-secondary)',
+                          }
+                    }
                     title={podeArrastar ? 'Segure e arraste até a lixeira para excluir este painel' : undefined}
                   >
                     <span>{dash.nome}</span>
@@ -1019,7 +1078,12 @@ export default function Dashboard() {
               <button
                 type="button"
                 onClick={() => setModalNovoDashboardAberto(true)}
-                className="px-2.5 py-1.5 rounded-lg text-xs font-semibold text-gray-500 hover:text-indigo-600 hover:bg-white/80 transition flex items-center gap-1 whitespace-nowrap"
+                className="theme-btn-secondary px-2.5 py-1.5 rounded-lg text-xs font-semibold border transition flex items-center gap-1 whitespace-nowrap"
+                style={{
+                  backgroundColor: 'var(--bg-surface)',
+                  color: 'var(--text-main)',
+                  borderColor: 'var(--border-color)',
+                }}
                 title="Criar novo painel"
               >
                 <Plus className="w-3.5 h-3.5" />
@@ -1035,7 +1099,12 @@ export default function Dashboard() {
                 type="button"
                 data-testid="btn-restaurar-layout"
                 onClick={handleRestaurarLayoutPadrao}
-                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 hover:text-indigo-600 text-xs font-semibold shadow-xs transition"
+                className="theme-btn-secondary inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border text-xs font-semibold shadow-xs transition"
+                style={{
+                  backgroundColor: 'var(--btn-secondary-bg)',
+                  color: 'var(--btn-secondary-text)',
+                  borderColor: 'var(--btn-secondary-border)',
+                }}
                 title="Restaurar posições e tamanhos originais dos gráficos"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
@@ -1047,7 +1116,11 @@ export default function Dashboard() {
             <button
               type="button"
               onClick={() => setModalNovoWidgetAberto(true)}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-xs transition"
+              className="theme-btn-primary inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold shadow-xs transition"
+              style={{
+                backgroundColor: 'var(--btn-primary-bg)',
+                color: 'var(--btn-primary-text)',
+              }}
             >
               <PlusCircle className="w-4 h-4" />
               <span>Adicionar Gráfico</span>
@@ -1065,7 +1138,7 @@ export default function Dashboard() {
               color: 'var(--text-main)',
             }}
           >
-            <Loader2 className="w-6 h-6 text-indigo-600 animate-spin mx-auto mb-2" />
+            <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2" style={{ color: 'var(--color-primary)' }} />
             <p className="text-xs text-gray-500" style={{ color: 'var(--text-secondary)' }}>Atualizando gráficos...</p>
           </div>
         ) : !activeDashboard?.widgets || activeDashboard.widgets.length === 0 ? (
@@ -1077,7 +1150,14 @@ export default function Dashboard() {
               color: 'var(--text-main)',
             }}
           >
-            <div className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center mx-auto mb-3">
+            <div
+              className="w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-3 border"
+              style={{
+                backgroundColor: 'var(--bg-surface-hover)',
+                color: 'var(--color-primary)',
+                borderColor: 'var(--border-color)',
+              }}
+            >
               <BarChart3 className="w-6 h-6" />
             </div>
             <p className="text-sm font-bold text-gray-800" style={{ color: 'var(--text-main)' }}>
@@ -1089,7 +1169,11 @@ export default function Dashboard() {
             <button
               type="button"
               onClick={() => setModalNovoWidgetAberto(true)}
-              className="inline-flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl shadow-xs transition"
+              className="theme-btn-primary inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-xl shadow-xs transition"
+              style={{
+                backgroundColor: 'var(--btn-primary-bg)',
+                color: 'var(--btn-primary-text)',
+              }}
             >
               <PlusCircle className="w-3.5 h-3.5" />
               Adicionar Gráfico
@@ -1127,33 +1211,59 @@ export default function Dashboard() {
 
       {/* Seção Insights & Alertas Proativos da IA */}
       <div
-        className="theme-card bg-gradient-to-r from-indigo-900 via-indigo-800 to-slate-900 text-white rounded-2xl shadow-md p-6 relative overflow-hidden mb-6"
+        data-testid="painel-insights-ia"
+        className="theme-card theme-insights-panel rounded-2xl border shadow-sm p-6 relative overflow-hidden mb-6 transition-colors duration-200"
+        style={{
+          backgroundColor: 'var(--insights-bg)',
+          borderColor: 'var(--insights-border)',
+          color: 'var(--insights-text)',
+          borderLeftWidth: '4px',
+          borderLeftColor: 'var(--color-primary)',
+        }}
       >
-        <div className="absolute right-0 top-0 translate-x-6 -translate-y-6 w-48 h-48 bg-indigo-500/20 rounded-full blur-2xl pointer-events-none"></div>
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4 relative z-10">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-md flex items-center justify-center text-indigo-200 border border-white/10">
-              <Activity className="w-5 h-5 text-indigo-300 animate-pulse" />
+            <div
+              className="w-10 h-10 rounded-xl flex items-center justify-center shadow-xs flex-shrink-0"
+              style={{
+                backgroundColor: 'var(--btn-primary-bg)',
+                color: 'var(--btn-primary-text)',
+              }}
+            >
+              <Activity className="w-5 h-5 animate-pulse" />
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-base font-bold text-white">Insights & Alertas Proativos da IA</h2>
-                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                  insightsIA.resumo_saude === 'CRITICO' ? 'bg-rose-500/80 text-white' :
-                  insightsIA.resumo_saude === 'ATENCAO' ? 'bg-amber-500/80 text-white' : 'bg-emerald-500/80 text-white'
-                }`}>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h2 className="text-base font-bold" style={{ color: 'var(--insights-text)' }}>
+                  Insights & Alertas Proativos da IA
+                </h2>
+                <span
+                  className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                    insightsIA.resumo_saude === 'CRITICO'
+                      ? 'bg-rose-600 text-white'
+                      : insightsIA.resumo_saude === 'ATENCAO'
+                      ? 'bg-amber-600 text-white'
+                      : 'bg-emerald-600 text-white'
+                  }`}
+                >
                   Saúde: {insightsIA.resumo_saude}
                 </span>
               </div>
-              <p className="text-xs text-indigo-200/80 mt-0.5">
+              <p className="text-xs mt-0.5" style={{ color: 'var(--insights-text-secondary)' }}>
                 Monitoramento inteligente de caixa, inadimplência, estoque e teto MEI em tempo real
               </p>
             </div>
           </div>
           <button
+            type="button"
             onClick={fetchInsights}
             disabled={loadingInsights}
-            className="self-start sm:self-center inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white text-xs font-semibold rounded-xl backdrop-blur-md transition border border-white/10"
+            className="theme-btn-secondary self-start sm:self-center inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-xl transition border shadow-xs"
+            style={{
+              backgroundColor: 'var(--btn-secondary-bg)',
+              color: 'var(--btn-secondary-text)',
+              borderColor: 'var(--btn-secondary-border)',
+            }}
           >
             <RotateCcw className={`w-3.5 h-3.5 ${loadingInsights ? 'animate-spin' : ''}`} />
             Atualizar Insights
@@ -1161,45 +1271,79 @@ export default function Dashboard() {
         </div>
 
         {loadingInsights ? (
-          <div className="py-6 text-center text-indigo-200 text-xs">
-            <Loader2 className="w-5 h-5 animate-spin mx-auto mb-2 text-indigo-300" />
+          <div className="py-6 text-center text-xs" style={{ color: 'var(--insights-text-secondary)' }}>
+            <Loader2 className="w-5 h-5 animate-spin mx-auto mb-2" style={{ color: 'var(--color-primary)' }} />
             Analisando indicadores do negócio...
           </div>
         ) : !Array.isArray(insightsIA?.insights) || insightsIA.insights.length === 0 ? (
-          <div className="bg-white/5 rounded-xl p-4 text-center border border-white/10">
-            <CheckCircle2 className="w-6 h-6 text-emerald-400 mx-auto mb-1.5" />
-            <p className="text-xs font-semibold text-white">Tudo em ordem por aqui!</p>
-            <p className="text-[11px] text-indigo-200/70 mt-0.5">Nenhum alerta crítico ou pendência detectada no momento.</p>
+          <div
+            className="theme-insights-card rounded-xl p-4 text-center border"
+            style={{
+              backgroundColor: 'var(--insights-card-bg)',
+              borderColor: 'var(--insights-border)',
+              color: 'var(--insights-card-text)',
+            }}
+          >
+            <CheckCircle2 className="w-6 h-6 text-emerald-500 mx-auto mb-1.5" />
+            <p className="text-xs font-semibold" style={{ color: 'var(--insights-card-text)' }}>
+              Tudo em ordem por aqui!
+            </p>
+            <p className="text-[11px] mt-0.5" style={{ color: 'var(--insights-card-subtext)' }}>
+              Nenhum alerta crítico ou pendência detectada no momento.
+            </p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 relative z-10">
             {(insightsIA?.insights || []).map((item) => {
-              const bgBadge = 
-                item.severidade === 'critico' ? 'bg-rose-500/20 text-rose-300 border-rose-500/30' :
-                item.severidade === 'alerta' ? 'bg-amber-500/20 text-amber-300 border-amber-500/30' :
-                'bg-sky-500/20 text-sky-300 border-sky-500/30';
-              
+              const bgBadge =
+                item.severidade === 'critico'
+                  ? 'bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-500/30'
+                  : item.severidade === 'alerta'
+                  ? 'bg-amber-500/15 text-amber-800 dark:text-amber-300 border-amber-500/30'
+                  : 'bg-sky-500/15 text-sky-800 dark:text-sky-300 border-sky-500/30';
+
               return (
-                <div key={item.id} className="bg-white/10 backdrop-blur-md rounded-xl p-4 border border-white/10 flex flex-col justify-between hover:bg-white/15 transition">
+                <div
+                  key={item.id}
+                  className="theme-insights-card rounded-xl p-4 border flex flex-col justify-between transition"
+                  style={{
+                    backgroundColor: 'var(--insights-card-bg)',
+                    borderColor: 'var(--insights-border)',
+                    color: 'var(--insights-card-text)',
+                  }}
+                >
                   <div>
                     <div className="flex items-center justify-between gap-2 mb-2">
                       <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider border ${bgBadge}`}>
                         {item.severidade} • {item.categoria}
                       </span>
                       {item.valor_associado !== undefined && item.valor_associado !== null && (
-                        <span className="text-xs font-bold text-white">
-                          {typeof item.valor_associado === 'number' && item.valor_associado > 10 ? formatMoney(item.valor_associado) : item.valor_associado}
+                        <span className="text-xs font-bold" style={{ color: 'var(--insights-card-text)' }}>
+                          {typeof item.valor_associado === 'number' && item.valor_associado > 10
+                            ? formatMoney(item.valor_associado)
+                            : item.valor_associado}
                         </span>
                       )}
                     </div>
-                    <h3 className="text-sm font-bold text-white mb-1">{item.titulo}</h3>
-                    <p className="text-xs text-indigo-100/90 leading-relaxed mb-3">{item.descricao}</p>
+                    <h3 className="text-sm font-bold mb-1" style={{ color: 'var(--insights-card-text)' }}>
+                      {item.titulo}
+                    </h3>
+                    <p className="text-xs leading-relaxed mb-3" style={{ color: 'var(--insights-card-subtext)' }}>
+                      {item.descricao}
+                    </p>
                   </div>
                   {item.acao_rota && (
-                    <div className="pt-2 border-t border-white/10 flex justify-end">
+                    <div
+                      className="pt-2 border-t flex justify-end"
+                      style={{ borderColor: 'var(--insights-border)' }}
+                    >
                       <Link
                         to={item.acao_rota}
-                        className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-white text-indigo-900 hover:bg-indigo-50 text-xs font-bold transition shadow-sm"
+                        className="theme-btn-primary inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition shadow-xs"
+                        style={{
+                          backgroundColor: 'var(--btn-primary-bg)',
+                          color: 'var(--btn-primary-text)',
+                        }}
                       >
                         <span>{item.acao_label || 'Ver Detalhes'}</span>
                         <ArrowRight className="w-3.5 h-3.5" />
@@ -1228,7 +1372,7 @@ export default function Dashboard() {
         >
           <div>
             <h2 className="text-base font-bold text-gray-900 flex items-center gap-2" style={{ color: 'var(--text-main)' }}>
-              <Calendar className="w-5 h-5 text-indigo-600" />
+              <Calendar className="w-5 h-5" style={{ color: 'var(--color-primary)' }} />
               Próximos Atendimentos
             </h2>
             <p className="text-xs text-gray-500 mt-0.5" style={{ color: 'var(--text-secondary)' }}>
@@ -1238,7 +1382,12 @@ export default function Dashboard() {
 
           <Link
             to="/agenda"
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-semibold transition"
+            className="theme-btn-secondary inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold transition"
+            style={{
+              backgroundColor: 'var(--btn-secondary-bg)',
+              color: 'var(--btn-secondary-text)',
+              borderColor: 'var(--btn-secondary-border)',
+            }}
           >
             <span>Ver Agenda Completa</span>
             <ArrowRight className="w-3.5 h-3.5" />
@@ -1247,23 +1396,34 @@ export default function Dashboard() {
 
         {loading ? (
           <div className="p-8 text-center">
-            <Loader2 className="w-6 h-6 text-indigo-600 animate-spin mx-auto mb-2" />
-            <p className="text-xs text-gray-500">Carregando agendamentos...</p>
+            <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2" style={{ color: 'var(--color-primary)' }} />
+            <p className="text-xs text-gray-500" style={{ color: 'var(--text-secondary)' }}>Carregando agendamentos...</p>
           </div>
         ) : resumo.proximos_agendamentos.length === 0 ? (
           <div className="p-8 text-center">
-            <div className="w-12 h-12 bg-sky-50 text-sky-600 rounded-xl flex items-center justify-center mx-auto mb-3">
+            <div
+              className="w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-3 border"
+              style={{
+                backgroundColor: 'var(--bg-surface-hover)',
+                color: 'var(--color-primary)',
+                borderColor: 'var(--border-color)',
+              }}
+            >
               <Calendar className="w-6 h-6" />
             </div>
-            <p className="text-sm font-semibold text-gray-800">
+            <p className="text-sm font-semibold text-gray-800" style={{ color: 'var(--text-main)' }}>
               Nenhum agendamento futuro no momento
             </p>
-            <p className="text-xs text-gray-500 max-w-sm mx-auto mt-1 mb-4">
+            <p className="text-xs text-gray-500 max-w-sm mx-auto mt-1 mb-4" style={{ color: 'var(--text-secondary)' }}>
               Agende novos atendimentos com seus clientes para organizar sua rotina de trabalho.
             </p>
             <Link
               to="/agenda?novo=true"
-              className="inline-flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl shadow-sm transition"
+              className="theme-btn-primary inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-xl shadow-sm transition"
+              style={{
+                backgroundColor: 'var(--btn-primary-bg)',
+                color: 'var(--btn-primary-text)',
+              }}
             >
               <Calendar className="w-3.5 h-3.5" />
               Agendar Atendimento

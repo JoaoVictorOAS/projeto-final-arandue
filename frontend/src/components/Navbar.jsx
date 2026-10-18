@@ -1,6 +1,8 @@
 import React from 'react';
-import { Menu, LogOut, User, Bell } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Menu, LogOut, User, Bell, ExternalLink } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { CartoonEyes } from './SketchDoodles';
 
 export default function Navbar({ onToggleSidebar }) {
   const { usuario, logout } = useAuth();
@@ -32,9 +34,10 @@ export default function Navbar({ onToggleSidebar }) {
           >
             <Menu className="w-6 h-6" />
           </button>
-          <div>
-            <h1 className="text-lg font-bold leading-tight" style={{ color: 'var(--text-main)' }}>
-              MEI{' '}
+          <div className="flex items-center gap-2">
+            <h1 className="text-lg font-bold leading-tight flex items-center gap-1.5" style={{ color: 'var(--text-main)' }}>
+              <span>MEI</span>
+              <CartoonEyes className="w-6 h-4 opacity-90 inline-block align-middle" />
               <span
                 className="font-medium text-sm hidden sm:inline"
                 style={{ color: 'var(--color-primary)' }}
@@ -42,10 +45,28 @@ export default function Navbar({ onToggleSidebar }) {
                 — Gestão Simplificada
               </span>
             </h1>
+            <span
+              className="font-hand text-xs px-2 py-0.5 rounded-full border border-dashed text-amber-600 dark:text-amber-400 rotate-1 hidden md:inline-block"
+              style={{ borderColor: 'currentColor' }}
+            >
+              feito à mão ✎
+            </span>
           </div>
         </div>
 
         <div className="flex items-center gap-4">
+          <Link
+            to="/landing"
+            className="hidden sm:inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-lg border border-dashed opacity-80 hover:opacity-100 hover:scale-105 transition-all"
+            style={{
+              borderColor: 'var(--border-color)',
+              color: 'var(--text-secondary, var(--text-main))',
+            }}
+            title="Conhecer a vitrine da plataforma"
+          >
+            <span>Ver vitrine</span>
+            <ExternalLink className="w-3 h-3" />
+          </Link>
           <div
             className="flex items-center gap-3 pl-2 border-l"
             style={{ borderColor: 'var(--border-color)' }}

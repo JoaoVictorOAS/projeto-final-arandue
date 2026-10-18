@@ -14,7 +14,9 @@ import {
   X,
   Building2,
   MessageCircle,
+  Bot,
   Settings,
+  Sparkles,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useChat } from '../context/ChatContext';
@@ -31,6 +33,7 @@ const NAV_ITEMS = [
   { to: '/estoque', label: 'Estoque & Produção', icon: Package },
   { to: '/fiscal', label: 'Notas Fiscais', icon: Receipt },
   { to: '/assistente', label: 'Assistente IA', icon: MessageCircle },
+  { to: '/atendente', label: 'Atendente Cliente', icon: Bot },
   { to: '/configuracoes', label: 'Configurações', icon: Settings },
 ];
 
@@ -41,7 +44,7 @@ export default function Sidebar({ isOpen, setIsOpen }) {
   const navLinkClasses = ({ isActive }) =>
     `flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all ${
       isActive
-        ? 'font-semibold shadow-sm'
+        ? 'font-semibold shadow-sm border'
         : 'hover:opacity-90'
     }`;
 
@@ -59,7 +62,12 @@ export default function Sidebar({ isOpen, setIsOpen }) {
         className="h-16 flex items-center justify-between px-6 border-b"
         style={{ borderColor: 'var(--border-color)' }}
       >
-        <Logo size="md" subtitle="Gestão MEI" />
+        <div className="flex items-center gap-2">
+          <Logo size="md" subtitle="Gestão MEI" />
+          <span className="font-hand text-xs px-2 py-0.5 rounded-full border border-dashed text-emerald-600 dark:text-emerald-400 -rotate-2 select-none hidden sm:inline-block">
+            100% MEI
+          </span>
+        </div>
 
         {setIsOpen && (
           <button
@@ -90,9 +98,12 @@ export default function Sidebar({ isOpen, setIsOpen }) {
                   ? {
                       backgroundColor: 'var(--color-primary)',
                       color: 'var(--color-primary-text)',
+                      borderColor: 'var(--color-primary)',
+                      boxShadow: '2px 2px 0px var(--border-color)',
                     }
                   : {
                       color: 'var(--text-main)',
+                      borderColor: 'transparent',
                     }
               }
             >
@@ -113,6 +124,24 @@ export default function Sidebar({ isOpen, setIsOpen }) {
           );
         })}
       </nav>
+
+      {/* Atalho Vitrine / Landing Page */}
+      <div className="px-4 py-2 border-t" style={{ borderColor: 'var(--border-color)' }}>
+        <NavLink
+          to="/landing"
+          onClick={() => setIsOpen && setIsOpen(false)}
+          className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold border border-dashed opacity-80 hover:opacity-100 hover:scale-[1.01] transition-all"
+          style={{
+            borderColor: 'var(--border-color)',
+            color: 'var(--text-secondary, var(--text-main))',
+            backgroundColor: 'var(--bg-surface-hover, transparent)',
+          }}
+        >
+          <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+          <span className="flex-1">Página Inicial / Vitrine</span>
+          <span className="font-hand text-[11px] text-amber-600 dark:text-amber-400">ver ↗</span>
+        </NavLink>
+      </div>
 
       {/* Footer Profile & Logout */}
       <div
