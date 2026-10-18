@@ -41,11 +41,12 @@ export default function AtendenteIA({ publicMode = false }) {
   const [saving, setSaving] = useState(false);
   const [copied, setCopied] = useState(false);
   const [feedback, setFeedback] = useState(null);
+  const [usarMensagemInicial, setUsarMensagemInicial] = useState(false);
 
   const [config, setConfig] = useState({
     nome_atendente: 'Atendente Virtual',
     tom_voz: 'AMIGAVEL',
-    mensagem_boas_vindas: 'Olá! Como posso ajudar você hoje?',
+    mensagem_boas_vindas: '',
     instrucoes_customizadas: '',
     orcamento_min_valor: 0,
     orcamento_max_valor: 500,
@@ -83,16 +84,29 @@ export default function AtendenteIA({ publicMode = false }) {
       carregarConfiguracao();
       carregarPendencias();
       carregarServicosCatalogo();
+    } else if (urlSlug) {
+      api
+        .get(`/atendente/publico/${urlSlug}`)
+        .then(({ data }) => {
+          if (data?.dados?.mensagem_boas_vindas?.trim()) {
+            setMensagens([
+              {
+                id: 'welcome',
+                remetente: 'atendente',
+                texto: data.dados.mensagem_boas_vindas.trim(),
+              },
+            ]);
+          } else {
+            setMensagens([]);
+          }
+        })
+        .catch(() => {
+          setMensagens([]);
+        });
     } else {
-      setMensagens([
-        {
-          id: 'welcome',
-          remetente: 'atendente',
-          texto: 'Olá! Bem-vindo ao nosso atendimento inteligente. Como posso ajudar você hoje?',
-        },
-      ]);
+      setMensagens([]);
     }
-  }, [publicMode]);
+  }, [publicMode, urlSlug]);
 
   useEffect(() => {
     if (chatEndRef.current && typeof chatEndRef.current.scrollIntoView === 'function') {
@@ -112,13 +126,19 @@ export default function AtendenteIA({ publicMode = false }) {
             ? data.dados.alcadas_por_servico
             : [],
         }));
-        setMensagens([
-          {
-            id: 'welcome',
-            remetente: 'atendente',
-            texto: data.dados.mensagem_boas_vindas || 'Olá! Como posso ajudar você hoje?',
-          },
-        ]);
+        const temMsg = Boolean(data.dados.mensagem_boas_vindas && data.dados.mensagem_boas_vindas.trim());
+        setUsarMensagemInicial(temMsg);
+        if (temMsg) {
+          setMensagens([
+            {
+              id: 'welcome',
+              remetente: 'atendente',
+              texto: data.dados.mensagem_boas_vindas.trim(),
+            },
+          ]);
+        } else {
+          setMensagens([]);
+        }
       }
     } catch (err) {
       setFeedback({
@@ -212,6 +232,7 @@ export default function AtendenteIA({ publicMode = false }) {
       setFeedback(null);
       const payload = {
         ...config,
+        mensagem_boas_vindas: usarMensagemInicial ? (config.mensagem_boas_vindas || '').trim() : '',
         orcamento_min_valor: Number(config.orcamento_min_valor),
         orcamento_max_valor: Number(config.orcamento_max_valor),
         desconto_max_percentual: Number(config.desconto_max_percentual),
@@ -339,24 +360,32 @@ export default function AtendenteIA({ publicMode = false }) {
           </div>
 
           <div className="flex-1 p-4 overflow-y-auto space-y-3">
-            {mensagens.map((m) => (
-              <div
-                key={m.id}
-                className={`flex ${m.remetente === 'cliente' ? 'justify-end' : 'justify-start'}`}
-              >
-                <div
-                  className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm ${
-                    m.remetente === 'cliente'
-                      ? 'bg-indigo-600 text-white'
-                      : m.erro
-                      ? 'bg-red-950/80 border border-red-800 text-red-200'
-                      : 'bg-slate-800 text-slate-100 border border-slate-700'
-                  }`}
-                >
-                  <p className="whitespace-pre-wrap">{m.texto}</p>
-                </div>
+            {mensagens.length === 0 ? (
+              <div className="h-full flex flex-col items-center justify-center text-center p-6 text-slate-400 space-y-2">
+                <Bot className="w-10 h-10 text-indigo-400" />
+                <p className="text-sm font-medium text-slate-200">Como podemos ajudar?</p>
+                <p className="text-xs">Digite sua mensagem abaixo para iniciar o atendimento.</p>
               </div>
-            ))}
+            ) : (
+              mensagens.map((m) => (
+                <div
+                  key={m.id}
+                  className={`flex ${m.remetente === 'cliente' ? 'justify-end' : 'justify-start'}`}
+                >
+                  <div
+                    className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm ${
+                      m.remetente === 'cliente'
+                        ? 'bg-indigo-600 text-white'
+                        : m.erro
+                        ? 'bg-red-950/80 border border-red-800 text-red-200'
+                        : 'bg-slate-800 text-slate-100 border border-slate-700'
+                    }`}
+                  >
+                    <p className="whitespace-pre-wrap">{m.texto}</p>
+                  </div>
+                </div>
+              ))
+            )}
             <div ref={chatEndRef} />
           </div>
 
@@ -387,11 +416,11 @@ export default function AtendenteIA({ publicMode = false }) {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2.5">
-            <Bot className="w-7 h-7 text-theme-primary" />
-            <span>Atendente Pessoal do Cliente (B2B2C)</span>
+            <Bot className="w-7 h-7 text-theme-primary shrink-0" />
+            <span>Atendente Virtual do Cliente</span>
           </h1>
           <AdaptiveParagraph className="text-sm opacity-75 mt-1">
-            Configure o tom de voz, limites de agendamento, alçada de orçamento (geral e por serviço) e regras de retorno ao humano.
+            Atendimento automatizado para tirar dúvidas de catálogo, agendar horários e fechar orçamentos dentro dos seus limites.
           </AdaptiveParagraph>
         </div>
 
@@ -399,10 +428,11 @@ export default function AtendenteIA({ publicMode = false }) {
           <button
             type="button"
             onClick={copiarLinkPublico}
-            className="btn-theme-primary inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold transition-colors shadow-sm self-start"
+            className="btn-theme-primary inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold transition-colors shadow-sm shrink-0 whitespace-nowrap self-start sm:self-center"
+            title="Copiar link de atendimento para clientes"
           >
-            {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-            <span>{copied ? 'Link Copiado!' : 'Copiar Link Público do Cliente'}</span>
+            {copied ? <Check className="w-4 h-4 text-emerald-300" /> : <Copy className="w-4 h-4" />}
+            <span>{copied ? 'Link Copiado!' : 'Copiar Link de Atendimento'}</span>
           </button>
         )}
       </div>
@@ -423,7 +453,7 @@ export default function AtendenteIA({ publicMode = false }) {
                   Atendimento pendente ({pendencias.length}) — Clientes aguardando retorno humano
                 </h2>
                 <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>
-                  Solicitações que fugiram da alçada ou do horário disponível do atendente virtual.
+                  Clientes que solicitaram horários ou orçamentos fora das regras automáticas.
                 </p>
               </div>
             </div>
@@ -456,13 +486,13 @@ export default function AtendenteIA({ publicMode = false }) {
                   )}
                 </div>
 
-                <div className="flex items-center gap-2 pt-1">
+                <div className="flex flex-wrap items-center gap-2 pt-1">
                   {item.telefone_cliente && (
                     <a
                       href={`https://wa.me/55${String(item.telefone_cliente).replace(/\D/g, '')}`}
                       target="_blank"
                       rel="noreferrer"
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-600 text-white hover:bg-emerald-500"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-600 text-white hover:bg-emerald-500 shrink-0 whitespace-nowrap"
                     >
                       <PhoneCall className="w-3.5 h-3.5" />
                       <span>WhatsApp</span>
@@ -471,7 +501,7 @@ export default function AtendenteIA({ publicMode = false }) {
                   <button
                     type="button"
                     onClick={() => handleResolverPendencia(item.id)}
-                    className="theme-btn-secondary inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition"
+                    className="theme-btn-secondary inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition shrink-0 whitespace-nowrap"
                     style={{
                       backgroundColor: 'var(--btn-secondary-bg)',
                       color: 'var(--btn-secondary-text)',
@@ -513,15 +543,15 @@ export default function AtendenteIA({ publicMode = false }) {
             >
               <div className="flex items-center justify-between">
                 <h2 className="text-base font-bold flex items-center gap-2">
-                  <Sliders className="w-5 h-5 text-theme-primary" />
+                  <Sliders className="w-5 h-5 text-theme-primary shrink-0" />
                   <span>Identidade & Tom de Voz</span>
                 </h2>
-                <label className="inline-flex items-center gap-2 text-xs font-semibold cursor-pointer">
+                <label className="inline-flex items-center gap-2 text-xs font-semibold cursor-pointer select-none">
                   <input
                     type="checkbox"
                     checked={Boolean(config.ativo)}
                     onChange={(e) => setConfig({ ...config, ativo: e.target.checked })}
-                    className="rounded border-slate-600 text-indigo-600 focus:ring-indigo-500"
+                    className="rounded"
                   />
                   <span>Atendente Ativo</span>
                 </label>
@@ -557,45 +587,68 @@ export default function AtendenteIA({ publicMode = false }) {
                 </div>
               </div>
 
-              <div>
-                <label className="block text-xs font-semibold mb-1">Mensagem de Boas-vindas</label>
-                <input
-                  type="text"
-                  value={config.mensagem_boas_vindas || ''}
-                  onChange={(e) => setConfig({ ...config, mensagem_boas_vindas: e.target.value })}
-                  className="w-full px-3.5 py-2 rounded-xl border text-sm bg-transparent"
-                  style={{ borderColor: 'var(--border-color)' }}
-                />
+              <div className="pt-1">
+                <label className="inline-flex items-center gap-2 text-xs font-semibold cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={usarMensagemInicial}
+                    onChange={(e) => {
+                      const ativo = e.target.checked;
+                      setUsarMensagemInicial(ativo);
+                      if (!ativo) {
+                        setConfig((prev) => ({ ...prev, mensagem_boas_vindas: '' }));
+                        setMensagens((prev) => prev.filter((m) => m.id !== 'welcome' && m.id !== 'welcome-reset'));
+                      } else {
+                        const msgPadrao = config.mensagem_boas_vindas?.trim() || 'Olá! Como posso ajudar você hoje?';
+                        setConfig((prev) => ({ ...prev, mensagem_boas_vindas: msgPadrao }));
+                        setMensagens((prev) => [
+                          { id: 'welcome', remetente: 'atendente', texto: msgPadrao },
+                          ...prev.filter((m) => m.id !== 'welcome' && m.id !== 'welcome-reset'),
+                        ]);
+                      }
+                    }}
+                    className="rounded"
+                  />
+                  <span>Definir pergunta ou saudação inicial (opcional)</span>
+                </label>
+                {usarMensagemInicial && (
+                  <div className="mt-2">
+                    <input
+                      type="text"
+                      value={config.mensagem_boas_vindas || ''}
+                      onChange={(e) => setConfig({ ...config, mensagem_boas_vindas: e.target.value })}
+                      placeholder="Ex: Olá! Como posso ajudar você hoje?"
+                      className="w-full px-3.5 py-2 rounded-xl border text-sm bg-transparent"
+                      style={{ borderColor: 'var(--border-color)' }}
+                    />
+                  </div>
+                )}
               </div>
 
               <div>
                 <label className="block text-xs font-semibold mb-1">
-                  Instruções Customizadas da Empresa (Regras de Atendimento)
+                  Instruções Adicionais do Negócio (Opcional)
                 </label>
                 <textarea
                   rows={2}
                   value={config.instrucoes_customizadas || ''}
                   onChange={(e) => setConfig({ ...config, instrucoes_customizadas: e.target.value })}
-                  placeholder="Ex: Atendemos de segunda a sábado das 9h às 18h. Não fazemos entregas fora da capital."
+                  placeholder="Ex: Não fazemos entregas aos domingos. Pagamento aceito via Pix e cartão na entrega."
                   className="w-full px-3.5 py-2 rounded-xl border text-sm bg-transparent"
                   style={{ borderColor: 'var(--border-color)' }}
                 />
               </div>
             </div>
 
-            {/* Limites de Agendamento e Quando Retornar ao Humano */}
+            {/* Limites de Agendamento e Retorno ao Humano */}
             <div
               className="p-6 rounded-2xl border space-y-4"
               style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-color)' }}
             >
               <h2 className="text-base font-bold flex items-center gap-2">
-                <Clock className="w-5 h-5 text-amber-500" />
-                <span>Limites de Agendamento & Retorno ao Humano</span>
+                <Clock className="w-5 h-5 text-amber-500 shrink-0" />
+                <span>Agendamentos & Horários</span>
               </h2>
-              <p className="text-xs opacity-75">
-                Defina com quantos dias de antecedência o atendente pode aceitar agendamentos (ex: mínimo 1 ou 3 dias).
-                Qualquer tentativa fora do horário ou da capacidade gera alerta <strong>"Atendimento pendente"</strong> no mobile.
-              </p>
 
               <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
                 <div>
@@ -647,21 +700,22 @@ export default function AtendenteIA({ publicMode = false }) {
                 </div>
               </div>
 
-              <div className="space-y-2 pt-1">
-                <label className="inline-flex items-center gap-2 text-xs font-semibold cursor-pointer">
+              <div className="space-y-3 pt-1">
+                <label className="inline-flex items-center gap-2 text-xs font-semibold cursor-pointer select-none">
                   <input
                     type="checkbox"
                     checked={Boolean(config.transbordo_automatico ?? true)}
                     onChange={(e) => setConfig({ ...config, transbordo_automatico: e.target.checked })}
+                    className="rounded"
                   />
                   <span>
-                    Transferir para humano e notificar no mobile ("Atendimento pendente") sempre que fugir da capacidade do agente
+                    Avisar no aplicativo quando o cliente precisar de atendimento humano
                   </span>
                 </label>
 
                 <div>
                   <label className="block text-xs font-semibold mb-1">
-                    Quando Retornar ao Humano (Gatilhos e Situações Específicas)
+                    Casos para Atendimento Humano (Opcional)
                   </label>
                   <input
                     type="text"
@@ -682,11 +736,11 @@ export default function AtendenteIA({ publicMode = false }) {
             >
               <div>
                 <h2 className="text-base font-bold flex items-center gap-2">
-                  <DollarSign className="w-5 h-5 text-emerald-500" />
-                  <span>Alçada de Fechamento Automático de Orçamentos (Guardrail Determinístico)</span>
+                  <DollarSign className="w-5 h-5 text-emerald-500 shrink-0" />
+                  <span>Limites de Orçamento Automático</span>
                 </h2>
                 <p className="text-xs opacity-75 mt-1">
-                  Defina a faixa padrão geral (R$ mín/máx e % desconto) e, se desejar, configure limites específicos por serviço.
+                  Valores permitidos para o atendente aprovar propostas de orçamento diretamente.
                 </p>
               </div>
 
@@ -734,7 +788,7 @@ export default function AtendenteIA({ publicMode = false }) {
 
               {/* Subseção: Alçada Específica por Serviço */}
               <div className="pt-3 border-t space-y-3" style={{ borderColor: 'var(--border-color)' }}>
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                   <div>
                     <h3
                       className="text-xs font-bold uppercase tracking-wider"
@@ -743,15 +797,15 @@ export default function AtendenteIA({ publicMode = false }) {
                       Alçada Específica por Serviço
                     </h3>
                     <p className="text-[11px] opacity-75">
-                      Personalize o mínimo, máximo em R$ e desconto permitido para serviços individuais do seu catálogo.
+                      Personalize os limites de valor e desconto para serviços individuais (opcional).
                     </p>
                   </div>
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                     <select
                       value={servicoSelecionadoId}
                       onChange={(e) => setServicoSelecionadoId(e.target.value)}
-                      className="px-3 py-1.5 rounded-xl border text-xs bg-transparent"
+                      className="px-3 py-1.5 rounded-xl border text-xs bg-transparent min-w-0"
                       style={{
                         borderColor: 'var(--border-color)',
                         backgroundColor: 'var(--bg-surface)',
@@ -769,7 +823,7 @@ export default function AtendenteIA({ publicMode = false }) {
                       type="button"
                       onClick={handleAdicionarAlcadaServico}
                       disabled={!servicoSelecionadoId}
-                      className="theme-btn-primary inline-flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-semibold border transition disabled:opacity-40"
+                      className="theme-btn-primary inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border transition disabled:opacity-40 shrink-0 whitespace-nowrap"
                       style={{
                         backgroundColor: 'var(--btn-primary-bg)',
                         color: 'var(--btn-primary-text)',
@@ -784,7 +838,7 @@ export default function AtendenteIA({ publicMode = false }) {
 
                 {(config.alcadas_por_servico || []).length === 0 ? (
                   <p className="text-xs opacity-60 italic">
-                    Nenhuma regra específica por serviço configurada (todos os serviços usam a alçada geral acima).
+                    Nenhuma regra específica por serviço configurada (todos usam os limites gerais).
                   </p>
                 ) : (
                   <div className="space-y-2.5">
@@ -797,11 +851,11 @@ export default function AtendenteIA({ publicMode = false }) {
                           backgroundColor: 'var(--bg-surface-hover)',
                         }}
                       >
-                        <div className="flex items-center justify-between">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
                           <span className="text-xs font-bold" style={{ color: 'var(--text-main)' }}>
                             {regra.nome_servico || `Serviço #${regra.servico_id}`}
                           </span>
-                          <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-3 shrink-0">
                             <label className="inline-flex items-center gap-1.5 text-[11px] cursor-pointer">
                               <input
                                 type="checkbox"
@@ -814,12 +868,12 @@ export default function AtendenteIA({ publicMode = false }) {
                                   )
                                 }
                               />
-                              <span>Permitir fechar automático</span>
+                              <span>Fechar automático</span>
                             </label>
                             <button
                               type="button"
                               onClick={() => handleRemoverAlcadaServico(regra.servico_id)}
-                              className="p-1 text-red-500 hover:text-red-400"
+                              className="p-1 text-red-500 hover:text-red-400 transition"
                               title="Remover regra deste serviço"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
@@ -827,7 +881,7 @@ export default function AtendenteIA({ publicMode = false }) {
                           </div>
                         </div>
 
-                        <div className="grid grid-cols-3 gap-2.5">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                           <div>
                             <label className="block text-[10px] opacity-75 mb-0.5">Mínimo (R$)</label>
                             <input
@@ -909,56 +963,61 @@ export default function AtendenteIA({ publicMode = false }) {
               style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-color)' }}
             >
               <h2 className="text-base font-bold flex items-center gap-2">
-                <ShieldCheck className="w-5 h-5" style={{ color: 'var(--color-primary)' }} />
-                <span>Capacidades MCP Permitidas ao Atendente</span>
+                <ShieldCheck className="w-5 h-5 shrink-0" style={{ color: 'var(--color-primary)' }} />
+                <span>O que o Atendente pode fazer</span>
               </h2>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                <label className="flex items-center gap-2.5 p-3 rounded-xl border cursor-pointer" style={{ borderColor: 'var(--border-color)' }}>
+                <label className="flex items-center gap-2.5 p-3 rounded-xl border cursor-pointer select-none" style={{ borderColor: 'var(--border-color)' }}>
                   <input
                     type="checkbox"
                     checked={Boolean(config.permite_consultar_catalogo)}
                     onChange={(e) => setConfig({ ...config, permite_consultar_catalogo: e.target.checked })}
+                    className="rounded"
                   />
                   <BookOpen className="w-4 h-4 flex-shrink-0" style={{ color: 'var(--color-primary)' }} />
                   <span>Consultar Catálogo e Preços</span>
                 </label>
 
-                <label className="flex items-center gap-2.5 p-3 rounded-xl border cursor-pointer" style={{ borderColor: 'var(--border-color)' }}>
+                <label className="flex items-center gap-2.5 p-3 rounded-xl border cursor-pointer select-none" style={{ borderColor: 'var(--border-color)' }}>
                   <input
                     type="checkbox"
                     checked={Boolean(config.permite_agendar)}
                     onChange={(e) => setConfig({ ...config, permite_agendar: e.target.checked })}
+                    className="rounded"
                   />
                   <Calendar className="w-4 h-4 flex-shrink-0" style={{ color: 'var(--color-primary)' }} />
                   <span>Verificar Agenda e Agendar Horários</span>
                 </label>
 
-                <label className="flex items-center gap-2.5 p-3 rounded-xl border cursor-pointer" style={{ borderColor: 'var(--border-color)' }}>
+                <label className="flex items-center gap-2.5 p-3 rounded-xl border cursor-pointer select-none" style={{ borderColor: 'var(--border-color)' }}>
                   <input
                     type="checkbox"
                     checked={Boolean(config.permite_gerar_orcamento)}
                     onChange={(e) => setConfig({ ...config, permite_gerar_orcamento: e.target.checked })}
+                    className="rounded"
                   />
                   <FileText className="w-4 h-4 flex-shrink-0" style={{ color: 'var(--color-primary)' }} />
                   <span>Elaborar Propostas de Orçamento</span>
                 </label>
 
-                <label className="flex items-center gap-2.5 p-3 rounded-xl border cursor-pointer" style={{ borderColor: 'var(--border-color)' }}>
+                <label className="flex items-center gap-2.5 p-3 rounded-xl border cursor-pointer select-none" style={{ borderColor: 'var(--border-color)' }}>
                   <input
                     type="checkbox"
                     checked={Boolean(config.permite_fechar_orcamento)}
                     onChange={(e) => setConfig({ ...config, permite_fechar_orcamento: e.target.checked })}
+                    className="rounded"
                   />
                   <Sparkles className="w-4 h-4 text-emerald-500 flex-shrink-0" />
                   <span>Fechar Orçamento Automaticamente na Faixa</span>
                 </label>
 
-                <label className="flex items-center gap-2.5 p-3 rounded-xl border cursor-pointer sm:col-span-2" style={{ borderColor: 'var(--border-color)' }}>
+                <label className="flex items-center gap-2.5 p-3 rounded-xl border cursor-pointer select-none sm:col-span-2" style={{ borderColor: 'var(--border-color)' }}>
                   <input
                     type="checkbox"
                     checked={Boolean(config.permite_gerar_cobranca_pix)}
                     onChange={(e) => setConfig({ ...config, permite_gerar_cobranca_pix: e.target.checked })}
+                    className="rounded"
                   />
                   <CreditCard className="w-4 h-4 flex-shrink-0" style={{ color: 'var(--color-primary)' }} />
                   <span>Gerar Cobrança Automática ao Aprovar Orçamento</span>
@@ -969,7 +1028,7 @@ export default function AtendenteIA({ publicMode = false }) {
                 <button
                   type="submit"
                   disabled={saving}
-                  className="btn-theme-primary inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold disabled:opacity-50 transition-colors shadow-sm"
+                  className="btn-theme-primary inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold disabled:opacity-50 transition-colors shadow-sm shrink-0 whitespace-nowrap"
                 >
                   <Save className="w-4 h-4" />
                   <span>{saving ? 'Salvando...' : 'Salvar Configurações'}</span>
@@ -984,28 +1043,32 @@ export default function AtendenteIA({ publicMode = false }) {
               className="rounded-2xl border overflow-hidden flex flex-col h-[640px]"
               style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-color)' }}
             >
-              <div className="p-4 border-b flex items-center justify-between" style={{ borderColor: 'var(--border-color)' }}>
-                <div className="flex items-center gap-2.5">
-                  <MessageSquare className="w-5 h-5" style={{ color: 'var(--color-primary)' }} />
-                  <div>
-                    <h3 className="text-sm font-bold">Simulador ao Vivo: {config.nome_atendente}</h3>
-                    <p className="text-[11px] opacity-70">
-                      Tom: {config.tom_voz} • Antecedência mín.: {config.antecedencia_minima_dias ?? 0}d • Faixa: R$ {config.orcamento_min_valor} a R$ {config.orcamento_max_valor}
+              <div className="p-4 border-b flex items-center justify-between gap-2" style={{ borderColor: 'var(--border-color)' }}>
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <MessageSquare className="w-5 h-5 shrink-0" style={{ color: 'var(--color-primary)' }} />
+                  <div className="min-w-0">
+                    <h3 className="text-sm font-bold truncate">Simulador ao Vivo: {config.nome_atendente}</h3>
+                    <p className="text-[11px] opacity-70 truncate">
+                      Tom: {config.tom_voz} • Faixa: R$ {config.orcamento_min_valor} a R$ {config.orcamento_max_valor}
                     </p>
                   </div>
                 </div>
                 <button
                   type="button"
-                  onClick={() =>
-                    setMensagens([
-                      {
-                        id: 'welcome-reset',
-                        remetente: 'atendente',
-                        texto: config.mensagem_boas_vindas || 'Olá! Como posso ajudar você hoje?',
-                      },
-                    ])
-                  }
-                  className="p-1.5 rounded-lg opacity-70 hover:opacity-100"
+                  onClick={() => {
+                    if (usarMensagemInicial && config.mensagem_boas_vindas?.trim()) {
+                      setMensagens([
+                        {
+                          id: 'welcome-reset',
+                          remetente: 'atendente',
+                          texto: config.mensagem_boas_vindas.trim(),
+                        },
+                      ]);
+                    } else {
+                      setMensagens([]);
+                    }
+                  }}
+                  className="p-1.5 rounded-lg opacity-70 hover:opacity-100 shrink-0 transition"
                   title="Reiniciar conversa"
                 >
                   <RefreshCw className="w-4 h-4" />
@@ -1013,44 +1076,54 @@ export default function AtendenteIA({ publicMode = false }) {
               </div>
 
               <div className="flex-1 p-4 overflow-y-auto space-y-3">
-                {mensagens.map((m) => (
-                  <div
-                    key={m.id}
-                    className={`flex flex-col ${m.remetente === 'cliente' ? 'items-end' : 'items-start'}`}
-                  >
-                    <div
-                      className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-xs leading-relaxed border ${
-                        m.remetente === 'cliente'
-                          ? 'theme-btn-primary'
-                          : m.erro
-                          ? 'bg-red-500/20 border-red-500/40 text-red-700 dark:text-red-300'
-                          : ''
-                      }`}
-                      style={
-                        m.remetente === 'cliente'
-                          ? {
-                              backgroundColor: 'var(--btn-primary-bg)',
-                              color: 'var(--btn-primary-text)',
-                              borderColor: 'var(--btn-primary-bg)',
-                            }
-                          : m.erro
-                          ? undefined
-                          : {
-                              backgroundColor: 'var(--bg-surface-hover)',
-                              color: 'var(--text-main)',
-                              borderColor: 'var(--border-color)',
-                            }
-                      }
-                    >
-                      <p className="whitespace-pre-wrap">{m.texto}</p>
-                    </div>
-                    {m.ferramentas && m.ferramentas.length > 0 && (
-                      <span className="text-[10px] mt-1 px-1" style={{ color: 'var(--color-primary)' }}>
-                        MCP: {m.ferramentas.join(', ')}
-                      </span>
-                    )}
+                {mensagens.length === 0 ? (
+                  <div className="h-full flex flex-col items-center justify-center text-center p-6 opacity-60 space-y-2">
+                    <Bot className="w-10 h-10 text-theme-primary" />
+                    <p className="text-xs font-semibold">Nenhuma mensagem inicial ativa</p>
+                    <p className="text-[11px] max-w-xs">
+                      O cliente iniciará a conversa. Envie uma mensagem pelo campo abaixo para testar o atendimento.
+                    </p>
                   </div>
-                ))}
+                ) : (
+                  mensagens.map((m) => (
+                    <div
+                      key={m.id}
+                      className={`flex flex-col ${m.remetente === 'cliente' ? 'items-end' : 'items-start'}`}
+                    >
+                      <div
+                        className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-xs leading-relaxed border ${
+                          m.remetente === 'cliente'
+                            ? 'theme-btn-primary'
+                            : m.erro
+                            ? 'bg-red-500/20 border-red-500/40 text-red-700 dark:text-red-300'
+                            : ''
+                        }`}
+                        style={
+                          m.remetente === 'cliente'
+                            ? {
+                                backgroundColor: 'var(--btn-primary-bg)',
+                                color: 'var(--btn-primary-text)',
+                                borderColor: 'var(--btn-primary-bg)',
+                              }
+                            : m.erro
+                            ? undefined
+                            : {
+                                backgroundColor: 'var(--bg-surface-hover)',
+                                color: 'var(--text-main)',
+                                borderColor: 'var(--border-color)',
+                              }
+                        }
+                      >
+                        <p className="whitespace-pre-wrap">{m.texto}</p>
+                      </div>
+                      {m.ferramentas && m.ferramentas.length > 0 && (
+                        <span className="text-[10px] mt-1 px-1" style={{ color: 'var(--color-primary)' }}>
+                          MCP: {m.ferramentas.join(', ')}
+                        </span>
+                      )}
+                    </div>
+                  ))
+                )}
                 <div ref={chatEndRef} />
               </div>
 
@@ -1064,13 +1137,13 @@ export default function AtendenteIA({ publicMode = false }) {
                   value={textoMensagem}
                   onChange={(e) => setTextoMensagem(e.target.value)}
                   placeholder="Simule um cliente (ex: Quero fechar um serviço de R$ 200)..."
-                  className="flex-1 px-3.5 py-2 text-xs rounded-xl border bg-transparent"
+                  className="flex-1 min-w-0 px-3.5 py-2 text-xs rounded-xl border bg-transparent"
                   style={{ borderColor: 'var(--border-color)', color: 'var(--text-main)' }}
                 />
                 <button
                   type="submit"
                   disabled={enviandoChat || !textoMensagem.trim()}
-                  className="theme-btn-primary px-3.5 py-2 disabled:opacity-50 rounded-xl text-xs font-semibold flex items-center gap-1"
+                  className="theme-btn-primary px-3.5 py-2 disabled:opacity-50 rounded-xl text-xs font-semibold flex items-center gap-1.5 shrink-0 whitespace-nowrap"
                   style={{
                     backgroundColor: 'var(--btn-primary-bg)',
                     color: 'var(--btn-primary-text)',

@@ -353,5 +353,47 @@ describe('Módulo AtendenteIA - Configuração e Simulador do Atendente Pessoal 
       expect(screen.getByText('Orçamento de R$ 250 aprovado automaticamente!')).toBeInTheDocument();
     });
   });
+
+  it('deve permitir configurar pergunta inicial como opcional e exibir estado vazio no simulador quando não definida', async () => {
+    api.get.mockResolvedValue({
+      data: {
+        sucesso: true,
+        dados: {
+          nome_atendente: 'Lia',
+          tom_voz: 'AMIGAVEL',
+          mensagem_boas_vindas: '',
+          orcamento_min_valor: 100,
+          orcamento_max_valor: 500,
+          desconto_max_percentual: 5,
+          slug_publico: 'atd-1-teste',
+          total_pendentes: 0,
+          itens: [],
+        },
+      },
+    });
+
+    render(
+      <MemoryRouter>
+        <AtendenteIA />
+      </MemoryRouter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('Nenhuma mensagem inicial ativa')).toBeInTheDocument();
+    });
+
+    const checkboxMsgInicial = screen.getByLabelText(/Definir pergunta ou saudação inicial \(opcional\)/i);
+    expect(checkboxMsgInicial).not.toBeChecked();
+
+    // Ativa a mensagem inicial
+    fireEvent.click(checkboxMsgInicial);
+    expect(checkboxMsgInicial).toBeChecked();
+
+    const inputMsg = screen.getByPlaceholderText(/Ex: Olá! Como posso ajudar você hoje\?/i);
+    expect(inputMsg).toBeInTheDocument();
+    fireEvent.change(inputMsg, { target: { value: 'Olá! Qual serviço você deseja?' } });
+
+    expect(screen.getByDisplayValue('Olá! Qual serviço você deseja?')).toBeInTheDocument();
+  });
 });
 
