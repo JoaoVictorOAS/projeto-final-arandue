@@ -138,4 +138,39 @@ npm run mobile:apk
    - Em telas maiores onde o texto ocupa 1 ou 2 linhas, ele se renderiza normalmente como texto contínuo.
    - Utilize sempre o componente canônico [`frontend/src/components/AdaptiveParagraph.jsx`](file:///home/joaovictor/Documents/repositorios/recode-projeto-final/frontend/src/components/AdaptiveParagraph.jsx) nos cabeçalhos e seções informativas do sistema para manter a consistência e evitar que blocos de texto altos empurrem a interface móvel para baixo.
 
+---
+
+## 🎨 8. Sistema de Temas Dinâmicos & Consistência Visual (Tokens & Variáveis CSS)
+
+> ⚠️ **REGRA MANDATÓRIA DE INTERFACE:**  
+> **Antes de adicionar ou modificar qualquer elemento visual (badges, botões, cards, textos, bordas, ícones, logos, containers ou decorações), é OBRIGATÓRIO verificar como ele se encaixa na estrutura de temas dinâmicos do sistema.**
+
+### 8.1 Proibição de Cores Estáticas / Hardcoded
+- **NUNCA** utilize classes utilitárias com cores fixas (como `bg-indigo-50`, `text-indigo-700`, `bg-amber-200`, `text-emerald-600`, `border-gray-200`, etc.) em componentes e elementos da aplicação sem vinculá-los às variáveis CSS do tema ativo.
+- Cores hardcoded quebram visualmente quando o usuário alterna entre temas (ex.: Claro, Noturno/Dark, Esmeralda, Oceano, Âmbar ou temas personalizados gerados pelo Assistente IA).
+
+### 8.2 Tabela Canônica de Tokens e Variáveis CSS
+Todo novo componente ou elemento de UI deve consumir diretamente as CSS Custom Properties definidas no `ThemeContext.jsx` e `index.css`:
+
+| Propósito Visual | Variável CSS / Classe | Exemplo de Aplicação |
+| :--- | :--- | :--- |
+| **Fundo da Aplicação / Tela** | `var(--bg-app)` | `style={{ backgroundColor: 'var(--bg-app)' }}` |
+| **Fundo de Superfície / Card** | `var(--bg-surface)` | `style={{ backgroundColor: 'var(--bg-surface)' }}` |
+| **Fundo Interativo / Hover** | `var(--bg-surface-hover)` | `style={{ backgroundColor: 'var(--bg-surface-hover)' }}` |
+| **Bordas e Divisórias** | `var(--border-color)` | `style={{ borderColor: 'var(--border-color)' }}` |
+| **Texto Principal / Título** | `var(--text-main)` | `style={{ color: 'var(--text-main)' }}` |
+| **Texto Secundário / Legendas** | `var(--text-secondary)` | `style={{ color: 'var(--text-secondary)' }}` |
+| **Texto Mudo / Placeholders** | `var(--text-muted)` | `style={{ color: 'var(--text-muted)' }}` |
+| **Cor Primária da Marca** | `var(--color-primary)` | `style={{ backgroundColor: 'var(--color-primary)' }}` |
+| **Acentos / Destaques** | `var(--color-accent)` | `style={{ color: 'var(--color-accent)' }}` |
+| **Fundo do Mascote / Logo** | `var(--logo-bg, var(--color-primary))` | `style={{ backgroundColor: 'var(--logo-bg, var(--color-primary))' }}` |
+| **Badges / Selos Sutis** | `.badge-theme-subtle` | Utilizar a classe semântica ou `var(--bg-surface-hover)` + `var(--color-primary)` |
+| **Botões Primários** | `.btn-theme-primary` | `var(--btn-primary-bg)` e `var(--btn-primary-text)` |
+
+### 8.3 Checklist de Validação Visual
+1. O elemento funciona com legibilidade e contraste adequados (WCAG) tanto no modo claro quanto no modo noturno (`dark`)?
+2. Ao trocar para os temas padrão (`esmeralda-mei`, `oceano-indigo`, `ambar-cafe`, `noturno-corporativo`), o elemento herda automaticamente as cores corretas?
+3. Se o elemento for um badge, sticker ou tag, ele utiliza `.badge-theme-subtle` ou `var(--color-primary)` / `var(--color-accent)` em vez de cores arbitrárias do Tailwind?
+
+
 
