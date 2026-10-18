@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Maximize2, Minimize2, Trash2, Calendar, GripVertical } from 'lucide-react';
 import AutoChartRenderer from '../charts/AutoChartRenderer';
+import { isMobileEnvironment } from '../../utils/device';
 
 /**
  * Cartão de Widget Gráfico Dinâmico para o Dashboard do MEI.
@@ -12,6 +13,7 @@ const DynamicWidgetCard = React.forwardRef(function DynamicWidgetCard({
   onToggleWidth,
   onChangePeriod,
   onDelete,
+  isMobile: isMobileProp,
   style,
   className = '',
   children,
@@ -19,7 +21,35 @@ const DynamicWidgetCard = React.forwardRef(function DynamicWidgetCard({
 }, ref) {
   if (!widget) return null;
 
-  const isWide = Number(widget.largura) === 2;
+  const isMobile = isMobileProp !== undefined ? isMobileProp : isMobileEnvironment();
+
+  const isWide = useMemo(() => {
+    const cfg = widget.configuracoes || {};
+    if (isMobile) {
+      if (cfg.mobile?.largura !== undefined) {
+        return Number(cfg.mobile.largura) === 2 || cfg.mobile.largura === 'inteira';
+      }
+      if (cfg.mobile?.w !== undefined) {
+        return Number(cfg.mobile.w) >= 9;
+      }
+      if (cfg.w !== undefined) {
+        return Number(cfg.w) >= 9;
+      }
+      return Number(widget.largura) === 2;
+    } else {
+      if (cfg.web?.largura !== undefined) {
+        return Number(cfg.web.largura) === 2 || cfg.web.largura === 'inteira';
+      }
+      if (cfg.web?.w !== undefined) {
+        return Number(cfg.web.w) >= 9;
+      }
+      if (cfg.w !== undefined) {
+        return Number(cfg.w) >= 9;
+      }
+      return Number(widget.largura) === 2;
+    }
+  }, [widget, isMobile]);
+
   const isLimiteMei = widget.metrica === 'limite_mei';
 
   return (
@@ -140,7 +170,7 @@ const DynamicWidgetCard = React.forwardRef(function DynamicWidgetCard({
         <AutoChartRenderer
           type={widget.tipo_grafico}
           data={widget.dados}
-          config={widget.configuracoes || {}}
+          config={isMobile ? (widget.configuracoes?.mobile || widget.configuracoes || {}) : (widget.configuracoes?.web || widget.configuracoes || {})}
         />
       </div>
 

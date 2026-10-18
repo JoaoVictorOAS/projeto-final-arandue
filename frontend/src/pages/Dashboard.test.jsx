@@ -563,6 +563,111 @@ describe('Módulo Dashboard - Visão Consolidada com Indicadores', () => {
       expect(api.delete).toHaveBeenCalledWith('/dashboards/2');
     });
   });
+
+  test('não deve permitir esticar/redimensionar widgets no mobile (isResizable desabilitado e sem puxadores no mobile)', async () => {
+    // Simula viewport mobile (< 768px)
+    Object.defineProperty(window, 'innerWidth', { writable: true, configurable: true, value: 480 });
+    fireEvent(window, new Event('resize'));
+
+    const { container } = render(
+      <MemoryRouter>
+        <Dashboard />
+      </MemoryRouter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId('widget-card-101')).toBeInTheDocument();
+    });
+
+    // No mobile, o react-grid-layout aplica a classe 'react-resizable-hide' e desativa o arraste de redimensionamento
+    const hiddenWrappers = container.querySelectorAll('.react-resizable-hide');
+    expect(hiddenWrappers.length).toBeGreaterThanOrEqual(1);
+
+    // Nenhum puxador visível fora de .react-resizable-hide
+    const activeHandles = container.querySelectorAll('.react-grid-item:not(.react-resizable-hide) > .react-resizable-handle');
+    expect(activeHandles.length).toBe(0);
+
+    // Restaura viewport
+    Object.defineProperty(window, 'innerWidth', { writable: true, configurable: true, value: 1024 });
+    fireEvent(window, new Event('resize'));
+  });
+
+  test('deve manter o layout dos widgets independente entre mobile e web ao redimensionar via toggle button', async () => {
+    // Configura mock com widget possuindo configurações prévias em web
+    const dashboardComConfigs = {
+      id: 1,
+      nome: 'Visão Geral',
+      descricao: 'Painel principal consolidado',
+      eh_padrao: true,
+      ordem: 0,
+      widgets: [
+        {
+          id: 101,
+          titulo: 'Faturamento Anual',
+          tipo_grafico: 'bar',
+          metrica: 'faturamento',
+          periodo: 'ano_atual',
+          largura: 2,
+          ordem: 0,
+          configuracoes: {
+            web: { w: 12, h: 4, x: 0, y: 0, largura: 2 },
+            mobile: { w: 6, h: 3, x: 0, y: 0, largura: 1 },
+          },
+          dados: [{ rotulo: 'Jan', valor: 2500 }],
+        },
+      ],
+    };
+
+    api.get.mockImplementation((url) => {
+      if (url === '/dashboard/resumo') {
+        return Promise.resolve({ data: { sucesso: true, dados: mockResumoDashboard } });
+      }
+      if (url === '/dashboards') {
+        return Promise.resolve({ data: { sucesso: true, dados: [dashboardComConfigs] } });
+      }
+      if (url === '/dashboards/1') {
+        return Promise.resolve({ data: { sucesso: true, dados: dashboardComConfigs } });
+      }
+      return Promise.reject(new Error('URL não mapeada'));
+    });
+
+    // Simula mobile
+    Object.defineProperty(window, 'innerWidth', { writable: true, configurable: true, value: 500 });
+    fireEvent(window, new Event('resize'));
+
+    render(
+      <MemoryRouter>
+        <Dashboard />
+      </MemoryRouter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId('widget-card-101')).toBeInTheDocument();
+    });
+
+    const resizeBtn = screen.getByTestId('widget-resize-btn-101');
+    fireEvent.click(resizeBtn);
+
+    // No mobile, deve salvar apenas em configuracoes.mobile, preservando configuracoes.web intacto
+    await waitFor(() => {
+      expect(api.put).toHaveBeenCalledWith(
+        '/dashboards/1/widgets/101',
+        expect.objectContaining({
+          configuracoes: expect.objectContaining({
+            web: { w: 12, h: 4, x: 0, y: 0, largura: 2 },
+            mobile: expect.objectContaining({
+              largura: 2,
+              w: 12,
+            }),
+          }),
+        })
+      );
+    });
+
+    // Restaura viewport para desktop
+    Object.defineProperty(window, 'innerWidth', { writable: true, configurable: true, value: 1024 });
+    fireEvent(window, new Event('resize'));
+  });
 });
 
 

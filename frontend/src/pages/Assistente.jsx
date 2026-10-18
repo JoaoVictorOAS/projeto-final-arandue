@@ -181,7 +181,7 @@ function AssistenteView() {
 
   return (
     <div
-      className="flex h-[calc(100dvh-7.5rem)] md:h-[calc(85vh)] min-h-[520px] theme-card overflow-hidden rounded-2xl shadow-lg border transition-colors duration-200 relative"
+      className="flex h-[calc(100dvh-4rem)] md:h-[calc(85vh)] min-h-0 md:min-h-[520px] theme-card overflow-hidden rounded-none md:rounded-2xl shadow-none md:shadow-lg border-0 md:border transition-colors duration-200 relative"
       style={{
         backgroundColor: 'var(--bg-surface)',
         borderColor: 'var(--border-color)',

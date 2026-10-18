@@ -1,6 +1,6 @@
 import React from 'react';
 import { render } from '@testing-library/react';
-import { BrowserRouter } from 'react-router-dom';
+import { BrowserRouter, MemoryRouter } from 'react-router-dom';
 import { describe, it, expect } from 'vitest';
 import Layout from './Layout';
 import { AuthProvider } from '../context/AuthContext';
@@ -33,5 +33,27 @@ describe('Layout - Suporte ao Tema Dinâmico', () => {
 
     const nav = container.querySelector('aside nav');
     expect(nav).not.toBeNull();
+
+    const main = container.querySelector('main');
+    expect(main).toHaveClass('p-4', 'sm:p-6', 'lg:p-8');
+  });
+
+  it('deve remover padding externo no mobile quando a rota for /assistente', () => {
+    const { container } = render(
+      <MemoryRouter initialEntries={['/assistente']}>
+        <AuthProvider>
+          <ChatProvider>
+            <ThemeProvider>
+              <Layout />
+            </ThemeProvider>
+          </ChatProvider>
+        </AuthProvider>
+      </MemoryRouter>
+    );
+
+    const main = container.querySelector('main');
+    expect(main).not.toBeNull();
+    expect(main).toHaveClass('p-0', 'md:p-6', 'lg:p-8');
+    expect(main).not.toHaveClass('p-4');
   });
 });

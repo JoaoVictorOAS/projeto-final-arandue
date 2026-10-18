@@ -31,6 +31,7 @@ import Modal from '../components/Modal';
 import DynamicWidgetCard from '../components/dashboard/DynamicWidgetCard';
 import ModalNovoDashboard from '../components/dashboard/ModalNovoDashboard';
 import ModalNovoWidget from '../components/dashboard/ModalNovoWidget';
+import { isMobileEnvironment } from '../utils/device';
 
 const ResponsiveGridLayout = WidthProvider(Responsive);
 
@@ -88,6 +89,15 @@ export default function Dashboard() {
   const [modalExcluirDashboardAberto, setModalExcluirDashboardAberto] = useState(false);
   const [dashboardParaExcluir, setDashboardParaExcluir] = useState(null);
   const [excluindoDashboard, setExcluindoDashboard] = useState(false);
+  const [isMobile, setIsMobile] = useState(isMobileEnvironment);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(isMobileEnvironment());
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const fetchDashboardDetalhes = useCallback(async (id, currentList = []) => {
     const listToSearch = currentList.length > 0 ? currentList : dashboards;
@@ -263,18 +273,56 @@ export default function Dashboard() {
 
     return (activeDashboard?.widgets || []).map((w) => {
       const cfg = w.configuracoes || {};
-      const width =
-        cfg.w !== undefined
-          ? Number(cfg.w)
-          : Number(w.largura) === 2
-          ? 12
-          : 6;
-      const height = cfg.h !== undefined ? Number(cfg.h) : 3;
+      const platformCfg = isMobile ? (cfg.mobile || {}) : (cfg.web || {});
 
-      let x = cfg.x !== undefined ? Number(cfg.x) : curX;
-      let y = cfg.y !== undefined ? Number(cfg.y) : curY;
+      // Determinar width da plataforma ativa com fallback
+      let width;
+      if (platformCfg.w !== undefined) {
+        width = Number(platformCfg.w);
+      } else if (platformCfg.largura !== undefined) {
+        width = Number(platformCfg.largura) === 2 ? 12 : 6;
+      } else if (!isMobile && cfg.w !== undefined) {
+        width = Number(cfg.w);
+      } else if (isMobile) {
+        if (cfg.w !== undefined) {
+          width = Number(cfg.w);
+        } else if (w.largura !== undefined) {
+          width = Number(w.largura) === 2 ? 12 : 6;
+        } else {
+          width = 12;
+        }
+      } else {
+        width = Number(w.largura) === 2 ? 12 : 6;
+      }
 
-      if (cfg.x === undefined) {
+      // Determinar height da plataforma ativa com fallback
+      let height;
+      if (platformCfg.h !== undefined) {
+        height = Number(platformCfg.h);
+      } else if (cfg.h !== undefined) {
+        height = Number(cfg.h);
+      } else {
+        height = 3;
+      }
+
+      // Determinar x e y
+      let x =
+        platformCfg.x !== undefined
+          ? Number(platformCfg.x)
+          : !isMobile && cfg.x !== undefined
+          ? Number(cfg.x)
+          : curX;
+      let y =
+        platformCfg.y !== undefined
+          ? Number(platformCfg.y)
+          : !isMobile && cfg.y !== undefined
+          ? Number(cfg.y)
+          : curY;
+
+      const hasExplicitX =
+        platformCfg.x !== undefined || (!isMobile && cfg.x !== undefined);
+
+      if (!hasExplicitX) {
         if (curX + width > 12) {
           curX = 0;
           curY += height;
@@ -288,19 +336,80 @@ export default function Dashboard() {
         i: String(w.id),
         x: isNaN(x) ? 0 : x,
         y: isNaN(y) ? 0 : y,
-        w: isNaN(width) ? 6 : width,
+        w: isNaN(width) ? (isMobile ? 12 : 6) : width,
         h: isNaN(height) ? 3 : height,
-        minW: 4,
+        minW: isMobile ? 1 : 4,
         maxW: 12,
         minH: 2,
         maxH: 8,
+        isResizable: !isMobile,
       };
     });
-  }, [activeDashboard?.widgets]);
+  }, [activeDashboard?.widgets, isMobile]);
 
   const handleDragOrResizeStop = async (layout) => {
     if (!layout || !activeDashboardId) return;
 
+    if (isMobile) {
+      setActiveDashboard((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          widgets: (prev.widgets || []).map((w) => {
+            const item = layout.find((l) => l.i === String(w.id));
+            if (!item) return w;
+            const mobileLargura = item.w >= 9 ? 2 : 1;
+            const novoConfigMobile = {
+              ...(w.configuracoes?.mobile || {}),
+              x: item.x,
+              y: item.y,
+              w: item.w,
+              h: item.h,
+              largura: mobileLargura,
+            };
+            return {
+              ...w,
+              configuracoes: {
+                ...(w.configuracoes || {}),
+                mobile: novoConfigMobile,
+              },
+            };
+          }),
+        };
+      });
+
+      try {
+        await Promise.all(
+          layout.map(async (item) => {
+            const widgetId = Number(item.i);
+            const targetWidget = (activeDashboard?.widgets || []).find((w) => w.id === widgetId);
+            if (!targetWidget) return;
+            const mobileLargura = item.w >= 9 ? 2 : 1;
+            const novoConfigMobile = {
+              ...(targetWidget.configuracoes?.mobile || {}),
+              x: item.x,
+              y: item.y,
+              w: item.w,
+              h: item.h,
+              largura: mobileLargura,
+            };
+            const novoConfig = {
+              ...(targetWidget.configuracoes || {}),
+              mobile: novoConfigMobile,
+            };
+            return api.put(`/dashboards/${activeDashboardId}/widgets/${widgetId}`, {
+              largura: Number(targetWidget.largura) === 2 ? 2 : 1,
+              configuracoes: novoConfig,
+            });
+          })
+        );
+      } catch (err) {
+        console.error('Erro ao salvar layout ajustado no mobile:', err);
+      }
+      return;
+    }
+
+    // Web
     setActiveDashboard((prev) => {
       if (!prev) return prev;
       return {
@@ -309,11 +418,20 @@ export default function Dashboard() {
           const item = layout.find((l) => l.i === String(w.id));
           if (!item) return w;
           const novaLargura = item.w >= 9 ? 2 : 1;
+          const novoConfigWeb = {
+            ...(w.configuracoes?.web || {}),
+            x: item.x,
+            y: item.y,
+            w: item.w,
+            h: item.h,
+            largura: novaLargura,
+          };
           return {
             ...w,
             largura: novaLargura,
             configuracoes: {
               ...(w.configuracoes || {}),
+              web: novoConfigWeb,
               x: item.x,
               y: item.y,
               w: item.w,
@@ -331,8 +449,17 @@ export default function Dashboard() {
           const targetWidget = (activeDashboard?.widgets || []).find((w) => w.id === widgetId);
           if (!targetWidget) return;
           const novaLargura = item.w >= 9 ? 2 : 1;
+          const novoConfigWeb = {
+            ...(targetWidget.configuracoes?.web || {}),
+            x: item.x,
+            y: item.y,
+            w: item.w,
+            h: item.h,
+            largura: novaLargura,
+          };
           const novoConfig = {
             ...(targetWidget.configuracoes || {}),
+            web: novoConfigWeb,
             x: item.x,
             y: item.y,
             w: item.w,
@@ -350,11 +477,97 @@ export default function Dashboard() {
   };
 
   const handleToggleWidth = async (widget) => {
-    const novaLargura = Number(widget.largura) === 2 ? 1 : 2;
+    if (isMobile) {
+      const curMobile = widget.configuracoes?.mobile || {};
+      const isCurrentWide =
+        curMobile.largura !== undefined
+          ? Number(curMobile.largura) === 2 || curMobile.largura === 'inteira'
+          : curMobile.w !== undefined
+          ? Number(curMobile.w) >= 9
+          : widget.configuracoes?.w !== undefined
+          ? Number(widget.configuracoes.w) >= 9
+          : Number(widget.largura) === 2;
+
+      const novaLarguraMobile = isCurrentWide ? 1 : 2;
+      const novoWMobile = novaLarguraMobile === 2 ? 12 : 6;
+      const novoHMobile =
+        curMobile.h !== undefined
+          ? Number(curMobile.h)
+          : widget.configuracoes?.h !== undefined
+          ? Number(widget.configuracoes.h)
+          : 3;
+
+      const novoConfigMobile = {
+        ...curMobile,
+        largura: novaLarguraMobile,
+        w: novoWMobile,
+        h: novoHMobile,
+      };
+
+      const novoConfig = {
+        ...(widget.configuracoes || {}),
+        mobile: novoConfigMobile,
+      };
+
+      setActiveDashboard((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          widgets: (prev.widgets || []).map((w) =>
+            w.id === widget.id
+              ? {
+                  ...w,
+                  configuracoes: novoConfig,
+                }
+              : w
+          ),
+        };
+      });
+
+      try {
+        await api.put(`/dashboards/${activeDashboardId}/widgets/${widget.id}`, {
+          largura: Number(widget.largura) === 2 ? 2 : 1,
+          configuracoes: novoConfig,
+        });
+      } catch (err) {
+        console.error('Erro ao atualizar largura do widget no mobile:', err);
+        await fetchDashboardDetalhes(activeDashboardId, dashboards);
+      }
+      return;
+    }
+
+    // Web
+    const curWeb = widget.configuracoes?.web || {};
+    const isCurrentWide =
+      curWeb.largura !== undefined
+        ? Number(curWeb.largura) === 2 || curWeb.largura === 'inteira'
+        : curWeb.w !== undefined
+        ? Number(curWeb.w) >= 9
+        : widget.configuracoes?.w !== undefined
+        ? Number(widget.configuracoes.w) >= 9
+        : Number(widget.largura) === 2;
+
+    const novaLargura = isCurrentWide ? 1 : 2;
     const novoW = novaLargura === 2 ? 12 : 6;
+    const novoH =
+      curWeb.h !== undefined
+        ? Number(curWeb.h)
+        : widget.configuracoes?.h !== undefined
+        ? Number(widget.configuracoes.h)
+        : 3;
+
+    const novoConfigWeb = {
+      ...curWeb,
+      largura: novaLargura,
+      w: novoW,
+      h: novoH,
+    };
+
     const novoConfig = {
       ...(widget.configuracoes || {}),
+      web: novoConfigWeb,
       w: novoW,
+      h: novoH,
     };
 
     setActiveDashboard((prev) => {
@@ -409,6 +622,52 @@ export default function Dashboard() {
   const handleRestaurarLayoutPadrao = async () => {
     if (!activeDashboard?.widgets || !activeDashboardId) return;
 
+    if (isMobile) {
+      let curY = 0;
+      const novosWidgets = (activeDashboard.widgets || []).map((w) => {
+        const wWidth = 12;
+        const wHeight = 3;
+        const posX = 0;
+        const posY = curY;
+        curY += 3;
+
+        const novoConfigMobile = {
+          x: posX,
+          y: posY,
+          w: wWidth,
+          h: wHeight,
+          largura: 2,
+        };
+
+        return {
+          ...w,
+          configuracoes: {
+            ...(w.configuracoes || {}),
+            mobile: novoConfigMobile,
+          },
+        };
+      });
+
+      setActiveDashboard((prev) => ({
+        ...prev,
+        widgets: novosWidgets,
+      }));
+
+      try {
+        await Promise.all(
+          novosWidgets.map((w) =>
+            api.put(`/dashboards/${activeDashboardId}/widgets/${w.id}`, {
+              largura: Number(w.largura) === 2 ? 2 : 1,
+              configuracoes: w.configuracoes,
+            })
+          )
+        );
+      } catch (err) {
+        console.error('Erro ao restaurar layout padrão no mobile:', err);
+      }
+      return;
+    }
+
     let curX = 0;
     let curY = 0;
     const novosWidgets = (activeDashboard.widgets || []).map((w) => {
@@ -424,10 +683,19 @@ export default function Dashboard() {
       const posY = curY;
       curX += wWidth;
 
+      const novoConfigWeb = {
+        x: posX,
+        y: posY,
+        w: wWidth,
+        h: wHeight,
+        largura: isWide ? 2 : 1,
+      };
+
       return {
         ...w,
         configuracoes: {
           ...(w.configuracoes || {}),
+          web: novoConfigWeb,
           x: posX,
           y: posY,
           w: wWidth,
@@ -808,12 +1076,12 @@ export default function Dashboard() {
         ) : (
           <ResponsiveGridLayout
             className="layout"
-            layouts={{ lg: layouts, md: layouts, sm: layouts }}
+            layouts={{ lg: layouts, md: layouts, sm: layouts, xs: layouts, xxs: layouts }}
             breakpoints={{ lg: 1024, md: 768, sm: 640, xs: 480, xxs: 0 }}
             cols={{ lg: 12, md: 12, sm: 6, xs: 4, xxs: 2 }}
             rowHeight={110}
             draggableHandle=".widget-drag-handle"
-            isResizable={true}
+            isResizable={!isMobile}
             isDraggable={true}
             compactType="vertical"
             onDragStop={handleDragOrResizeStop}
@@ -823,6 +1091,7 @@ export default function Dashboard() {
               <div key={String(widget.id)} className="h-full relative">
                 <DynamicWidgetCard
                   widget={widget}
+                  isMobile={isMobile}
                   onToggleWidth={handleToggleWidth}
                   onChangePeriod={handleChangePeriod}
                   onDelete={handleDeleteWidget}

@@ -117,6 +117,15 @@ body {
   transform: scale(1.15);
 }
 
+/* Desabilita puxadores de redimensionamento em telas mobile */
+@media (max-width: 767px) {
+  .react-grid-item > .react-resizable-handle {
+    display: none !important;
+    pointer-events: none !important;
+  }
+}
+
+
 /* =========================================================================
    SISTEMA DE TEMAS DINÂMICOS — MAPEAMENTO DE SUPERFÍCIES, CARDS E WIDGETS
    Garante que todos os cards, widgets, inputs e tabelas herdem as cores
