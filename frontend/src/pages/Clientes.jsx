@@ -209,7 +209,7 @@ export default function Clientes() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <Users className="w-7 h-7 text-indigo-600" />
+            <Users className="w-7 h-7 text-theme-primary" />
             Gestão de Clientes
           </h1>
           <p className="text-sm text-gray-500 mt-1">
@@ -220,7 +220,7 @@ export default function Clientes() {
         <button
           type="button"
           onClick={handleOpenCreateModal}
-          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white text-sm font-semibold rounded-xl shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+          className="btn-theme-primary inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-xl shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
         >
           <UserPlus className="w-4 h-4" />
           Novo Cliente
@@ -285,7 +285,7 @@ export default function Clientes() {
           disabled={loading}
           className="inline-flex items-center gap-2 px-3.5 py-2 text-sm text-gray-600 bg-gray-50 hover:bg-gray-100 rounded-xl border border-gray-200 transition disabled:opacity-60"
         >
-          <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-indigo-600' : ''}`} />
+          <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-theme-primary' : ''}`} />
           Atualizar
         </button>
       </div>
@@ -294,13 +294,13 @@ export default function Clientes() {
       {loading ? (
         <div className="bg-white rounded-2xl border border-gray-200/80 p-12 text-center shadow-sm">
           <div className="flex flex-col items-center justify-center gap-3">
-            <Loader2 className="w-8 h-8 text-indigo-600 animate-spin" />
+            <Loader2 className="w-8 h-8 text-theme-primary animate-spin" />
             <p className="text-sm font-medium text-gray-500">Carregando lista de clientes...</p>
           </div>
         </div>
       ) : clientes.length === 0 ? (
         <div className="bg-white rounded-2xl border border-gray-200/80 p-12 text-center shadow-sm">
-          <div className="w-16 h-16 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+          <div className="w-16 h-16 badge-theme-subtle rounded-2xl flex items-center justify-center mx-auto mb-4">
             <Users className="w-8 h-8" />
           </div>
           <h3 className="text-lg font-bold text-gray-900">
@@ -323,7 +323,7 @@ export default function Clientes() {
             <button
               type="button"
               onClick={handleOpenCreateModal}
-              className="inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl shadow-sm transition"
+              className="btn-theme-primary inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-xl shadow-sm transition"
             >
               <UserPlus className="w-4 h-4" />
               Cadastrar Primeiro Cliente
@@ -515,7 +515,7 @@ export default function Clientes() {
               type="submit"
               form="form-cliente"
               disabled={submitting}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-sm font-semibold text-white shadow-sm disabled:opacity-60 transition"
+              className="btn-theme-primary w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold shadow-sm disabled:opacity-60 transition"
             >
               {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
               {editingCliente ? 'Atualizar Cliente' : 'Salvar Cliente'}
