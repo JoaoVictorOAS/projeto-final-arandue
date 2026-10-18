@@ -317,6 +317,7 @@ const assistenteService = {
         status: 'concluida',
         conteudo: respostaAi.resposta,
         fontes: respostaAi.fontes || [],
+        tools_usadas: respostaAi.tools_usadas || [],
         criado_em: new Date().toISOString()
       }
     };

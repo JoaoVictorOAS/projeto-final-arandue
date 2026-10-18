@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import api from '../services/api';
+import { dispararAtualizacaoTema } from './ThemeContext';
 
 const storage = {
   getItem: (key) => {
@@ -68,6 +69,7 @@ export function AuthProvider({ children }) {
       storage.setItem('usuario', JSON.stringify(usuarioRecebido));
       setToken(tokenRecebido);
       setUsuario(usuarioRecebido);
+      dispararAtualizacaoTema();
     }
 
     return response.data;
@@ -88,6 +90,7 @@ export function AuthProvider({ children }) {
       storage.setItem('usuario', JSON.stringify(usuarioRecebido));
       setToken(tokenRecebido);
       setUsuario(usuarioRecebido);
+      dispararAtualizacaoTema();
     }
 
     return response.data;
@@ -115,6 +118,7 @@ export function AuthProvider({ children }) {
       storage.setItem('usuario', JSON.stringify(usuarioRecebido));
       setToken(tokenRecebido);
       setUsuario(usuarioRecebido);
+      dispararAtualizacaoTema();
     }
 
     return response.data;
@@ -123,8 +127,10 @@ export function AuthProvider({ children }) {
   const logout = () => {
     storage.removeItem('token');
     storage.removeItem('usuario');
+    storage.removeItem('arandue_tema_ativo');
     setToken(null);
     setUsuario(null);
+    dispararAtualizacaoTema();
   };
 
   const estaAutenticado = Boolean(token && usuario);

@@ -1,9 +1,31 @@
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
 import api from '../services/api';
+import { useTheme, dispararAtualizacaoTema } from './ThemeContext';
+
+export function verificarEAtualizarTema(toolsUsadas, conteudo, carregarTemasFn) {
+  const usouFerramentaTema =
+    Array.isArray(toolsUsadas) &&
+    toolsUsadas.some((t) => typeof t === 'string' && t.toLowerCase().includes('tema'));
+
+  const mencionouTemaAtivado =
+    typeof conteudo === 'string' &&
+    (/(?:tema|modo escuro|modo claro).*(?:ativad|aplicad|alterad|atualizad|configurad|gerad)/i.test(conteudo) ||
+     /(?:ativei|apliquei|alterei|mudei|atualizei|configurei|gerei).*(?:tema|modo)/i.test(conteudo));
+
+  if (usouFerramentaTema || mencionouTemaAtivado) {
+    if (typeof carregarTemasFn === 'function') {
+      carregarTemasFn();
+    }
+    dispararAtualizacaoTema();
+  }
+}
 
 const ChatContext = createContext({});
 
 export function ChatProvider({ children }) {
+  const themeContext = useTheme();
+  const carregarTemas = themeContext?.carregarTemas;
+
   const [conversas, setConversas] = useState([]);
   const [conversaAtivaId, setConversaAtivaId] = useState(null);
   const [mensagens, setMensagens] = useState([]);
@@ -111,6 +133,9 @@ export function ChatProvider({ children }) {
             // Atualiza a lista de conversas em segundo plano
             carregarConversas(true);
 
+            // Se o assistente executou ferramenta de tema ou alterou o tema visual, atualiza o tema imediatamente
+            verificarEAtualizarTema(dadosMsg.tools_usadas, dadosMsg.conteudo, carregarTemas);
+
             // Se o usuário não estiver na página do assistente, dispara notificação
             if (typeof window !== 'undefined' && window.location.pathname !== '/assistente') {
               setNotificacao({
@@ -143,7 +168,7 @@ export function ChatProvider({ children }) {
         console.error('Erro no short-polling da mensagem:', err);
       }
     }, POLLING_INTERVAL_MS);
-  }, [pararPolling, carregarConversas, POLLING_INTERVAL_MS]);
+  }, [pararPolling, carregarConversas, POLLING_INTERVAL_MS, carregarTemas]);
 
   // Carrega mensagens da conversa selecionada
   const selecionarConversa = useCallback(async (conversaId) => {
@@ -273,6 +298,7 @@ export function ChatProvider({ children }) {
           // Caso a resposta tenha retornado síncrona
           setMensagens((prev) => [...prev, msgAssistente]);
           setEnviando(false);
+          verificarEAtualizarTema(msgAssistente?.tools_usadas, msgAssistente?.conteudo, carregarTemas);
         }
       }
     } catch (err) {
@@ -283,7 +309,7 @@ export function ChatProvider({ children }) {
       setErro(mensagemErro);
       setEnviando(false);
     }
-  }, [mensagemInput, anexoMidia, enviando, conversaAtivaId, carregarConversas, iniciarPolling]);
+  }, [mensagemInput, anexoMidia, enviando, conversaAtivaId, carregarConversas, iniciarPolling, carregarTemas]);
 
   const limparAnexoMidia = useCallback(() => {
     setAnexoMidia(null);

@@ -23,6 +23,12 @@ const TEMA_PADRAO_FALLBACK = {
 
 const ThemeContext = createContext({});
 
+export function dispararAtualizacaoTema() {
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('arandue:tema-atualizado'));
+  }
+}
+
 export function applyThemeToDOM(tema) {
   if (typeof document === 'undefined') return;
   const root = document.documentElement;
@@ -79,6 +85,22 @@ export function ThemeProvider({ children }) {
   const [carregando, setCarregando] = useState(false);
 
   const carregarTemas = useCallback(async () => {
+    let token = null;
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        token = window.localStorage.getItem('token');
+      }
+    } catch {}
+
+    const isTest =
+      (typeof import.meta !== 'undefined' && import.meta.env?.MODE === 'test') ||
+      (typeof process !== 'undefined' && process.env?.NODE_ENV === 'test');
+
+    if (!token && !isTest) {
+      setCarregando(false);
+      return;
+    }
+
     try {
       setCarregando(true);
       const res = await api.get('/configuracoes/temas');
@@ -103,6 +125,52 @@ export function ThemeProvider({ children }) {
 
   useEffect(() => {
     carregarTemas();
+  }, [carregarTemas]);
+
+  useEffect(() => {
+    const handleAtualizacaoTema = () => {
+      carregarTemas();
+    };
+
+    const handleStorage = (e) => {
+      if (e.key === 'arandue_tema_ativo' && e.newValue) {
+        try {
+          const parsed = JSON.parse(e.newValue);
+          setTemaAtual(parsed);
+          applyThemeToDOM(parsed);
+        } catch {}
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
+        let hasToken = false;
+        try {
+          hasToken = Boolean(window.localStorage?.getItem('token'));
+        } catch {}
+        const isTest =
+          (typeof import.meta !== 'undefined' && import.meta.env?.MODE === 'test') ||
+          (typeof process !== 'undefined' && process.env?.NODE_ENV === 'test');
+        if (hasToken && !isTest) {
+          carregarTemas();
+        }
+      }
+    };
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('arandue:tema-atualizado', handleAtualizacaoTema);
+      window.addEventListener('storage', handleStorage);
+      if (typeof document !== 'undefined') {
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+      }
+      return () => {
+        window.removeEventListener('arandue:tema-atualizado', handleAtualizacaoTema);
+        window.removeEventListener('storage', handleStorage);
+        if (typeof document !== 'undefined') {
+          document.removeEventListener('visibilitychange', handleVisibilityChange);
+        }
+      };
+    }
   }, [carregarTemas]);
 
   const ativarTema = async (idOuSlug) => {

@@ -622,5 +622,227 @@ describe('Módulo do Assistente IA', () => {
     fireEvent.click(screen.getByRole('button', { name: /nova conversa/i }));
     expect(aside).toHaveClass('-translate-x-full');
   });
+
+  test('deve aplicar classes responsivas que removem a aparência de modal no mobile', async () => {
+    api.get.mockResolvedValueOnce({
+      data: { sucesso: true, dados: [] },
+    });
+
+    const { container } = render(<Assistente />);
+
+    await waitFor(() => {
+      expect(screen.getByText(/como posso ajudar o seu negócio hoje\?/i)).toBeInTheDocument();
+    });
+
+    const outerContainer = container.querySelector('.theme-card');
+    expect(outerContainer).toBeInTheDocument();
+    expect(outerContainer).toHaveClass('rounded-none', 'md:rounded-2xl');
+    expect(outerContainer).toHaveClass('shadow-none', 'md:shadow-lg');
+    expect(outerContainer).toHaveClass('border-0', 'md:border');
+    expect(outerContainer).toHaveClass('h-[calc(100dvh-4rem)]', 'md:h-[calc(85vh)]');
+    expect(outerContainer).toHaveClass('min-h-0', 'md:min-h-[520px]');
+  });
+
+  test('deve atualizar e aplicar o tema dinamicamente quando o assistente alterar o tema via tools ou resposta', async () => {
+    let temaAtivo = {
+      id: 1,
+      nome: 'Claro Aranduê',
+      modo: 'light',
+      eh_ativo: true,
+      tokens: {
+        bgApp: '#f8fafc',
+        primary: '#4f46e5',
+      },
+    };
+
+    api.get.mockImplementation((url) => {
+      if (url === '/assistente/conversas') {
+        return Promise.resolve({ data: { sucesso: true, dados: [] } });
+      }
+      if (url === '/configuracoes/temas') {
+        return Promise.resolve({
+          data: {
+            sucesso: true,
+            dados: [
+              { ...temaAtivo, eh_ativo: temaAtivo.id === 1 },
+              {
+                id: 2,
+                nome: 'Escuro Aranduê',
+                modo: 'dark',
+                eh_ativo: temaAtivo.id === 2,
+                tokens: {
+                  bgApp: '#0f172a',
+                  primary: '#6366f1',
+                },
+              },
+            ],
+          },
+        });
+      }
+      return Promise.resolve({ data: { sucesso: true, dados: [] } });
+    });
+
+    api.post.mockImplementation((url) => {
+      if (url === '/assistente/mensagens') {
+        // Ao executar a mensagem do assistente, o tema ativo no backend passa a ser escuro
+        temaAtivo = {
+          id: 2,
+          nome: 'Escuro Aranduê',
+          modo: 'dark',
+          eh_ativo: true,
+          tokens: {
+            bgApp: '#0f172a',
+            primary: '#6366f1',
+          },
+        };
+        return Promise.resolve({
+          data: {
+            sucesso: true,
+            dados: {
+              conversa_id: 999,
+              mensagem: {
+                id: 1234,
+                papel: 'assistente',
+                status: 'concluida',
+                conteudo: "Tema 'Escuro Aranduê' ativado com sucesso!",
+                tools_usadas: ['ativar_tema'],
+                fontes: [],
+                criado_em: new Date().toISOString(),
+              },
+            },
+          },
+        });
+      }
+      return Promise.resolve({ data: { sucesso: true } });
+    });
+
+    const { ThemeProvider } = await import('../context/ThemeContext');
+
+    render(
+      <ThemeProvider>
+        <Assistente />
+      </ThemeProvider>
+    );
+
+    const input = await screen.findByPlaceholderText(/digite sua dúvida contábil ou sobre seu negócio\.\.\./i);
+    fireEvent.change(input, { target: { value: 'muda para o tema escuro' } });
+
+    const btnEnviar = screen.getByRole('button', { name: /enviar/i });
+    fireEvent.click(btnEnviar);
+
+    await waitFor(() => {
+      expect(screen.getByText(/Tema 'Escuro Aranduê' ativado com sucesso!/i)).toBeInTheDocument();
+    });
+
+    // O tema deve ter sido atualizado no DOM imediatamente sem precisar navegar até /configuracoes
+    await waitFor(() => {
+      expect(document.documentElement.classList.contains('dark')).toBe(true);
+      expect(document.documentElement.style.getPropertyValue('--bg-app')).toBe('#0f172a');
+    });
+  });
+
+  test('deve atualizar o tema imediatamente após short-polling quando a IA ativar o tema de forma assíncrona', async () => {
+    let temaAtivo = {
+      id: 1,
+      nome: 'Claro Aranduê',
+      modo: 'light',
+      eh_ativo: true,
+      tokens: {
+        bgApp: '#f8fafc',
+        primary: '#4f46e5',
+      },
+    };
+
+    api.get.mockImplementation((url) => {
+      if (url === '/assistente/conversas') {
+        return Promise.resolve({ data: { sucesso: true, dados: [] } });
+      }
+      if (url === '/configuracoes/temas') {
+        return Promise.resolve({
+          data: {
+            sucesso: true,
+            dados: [
+              { ...temaAtivo, eh_ativo: temaAtivo.id === 1 },
+              {
+                id: 2,
+                nome: 'Escuro Aranduê',
+                modo: 'dark',
+                eh_ativo: temaAtivo.id === 2,
+                tokens: {
+                  bgApp: '#0f172a',
+                  primary: '#6366f1',
+                },
+              },
+            ],
+          },
+        });
+      }
+      if (url === '/assistente/mensagens/4321/status') {
+        temaAtivo = {
+          id: 2,
+          nome: 'Escuro Aranduê',
+          modo: 'dark',
+          eh_ativo: true,
+          tokens: {
+            bgApp: '#0f172a',
+            primary: '#6366f1',
+          },
+        };
+        return Promise.resolve({
+          data: {
+            sucesso: true,
+            dados: {
+              id: 4321,
+              conversa_id: 888,
+              status: 'concluida',
+              conteudo: "Tema 'Escuro Aranduê' (dark) ativado com sucesso em todo o sistema!",
+              tools_usadas: ['ativar_tema'],
+              fontes: [],
+            },
+          },
+        });
+      }
+      return Promise.resolve({ data: { sucesso: true, dados: [] } });
+    });
+
+    api.post.mockResolvedValueOnce({
+      data: {
+        sucesso: true,
+        dados: {
+          conversa_id: 888,
+          mensagem: {
+            id: 4321,
+            papel: 'assistente',
+            status: 'processando',
+            conteudo: null,
+            fontes: [],
+          },
+        },
+      },
+    });
+
+    const { ThemeProvider } = await import('../context/ThemeContext');
+
+    render(
+      <ThemeProvider>
+        <Assistente />
+      </ThemeProvider>
+    );
+
+    const input = await screen.findByPlaceholderText(/digite sua dúvida contábil ou sobre seu negócio\.\.\./i);
+    fireEvent.change(input, { target: { value: 'quero ativar o tema escuro' } });
+
+    const btnEnviar = screen.getByRole('button', { name: /enviar/i });
+    fireEvent.click(btnEnviar);
+
+    await waitFor(() => {
+      expect(screen.getByText(/Tema 'Escuro Aranduê' \(dark\) ativado com sucesso em todo o sistema!/i)).toBeInTheDocument();
+    });
+
+    await waitFor(() => {
+      expect(document.documentElement.classList.contains('dark')).toBe(true);
+      expect(document.documentElement.style.getPropertyValue('--bg-app')).toBe('#0f172a');
+    });
+  });
 });
 

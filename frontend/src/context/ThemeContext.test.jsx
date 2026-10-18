@@ -254,4 +254,58 @@ describe('ThemeContext', () => {
 
     HTMLAnchorElement.prototype.click.mockRestore();
   });
+
+  it('deve recarregar e aplicar novo tema ativo quando dispararAtualizacaoTema for chamado (ex: após IA ativar tema)', async () => {
+    render(
+      <ThemeProvider>
+        <ComponenteTeste />
+      </ThemeProvider>
+    );
+
+    await screen.findByTestId('nome-tema');
+    expect(screen.getByTestId('nome-tema').textContent).toBe('Claro Aranduê');
+
+    // Simula que o backend mudou o tema ativo para o tema 2 (ex: via ferramenta MCP do assistente)
+    mockTemas = mockTemas.map((t) => ({ ...t, eh_ativo: t.id === 2 }));
+
+    await act(async () => {
+      window.dispatchEvent(new CustomEvent('arandue:tema-atualizado'));
+    });
+
+    expect(screen.getByTestId('nome-tema').textContent).toBe('Escuro Aranduê');
+    expect(document.documentElement.classList.contains('dark')).toBe(true);
+    expect(document.documentElement.style.getPropertyValue('--bg-app')).toBe('#0f172a');
+  });
+
+  it('deve sincronizar tema quando o evento storage for disparado por outra aba', async () => {
+    render(
+      <ThemeProvider>
+        <ComponenteTeste />
+      </ThemeProvider>
+    );
+
+    await screen.findByTestId('nome-tema');
+
+    const novoTemaStorage = {
+      id: 2,
+      nome: 'Escuro Aranduê',
+      modo: 'dark',
+      tokens: {
+        bgApp: '#0f172a',
+        primary: '#6366f1',
+      },
+    };
+
+    await act(async () => {
+      window.dispatchEvent(
+        new StorageEvent('storage', {
+          key: 'arandue_tema_ativo',
+          newValue: JSON.stringify(novoTemaStorage),
+        })
+      );
+    });
+
+    expect(screen.getByTestId('nome-tema').textContent).toBe('Escuro Aranduê');
+    expect(document.documentElement.classList.contains('dark')).toBe(true);
+  });
 });
