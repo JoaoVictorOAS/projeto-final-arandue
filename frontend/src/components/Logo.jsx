@@ -25,7 +25,10 @@ export default function Logo({
     <div className={`flex items-center gap-3 ${className}`}>
       {/* Ícone Vetorial Estilo Desenhado à Mão — Gatinho Estilo PKLS (Hand-Drawn Cat) */}
       <div
-        className={`${currentSize.icon} relative flex-shrink-0 rounded-2xl bg-amber-200 text-zinc-900 border-2 border-zinc-900 dark:border-white shadow-[3px_3px_0px_#18181b] dark:shadow-[3px_3px_0px_#ffffff] p-1 flex items-center justify-center transform -rotate-3 hover:rotate-0 transition-transform`}
+        className={`${currentSize.icon} relative flex-shrink-0 rounded-2xl text-zinc-900 border-2 border-zinc-900 dark:border-white shadow-[3px_3px_0px_#18181b] dark:shadow-[3px_3px_0px_#ffffff] p-1 flex items-center justify-center transform -rotate-3 hover:rotate-0 transition-all duration-200`}
+        style={{
+          backgroundColor: 'var(--logo-bg, var(--color-primary, #4f46e5))',
+        }}
       >
         <svg
           viewBox="0 0 100 100"

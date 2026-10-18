@@ -41,16 +41,20 @@ export default function Sidebar({ isOpen, setIsOpen }) {
   const { logout, usuario } = useAuth();
   const { enviando, notificacao } = useChat();
 
-  const navLinkClasses = ({ isActive }) =>
-    `flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all ${
+  const getNavLinkClasses = (isMobile) => ({ isActive }) =>
+    `flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all sidebar-nav-item ${
       isActive
-        ? 'font-semibold shadow-sm border'
-        : 'hover:opacity-90'
+        ? 'font-semibold shadow-sm border sidebar-nav-item-active'
+        : isMobile
+        ? 'hover:opacity-90'
+        : 'sidebar-nav-item-web'
     }`;
 
-  const sidebarContent = (
+  const renderSidebarContent = (isMobile = false) => (
     <div
-      className="flex flex-col h-full border-r transition-colors duration-200"
+      className={`flex flex-col h-full border-r transition-colors duration-200 ${
+        isMobile ? 'sidebar-mobile' : 'sidebar-web'
+      }`}
       style={{
         backgroundColor: 'var(--bg-surface)',
         borderColor: 'var(--border-color)',
@@ -92,7 +96,7 @@ export default function Sidebar({ isOpen, setIsOpen }) {
               to={item.to}
               end={item.end}
               onClick={() => setIsOpen && setIsOpen(false)}
-              className={navLinkClasses}
+              className={getNavLinkClasses(isMobile)}
               style={({ isActive }) =>
                 isActive
                   ? {
@@ -107,7 +111,7 @@ export default function Sidebar({ isOpen, setIsOpen }) {
                     }
               }
             >
-              <Icon className="w-5 h-5 flex-shrink-0" />
+              <Icon className="w-5 h-5 flex-shrink-0 sidebar-nav-icon" />
               <span className="flex-1">{item.label}</span>
               {item.to === '/assistente' && enviando && (
                 <span className="flex h-2 w-2 relative" title="Assistente processando resposta">
@@ -182,7 +186,7 @@ export default function Sidebar({ isOpen, setIsOpen }) {
     <>
       {/* Desktop static sidebar */}
       <aside className="hidden md:block w-64 flex-shrink-0 sticky top-0 h-screen">
-        {sidebarContent}
+        {renderSidebarContent(false)}
       </aside>
 
       {/* Mobile Drawer Backdrop */}
@@ -201,7 +205,7 @@ export default function Sidebar({ isOpen, setIsOpen }) {
         }`}
         style={{ backgroundColor: 'var(--bg-surface)' }}
       >
-        {sidebarContent}
+        {renderSidebarContent(true)}
       </aside>
     </>
   );

@@ -15,6 +15,7 @@
   --color-primary-hover: #4338ca;
   --color-primary-text: #ffffff;
   --color-accent: #f59e0b;
+  --logo-bg: #4f46e5;
   --btn-primary-bg: #4f46e5;
   --btn-primary-hover: #4338ca;
   --btn-primary-text: #ffffff;
@@ -70,6 +71,46 @@
 
 .text-theme-primary {
   color: var(--color-primary) !important;
+}
+
+/* ==========================================================================
+   Efeito Hover nos Ícones Laterais da Sidebar (Restrito Estritamente ao Web)
+   ========================================================================== */
+.sidebar-nav-icon {
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), color 0.2s ease;
+  will-change: transform;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  /* No Web / Dispositivos com mouse ou trackpad de precisão */
+  .sidebar-web .sidebar-nav-item {
+    transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+  }
+
+  /* Hover no item não ativo: fundo interativo e destaque do ícone lateral */
+  .sidebar-web .sidebar-nav-item:not(.sidebar-nav-item-active):hover {
+    background-color: var(--bg-surface-hover);
+  }
+
+  .sidebar-web .sidebar-nav-item:not(.sidebar-nav-item-active):hover .sidebar-nav-icon {
+    transform: scale(1.18);
+    color: var(--color-primary) !important;
+  }
+
+  /* Hover no item ativo: leve feedback de brilho e zoom táctil no ícone */
+  .sidebar-web .sidebar-nav-item.sidebar-nav-item-active:hover {
+    filter: brightness(1.05);
+  }
+
+  .sidebar-web .sidebar-nav-item.sidebar-nav-item-active:hover .sidebar-nav-icon {
+    transform: scale(1.18);
+    color: var(--color-primary-text) !important;
+  }
+
+  /* Hover direto e pontual no ícone lateral individual */
+  .sidebar-web .sidebar-nav-icon:hover {
+    transform: scale(1.24);
+  }
 }
 
 body {
