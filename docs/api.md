@@ -137,19 +137,43 @@ Esta documentação detalha os padrões arquiteturais, cabeçalhos, autenticaç�
 
 | Método | Rota | Descrição |
 | :--- | :--- | :--- |
-| `GET` | `/api/servicos` | Listar catálogo de itens cadastrados |
-| `POST` | `/api/servicos` | Cadastrar novo serviço ou produto |
+| Método | Rota | Descrição |
+| :--- | :--- | :--- |
+| `GET` | `/api/servicos` | Listar catálogo de itens cadastrados (suporta `?busca=`, `?categoria=` e `?recorrente=true`) |
+| `POST` | `/api/servicos` | Cadastrar novo serviço ou produto (com suporte a `recorrente`, `periodicidade` e `dia_vencimento_padrao`) |
 | `GET` | `/api/servicos/:id` | Obter detalhes do item |
 | `PUT` | `/api/servicos/:id` | Atualizar item |
 | `DELETE`| `/api/servicos/:id` | Desativar/excluir item |
+| `GET` | `/api/servicos/assinaturas` | Listar contratos de assinaturas com resumo de MRR e status (filtros: `?status=ATIVA`, `?cliente_id=`) |
+| `POST` | `/api/servicos/assinaturas` | Cadastrar nova assinatura vinculando cliente e serviço (com herança de valores padrão) |
+| `GET` | `/api/servicos/assinaturas/:id` | Obter detalhes da assinatura recorrente |
+| `PUT` | `/api/servicos/assinaturas/:id` | Atualizar dados da assinatura |
+| `PATCH`| `/api/servicos/assinaturas/:id/status` | Alterar status da assinatura (`ATIVA`, `PAUSADA`, `CANCELADA`) |
+| `POST` | `/api/servicos/assinaturas/:id/gerar-cobranca` | Gerar cobrança do ciclo atual no Contas a Receber e avançar próximo vencimento |
 
-### Exemplo de Payload — Criar/Atualizar Serviço
+### Exemplo de Payload — Criar Serviço Recorrente
 ```json
 {
-  "nome": "Instalação Elétrica Residencial",
-  "descricao": "Instalação completa de disjuntores e fiação básica",
+  "nome": "Manutenção Mensal de Computadores",
+  "descricao": "Visitas quinzenais e suporte remoto ilimitado",
   "preco": 250.00,
-  "categoria": "Serviço"
+  "categoria": "Manutenção",
+  "recorrente": true,
+  "periodicidade": "MENSAL",
+  "dia_vencimento_padrao": 10
+}
+```
+
+### Exemplo de Payload — Criar Assinatura Recorrente
+```json
+{
+  "cliente_id": 4,
+  "servico_id": 2,
+  "valor": 250.00,
+  "periodicidade": "MENSAL",
+  "dia_vencimento": 10,
+  "data_inicio": "2026-10-01",
+  "observacoes": "Contrato sem fidelidade"
 }
 ```
 

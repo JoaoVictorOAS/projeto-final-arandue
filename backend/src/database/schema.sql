@@ -45,6 +45,9 @@ CREATE TABLE IF NOT EXISTS servicos (
     preco DECIMAL(10,2) NOT NULL DEFAULT 0.00,
     categoria VARCHAR(50) DEFAULT 'Geral',
     ativo TINYINT(1) NOT NULL DEFAULT 1,
+    recorrente TINYINT(1) NOT NULL DEFAULT 0,
+    periodicidade VARCHAR(20) NULL DEFAULT NULL,
+    dia_vencimento_padrao INT NULL DEFAULT NULL,
     controla_estoque_pronto TINYINT(1) NOT NULL DEFAULT 0,
     estoque_pronto_atual INT NOT NULL DEFAULT 0,
     estoque_pronto_minimo INT NOT NULL DEFAULT 0,
@@ -482,6 +485,34 @@ CREATE TABLE IF NOT EXISTS temas_usuario (
         REFERENCES usuarios(id) ON DELETE CASCADE ON UPDATE CASCADE,
     INDEX idx_temas_usuario (usuario_id),
     INDEX idx_temas_ativo (usuario_id, eh_ativo)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 20. Tabela de Assinaturas (Serviços Recorrentes)
+CREATE TABLE IF NOT EXISTS assinaturas (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    usuario_id INT NOT NULL,
+    cliente_id INT NOT NULL,
+    servico_id INT NOT NULL,
+    valor DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+    periodicidade VARCHAR(20) NOT NULL DEFAULT 'MENSAL',
+    dia_vencimento INT NOT NULL DEFAULT 10,
+    data_inicio DATE NOT NULL,
+    proximo_vencimento DATE NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'ATIVA',
+    observacoes TEXT NULL,
+    criado_em DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    atualizado_em DATETIME NULL ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_assinaturas_usuario FOREIGN KEY (usuario_id) 
+        REFERENCES usuarios(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT fk_assinaturas_cliente FOREIGN KEY (cliente_id) 
+        REFERENCES clientes(id) ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT fk_assinaturas_servico FOREIGN KEY (servico_id) 
+        REFERENCES servicos(id) ON DELETE RESTRICT ON UPDATE CASCADE,
+    INDEX idx_assinaturas_usuario (usuario_id),
+    INDEX idx_assinaturas_cliente (cliente_id),
+    INDEX idx_assinaturas_servico (servico_id),
+    INDEX idx_assinaturas_usuario_status (usuario_id, status),
+    INDEX idx_assinaturas_proximo_vencimento (usuario_id, proximo_vencimento)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 SET FOREIGN_KEY_CHECKS = 1;

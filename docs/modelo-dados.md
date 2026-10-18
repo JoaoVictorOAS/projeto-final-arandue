@@ -170,6 +170,9 @@ Armazena o catálogo de serviços prestados e produtos comercializados pelo MEI.
 | `preco` | `DECIMAL(10,2)` | Não | `0.00` | Preço padrão tabelado |
 | `categoria` | `VARCHAR(50)` | Sim | `'Geral'` | Categoria (ex: 'Serviço', 'Produto', 'Manutenção') |
 | `ativo` | `TINYINT(1)` | Não | `1` | `1` = Ativo, `0` = Inativo / Descontinuado |
+| `recorrente` | `TINYINT(1)` | Não | `0` | Indica se o serviço é ofertado como assinatura recorrente |
+| `periodicidade` | `VARCHAR(20)` | Sim | `NULL` | `'SEMANAL'`, `'QUINZENAL'`, `'MENSAL'`, `'TRIMESTRAL'`, `'SEMESTRAL'`, `'ANUAL'` |
+| `dia_vencimento_padrao` | `INT` | Sim | `NULL` | Dia de vencimento padrão sugerido (1 a 31) |
 | `criado_em` | `DATETIME` | Não | `CURRENT_TIMESTAMP` | Data de inclusão |
 
 ---
@@ -290,6 +293,27 @@ Registro individual de cada mensagem trocada na conversa, com suporte multimodal
 | `tools_usadas` | `JSON` | Sim | `NULL` | Lista de ferramentas MCP acionadas pela IA |
 | `rag_backend` | `VARCHAR(20)` | Sim | `NULL` | Mecanismo de RAG acionado (`chroma`, `local`, etc.) |
 | `criado_em` | `DATETIME` | Não | `CURRENT_TIMESTAMP` | Data e hora do envio |
+
+---
+
+### 2.11 Tabela `assinaturas`
+Armazena os contratos de serviços recorrentes contratados pelos clientes, com periodicidade, controle de ciclos e faturamento automático.
+
+| Campo | Tipo | Nulo | Padrão | Descrição |
+| :--- | :--- | :--- | :--- | :--- |
+| `id` | `INT AUTO_INCREMENT` | Não | — | Chave primária |
+| `usuario_id` | `INT` | Não | — | Chave estrangeira -> `usuarios(id)` (CASCADE) |
+| `cliente_id` | `INT` | Não | — | Chave estrangeira -> `clientes(id)` (RESTRICT) |
+| `servico_id` | `INT` | Não | — | Chave estrangeira -> `servicos(id)` (RESTRICT) |
+| `valor` | `DECIMAL(10,2)` | Não | `0.00` | Valor cobrado a cada ciclo |
+| `periodicidade` | `VARCHAR(20)` | Não | `'MENSAL'` | `'SEMANAL'`, `'QUINZENAL'`, `'MENSAL'`, `'TRIMESTRAL'`, `'SEMESTRAL'`, `'ANUAL'` |
+| `dia_vencimento`| `INT` | Não | `10` | Dia de vencimento do ciclo (1 a 31) |
+| `data_inicio` | `DATE` | Não | — | Data de início do contrato da assinatura |
+| `proximo_vencimento`| `DATE` | Não | — | Data prevista para a próxima cobrança |
+| `status` | `VARCHAR(20)` | Não | `'ATIVA'` | `'ATIVA'`, `'PAUSADA'`, `'CANCELADA'` |
+| `observacoes` | `TEXT` | Sim | `NULL` | Observações do contrato |
+| `criado_em` | `DATETIME` | Não | `CURRENT_TIMESTAMP` | Data de contratação |
+| `atualizado_em` | `DATETIME` | Sim | `NULL` | Data da última atualização cadastral |
 
 ---
 

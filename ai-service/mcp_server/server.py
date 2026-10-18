@@ -597,15 +597,25 @@ async def cadastrar_servico(
     nome: str,
     preco: float,
     categoria: Optional[str] = "Geral",
-    descricao: Optional[str] = ""
+    descricao: Optional[str] = "",
+    recorrente: bool = False,
+    periodicidade: Optional[str] = None,
+    dia_vencimento_padrao: Optional[int] = None
 ) -> Dict[str, Any]:
-    """Cadastra um novo serviço ou produto no catálogo do MEI."""
-    payload = {
+    """Cadastra um novo serviço ou produto no catálogo do MEI, com suporte opcional a recorrência (assinatura)."""
+    payload: Dict[str, Any] = {
         "nome": nome.strip(),
         "preco": float(preco),
         "categoria": categoria or "Geral",
-        "descricao": descricao or ""
+        "descricao": descricao or "",
+        "recorrente": bool(recorrente)
     }
+    if recorrente:
+        if periodicidade:
+            payload["periodicidade"] = periodicidade.strip().upper()
+        if dia_vencimento_padrao is not None:
+            payload["dia_vencimento_padrao"] = int(dia_vencimento_padrao)
+
     res = await _post("/servicos", payload)
     if not res.get("sucesso"):
         return {"erro": res.get("erro", "Erro ao cadastrar serviço")}
@@ -614,8 +624,149 @@ async def cadastrar_servico(
         "mensagem": f"Serviço '{servico.get('nome')}' cadastrado com sucesso!",
         "servico_id": servico.get("id"),
         "nome": servico.get("nome"),
-        "preco": float(servico.get("preco", preco))
+        "preco": float(servico.get("preco", preco)),
+        "recorrente": bool(servico.get("recorrente", recorrente)),
+        "periodicidade": servico.get("periodicidade"),
+        "dia_vencimento_padrao": servico.get("dia_vencimento_padrao")
     }
+
+@mcp_server_app.tool()
+async def listar_assinaturas(status: Optional[str] = None) -> Dict[str, Any]:
+    """Lista as assinaturas (serviços recorrentes) ativas ou com determinado status contratadas pelos clientes do MEI, além do resumo de MRR e próximos vencimentos."""
+    params = {}
+    if status and str(status).strip():
+        params["status"] = str(status).strip().upper()
+
+    dados = await _fetch("/servicos/assinaturas", params=params)
+    if isinstance(dados, dict) and "erro" in dados:
+        return dados
+
+    lista = dados if isinstance(dados, list) else (dados.get("dados", []) if isinstance(dados, dict) else [])
+
+    assinaturas = []
+    total_ativas = 0
+    mrr = 0.0
+    for item in lista:
+        st = item.get("status", "ATIVA")
+        val = float(item.get("valor", 0))
+        per = item.get("periodicidade", "MENSAL")
+        if st == "ATIVA":
+            total_ativas += 1
+            if per == "SEMANAL":
+                mrr += val * (52 / 12)
+            elif per == "QUINZENAL":
+                mrr += val * 2
+            elif per == "MENSAL":
+                mrr += val
+            elif per == "TRIMESTRAL":
+                mrr += val / 3
+            elif per == "SEMESTRAL":
+                mrr += val / 6
+            elif per == "ANUAL":
+                mrr += val / 12
+            else:
+                mrr += val
+
+        assinaturas.append({
+            "id": item.get("id"),
+            "cliente_id": item.get("cliente_id"),
+            "cliente_nome": item.get("cliente_nome"),
+            "servico_id": item.get("servico_id"),
+            "servico_nome": item.get("servico_nome"),
+            "valor": val,
+            "periodicidade": per,
+            "dia_vencimento": item.get("dia_vencimento"),
+            "data_inicio": item.get("data_inicio"),
+            "proximo_vencimento": item.get("proximo_vencimento"),
+            "status": st,
+            "observacoes": item.get("observacoes")
+        })
+
+    return {
+        "sucesso": True,
+        "total_assinaturas": len(assinaturas),
+        "total_ativas": total_ativas,
+        "mrr_estimado": round(mrr, 2),
+        "assinaturas": assinaturas
+    }
+
+@mcp_server_app.tool()
+async def cadastrar_assinatura(
+    cliente_id: int,
+    servico_id: int,
+    valor: Optional[float] = None,
+    periodicidade: str = "MENSAL",
+    dia_vencimento: int = 10,
+    data_inicio: Optional[str] = None,
+    observacoes: Optional[str] = None
+) -> Dict[str, Any]:
+    """Cadastra um novo contrato de assinatura recorrente vinculando um cliente a um serviço."""
+    payload: Dict[str, Any] = {
+        "cliente_id": int(cliente_id),
+        "servico_id": int(servico_id),
+        "periodicidade": (periodicidade or "MENSAL").strip().upper(),
+        "dia_vencimento": int(dia_vencimento or 10)
+    }
+    if valor is not None:
+        payload["valor"] = float(valor)
+    if data_inicio and str(data_inicio).strip():
+        payload["data_inicio"] = str(data_inicio).strip()
+    if observacoes and str(observacoes).strip():
+        payload["observacoes"] = str(observacoes).strip()
+
+    res = await _post("/servicos/assinaturas", payload)
+    if not res.get("sucesso"):
+        return {"erro": res.get("erro", "Erro ao cadastrar assinatura recorrente")}
+    ass = res.get("dados", {})
+    return {
+        "mensagem": f"Assinatura #{ass.get('id')} cadastrada com sucesso para o cliente '{ass.get('cliente_nome', cliente_id)}'!",
+        "assinatura_id": ass.get("id"),
+        "cliente_id": ass.get("cliente_id"),
+        "cliente_nome": ass.get("cliente_nome"),
+        "servico_id": ass.get("servico_id"),
+        "servico_nome": ass.get("servico_nome"),
+        "valor": float(ass.get("valor", valor or 0)),
+        "periodicidade": ass.get("periodicidade"),
+        "dia_vencimento": ass.get("dia_vencimento"),
+        "data_inicio": ass.get("data_inicio"),
+        "proximo_vencimento": ass.get("proximo_vencimento"),
+        "status": ass.get("status")
+    }
+
+@mcp_server_app.tool()
+async def atualizar_status_assinatura(assinatura_id: int, status: str) -> Dict[str, Any]:
+    """Atualiza o status de uma assinatura recorrente (ex: ATIVA, PAUSADA, CANCELADA)."""
+    status_formatado = (status or "").strip().upper()
+    if status_formatado not in ("ATIVA", "PAUSADA", "CANCELADA"):
+        return {"erro": f"Status inválido: '{status}'. Utilize 'ATIVA', 'PAUSADA' ou 'CANCELADA'."}
+
+    res = await _patch(f"/servicos/assinaturas/{int(assinatura_id)}/status", {"status": status_formatado})
+    if not res.get("sucesso"):
+        return {"erro": res.get("erro", "Erro ao atualizar status da assinatura")}
+    ass = res.get("dados", {})
+    return {
+        "mensagem": f"Assinatura #{assinatura_id} atualizada para status '{status_formatado}' com sucesso!",
+        "assinatura_id": ass.get("id", assinatura_id),
+        "status": ass.get("status", status_formatado)
+    }
+
+@mcp_server_app.tool()
+async def gerar_cobranca_assinatura(assinatura_id: int) -> Dict[str, Any]:
+    """Gera automaticamente uma nova cobrança a receber para o ciclo atual de uma assinatura recorrente e avança a data de próximo vencimento."""
+    res = await _post(f"/servicos/assinaturas/{int(assinatura_id)}/gerar-cobranca", {})
+    if not res.get("sucesso"):
+        return {"erro": res.get("erro", "Erro ao gerar cobrança para a assinatura")}
+    dados = res.get("dados", {})
+    cobranca = dados.get("cobranca", {})
+    return {
+        "mensagem": f"Cobrança #{cobranca.get('id')} gerada com sucesso no valor de R$ {float(cobranca.get('valor', 0)):.2f} com vencimento em {cobranca.get('vencimento')}!",
+        "assinatura_id": int(assinatura_id),
+        "cobranca_id": cobranca.get("id"),
+        "valor": float(cobranca.get("valor", 0)),
+        "vencimento_cobranca": cobranca.get("vencimento"),
+        "novo_proximo_vencimento": dados.get("proximo_vencimento")
+    }
+
 
 @mcp_server_app.tool()
 async def cadastrar_orcamento(

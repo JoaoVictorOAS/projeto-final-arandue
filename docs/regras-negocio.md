@@ -24,6 +24,13 @@ Este documento descreve as regras de negócio, restrições operacionais e valid
 2. **Política de Exclusão vs Inativação:**
    - **Exclusão Lógica (Recomendada):** Clientes e serviços possuem a flag `ativo = 1`. Caso o usuário opte por "excluir" um cliente que já possui orçamentos, agendamentos ou cobranças associadas, o sistema inativa o registro (`ativo = 0`), preservando a integridade histórica.
    - **Exclusão Física:** Só é permitida se o registro não possuir nenhum histórico relacional no banco de dados.
+3. **Serviços Recorrentes e Assinaturas (Planos):**
+   - Serviços podem ser configurados com a flag `recorrente = 1`, definindo `periodicidade` padrão (`SEMANAL`, `QUINZENAL`, `MENSAL`, `TRIMESTRAL`, `SEMESTRAL`, `ANUAL`) e `dia_vencimento_padrao` (1 a 31).
+   - Ao criar uma **Assinatura** (`/api/servicos/assinaturas`), o sistema vincula um cliente e um serviço, herdando automaticamente o preço e periodicidade do serviço quando omitidos.
+   - O cálculo do próximo ciclo de vencimento é automático com base na periodicidade da assinatura.
+   - Ao acionar a geração de cobrança de um ciclo (`POST /api/servicos/assinaturas/:id/gerar-cobranca`), é gerada uma fatura pendente no Contas a Receber e o `proximo_vencimento` da assinatura avança para o próximo ciclo de pagamento.
+   - Assinaturas canceladas não permitem novas emissões de cobrança.
+   - O sistema calcula a métrica de Receita Mensal Recorrente (MRR) proporcionalmente para todas as assinaturas ativas do MEI.
 
 ---
 
