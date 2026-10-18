@@ -113,4 +113,52 @@ describe('AutoChartRenderer Component', () => {
     render(<AutoChartRenderer type="tipo_inexistente" data={[{ a: 1 }]} />);
     expect(screen.getByText(/Tipo de gráfico não suportado/i)).toBeInTheDocument();
   });
+
+  describe('Harmonização de Cores e Hierarquia com o Tema', () => {
+    it('deve exportar a função gerarPaletaTema gerando tons harmônicos a partir dos tokens primário e acento', async () => {
+      const { gerarPaletaTema } = await import('./AutoChartRenderer');
+      expect(typeof gerarPaletaTema).toBe('function');
+
+      const tokens = { primary: '#059669', accent: '#d97706' };
+      const paleta = gerarPaletaTema(tokens);
+
+      expect(Array.isArray(paleta)).toBe(true);
+      expect(paleta.length).toBeGreaterThanOrEqual(6);
+      expect(paleta[0].toLowerCase()).toBe('#059669');
+      expect(paleta[1].toLowerCase()).toBe('#d97706');
+    });
+
+    it('deve preservar cores semânticas fixas para entradas e saídas (#10b981 e #ef4444)', () => {
+      const fluxoData = [{ periodo: 'Jan/26', entradas: 5000, saidas: 2000 }];
+      const { container } = render(<AutoChartRenderer type="bar" data={fluxoData} />);
+      
+      // Bar de entradas e saídas devem ter as cores semânticas preservadas
+      expect(container.innerHTML).toContain('#10b981');
+      expect(container.innerHTML).toContain('#ef4444');
+    });
+
+    it('deve mapear status conhecidos de cobranças e orçamentos para cores semânticas via STATUS_CORES_MAP', async () => {
+      const { STATUS_CORES_MAP } = await import('./AutoChartRenderer');
+      expect(STATUS_CORES_MAP.PAGO).toBe('#10b981');
+      expect(STATUS_CORES_MAP.APROVADO).toBe('#10b981');
+      expect(STATUS_CORES_MAP.PENDENTE).toBe('#f59e0b');
+      expect(STATUS_CORES_MAP.ATRASADO).toBe('#ef4444');
+      expect(STATUS_CORES_MAP.CANCELADO).toBe('#ef4444');
+
+      const statusData = [
+        { status: 'PAGO', total: 10, valor: 3000 },
+        { status: 'PENDENTE', total: 5, valor: 1500 },
+        { status: 'ATRASADO', total: 2, valor: 600 },
+      ];
+      const { container } = render(<AutoChartRenderer type="donut" data={statusData} />);
+      expect(container).toBeDefined();
+    });
+
+    it('deve aplicar a cor primária do tema ativo em gráficos analíticos de barra (ex: receita)', () => {
+      const receitaData = [{ periodo: 'Jan/26', receita: 4500 }];
+      const { container } = render(<AutoChartRenderer type="bar" data={receitaData} />);
+      // Por padrão sem theme provider customizado, usa primaryColor de fallback (#6366f1)
+      expect(container.innerHTML).toContain('#6366f1');
+    });
+  });
 });
