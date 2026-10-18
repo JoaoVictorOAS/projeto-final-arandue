@@ -1,4 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { StatusBar, Style } from '@capacitor/status-bar';
+import { Capacitor } from '@capacitor/core';
 import api from '../services/api';
 
 const TEMA_PADRAO_FALLBACK = {
@@ -159,6 +161,39 @@ export function applyThemeToDOM(tema) {
   } else {
     root.classList.remove('dark');
   }
+
+  // Sincroniza StatusBar do Android e meta theme-color com o tema aplicado
+  sincronizarStatusBarComTema(tema).catch(() => {});
+}
+
+export async function sincronizarStatusBarComTema(tema) {
+  const modo = tema?.modo || 'light';
+  const tokens = tema?.tokens || tema?.cores || {};
+  const corFundo = tokens.bgSurface || tokens.bgApp || (modo === 'dark' ? '#0f172a' : '#ffffff');
+
+  // 1. Atualiza tag <meta name="theme-color"> no HTML
+  if (typeof document !== 'undefined') {
+    let metaTheme = document.querySelector('meta[name="theme-color"]');
+    if (!metaTheme) {
+      metaTheme = document.createElement('meta');
+      metaTheme.setAttribute('name', 'theme-color');
+      document.head.appendChild(metaTheme);
+    }
+    metaTheme.setAttribute('content', corFundo);
+  }
+
+  // 2. No Capacitor nativo (Android / iOS): sincroniza cor e estilo da Status Bar
+  if (typeof window !== 'undefined' && typeof Capacitor !== 'undefined' && Capacitor.isNativePlatform()) {
+    try {
+      await StatusBar.setBackgroundColor({ color: corFundo });
+      await StatusBar.setStyle({
+        style: modo === 'dark' ? Style.Dark : Style.Light,
+      });
+      await StatusBar.setOverlaysWebView({ overlay: false });
+    } catch {
+      // Ignora silenciosamente em caso de erro na plataforma nativa
+    }
+  }
 }
 
 export function ThemeProvider({ children }) {
@@ -222,6 +257,10 @@ export function ThemeProvider({ children }) {
   useEffect(() => {
     carregarTemas();
   }, [carregarTemas]);
+
+  useEffect(() => {
+    sincronizarStatusBarComTema(temaAtual).catch(() => {});
+  }, [temaAtual]);
 
   useEffect(() => {
     const handleAtualizacaoTema = () => {

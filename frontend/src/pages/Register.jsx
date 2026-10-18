@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import Logo from '../components/Logo';
 import { useAuth } from '../context/AuthContext';
+import { sincronizarStatusBarComTema } from '../context/ThemeContext';
 
 export default function Register() {
   const [nome, setNome] = useState('');
@@ -37,6 +38,7 @@ export default function Register() {
 
     root.classList.remove('dark');
     root.setAttribute('data-theme-mode', 'light');
+    sincronizarStatusBarComTema({ modo: 'light', tokens: { bgSurface: '#ffffff', bgApp: '#ffffff' } }).catch(() => {});
 
     return () => {
       if (estavaDark) {

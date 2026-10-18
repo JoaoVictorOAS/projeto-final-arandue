@@ -14,6 +14,7 @@ import {
 import { signInWithPopup } from 'firebase/auth';
 import Logo from '../components/Logo';
 import { useAuth } from '../context/AuthContext';
+import { sincronizarStatusBarComTema } from '../context/ThemeContext';
 import { auth, googleProvider } from '../services/firebase';
 import {
   OwlMascotDoodle,
@@ -41,6 +42,7 @@ export default function Login() {
 
     root.classList.remove('dark');
     root.setAttribute('data-theme-mode', 'light');
+    sincronizarStatusBarComTema({ modo: 'light', tokens: { bgSurface: '#ffffff', bgApp: '#ffffff' } }).catch(() => {});
 
     return () => {
       if (estavaDark) {

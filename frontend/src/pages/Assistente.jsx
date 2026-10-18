@@ -323,9 +323,27 @@ function AssistenteView() {
         className="flex-1 flex flex-col h-full min-w-0 relative overflow-hidden transition-colors duration-200"
         style={{ backgroundColor: 'var(--bg-app)', color: 'var(--text-main)' }}
       >
-        {/* Header do Chat */}
+        {/* Botão Flutuante Mobile: Somente o ícone de conversas para máxima imersão */}
+        <div className="md:hidden absolute top-3 left-3 z-20">
+          <button
+            type="button"
+            onClick={() => setSidebarConversasAberta(true)}
+            className="p-2.5 rounded-full shadow-md border backdrop-blur-md transition-transform active:scale-90 flex items-center justify-center opacity-90 hover:opacity-100"
+            style={{
+              backgroundColor: 'var(--bg-surface)',
+              borderColor: 'var(--border-color)',
+              color: 'var(--text-main)',
+            }}
+            title="Abrir histórico de conversas"
+            aria-label="Abrir histórico de conversas"
+          >
+            <MessageSquare className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Header do Chat (visível apenas em telas médias/desktop) */}
         <header
-          className="h-14 border-b px-3 sm:px-6 flex items-center justify-between flex-shrink-0 transition-colors duration-200"
+          className="hidden md:flex h-14 border-b px-6 items-center justify-between flex-shrink-0 transition-colors duration-200"
           style={{
             backgroundColor: 'var(--bg-surface)',
             borderColor: 'var(--border-color)',
@@ -333,38 +351,25 @@ function AssistenteView() {
           }}
         >
           <div className="flex items-center gap-2 min-w-0">
-            <button
-              type="button"
-              onClick={() => setSidebarConversasAberta(true)}
-              className="p-1.5 sm:p-2 -ml-1 rounded-lg md:hidden transition-colors hover:opacity-80 flex-shrink-0"
-              style={{ color: 'var(--text-secondary)' }}
-              title="Abrir histórico de conversas"
-              aria-label="Abrir histórico de conversas"
-            >
-              <MessageSquare className="w-5 h-5" />
-            </button>
             <Bot className="w-5 h-5 flex-shrink-0" style={{ color: 'var(--color-primary)' }} />
-            <span className="text-xs sm:text-sm font-semibold truncate max-w-[130px] sm:max-w-xs md:max-w-md" style={{ color: 'var(--text-main)' }}>
+            <span className="text-sm font-semibold truncate max-w-md" style={{ color: 'var(--text-main)' }}>
               {conversaAtivaId
                 ? conversas.find((c) => c.id === conversaAtivaId)?.titulo || 'Conversa Ativa'
                 : 'Nova Consulta'}
             </span>
             {conversaAtivaId && conversas.find((c) => c.id === conversaAtivaId)?.canal === 'whatsapp' && (
-              <span className="text-[10px] sm:text-[11px] px-1.5 sm:px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 font-semibold border border-emerald-200 flex-shrink-0">
+              <span className="text-[11px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 font-semibold border border-emerald-200 flex-shrink-0">
                 Canal WhatsApp
               </span>
             )}
-            <span className="hidden sm:inline-flex text-[11px] px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 font-medium border border-indigo-100 flex-shrink-0">
+            <span className="inline-flex text-[11px] px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 font-medium border border-indigo-100 flex-shrink-0">
               RAG Oficial MEI + Dados do Negócio
-            </span>
-            <span className="sm:hidden text-[10px] px-1.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 font-medium border border-indigo-100 flex-shrink-0">
-              RAG MEI
             </span>
           </div>
         </header>
 
         {/* Mensagens ou Sugestões Iniciais */}
-        <div className="flex-1 overflow-y-auto p-3 sm:p-6 space-y-4">
+        <div className="flex-1 overflow-y-auto p-3 sm:p-6 space-y-4 pt-14 md:pt-6">
           {carregandoMensagens ? (
             <div className="flex items-center justify-center h-full text-sm" style={{ color: 'var(--text-muted)' }}>
               <Loader2 className="w-6 h-6 animate-spin mr-2" style={{ color: 'var(--color-primary)' }} />
