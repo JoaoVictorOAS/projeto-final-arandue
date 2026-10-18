@@ -39,6 +39,39 @@
   --sketch-shadow: rgba(15, 23, 42, 0.85);
 }
 
+/* Classes Utilitárias Semânticas do Sistema de Temas */
+.btn-theme-primary {
+  background-color: var(--btn-primary-bg) !important;
+  color: var(--btn-primary-text) !important;
+  border-color: transparent !important;
+  transition: all 0.2s ease;
+}
+
+.btn-theme-primary:hover {
+  background-color: var(--btn-primary-hover) !important;
+  filter: brightness(0.95);
+}
+
+.btn-theme-primary:active {
+  filter: brightness(0.9);
+}
+
+.tab-theme-active {
+  background-color: var(--btn-primary-bg) !important;
+  color: var(--btn-primary-text) !important;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.badge-theme-subtle {
+  background-color: var(--bg-surface-hover) !important;
+  color: var(--color-primary) !important;
+  border: 1px solid var(--border-color) !important;
+}
+
+.text-theme-primary {
+  color: var(--color-primary) !important;
+}
+
 body {
   margin: 0;
   min-height: 100vh;
