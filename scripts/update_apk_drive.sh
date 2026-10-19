@@ -126,7 +126,10 @@ ADB_BIN="$ANDROID_HOME/platform-tools/adb"
 if [ -x "$ADB_BIN" ] && "$ADB_BIN" devices | grep -qE "[a-zA-Z0-9]+\s+device$"; then
   echo -e "\n${BLUE}📲 [5/5] Dispositivo Android detectado via ADB! Instalando atualização no celular...${NC}"
   "$ADB_BIN" install -r "$LATEST_APK"
-  echo -e "${GREEN}📱 Aplicativo instalado/atualizado com sucesso no celular!${NC}"
+  echo -e "${BLUE}🔄 Reiniciando aplicativo no dispositivo...${NC}"
+  "$ADB_BIN" shell am force-stop com.arandue.app
+  "$ADB_BIN" shell am start -n com.arandue.app/.MainActivity
+  echo -e "${GREEN}📱 Aplicativo instalado e reiniciado com sucesso no celular!${NC}"
 fi
 
 echo -e "\n${GREEN}🚀 Concluído com sucesso!${NC}\n"

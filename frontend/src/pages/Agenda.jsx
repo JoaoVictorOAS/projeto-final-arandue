@@ -24,6 +24,7 @@ import api from '../services/api';
 import Modal from '../components/Modal';
 import FormField from '../components/FormField';
 import StatusBadge from '../components/StatusBadge';
+import ThemedSelect from '../components/ThemedSelect';
 
 // Helper de formatação BRL
 export const formatBRL = (value) => {
@@ -735,15 +736,17 @@ export default function Agenda() {
 
           {/* Seleção do Orçamento Aprovado */}
           <div>
-            <label htmlFor="ag_orcamento_id" className="block text-sm font-semibold text-gray-700 mb-1">
+            <label htmlFor="ag_orcamento_id" className="block text-sm font-semibold mb-1" style={{ color: 'var(--text-main)' }}>
               Orçamento Aprovado {orcamentosAprovados.length > 0 && <span className="text-rose-500">*</span>}
             </label>
-            <select
+            <ThemedSelect
               id="ag_orcamento_id"
               name="orcamento_id"
+              label="Orçamento Aprovado"
               value={formOrcamentoId}
               onChange={(e) => handleSelectOrcamento(e.target.value)}
-              className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-gray-200 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              placeholder="Selecione o orçamento aprovado..."
+              error={formErrors.orcamento_id}
             >
               <option value="">Selecione o orçamento aprovado...</option>
               {orcamentosAprovados.map((orc) => (
@@ -751,7 +754,7 @@ export default function Agenda() {
                   #{String(orc.id).padStart(4, '0')} - {orc.cliente_nome || `Cliente #${orc.cliente_id}`} ({formatBRL(orc.total)})
                 </option>
               ))}
-            </select>
+            </ThemedSelect>
             {formErrors.orcamento_id && (
               <p className="text-xs text-rose-600 mt-1">{formErrors.orcamento_id}</p>
             )}
@@ -764,16 +767,18 @@ export default function Agenda() {
 
           {/* Seleção do Cliente */}
           <div>
-            <label htmlFor="ag_cliente_id" className="block text-sm font-semibold text-gray-700 mb-1">
+            <label htmlFor="ag_cliente_id" className="block text-sm font-semibold mb-1" style={{ color: 'var(--text-main)' }}>
               Cliente <span className="text-rose-500">*</span>
             </label>
-            <select
+            <ThemedSelect
               id="ag_cliente_id"
               name="cliente_id"
+              label="Cliente"
               value={formClienteId}
               onChange={(e) => setFormClienteId(e.target.value)}
-              className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-gray-200 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              placeholder="Selecione o cliente..."
               required
+              error={formErrors.cliente_id}
             >
               <option value="">Selecione o cliente...</option>
               {clientes.map((c) => (
@@ -781,7 +786,7 @@ export default function Agenda() {
                   {c.nome} {c.telefone ? `(${c.telefone})` : ''}
                 </option>
               ))}
-            </select>
+            </ThemedSelect>
             {formErrors.cliente_id && (
               <p className="text-xs text-rose-600 mt-1">{formErrors.cliente_id}</p>
             )}
@@ -789,15 +794,16 @@ export default function Agenda() {
 
           {/* Seleção do Serviço */}
           <div>
-            <label htmlFor="ag_servico_id" className="block text-sm font-semibold text-gray-700 mb-1">
+            <label htmlFor="ag_servico_id" className="block text-sm font-semibold mb-1" style={{ color: 'var(--text-main)' }}>
               Serviço a Realizar
             </label>
-            <select
+            <ThemedSelect
               id="ag_servico_id"
               name="servico_id"
+              label="Serviço a Realizar"
               value={formServicoId}
               onChange={(e) => setFormServicoId(e.target.value)}
-              className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-gray-200 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              placeholder="(Atendimento Geral / Não especificado)"
             >
               <option value="">(Atendimento Geral / Não especificado)</option>
               {servicos.map((s) => (
@@ -805,7 +811,7 @@ export default function Agenda() {
                   {s.nome}
                 </option>
               ))}
-            </select>
+            </ThemedSelect>
           </div>
 
           {/* Data e Hora (datetime-local) */}

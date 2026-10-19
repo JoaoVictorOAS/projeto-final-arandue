@@ -26,6 +26,7 @@ import {
 import api from '../services/api';
 import Modal from '../components/Modal';
 import FormField from '../components/FormField';
+import ThemedSelect from '../components/ThemedSelect';
 
 const CATEGORIAS_PADRAO = [
   'Serviço',
@@ -570,12 +571,12 @@ export default function Servicos() {
                 )}
               </div>
 
-              <div className="sm:w-48">
-                <select
+              <div className="sm:w-52">
+                <ThemedSelect
                   value={categoriaFiltro}
                   onChange={(e) => setCategoriaFiltro(e.target.value)}
-                  className="w-full px-3 py-2 text-sm rounded-xl border border-gray-200 bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
-                  aria-label="Filtrar por categoria"
+                  label="Filtrar por Categoria"
+                  placeholder="Todas Categorias"
                 >
                   <option value="TODAS">Todas Categorias</option>
                   {CATEGORIAS_PADRAO.map((cat) => (
@@ -583,7 +584,7 @@ export default function Servicos() {
                       {cat}
                     </option>
                   ))}
-                </select>
+                </ThemedSelect>
               </div>
             </div>
 
@@ -765,17 +766,20 @@ export default function Servicos() {
           {/* Filtros de Assinaturas */}
           <div className="bg-white rounded-2xl p-4 border border-gray-200/80 shadow-sm flex flex-col sm:flex-row gap-3 items-center justify-between">
             <div className="flex items-center gap-2 w-full sm:w-auto">
-              <span className="text-xs font-semibold text-gray-500 uppercase">Filtrar por Status:</span>
-              <select
-                value={filtroStatusAssinatura}
-                onChange={(e) => setFiltroStatusAssinatura(e.target.value)}
-                className="px-3 py-1.5 text-sm rounded-xl border border-gray-200 bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
-              >
-                <option value="TODAS">Todas as Assinaturas</option>
-                <option value="ATIVA">Ativas</option>
-                <option value="PAUSADA">Pausadas</option>
-                <option value="CANCELADA">Canceladas</option>
-              </select>
+              <span className="text-xs font-semibold uppercase" style={{ color: 'var(--text-secondary)' }}>Status:</span>
+              <div className="w-52">
+                <ThemedSelect
+                  value={filtroStatusAssinatura}
+                  onChange={(e) => setFiltroStatusAssinatura(e.target.value)}
+                  label="Filtrar por Status"
+                  placeholder="Todas as Assinaturas"
+                >
+                  <option value="TODAS">Todas as Assinaturas</option>
+                  <option value="ATIVA">Ativas</option>
+                  <option value="PAUSADA">Pausadas</option>
+                  <option value="CANCELADA">Canceladas</option>
+                </ThemedSelect>
+              </div>
             </div>
 
             <button
@@ -1040,19 +1044,16 @@ export default function Servicos() {
                   <label htmlFor="periodicidade" className="block text-xs font-semibold text-gray-700 mb-1">
                     Periodicidade Padrão
                   </label>
-                  <select
+                  <ThemedSelect
                     id="periodicidade"
                     name="periodicidade"
                     value={formData.periodicidade}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 text-sm rounded-xl border border-gray-200 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
-                  >
-                    {PERIODICIDADES.map((p) => (
-                      <option key={p.value} value={p.value}>
-                        {p.label}
-                      </option>
-                    ))}
-                  </select>
+                    options={PERIODICIDADES.map((p) => ({
+                      value: p.value,
+                      label: p.label,
+                    }))}
+                  />
                 </div>
 
                 <div>
@@ -1136,21 +1137,18 @@ export default function Servicos() {
             <label htmlFor="cliente_id" className="block text-sm font-semibold text-gray-700 mb-1">
               Cliente Contratante *
             </label>
-            <select
+            <ThemedSelect
               id="cliente_id"
               name="cliente_id"
               value={formAssinatura.cliente_id}
               onChange={handleAssinaturaInputChange}
               required
-              className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-gray-200 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
-            >
-              <option value="">Selecione o cliente...</option>
-              {clientes.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.nome} {c.email ? `(${c.email})` : ''}
-                </option>
-              ))}
-            </select>
+              placeholder="Selecione o cliente..."
+              options={clientes.map((c) => ({
+                value: c.id,
+                label: `${c.nome}${c.email ? ` (${c.email})` : ''}`,
+              }))}
+            />
             {formAssinaturaErrors.cliente_id && (
               <p className="text-xs text-rose-600 mt-1">{formAssinaturaErrors.cliente_id}</p>
             )}
@@ -1160,21 +1158,18 @@ export default function Servicos() {
             <label htmlFor="servico_id" className="block text-sm font-semibold text-gray-700 mb-1">
               Serviço / Plano Recorrente *
             </label>
-            <select
+            <ThemedSelect
               id="servico_id"
               name="servico_id"
               value={formAssinatura.servico_id}
               onChange={handleAssinaturaInputChange}
               required
-              className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-gray-200 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
-            >
-              <option value="">Selecione o serviço...</option>
-              {servicos.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.nome} — {formatCurrency(s.preco)} {s.recorrente ? `(${s.periodicidade || 'Recorrente'})` : ''}
-                </option>
-              ))}
-            </select>
+              placeholder="Selecione o serviço..."
+              options={servicos.map((s) => ({
+                value: s.id,
+                label: `${s.nome} — ${formatCurrency(s.preco)}${s.recorrente ? ` (${s.periodicidade || 'Recorrente'})` : ''}`,
+              }))}
+            />
             {formAssinaturaErrors.servico_id && (
               <p className="text-xs text-rose-600 mt-1">{formAssinaturaErrors.servico_id}</p>
             )}
@@ -1199,19 +1194,16 @@ export default function Servicos() {
               <label htmlFor="periodicidade_ass" className="block text-sm font-semibold text-gray-700 mb-1">
                 Periodicidade
               </label>
-              <select
+              <ThemedSelect
                 id="periodicidade_ass"
                 name="periodicidade"
                 value={formAssinatura.periodicidade}
                 onChange={handleAssinaturaInputChange}
-                className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-gray-200 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
-              >
-                {PERIODICIDADES.map((p) => (
-                  <option key={p.value} value={p.value}>
-                    {p.label}
-                  </option>
-                ))}
-              </select>
+                options={PERIODICIDADES.map((p) => ({
+                  value: p.value,
+                  label: p.label,
+                }))}
+              />
             </div>
           </div>
 

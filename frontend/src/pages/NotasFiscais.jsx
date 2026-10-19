@@ -24,6 +24,7 @@ import api from '../services/api';
 import Modal from '../components/Modal';
 import FormField from '../components/FormField';
 import StatusBadge from '../components/StatusBadge';
+import ThemedSelect from '../components/ThemedSelect';
 import { obterSefazInfo } from './Configuracoes';
 
 export const formatCurrency = (val) => {
@@ -390,26 +391,32 @@ export default function NotasFiscais() {
         </div>
 
         <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
-          <select
-            value={tipoFiltro}
-            onChange={(e) => setTipoFiltro(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500"
-          >
-            <option value="TODOS">Todos os Modelos</option>
-            <option value="NFSE">NFS-e (Serviços)</option>
-            <option value="NFE">NF-e (Mercadorias)</option>
-            <option value="NFCE">NFC-e (Consumidor)</option>
-          </select>
+          <div className="min-w-[180px] w-full sm:w-auto">
+            <ThemedSelect
+              value={tipoFiltro}
+              onChange={(e) => setTipoFiltro(e.target.value)}
+              aria-label="Filtrar por modelo"
+              options={[
+                { value: 'TODOS', label: 'Todos os Modelos' },
+                { value: 'NFSE', label: 'NFS-e (Serviços)' },
+                { value: 'NFE', label: 'NF-e (Mercadorias)' },
+                { value: 'NFCE', label: 'NFC-e (Consumidor)' },
+              ]}
+            />
+          </div>
 
-          <select
-            value={statusFiltro}
-            onChange={(e) => setStatusFiltro(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500"
-          >
-            <option value="TODOS">Todos os Status</option>
-            <option value="EMITIDA">Emitidas</option>
-            <option value="CANCELADA">Canceladas</option>
-          </select>
+          <div className="min-w-[170px] w-full sm:w-auto">
+            <ThemedSelect
+              value={statusFiltro}
+              onChange={(e) => setStatusFiltro(e.target.value)}
+              aria-label="Filtrar por status"
+              options={[
+                { value: 'TODOS', label: 'Todos os Status' },
+                { value: 'EMITIDA', label: 'Emitidas' },
+                { value: 'CANCELADA', label: 'Canceladas' },
+              ]}
+            />
+          </div>
 
           <button
             type="button"
@@ -777,22 +784,22 @@ export default function NotasFiscais() {
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Atividade / Código de Tributação Nacional (Portal Nacional MEI):
                 </label>
-                <select
+                <ThemedSelect
                   value={formEmissao.codigo_tributacao_nacional}
                   onChange={(e) =>
                     setFormEmissao({ ...formEmissao, codigo_tributacao_nacional: e.target.value })
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                >
-                  <option value="01.07.01">01.07.01 - Suporte técnico, informática e manutenção de software</option>
-                  <option value="14.01.01">14.01.01 - Lubrificação, limpeza, lavagem e polimento de veículos</option>
-                  <option value="14.02.01">14.02.01 - Assistência e manutenção de máquinas, aparelhos e objetos</option>
-                  <option value="07.02.01">07.02.01 - Execução de obras, construção civil, reformas e hidráulica</option>
-                  <option value="04.01.01">04.01.01 - Serviços de beleza, estética, cabeleireiro e barbearia</option>
-                  <option value="17.01.01">17.01.01 - Assessoria, consultoria e apoio administrativo</option>
-                  <option value="13.04.01">13.04.01 - Fotografia, filmagem e serviços audiovisuais</option>
-                  <option value="10.05.01">10.05.01 - Intermediação, corretagem e agenciamento</option>
-                </select>
+                  options={[
+                    { value: '01.07.01', label: '01.07.01 - Suporte técnico, informática e manutenção de software' },
+                    { value: '14.01.01', label: '14.01.01 - Lubrificação, limpeza, lavagem e polimento de veículos' },
+                    { value: '14.02.01', label: '14.02.01 - Assistência e manutenção de máquinas, aparelhos e objetos' },
+                    { value: '07.02.01', label: '07.02.01 - Execução de obras, construção civil, reformas e hidráulica' },
+                    { value: '04.01.01', label: '04.01.01 - Serviços de beleza, estética, cabeleireiro e barbearia' },
+                    { value: '17.01.01', label: '17.01.01 - Assessoria, consultoria e apoio administrativo' },
+                    { value: '13.04.01', label: '13.04.01 - Fotografia, filmagem e serviços audiovisuais' },
+                    { value: '10.05.01', label: '10.05.01 - Intermediação, corretagem e agenciamento' },
+                  ]}
+                />
               </div>
 
               <div>

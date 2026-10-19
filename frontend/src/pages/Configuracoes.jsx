@@ -35,6 +35,7 @@ import {
 } from 'lucide-react';
 import api from '../services/api';
 import { useTheme } from '../context/ThemeContext';
+import ThemedSelect from '../components/ThemedSelect';
 
 export const UFS_BRASIL = [
   { uf: 'AC', nome: 'Acre', cUf: '12', autorizador: 'SVRS', aliquotaPadrao: 19 },
@@ -787,21 +788,18 @@ export default function Configuracoes() {
               <label htmlFor="uf" className="block text-sm font-semibold text-gray-700 mb-1">
                 Estado (UF) <span className="text-rose-500">*</span>
               </label>
-              <select
+              <ThemedSelect
                 id="uf"
                 name="uf"
                 required
                 value={form.uf}
                 onChange={(e) => setForm({ ...form, uf: e.target.value.toUpperCase() })}
-                className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-gray-300 bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-              >
-                <option value="">Selecione o Estado</option>
-                {UFS_BRASIL.map((item) => (
-                  <option key={item.uf} value={item.uf}>
-                    {item.uf} - {item.nome}
-                  </option>
-                ))}
-              </select>
+                placeholder="Selecione o Estado"
+                options={UFS_BRASIL.map((item) => ({
+                  value: item.uf,
+                  label: `${item.uf} - ${item.nome}`,
+                }))}
+              />
             </div>
 
             <div>
@@ -930,16 +928,16 @@ export default function Configuracoes() {
               <label htmlFor="ambiente_fiscal" className="block text-sm font-semibold text-gray-700 mb-1">
                 Ambiente Fiscal
               </label>
-              <select
+              <ThemedSelect
                 id="ambiente_fiscal"
                 name="ambiente_fiscal"
                 value={form.ambiente_fiscal}
                 onChange={(e) => setForm({ ...form, ambiente_fiscal: e.target.value })}
-                className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-gray-300 bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-              >
-                <option value="HOMOLOGACAO">Homologação (Ambiente de Testes)</option>
-                <option value="PRODUCAO">Produção (Ambiente Oficial)</option>
-              </select>
+                options={[
+                  { value: 'HOMOLOGACAO', label: 'Homologação (Ambiente de Testes)' },
+                  { value: 'PRODUCAO', label: 'Produção (Ambiente Oficial)' },
+                ]}
+              />
             </div>
 
             <div>

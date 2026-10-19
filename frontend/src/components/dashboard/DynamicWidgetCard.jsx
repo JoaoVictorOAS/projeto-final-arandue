@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { Maximize2, Minimize2, Trash2, Calendar, GripVertical } from 'lucide-react';
 import AutoChartRenderer from '../charts/AutoChartRenderer';
+import ThemedSelect from '../ThemedSelect';
 import { isMobileEnvironment } from '../../utils/device';
 
 /**
@@ -102,32 +103,26 @@ const DynamicWidgetCard = React.forwardRef(function DynamicWidgetCard({
               Ano Atual
             </span>
           ) : (
-            <div className="relative inline-flex items-center">
-              <select
+            <div className="min-w-[140px]">
+              <ThemedSelect
                 value={widget.periodo || 'ultimos_6_meses'}
                 onChange={(e) => onChangePeriod && onChangePeriod(widget, e.target.value)}
-                className="text-xs font-medium bg-gray-50 hover:bg-gray-100 border border-gray-200 text-gray-700 rounded-lg px-2 py-1 pr-6 focus:outline-none focus:ring-1 focus:ring-indigo-500 cursor-pointer appearance-none transition"
-                style={{
-                  backgroundColor: 'var(--bg-surface-hover)',
-                  borderColor: 'var(--border-color)',
-                  color: 'var(--text-main)',
-                }}
                 aria-label="Selecionar período"
-              >
-                <option value="mes_atual">Mês Atual</option>
-                <option value="ultimos_3_meses">Últimos 3 Meses</option>
-                <option value="ultimos_6_meses">Últimos 6 Meses</option>
-                <option value="ultimos_12_meses">Últimos 12 Meses</option>
-                <option value="ano_atual">Ano Atual</option>
-                <option value="historico_total">Histórico Total</option>
-                <option value="proximos_30_dias">Próximos 30 Dias</option>
-                <option value="proximos_60_dias">Próximos 60 Dias</option>
-                <option value="proximos_3_meses">Próximos 3 Meses</option>
-                <option value="proximos_6_meses">Próximos 6 Meses</option>
-                <option value="proximos_12_meses">Próximos 12 Meses</option>
-                <option value="proximos_1_ano">Próximo 1 Ano</option>
-              </select>
-              <Calendar className="w-3 h-3 text-gray-400 absolute right-1.5 pointer-events-none" />
+                options={[
+                  { value: 'mes_atual', label: 'Mês Atual' },
+                  { value: 'ultimos_3_meses', label: 'Últimos 3 Meses' },
+                  { value: 'ultimos_6_meses', label: 'Últimos 6 Meses' },
+                  { value: 'ultimos_12_meses', label: 'Últimos 12 Meses' },
+                  { value: 'ano_atual', label: 'Ano Atual' },
+                  { value: 'historico_total', label: 'Histórico Total' },
+                  { value: 'proximos_30_dias', label: 'Próximos 30 Dias' },
+                  { value: 'proximos_60_dias', label: 'Próximos 60 Dias' },
+                  { value: 'proximos_3_meses', label: 'Próximos 3 Meses' },
+                  { value: 'proximos_6_meses', label: 'Próximos 6 Meses' },
+                  { value: 'proximos_12_meses', label: 'Próximos 12 Meses' },
+                  { value: 'proximos_1_ano', label: 'Próximo 1 Ano' },
+                ]}
+              />
             </div>
           )}
 

@@ -25,6 +25,7 @@ import api from '../services/api';
 import Modal from '../components/Modal';
 import FormField from '../components/FormField';
 import StatusBadge from '../components/StatusBadge';
+import ThemedSelect from '../components/ThemedSelect';
 
 const formatMoney = (val) => {
   const num = Number(val) || 0;
@@ -447,22 +448,23 @@ export default function Caixa() {
         <div className="flex items-center gap-2 overflow-x-auto pt-1 pb-2 sm:pb-1">
           {/* Filtro Mês */}
           {mesesDisponiveis.length > 0 && (
-            <select
-              value={filtroMes}
-              onChange={(e) => setFiltroMes(e.target.value)}
-              aria-label="Filtrar por mês"
-              className="px-3.5 py-2 text-xs font-semibold rounded-lg bg-gray-50 border border-gray-200 text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
-            >
-              <option value="TODOS">Todos os Meses</option>
-              {mesesDisponiveis.map((m) => {
-                const [ano, mes] = m.split('-');
-                return (
-                  <option key={m} value={m}>
-                    {mes}/{ano}
-                  </option>
-                );
-              })}
-            </select>
+            <div className="min-w-[150px]">
+              <ThemedSelect
+                value={filtroMes}
+                onChange={(e) => setFiltroMes(e.target.value)}
+                aria-label="Filtrar por mês"
+                options={[
+                  { value: 'TODOS', label: 'Todos os Meses' },
+                  ...mesesDisponiveis.map((m) => {
+                    const [ano, mes] = m.split('-');
+                    return {
+                      value: m,
+                      label: `${mes}/${ano}`,
+                    };
+                  }),
+                ]}
+              />
+            </div>
           )}
 
           {/* Filtro Tipo */}

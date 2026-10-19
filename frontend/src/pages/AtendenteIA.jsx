@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import api from '../services/api';
 import AdaptiveParagraph from '../components/AdaptiveParagraph';
+import ThemedSelect from '../components/ThemedSelect';
 
 const TONS_DE_VOZ = [
   { id: 'FORMAL', label: 'Formal & Corporativo', desc: 'Vocabulário polido, respeitoso e estruturado.' },
@@ -572,18 +573,14 @@ export default function AtendenteIA({ publicMode = false }) {
 
                 <div>
                   <label className="block text-xs font-semibold mb-1">Tom de Voz</label>
-                  <select
+                  <ThemedSelect
                     value={config.tom_voz}
                     onChange={(e) => setConfig({ ...config, tom_voz: e.target.value })}
-                    className="w-full px-3.5 py-2 rounded-xl border text-sm bg-transparent"
-                    style={{ borderColor: 'var(--border-color)', backgroundColor: 'var(--bg-surface)' }}
-                  >
-                    {TONS_DE_VOZ.map((t) => (
-                      <option key={t.id} value={t.id}>
-                        {t.label}
-                      </option>
-                    ))}
-                  </select>
+                    options={TONS_DE_VOZ.map((t) => ({
+                      value: t.id,
+                      label: t.label,
+                    }))}
+                  />
                 </div>
               </div>
 
@@ -802,23 +799,17 @@ export default function AtendenteIA({ publicMode = false }) {
                   </div>
 
                   <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-                    <select
-                      value={servicoSelecionadoId}
-                      onChange={(e) => setServicoSelecionadoId(e.target.value)}
-                      className="px-3 py-1.5 rounded-xl border text-xs bg-transparent min-w-0"
-                      style={{
-                        borderColor: 'var(--border-color)',
-                        backgroundColor: 'var(--bg-surface)',
-                        color: 'var(--text-main)',
-                      }}
-                    >
-                      <option value="">Selecionar serviço...</option>
-                      {servicosCatalogo.map((s) => (
-                        <option key={s.id} value={s.id}>
-                          {s.nome} (R$ {Number(s.preco || 0).toFixed(2)})
-                        </option>
-                      ))}
-                    </select>
+                    <div className="flex-1 min-w-[200px]">
+                      <ThemedSelect
+                        value={servicoSelecionadoId}
+                        onChange={(e) => setServicoSelecionadoId(e.target.value)}
+                        placeholder="Selecionar serviço..."
+                        options={servicosCatalogo.map((s) => ({
+                          value: s.id,
+                          label: `${s.nome} (R$ ${Number(s.preco || 0).toFixed(2)})`,
+                        }))}
+                      />
+                    </div>
                     <button
                       type="button"
                       onClick={handleAdicionarAlcadaServico}

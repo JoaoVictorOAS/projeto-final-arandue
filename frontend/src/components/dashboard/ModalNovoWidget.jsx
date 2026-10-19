@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { BarChart3, PieChart, LineChart, Gauge, TrendingUp, Sparkles, Loader2 } from 'lucide-react';
 import Modal from '../Modal';
+import ThemedSelect from '../ThemedSelect';
 
 const CATALOGO_PADRAO = [
   {
@@ -203,18 +204,16 @@ export default function ModalNovoWidget({
           <label htmlFor="widget-metrica" className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
             Métrica Analítica
           </label>
-          <select
+          <ThemedSelect
             id="widget-metrica"
+            name="metrica"
             value={metrica}
             onChange={(e) => setMetrica(e.target.value)}
-            className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition"
-          >
-            {metricas.map((m) => (
-              <option key={m.chave} value={m.chave}>
-                {m.nome}
-              </option>
-            ))}
-          </select>
+            options={metricas.map((m) => ({
+              value: m.chave,
+              label: m.nome,
+            }))}
+          />
           {metricaAtual?.descricao && (
             <p className="text-xs text-gray-500 mt-1 italic">{metricaAtual.descricao}</p>
           )}
@@ -226,36 +225,32 @@ export default function ModalNovoWidget({
             <label htmlFor="widget-tipo" className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
               Tipo de Gráfico
             </label>
-            <select
+            <ThemedSelect
               id="widget-tipo"
+              name="tipo_grafico"
               value={tipoGrafico}
               onChange={(e) => setTipoGrafico(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition"
-            >
-              {tiposCompativeis.map((tipo) => (
-                <option key={tipo} value={tipo}>
-                  {NOMES_TIPOS[tipo] || tipo}
-                </option>
-              ))}
-            </select>
+              options={tiposCompativeis.map((tipo) => ({
+                value: tipo,
+                label: NOMES_TIPOS[tipo] || tipo,
+              }))}
+            />
           </div>
 
           <div>
             <label htmlFor="widget-periodo" className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
               Período
             </label>
-            <select
+            <ThemedSelect
               id="widget-periodo"
+              name="periodo"
               value={periodo}
               onChange={(e) => setPeriodo(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition"
-            >
-              {periodosCompativeis.map((p) => (
-                <option key={p} value={p}>
-                  {NOMES_PERIODOS[p] || p}
-                </option>
-              ))}
-            </select>
+              options={periodosCompativeis.map((p) => ({
+                value: p,
+                label: NOMES_PERIODOS[p] || p,
+              }))}
+            />
           </div>
         </div>
 
@@ -264,15 +259,16 @@ export default function ModalNovoWidget({
           <label htmlFor="widget-largura" className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
             Largura do Card
           </label>
-          <select
+          <ThemedSelect
             id="widget-largura"
+            name="largura"
             value={largura}
             onChange={(e) => setLargura(Number(e.target.value))}
-            className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition"
-          >
-            <option value={1}>1 Coluna (Metade da Tela em Telas Grandes)</option>
-            <option value={2}>2 Colunas (Largura Completa)</option>
-          </select>
+            options={[
+              { value: 1, label: '1 Coluna (Metade da Tela em Telas Grandes)' },
+              { value: 2, label: '2 Colunas (Largura Completa)' },
+            ]}
+          />
         </div>
 
         {/* Rodapé / Botões */}

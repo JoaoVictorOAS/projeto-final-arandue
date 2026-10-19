@@ -28,6 +28,7 @@ import FormField from '../components/FormField';
 import StatusBadge from '../components/StatusBadge';
 import CameraCaptureModal from '../components/CameraCaptureModal';
 import AdaptiveParagraph from '../components/AdaptiveParagraph';
+import ThemedSelect from '../components/ThemedSelect';
 
 export const formatCurrency = (val) => {
   const num = typeof val === 'number' ? val : parseFloat(val) || 0;
@@ -1067,22 +1068,19 @@ export default function Estoque() {
                 <label className="block text-sm font-semibold text-gray-700 mb-1">
                   Selecione um Produto do Catálogo:
                 </label>
-                <select
+                <ThemedSelect
                   value={servicoSelecionadoId}
                   onChange={(e) => {
                     const id = e.target.value;
                     setServicoSelecionadoId(id);
                     carregarFichaTecnica(id);
                   }}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                >
-                  <option value="">-- Escolha o produto para ver a receita --</option>
-                  {servicos.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.nome} ({formatCurrency(s.preco)})
-                    </option>
-                  ))}
-                </select>
+                  placeholder="-- Escolha o produto para ver a receita --"
+                  options={servicos.map((s) => ({
+                    value: s.id,
+                    label: `${s.nome} (${formatCurrency(s.preco)})`,
+                  }))}
+                />
               </div>
 
               {servicoSelecionadoId && (
@@ -1225,19 +1223,17 @@ export default function Estoque() {
                 <label htmlFor="simulacao-servico" className="block text-xs font-semibold text-gray-700 mb-1">
                   Produto a Simular:
                 </label>
-                <select
+                <ThemedSelect
                   id="simulacao-servico"
+                  name="simulacao_servico"
                   value={simulacaoServicoId}
                   onChange={(e) => setSimulacaoServicoId(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                >
-                  <option value="">-- Selecione o produto --</option>
-                  {servicos.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.nome}
-                    </option>
-                  ))}
-                </select>
+                  placeholder="-- Selecione o produto --"
+                  options={servicos.map((s) => ({
+                    value: s.id,
+                    label: s.nome,
+                  }))}
+                />
               </div>
 
               <button
@@ -1540,15 +1536,15 @@ export default function Estoque() {
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Unidade Base de Fracionamento:
             </label>
-            <select
+            <ThemedSelect
               value={formInsumo.unidade_base}
               onChange={(e) => setFormInsumo({ ...formInsumo, unidade_base: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            >
-              <option value="g">Gramas (g) — Ideal para farinhas, carnes, temperos</option>
-              <option value="ml">Mililitros (ml) — Ideal para óleos, leite, líquidos</option>
-              <option value="un">Unidades (un) — Ideal para ovos, embalagens, potes</option>
-            </select>
+              options={[
+                { value: 'g', label: 'Gramas (g) — Ideal para farinhas, carnes, temperos' },
+                { value: 'ml', label: 'Mililitros (ml) — Ideal para óleos, leite, líquidos' },
+                { value: 'un', label: 'Unidades (un) — Ideal para ovos, embalagens, potes' },
+              ]}
+            />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -1637,18 +1633,15 @@ export default function Estoque() {
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Selecionar Insumo Cadastrado:
             </label>
-            <select
+            <ThemedSelect
               value={formEntrada.insumo_id}
               onChange={(e) => setFormEntrada({ ...formEntrada, insumo_id: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            >
-              <option value="">-- Ou digite o nome abaixo caso seja novo --</option>
-              {insumos.map((i) => (
-                <option key={i.id} value={i.id}>
-                  {i.nome} (Saldo atual: {formatQuantity(i.quantidade_atual, i.unidade_base)})
-                </option>
-              ))}
-            </select>
+              placeholder="-- Ou digite o nome abaixo caso seja novo --"
+              options={insumos.map((i) => ({
+                value: i.id,
+                label: `${i.nome} (Saldo atual: ${formatQuantity(i.quantidade_atual, i.unidade_base)})`,
+              }))}
+            />
           </div>
 
           {!formEntrada.insumo_id && (
@@ -1675,17 +1668,17 @@ export default function Estoque() {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Unidade:</label>
-              <select
+              <ThemedSelect
                 value={formEntrada.unidade}
                 onChange={(e) => setFormEntrada({ ...formEntrada, unidade: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              >
-                <option value="kg">Quilos (kg) — converte para gramas</option>
-                <option value="g">Gramas (g)</option>
-                <option value="l">Litros (l) — converte para ml</option>
-                <option value="ml">Mililitros (ml)</option>
-                <option value="un">Unidades (un)</option>
-              </select>
+                options={[
+                  { value: 'kg', label: 'Quilos (kg) — converte para gramas' },
+                  { value: 'g', label: 'Gramas (g)' },
+                  { value: 'l', label: 'Litros (l) — converte para ml' },
+                  { value: 'ml', label: 'Mililitros (ml)' },
+                  { value: 'un', label: 'Unidades (un)' },
+                ]}
+              />
             </div>
           </div>
 
@@ -1753,23 +1746,20 @@ export default function Estoque() {
               return (
                 <div key={index} className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg border border-gray-200">
                   <div className="flex-1">
-                    <select
+                    <ThemedSelect
                       value={item.insumo_id}
                       onChange={(e) => {
                         const novo = [...ingredientesForm];
                         novo[index].insumo_id = e.target.value;
                         setIngredientesForm(novo);
                       }}
-                      className="w-full px-2 py-1.5 border border-gray-300 rounded text-xs focus:ring-1 focus:ring-indigo-500"
+                      placeholder="-- Insumo --"
+                      options={insumos.map((ins) => ({
+                        value: ins.id,
+                        label: `${ins.nome} (${ins.unidade_base})`,
+                      }))}
                       required
-                    >
-                      <option value="">-- Insumo --</option>
-                      {insumos.map((ins) => (
-                        <option key={ins.id} value={ins.id}>
-                          {ins.nome} ({ins.unidade_base})
-                        </option>
-                      ))}
-                    </select>
+                    />
                   </div>
 
                   <div className="w-32">
@@ -1843,19 +1833,16 @@ export default function Estoque() {
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Produto Fabricado:
             </label>
-            <select
+            <ThemedSelect
               value={formProducao.servico_id}
               onChange={(e) => setFormProducao({ ...formProducao, servico_id: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              placeholder="-- Selecione o produto --"
+              options={servicos.map((s) => ({
+                value: s.id,
+                label: s.nome,
+              }))}
               required
-            >
-              <option value="">-- Selecione o produto --</option>
-              {servicos.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.nome}
-                </option>
-              ))}
-            </select>
+            />
           </div>
 
           <FormField
@@ -2076,21 +2063,23 @@ export default function Estoque() {
                       className="w-16 px-2 py-1 border border-gray-300 rounded text-xs"
                       placeholder="Qtd"
                     />
-                    <select
-                      value={it.unidade}
-                      onChange={(e) => {
-                        const novo = { ...dadosNotaImportada };
-                        novo.itens[idx].unidade = e.target.value;
-                        setDadosNotaImportada(novo);
-                      }}
-                      className="w-16 px-1 py-1 border border-gray-300 rounded text-xs"
-                    >
-                      <option value="kg">kg</option>
-                      <option value="g">g</option>
-                      <option value="l">l</option>
-                      <option value="ml">ml</option>
-                      <option value="un">un</option>
-                    </select>
+                    <div className="w-20">
+                      <ThemedSelect
+                        value={it.unidade}
+                        onChange={(e) => {
+                          const novo = { ...dadosNotaImportada };
+                          novo.itens[idx].unidade = e.target.value;
+                          setDadosNotaImportada(novo);
+                        }}
+                        options={[
+                          { value: 'kg', label: 'kg' },
+                          { value: 'g', label: 'g' },
+                          { value: 'l', label: 'l' },
+                          { value: 'ml', label: 'ml' },
+                          { value: 'un', label: 'un' },
+                        ]}
+                      />
+                    </div>
                     <input
                       type="number"
                       step="0.01"
