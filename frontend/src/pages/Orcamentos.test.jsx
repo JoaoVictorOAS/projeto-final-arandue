@@ -127,13 +127,13 @@ describe('Módulo de Orçamentos', () => {
     expect(screen.getByText(/carregando orçamentos/i)).toBeInTheDocument();
 
     await waitFor(() => {
-      expect(screen.getByText('#0101')).toBeInTheDocument();
-      expect(screen.getByText('#0102')).toBeInTheDocument();
+      expect(screen.getAllByText('#0101').length).toBeGreaterThan(0);
+      expect(screen.getAllByText('#0102').length).toBeGreaterThan(0);
     });
 
     // Clientes
-    expect(screen.getByText('João Silva')).toBeInTheDocument();
-    expect(screen.getByText('Maria Fernandes')).toBeInTheDocument();
+    expect(screen.getAllByText('João Silva').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Maria Fernandes').length).toBeGreaterThan(0);
 
     // Valores formatados BRL (pode aparecer no subtotal e no total)
     expect(screen.getAllByText(/1\.400,00/).length).toBeGreaterThan(0);
@@ -148,10 +148,10 @@ describe('Módulo de Orçamentos', () => {
     renderOrcamentos();
 
     await waitFor(() => {
-      expect(screen.getByLabelText(/ver proposta do orçamento 101/i)).toBeInTheDocument();
+      expect(screen.getAllByLabelText(/ver proposta do orçamento 101/i).length).toBeGreaterThan(0);
     });
 
-    const btnVerProposta = screen.getByLabelText(/ver proposta do orçamento 101/i);
+    const btnVerProposta = screen.getAllByLabelText(/ver proposta do orçamento 101/i)[0];
     fireEvent.click(btnVerProposta);
 
     // Modal de proposta comercial
@@ -233,7 +233,7 @@ describe('Módulo de Orçamentos', () => {
     renderOrcamentos();
 
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: /agendar/i })).toBeInTheDocument();
+      expect(screen.getAllByRole('button', { name: /agendar/i }).length).toBeGreaterThan(0);
     });
   });
 });

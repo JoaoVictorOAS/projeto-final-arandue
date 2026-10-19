@@ -20,6 +20,7 @@ import {
   XCircle,
   Copy,
   Check,
+  CreditCard,
 } from 'lucide-react';
 import api from '../services/api';
 import Modal from '../components/Modal';
@@ -536,9 +537,15 @@ export default function Orcamentos() {
           </button>
         </div>
       ) : (
-        <div className="bg-white rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden">
-          {/* Tabela em telas médias e grandes */}
-          <div className="overflow-x-auto">
+        <div
+          className="bg-white rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden"
+          style={{
+            backgroundColor: 'var(--bg-surface, #ffffff)',
+            borderColor: 'var(--border-color, #e5e7eb)',
+          }}
+        >
+          {/* DESKTOP TABLE VIEW: Exibida em telas médias e grandes (md+) */}
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead className="bg-gray-50/75 border-b border-gray-100 text-xs uppercase text-gray-500 font-semibold tracking-wider">
                 <tr>
@@ -717,6 +724,212 @@ export default function Orcamentos() {
                 })}
               </tbody>
             </table>
+          </div>
+
+          {/* MOBILE CARDS VIEW: Exibida em celulares (< md) */}
+          <div
+            className="block md:hidden divide-y divide-gray-100"
+            style={{ borderColor: 'var(--border-color, #f3f4f6)' }}
+          >
+            {orcamentosFiltrados.map((orc) => {
+              const cliente = getCliente(orc.cliente_id);
+              const nomeCliente = cliente?.nome || orc.cliente_nome || `Cliente #${orc.cliente_id}`;
+              const isUpdating = statusUpdatingId === orc.id;
+
+              return (
+                <div
+                  key={orc.id}
+                  className="p-4 space-y-3.5 transition-colors"
+                  style={{ backgroundColor: 'var(--bg-surface, #ffffff)' }}
+                  data-testid={`orcamento-card-${orc.id}`}
+                >
+                  {/* Topo do Card: Número, Cliente e Status */}
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono font-bold text-theme-primary text-xs shrink-0">
+                          #{String(orc.id).padStart(4, '0')}
+                        </span>
+                        <h4
+                          className="font-semibold text-gray-900 truncate text-sm"
+                          style={{ color: 'var(--text-main, #111827)' }}
+                        >
+                          {nomeCliente}
+                        </h4>
+                      </div>
+                      {cliente?.telefone && (
+                        <span
+                          className="text-xs text-gray-500 block mt-0.5"
+                          style={{ color: 'var(--text-secondary, #6b7280)' }}
+                        >
+                          {cliente.telefone}
+                        </span>
+                      )}
+                    </div>
+                    <div className="shrink-0 flex flex-col items-end gap-1">
+                      <StatusBadge status={orc.status || 'RASCUNHO'} />
+                      {orc.status === 'APROVADO' && (
+                        orc.fluxo?.cobranca ? (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200">
+                            {orc.fluxo.cobranca.status === 'PAGO' ? 'Pago' : 'Cobrado'}
+                          </span>
+                        ) : orc.fluxo?.agendamento ? (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                            Agendado
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                            Aprovado
+                          </span>
+                        )
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Micro-grid de Dados: Total e Datas */}
+                  <div
+                    className="grid grid-cols-2 gap-2.5 p-3 rounded-xl border text-xs"
+                    style={{
+                      backgroundColor: 'var(--bg-surface-hover, #f9fafb)',
+                      borderColor: 'var(--border-color, #f3f4f6)',
+                    }}
+                  >
+                    <div>
+                      <span
+                        className="text-[10px] uppercase font-semibold text-gray-400 tracking-wider block"
+                        style={{ color: 'var(--text-muted, #9ca3af)' }}
+                      >
+                        Valor Total
+                      </span>
+                      <div className="flex items-baseline gap-1 mt-0.5">
+                        <span
+                          className="font-bold text-sm text-gray-900"
+                          style={{ color: 'var(--text-main, #111827)' }}
+                        >
+                          {formatBRL(orc.total)}
+                        </span>
+                        {Number(orc.desconto) > 0 && (
+                          <span className="text-[10px] text-rose-600 font-medium">
+                            (-{formatBRL(orc.desconto)})
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div>
+                      <span
+                        className="text-[10px] uppercase font-semibold text-gray-400 tracking-wider block"
+                        style={{ color: 'var(--text-muted, #9ca3af)' }}
+                      >
+                        Emissão / Validade
+                      </span>
+                      <div
+                        className="text-gray-700 font-medium mt-0.5"
+                        style={{ color: 'var(--text-secondary, #374151)' }}
+                      >
+                        <span>{formatDate(orc.data_emissao)}</span>
+                        <span className="text-[10px] text-gray-400 block font-normal">
+                          Val: {formatDate(orc.validade)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Ações Tácteis Mobile */}
+                  <div className="pt-0.5 flex items-center justify-between gap-2 flex-wrap">
+                    <div className="flex items-center gap-1.5">
+                      {/* Ver Proposta */}
+                      <button
+                        type="button"
+                        onClick={() => handleOpenProposta(orc)}
+                        className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 text-xs font-semibold shadow-xs transition min-h-[40px] cursor-pointer"
+                        title="Visualizar Proposta Comercial"
+                        aria-label={`Ver proposta do orçamento ${orc.id}`}
+                      >
+                        <Eye className="w-4 h-4 text-theme-primary shrink-0" />
+                        <span>Proposta</span>
+                      </button>
+
+                      {/* Compartilhar WhatsApp */}
+                      <button
+                        type="button"
+                        onClick={() => handleCompartilharWhatsApp(orc)}
+                        className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-green-50 text-green-700 hover:bg-green-100 border border-green-200 text-xs font-semibold shadow-xs transition min-h-[40px] cursor-pointer"
+                        title="Compartilhar no WhatsApp"
+                        aria-label={`Compartilhar orçamento ${orc.id} no WhatsApp`}
+                      >
+                        <Share2 className="w-4 h-4 text-green-600 shrink-0" />
+                        <span>WhatsApp</span>
+                      </button>
+                    </div>
+
+                    <div className="flex items-center gap-1.5">
+                      {/* Agendar Atendimento (Aprovado sem agendamento) */}
+                      {orc.status === 'APROVADO' && !orc.fluxo?.agendamento && (
+                        <button
+                          type="button"
+                          onClick={() => navigate(`/agenda?orcamento_id=${orc.id}&cliente_id=${orc.cliente_id}`)}
+                          className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl badge-theme-subtle hover:brightness-95 text-xs font-semibold transition min-h-[40px] cursor-pointer"
+                          title="Agendar Atendimento para este Orçamento"
+                        >
+                          <Calendar className="w-3.5 h-3.5 shrink-0" />
+                          <span>Agendar</span>
+                        </button>
+                      )}
+
+                      {/* Ações de Mudança de Status */}
+                      {orc.status === 'RASCUNHO' && (
+                        <button
+                          type="button"
+                          disabled={isUpdating}
+                          onClick={() => handleUpdateStatus(orc.id, 'ENVIADO')}
+                          className="inline-flex items-center justify-center gap-1 px-3 py-2 rounded-xl bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 text-xs font-semibold transition min-h-[40px] cursor-pointer"
+                          title="Marcar como Enviado"
+                        >
+                          <Send className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                          <span>Enviar</span>
+                        </button>
+                      )}
+
+                      {orc.status === 'ENVIADO' && (
+                        <div className="inline-flex items-center gap-1">
+                          <button
+                            type="button"
+                            disabled={isUpdating}
+                            onClick={() => handleUpdateStatus(orc.id, 'APROVADO')}
+                            className="px-2.5 py-2 rounded-xl bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 text-xs font-semibold transition min-h-[40px] cursor-pointer"
+                            title="Aprovar Orçamento"
+                          >
+                            Aprovar
+                          </button>
+                          <button
+                            type="button"
+                            disabled={isUpdating}
+                            onClick={() => handleUpdateStatus(orc.id, 'RECUSADO')}
+                            className="px-2.5 py-2 rounded-xl bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200 text-xs font-semibold transition min-h-[40px] cursor-pointer"
+                            title="Recusar Orçamento"
+                          >
+                            Recusar
+                          </button>
+                        </div>
+                      )}
+
+                      {(orc.status === 'APROVADO' || orc.status === 'RECUSADO') && (
+                        <button
+                          type="button"
+                          disabled={isUpdating}
+                          onClick={() => handleUpdateStatus(orc.id, 'RASCUNHO')}
+                          className="px-2.5 py-2 rounded-xl text-gray-500 hover:bg-gray-100 text-xs font-medium transition min-h-[40px] cursor-pointer"
+                          title="Reabrir como Rascunho"
+                        >
+                          Reabrir
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}
@@ -1092,46 +1305,80 @@ export default function Orcamentos() {
               );
             })()}
 
-            {/* Tabela de Itens da Proposta */}
+            {/* Tabela / Cards de Itens da Proposta */}
             <div className="border border-gray-200 rounded-xl overflow-hidden">
-              <table className="w-full text-left text-sm">
-                <thead className="bg-gray-100/75 text-xs uppercase font-semibold text-gray-600">
-                  <tr>
-                    <th className="px-4 py-3">#</th>
-                    <th className="px-4 py-3">Item / Serviço</th>
-                    <th className="px-4 py-3 text-center">Qtd</th>
-                    <th className="px-4 py-3 text-right">Preço Unit.</th>
-                    <th className="px-4 py-3 text-right">Subtotal</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                  {selectedOrcamento.itens && selectedOrcamento.itens.length > 0 ? (
-                    selectedOrcamento.itens.map((it, idx) => {
-                      const desc = it.descricao || it.servico_nome || `Item ${idx + 1}`;
-                      const sub = it.subtotal || (Number(it.quantidade) || 1) * (Number(it.preco_unitario) || 0);
-                      return (
-                        <tr key={it.id || idx}>
-                          <td className="px-4 py-3 text-gray-400 font-mono text-xs">{idx + 1}</td>
-                          <td className="px-4 py-3 font-medium text-gray-900">{desc}</td>
-                          <td className="px-4 py-3 text-center font-mono">{it.quantidade}</td>
-                          <td className="px-4 py-3 text-right font-mono text-gray-700">
-                            {formatBRL(it.preco_unitario)}
-                          </td>
-                          <td className="px-4 py-3 text-right font-mono font-semibold text-gray-900">
-                            {formatBRL(sub)}
-                          </td>
-                        </tr>
-                      );
-                    })
-                  ) : (
+              {/* Desktop Table */}
+              <div className="hidden sm:block overflow-x-auto">
+                <table className="w-full text-left text-sm">
+                  <thead className="bg-gray-100/75 text-xs uppercase font-semibold text-gray-600">
                     <tr>
-                      <td colSpan="5" className="px-4 py-4 text-center text-gray-500 italic">
-                        Itens consolidados na proposta.
-                      </td>
+                      <th className="px-4 py-3">#</th>
+                      <th className="px-4 py-3">Item / Serviço</th>
+                      <th className="px-4 py-3 text-center">Qtd</th>
+                      <th className="px-4 py-3 text-right">Preço Unit.</th>
+                      <th className="px-4 py-3 text-right">Subtotal</th>
                     </tr>
-                  )}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {selectedOrcamento.itens && selectedOrcamento.itens.length > 0 ? (
+                      selectedOrcamento.itens.map((it, idx) => {
+                        const desc = it.descricao || it.servico_nome || `Item ${idx + 1}`;
+                        const sub = it.subtotal || (Number(it.quantidade) || 1) * (Number(it.preco_unitario) || 0);
+                        return (
+                          <tr key={it.id || idx}>
+                            <td className="px-4 py-3 text-gray-400 font-mono text-xs">{idx + 1}</td>
+                            <td className="px-4 py-3 font-medium text-gray-900">{desc}</td>
+                            <td className="px-4 py-3 text-center font-mono">{it.quantidade}</td>
+                            <td className="px-4 py-3 text-right font-mono text-gray-700">
+                              {formatBRL(it.preco_unitario)}
+                            </td>
+                            <td className="px-4 py-3 text-right font-mono font-semibold text-gray-900">
+                              {formatBRL(sub)}
+                            </td>
+                          </tr>
+                        );
+                      })
+                    ) : (
+                      <tr>
+                        <td colSpan="5" className="px-4 py-4 text-center text-gray-500 italic">
+                          Itens consolidados na proposta.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile Cards */}
+              <div className="block sm:hidden divide-y divide-gray-100">
+                {selectedOrcamento.itens && selectedOrcamento.itens.length > 0 ? (
+                  selectedOrcamento.itens.map((it, idx) => {
+                    const desc = it.descricao || it.servico_nome || `Item ${idx + 1}`;
+                    const sub = it.subtotal || (Number(it.quantidade) || 1) * (Number(it.preco_unitario) || 0);
+                    return (
+                      <div key={it.id || idx} className="p-3.5 space-y-1.5">
+                        <div className="flex items-start justify-between gap-2">
+                          <span className="font-medium text-sm text-gray-900 leading-snug">
+                            <span className="text-gray-400 font-mono text-xs mr-1">#{idx + 1}</span>
+                            {desc}
+                          </span>
+                          <span className="font-bold text-sm font-mono text-gray-900 shrink-0">
+                            {formatBRL(sub)}
+                          </span>
+                        </div>
+                        <div className="text-xs text-gray-500 font-mono flex items-center justify-between">
+                          <span>Qtd: {it.quantidade}</span>
+                          <span>Unit: {formatBRL(it.preco_unitario)}</span>
+                        </div>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div className="p-4 text-center text-gray-500 italic text-sm">
+                    Itens consolidados na proposta.
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Totais e Observações */}

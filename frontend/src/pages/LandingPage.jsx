@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { applyThemeToDOM, TEMA_COFFEE_LANDING } from '../context/ThemeContext';
 import {
   CartoonEyes,
   OwlMascotDoodle,
@@ -13,9 +14,32 @@ import {
   SketchSparkle,
   SketchStickerBadge,
 } from '../components/SketchDoodles';
+import {
+  ModulosSection,
+  FluxoIntegradoSection,
+  AssistenteSection,
+  AtendenteSection,
+  TemasSegurancaSection,
+  FaqSection,
+} from './LandingSections';
 
 export default function LandingPage() {
   const { estaAutenticado } = useAuth();
+
+  // Isola a landing do tema do usuário: força o tema "coffee" (Âmbar & Café) e restaura ao sair
+  useEffect(() => {
+    applyThemeToDOM(TEMA_COFFEE_LANDING);
+    return () => {
+      let anterior = null;
+      try {
+        const cached = window.localStorage.getItem('arandue_tema_ativo');
+        if (cached) anterior = JSON.parse(cached);
+      } catch {
+        anterior = null;
+      }
+      applyThemeToDOM(anterior || undefined);
+    };
+  }, []);
 
   return (
     <div
@@ -25,7 +49,7 @@ export default function LandingPage() {
         color: 'var(--text-main, #18181b)',
       }}
     >
-      <div className="max-w-[1720px] 2xl:max-w-[1920px] w-full mx-auto px-4 sm:px-8 py-8">
+      <div className="max-w-6xl 2xl:max-w-7xl w-full mx-auto px-4 sm:px-8 py-8">
         {/* 1. Header Editorial Sketch */}
         <header className="flex flex-wrap items-center justify-between gap-4 pb-6 border-b-2 border-dashed border-current/30">
           <div className="flex items-center gap-3">
@@ -78,13 +102,21 @@ export default function LandingPage() {
         </header>
 
         {/* 3. Hero Section (Referência PKLS) */}
-        <section className="mt-10 text-center relative">
-          <div className="inline-flex items-center gap-2 font-hand text-2xl font-bold bg-amber-200 text-zinc-900 px-4 py-1 rounded-full border-2 border-zinc-900 -rotate-2 shadow-[3px_3px_0px_#18181b] mb-6">
+        <section className="mt-14 text-center relative">
+          <div className="inline-flex items-center gap-2 font-hand text-2xl font-bold bg-amber-200 text-zinc-900 px-4 py-1 rounded-full border-2 border-zinc-900 -rotate-2 shadow-[3px_3px_0px_#18181b] mb-8">
             <span>✨ Chega de planilha cinza e sistema sem graça!</span>
           </div>
 
+          {/* Monumental Display Heading — o nome é o foco logo no início */}
+          <h1 className="font-display font-extrabold text-6xl sm:text-8xl md:text-9xl tracking-tighter leading-none select-none">
+            ARANDUÊ
+          </h1>
+          <div className="flex justify-center mt-3">
+            <SketchUnderline className="w-56 h-4 text-amber-500" />
+          </div>
+
           {/* 5 Personagens em Linha com Olhos Cartoon */}
-          <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 items-end max-w-5xl mx-auto py-4">
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-x-8 gap-y-10 items-end max-w-6xl mx-auto mt-16 py-4">
             {/* 1. Coruja Aranduê */}
             <div className="flex flex-col items-center group">
               <OwlMascotDoodle
@@ -119,20 +151,9 @@ export default function LandingPage() {
             </div>
           </div>
 
-          {/* Faixa tripla de subtítulos */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs sm:text-sm font-extrabold uppercase tracking-wider mt-6 pt-4 border-t-2 border-current/20">
-            <div className="sm:text-left">CONTROLE TOTAL DO SEU CAIXA E ESTOQUE</div>
-            <div className="text-center">COPILOTO & ATENDENTE IA PARA MEI</div>
-            <div className="sm:text-right">FEITO PARA SEU NEGÓCIO CRESCER</div>
-          </div>
-
-          {/* Monumental Display Heading */}
-          <h1 className="font-display font-extrabold text-6xl sm:text-8xl md:text-9xl tracking-tighter leading-none mt-2 select-none">
-            ARANDUÊ
-          </h1>
 
           {/* CTA Principal */}
-          <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
+          <div className="mt-14 flex flex-wrap items-center justify-center gap-4">
             <Link
               to="/register"
               className="sketch-btn px-6 py-3 rounded-2xl font-display font-bold text-base sm:text-lg bg-lime-300 dark:bg-lime-400 text-zinc-900 -rotate-1 hover:rotate-0 flex items-center gap-2"
@@ -155,7 +176,7 @@ export default function LandingPage() {
         </section>
 
         {/* 4. Seção "Ordem Primeiro, Caos Depois" (Referência Dzaglik + Cadeira de Praia PKLS) */}
-        <section id="como-funciona" className="mt-24 relative">
+        <section id="como-funciona" className="mt-32 relative">
           <div className="text-center max-w-3xl mx-auto mb-12">
             <span className="font-hand text-2xl font-bold text-indigo-600 dark:text-indigo-400 block -rotate-1">
               ↓ Esqueça as grades rígidas e planilhas complicadas
@@ -172,9 +193,9 @@ export default function LandingPage() {
           </div>
 
           {/* Grid Espalhado (4 Cards Assimétricos ao redor da Ilustração Central) */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
             {/* Coluna Esquerda */}
-            <div className="lg:col-span-4 space-y-8">
+            <div className="lg:col-span-4 space-y-12">
               <div
                 className="sketch-card sketch-tape p-6 relative transform -rotate-2"
                 style={{
@@ -244,7 +265,7 @@ export default function LandingPage() {
             </div>
 
             {/* Coluna Direita */}
-            <div className="lg:col-span-4 space-y-8">
+            <div className="lg:col-span-4 space-y-12">
               <div
                 className="sketch-card sketch-tape p-6 relative transform rotate-1 lg:-translate-x-2"
                 style={{
@@ -300,8 +321,16 @@ export default function LandingPage() {
           </div>
         </section>
 
+        {/* Seções informativas: módulos, fluxo integrado, copiloto IA, atendente, temas/segurança e FAQ */}
+        <ModulosSection />
+        <FluxoIntegradoSection />
+        <AssistenteSection />
+        <AtendenteSection />
+        <TemasSegurancaSection />
+        <FaqSection />
+
         {/* 5. Seção Anéis Tracejados & Manifesto (Referência PKLS) */}
-        <section id="manifesto" className="mt-24 py-10 relative overflow-hidden">
+        <section id="manifesto" className="mt-32 py-10 relative overflow-hidden">
           <div id="superpoderes" className="max-w-4xl mx-auto relative px-4">
             {/* Elipse Superior */}
             <div className="border-2 border-dashed border-current rounded-[100%] py-8 px-6 text-center">

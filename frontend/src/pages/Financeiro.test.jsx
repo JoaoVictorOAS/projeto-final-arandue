@@ -321,8 +321,8 @@ describe('Módulo Financeiro - Cobranças e Livro Caixa', () => {
 
       // Aguarda extrato
       await waitFor(() => {
-        expect(screen.getByText(/baixa recebimento cobrança #0102/i)).toBeInTheDocument();
-        expect(screen.getByText(/pagamento da guia mensal das mei/i)).toBeInTheDocument();
+        expect(screen.getAllByText(/baixa recebimento cobrança #0102/i).length).toBeGreaterThan(0);
+        expect(screen.getAllByText(/pagamento da guia mensal das mei/i).length).toBeGreaterThan(0);
       });
 
       // Cards superiores de resumo:
@@ -334,8 +334,8 @@ describe('Módulo Financeiro - Cobranças e Livro Caixa', () => {
       expect(screen.getAllByText(/375,00/).length).toBeGreaterThan(0);
 
       // Linhas do extrato com badges
-      expect(screen.getByText(/Recebimento de Cliente/i)).toBeInTheDocument();
-      expect(screen.getByText(/DAS-MEI/i)).toBeInTheDocument();
+      expect(screen.getAllByText(/Recebimento de Cliente/i).length).toBeGreaterThan(0);
+      expect(screen.getAllByText(/DAS-MEI/i).length).toBeGreaterThan(0);
     });
 
     test('deve exibir tag de rastreabilidade completa de origem no livro caixa', async () => {
@@ -346,8 +346,8 @@ describe('Módulo Financeiro - Cobranças e Livro Caixa', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByText(/origem: cobrança #0102/i)).toBeInTheDocument();
-        expect(screen.getByText(/\(agendamento #50\)/i)).toBeInTheDocument();
+        expect(screen.getAllByText(/origem: cobrança #0102/i).length).toBeGreaterThan(0);
+        expect(screen.getAllByText(/\(agendamento #50\)/i).length).toBeGreaterThan(0);
       });
     });
 

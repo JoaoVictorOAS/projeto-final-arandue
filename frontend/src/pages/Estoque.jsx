@@ -873,41 +873,93 @@ export default function Estoque() {
                 </button>
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-sm">
-                  <thead className="bg-gray-50 text-gray-600 uppercase text-xs font-semibold border-b border-gray-200">
-                    <tr>
-                      <th className="px-6 py-3.5">Insumo / Matéria-Prima</th>
-                      <th className="px-6 py-3.5">Saldo Atual</th>
-                      <th className="px-6 py-3.5">Estoque Mínimo</th>
-                      <th className="px-6 py-3.5">Custo Médio Ponderado</th>
-                      <th className="px-6 py-3.5">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-100">
-                    {insumos.map((insumo) => {
-                      const saldo = Number(insumo.quantidade_atual);
-                      const minimo = Number(insumo.estoque_minimo);
-                      const isAbaixo = saldo <= minimo;
+              <>
+                {/* DESKTOP TABLE VIEW: Exibida em telas médias e grandes (md+) */}
+                <div className="hidden md:block overflow-x-auto">
+                  <table className="w-full text-left text-sm">
+                    <thead className="bg-gray-50 text-gray-600 uppercase text-xs font-semibold border-b border-gray-200">
+                      <tr>
+                        <th className="px-6 py-3.5">Insumo / Matéria-Prima</th>
+                        <th className="px-6 py-3.5">Saldo Atual</th>
+                        <th className="px-6 py-3.5">Estoque Mínimo</th>
+                        <th className="px-6 py-3.5">Custo Médio Ponderado</th>
+                        <th className="px-6 py-3.5">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                      {insumos.map((insumo) => {
+                        const saldo = Number(insumo.quantidade_atual);
+                        const minimo = Number(insumo.estoque_minimo);
+                        const isAbaixo = saldo <= minimo;
 
-                      return (
-                        <tr key={insumo.id} className="hover:bg-gray-50/80 transition-colors">
-                          <td className="px-6 py-4 font-semibold text-gray-900">
-                            {insumo.nome}
-                            <span className="ml-2 text-xs text-gray-400 font-normal">
-                              ({insumo.unidade_base})
+                        return (
+                          <tr key={insumo.id} className="hover:bg-gray-50/80 transition-colors">
+                            <td className="px-6 py-4 font-semibold text-gray-900">
+                              {insumo.nome}
+                              <span className="ml-2 text-xs text-gray-400 font-normal">
+                                ({insumo.unidade_base})
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 font-bold text-gray-800">
+                              {formatQuantity(insumo.quantidade_atual, insumo.unidade_base)}
+                            </td>
+                            <td className="px-6 py-4 text-gray-600">
+                              {formatQuantity(insumo.estoque_minimo, insumo.unidade_base)}
+                            </td>
+                            <td className="px-6 py-4 text-gray-700">
+                              {formatCurrency(insumo.custo_unitario)} / {insumo.unidade_base}
+                            </td>
+                            <td className="px-6 py-4">
+                              {isAbaixo ? (
+                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+                                  <AlertTriangle className="w-3.5 h-3.5" />
+                                  Repor Estoque
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                  <CheckCircle2 className="w-3.5 h-3.5" />
+                                  Suficiente
+                                </span>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* MOBILE CARDS VIEW: Exibida em celulares (< md) */}
+                <div
+                  className="block md:hidden divide-y divide-gray-100"
+                  style={{ borderColor: 'var(--border-color, #f3f4f6)' }}
+                >
+                  {insumos.map((insumo) => {
+                    const saldo = Number(insumo.quantidade_atual);
+                    const minimo = Number(insumo.estoque_minimo);
+                    const isAbaixo = saldo <= minimo;
+
+                    return (
+                      <div
+                        key={insumo.id}
+                        className="p-4 space-y-3.5 transition-colors"
+                        style={{ backgroundColor: 'var(--bg-surface, #ffffff)' }}
+                        data-testid={`insumo-card-${insumo.id}`}
+                      >
+                        {/* Topo do Card: Nome e Status */}
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <h4
+                              className="font-semibold text-gray-900 text-sm"
+                              style={{ color: 'var(--text-main, #111827)' }}
+                            >
+                              {insumo.nome}
+                            </h4>
+                            <span className="text-xs text-gray-400 font-normal">
+                              Unidade: {insumo.unidade_base}
                             </span>
-                          </td>
-                          <td className="px-6 py-4 font-bold text-gray-800">
-                            {formatQuantity(insumo.quantidade_atual, insumo.unidade_base)}
-                          </td>
-                          <td className="px-6 py-4 text-gray-600">
-                            {formatQuantity(insumo.estoque_minimo, insumo.unidade_base)}
-                          </td>
-                          <td className="px-6 py-4 text-gray-700">
-                            {formatCurrency(insumo.custo_unitario)} / {insumo.unidade_base}
-                          </td>
-                          <td className="px-6 py-4">
+                          </div>
+                          <div>
                             {isAbaixo ? (
                               <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">
                                 <AlertTriangle className="w-3.5 h-3.5" />
@@ -919,13 +971,70 @@ export default function Estoque() {
                                 Suficiente
                               </span>
                             )}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
+                          </div>
+                        </div>
+
+                        {/* Micro-grid de Dados: Saldo, Mínimo e Custo */}
+                        <div
+                          className="grid grid-cols-2 gap-2.5 p-3 rounded-xl border text-xs"
+                          style={{
+                            backgroundColor: 'var(--bg-surface-hover, #f9fafb)',
+                            borderColor: 'var(--border-color, #f3f4f6)',
+                          }}
+                        >
+                          <div>
+                            <span
+                              className="text-[10px] uppercase font-semibold text-gray-400 tracking-wider block"
+                              style={{ color: 'var(--text-muted, #9ca3af)' }}
+                            >
+                              Saldo Atual
+                            </span>
+                            <span
+                              className="font-bold text-sm text-gray-900 mt-0.5 block"
+                              style={{ color: 'var(--text-main, #111827)' }}
+                            >
+                              {formatQuantity(insumo.quantidade_atual, insumo.unidade_base)}
+                            </span>
+                          </div>
+
+                          <div>
+                            <span
+                              className="text-[10px] uppercase font-semibold text-gray-400 tracking-wider block"
+                              style={{ color: 'var(--text-muted, #9ca3af)' }}
+                            >
+                              Estoque Mínimo
+                            </span>
+                            <span
+                              className="font-medium text-gray-700 mt-0.5 block"
+                              style={{ color: 'var(--text-secondary, #374151)' }}
+                            >
+                              {formatQuantity(insumo.estoque_minimo, insumo.unidade_base)}
+                            </span>
+                          </div>
+
+                          <div
+                            className="col-span-2 pt-2 border-t flex items-center justify-between"
+                            style={{ borderColor: 'var(--border-color, #e5e7eb)' }}
+                          >
+                            <span
+                              className="text-[10px] uppercase font-semibold text-gray-400 tracking-wider"
+                              style={{ color: 'var(--text-muted, #9ca3af)' }}
+                            >
+                              Custo Médio Ponderado
+                            </span>
+                            <span
+                              className="font-semibold text-xs text-gray-800"
+                              style={{ color: 'var(--text-main, #111827)' }}
+                            >
+                              {formatCurrency(insumo.custo_unitario)} / {insumo.unidade_base}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
             )}
           </div>
         </div>
@@ -1007,39 +1116,66 @@ export default function Estoque() {
                     </button>
                   </div>
                 ) : (
-                  <div className="overflow-x-auto border border-gray-200 rounded-lg">
-                    <table className="w-full text-left text-sm">
-                      <thead className="bg-gray-50 text-gray-600 uppercase text-xs font-semibold">
-                        <tr>
-                          <th className="px-4 py-3">Insumo</th>
-                          <th className="px-4 py-3">Quantidade por Unidade de Produto</th>
-                          <th className="px-4 py-3">Custo Unitário</th>
-                          <th className="px-4 py-3">Custo Parcial</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-gray-100">
-                        {fichaAtual.ingredientes.map((ing) => {
-                          const parcial =
-                            Number(ing.quantidade_necessaria) * Number(ing.custo_unitario);
-                          return (
-                            <tr key={ing.id || ing.insumo_id}>
-                              <td className="px-4 py-3 font-medium text-gray-900">
+                  <div className="border border-gray-200 rounded-lg overflow-hidden">
+                    {/* Visualização Tabela para Telas Médias e Grandes */}
+                    <div className="hidden md:block overflow-x-auto">
+                      <table className="w-full text-left text-sm">
+                        <thead className="bg-gray-50 text-gray-600 uppercase text-xs font-semibold">
+                          <tr>
+                            <th className="px-4 py-3">Insumo</th>
+                            <th className="px-4 py-3">Quantidade por Unidade de Produto</th>
+                            <th className="px-4 py-3">Custo Unitário</th>
+                            <th className="px-4 py-3">Custo Parcial</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-100">
+                          {fichaAtual.ingredientes.map((ing) => {
+                            const parcial =
+                              Number(ing.quantidade_necessaria) * Number(ing.custo_unitario);
+                            return (
+                              <tr key={ing.id || ing.insumo_id}>
+                                <td className="px-4 py-3 font-medium text-gray-900">
+                                  {ing.nome_insumo}
+                                </td>
+                                <td className="px-4 py-3 text-gray-700">
+                                  {formatQuantity(ing.quantidade_necessaria, ing.unidade_base)}
+                                </td>
+                                <td className="px-4 py-3 text-gray-600">
+                                  {formatCurrency(ing.custo_unitario)} / {ing.unidade_base}
+                                </td>
+                                <td className="px-4 py-3 font-semibold text-gray-900">
+                                  {formatCurrency(parcial)}
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {/* Visualização em Cards para Mobile */}
+                    <div className="block md:hidden divide-y divide-gray-100">
+                      {fichaAtual.ingredientes.map((ing) => {
+                        const parcial =
+                          Number(ing.quantidade_necessaria) * Number(ing.custo_unitario);
+                        return (
+                          <div key={ing.id || ing.insumo_id} className="p-3.5 space-y-2">
+                            <div className="flex items-center justify-between gap-2">
+                              <h5 className="font-semibold text-sm text-gray-900">
                                 {ing.nome_insumo}
-                              </td>
-                              <td className="px-4 py-3 text-gray-700">
-                                {formatQuantity(ing.quantidade_necessaria, ing.unidade_base)}
-                              </td>
-                              <td className="px-4 py-3 text-gray-600">
-                                {formatCurrency(ing.custo_unitario)} / {ing.unidade_base}
-                              </td>
-                              <td className="px-4 py-3 font-semibold text-gray-900">
+                              </h5>
+                              <span className="font-bold text-sm text-theme-primary">
                                 {formatCurrency(parcial)}
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
+                              </span>
+                            </div>
+                            <div className="flex items-center justify-between text-xs text-gray-600 pt-1 border-t border-gray-50">
+                              <span>Qtd: <strong className="text-gray-800">{formatQuantity(ing.quantidade_necessaria, ing.unidade_base)}</strong></span>
+                              <span>Unit.: <strong className="text-gray-800">{formatCurrency(ing.custo_unitario)}/{ing.unidade_base}</strong></span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
                 )}
               </div>
@@ -1177,51 +1313,142 @@ export default function Estoque() {
               <p className="text-sm">Nenhuma movimentação registrada até o momento.</p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm">
-                <thead className="bg-gray-50 text-gray-600 uppercase text-xs font-semibold border-b border-gray-200">
-                  <tr>
-                    <th className="px-6 py-3">Data / Hora</th>
-                    <th className="px-6 py-3">Insumo</th>
-                    <th className="px-6 py-3">Tipo</th>
-                    <th className="px-6 py-3">Quantidade</th>
-                    <th className="px-6 py-3">Saldo Resultante</th>
-                    <th className="px-6 py-3">Motivo / Documento</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                  {movimentacoes.map((m) => {
-                    const isEntrada = m.tipo === 'ENTRADA' || m.tipo === 'ESTORNO';
-                    return (
-                      <tr key={m.id} className="hover:bg-gray-50/80">
-                        <td className="px-6 py-3.5 text-gray-500">{formatDate(m.criado_em)}</td>
-                        <td className="px-6 py-3.5 font-semibold text-gray-900">
-                          {m.nome_insumo || `Insumo #${m.insumo_id}`}
-                        </td>
-                        <td className="px-6 py-3.5">
+            <>
+              {/* DESKTOP TABLE VIEW: Exibida em telas médias e grandes (md+) */}
+              <div className="hidden md:block overflow-x-auto">
+                <table className="w-full text-left text-sm">
+                  <thead className="bg-gray-50 text-gray-600 uppercase text-xs font-semibold border-b border-gray-200">
+                    <tr>
+                      <th className="px-6 py-3">Data / Hora</th>
+                      <th className="px-6 py-3">Insumo</th>
+                      <th className="px-6 py-3">Tipo</th>
+                      <th className="px-6 py-3">Quantidade</th>
+                      <th className="px-6 py-3">Saldo Resultante</th>
+                      <th className="px-6 py-3">Motivo / Documento</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {movimentacoes.map((m) => {
+                      const isEntrada = m.tipo === 'ENTRADA' || m.tipo === 'ESTORNO';
+                      return (
+                        <tr key={m.id} className="hover:bg-gray-50/80">
+                          <td className="px-6 py-3.5 text-gray-500">{formatDate(m.criado_em)}</td>
+                          <td className="px-6 py-3.5 font-semibold text-gray-900">
+                            {m.nome_insumo || `Insumo #${m.insumo_id}`}
+                          </td>
+                          <td className="px-6 py-3.5">
+                            <span
+                              className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold ${
+                                isEntrada ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'
+                              }`}
+                            >
+                              {m.tipo}
+                            </span>
+                          </td>
+                          <td className={`px-6 py-3.5 font-bold ${isEntrada ? 'text-emerald-600' : 'text-red-600'}`}>
+                            {isEntrada ? '+' : '-'} {formatQuantity(m.quantidade, m.unidade_base)}
+                          </td>
+                          <td className="px-6 py-3.5 text-gray-700 font-medium">
+                            {formatQuantity(m.saldo_apos, m.unidade_base)}
+                          </td>
+                          <td className="px-6 py-3.5 text-xs text-gray-500 truncate max-w-xs">
+                            {m.motivo || '—'}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* MOBILE CARDS VIEW: Exibida em celulares (< md) */}
+              <div
+                className="block md:hidden divide-y divide-gray-100"
+                style={{ borderColor: 'var(--border-color, #f3f4f6)' }}
+              >
+                {movimentacoes.map((m) => {
+                  const isEntrada = m.tipo === 'ENTRADA' || m.tipo === 'ESTORNO';
+                  return (
+                    <div
+                      key={m.id}
+                      className="p-4 space-y-3 transition-colors"
+                      style={{ backgroundColor: 'var(--bg-surface, #ffffff)' }}
+                      data-testid={`mov-estoque-card-${m.id}`}
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <h4
+                            className="font-semibold text-gray-900 text-sm"
+                            style={{ color: 'var(--text-main, #111827)' }}
+                          >
+                            {m.nome_insumo || `Insumo #${m.insumo_id}`}
+                          </h4>
+                          <span className="text-xs text-gray-400 block mt-0.5">
+                            {formatDate(m.criado_em)}
+                          </span>
+                        </div>
+                        <span
+                          className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold ${
+                            isEntrada ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'
+                          }`}
+                        >
+                          {m.tipo}
+                        </span>
+                      </div>
+
+                      <div
+                        className="grid grid-cols-2 gap-2.5 p-3 rounded-xl border text-xs"
+                        style={{
+                          backgroundColor: 'var(--bg-surface-hover, #f9fafb)',
+                          borderColor: 'var(--border-color, #f3f4f6)',
+                        }}
+                      >
+                        <div>
                           <span
-                            className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold ${
-                              isEntrada ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'
+                            className="text-[10px] uppercase font-semibold text-gray-400 tracking-wider block"
+                            style={{ color: 'var(--text-muted, #9ca3af)' }}
+                          >
+                            Quantidade
+                          </span>
+                          <span
+                            className={`font-bold text-sm block mt-0.5 ${
+                              isEntrada ? 'text-emerald-600' : 'text-red-600'
                             }`}
                           >
-                            {m.tipo}
+                            {isEntrada ? '+' : '-'}
+                            {formatQuantity(m.quantidade, m.unidade_base)}
                           </span>
-                        </td>
-                        <td className={`px-6 py-3.5 font-bold ${isEntrada ? 'text-emerald-600' : 'text-red-600'}`}>
-                          {isEntrada ? '+' : '-'} {formatQuantity(m.quantidade, m.unidade_base)}
-                        </td>
-                        <td className="px-6 py-3.5 text-gray-700 font-medium">
-                          {formatQuantity(m.saldo_apos, m.unidade_base)}
-                        </td>
-                        <td className="px-6 py-3.5 text-xs text-gray-500 truncate max-w-xs">
-                          {m.motivo || '—'}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+                        </div>
+
+                        <div>
+                          <span
+                            className="text-[10px] uppercase font-semibold text-gray-400 tracking-wider block"
+                            style={{ color: 'var(--text-muted, #9ca3af)' }}
+                          >
+                            Saldo Resultante
+                          </span>
+                          <span
+                            className="font-medium text-gray-800 block mt-0.5"
+                            style={{ color: 'var(--text-secondary, #374151)' }}
+                          >
+                            {formatQuantity(m.saldo_apos, m.unidade_base)}
+                          </span>
+                        </div>
+
+                        {m.motivo && (
+                          <div
+                            className="col-span-2 pt-2 border-t text-[11px] text-gray-500 italic"
+                            style={{ borderColor: 'var(--border-color, #e5e7eb)' }}
+                          >
+                            Motivo: {m.motivo}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </>
           )}
         </div>
       )}

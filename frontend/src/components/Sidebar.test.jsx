@@ -87,4 +87,28 @@ describe('Sidebar - Ícones Laterais e Efeito Hover Web', () => {
     });
     expect(setIsOpenMock).toHaveBeenCalledWith(false);
   });
+
+  it('deve renderizar o gatinho decorativo encostado na borda direita no rodapé da sidebar', () => {
+    const { container } = renderSidebar('/', true);
+
+    const mascotBadges = container.querySelectorAll('[data-testid="sidebar-mascot-cat"]');
+    expect(mascotBadges.length).toBe(2); // desktop and mobile
+    mascotBadges.forEach((badge) => {
+      const catSvg = badge.querySelector('svg');
+      expect(catSvg).not.toBeNull();
+      expect(catSvg.getAttribute('aria-label')).toBe('Gatinho decorativo encostado na borda');
+    });
+  });
+
+  it('deve manter o atalho de vitrine mas não exibir dados de perfil ou logout duplicado no rodapé', () => {
+    renderSidebar('/', true);
+
+    // O atalho de vitrine deve existir
+    expect(screen.getAllByText('Página Inicial / Vitrine').length).toBeGreaterThan(0);
+
+    // Mas os dados de logout e perfil redundante devem estar removidos da sidebar
+    expect(screen.queryByText('admin@mei.com')).toBeNull();
+    expect(screen.queryByLabelText('Sair da conta')).toBeNull();
+  });
 });
+

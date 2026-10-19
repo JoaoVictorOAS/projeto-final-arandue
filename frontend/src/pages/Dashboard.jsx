@@ -889,9 +889,10 @@ export default function Dashboard() {
         <div>
           <div className="flex items-center gap-2.5">
             <h1
-              className="text-2xl sm:text-3xl font-bold tracking-tight"
+              className="text-2xl sm:text-3xl font-bold tracking-tight flex items-center gap-2"
               style={{ color: 'var(--text-main)' }}
             >
+              <LayoutDashboard className="w-7 h-7 text-theme-primary" />
               Visão Geral
             </h1>
           </div>

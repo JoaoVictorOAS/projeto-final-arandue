@@ -174,3 +174,8 @@ Todo novo componente ou elemento de UI deve consumir diretamente as CSS Custom P
 
 
 
+
+### 8.4 Exceções: Landing Page e Login (Isolados do Tema do Usuário)
+- A **Landing Page** (`LandingPage.jsx`), assim como o **Login**, **NÃO segue** o tema dinâmico escolhido pelo usuário.
+- A Landing é fixada no tema **coffee** (`ambar-cafe` — Âmbar & Café), aplicado via `applyThemeToDOM(TEMA_COFFEE_LANDING)` (exportado de `ThemeContext.jsx`) ao montar, restaurando o tema em cache (`arandue_tema_ativo`) ao desmontar.
+- O Login permanece forçado em modo claro. Ao alterar essas telas, não vincule cores ao tema ativo do usuário.

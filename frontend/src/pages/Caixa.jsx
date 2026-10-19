@@ -535,7 +535,8 @@ export default function Caixa() {
             </span>
           </div>
 
-          <div className="overflow-x-auto">
+          {/* DESKTOP TABLE VIEW: Exibida em telas médias e grandes (md+) */}
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-gray-50/80 border-b border-gray-200 text-xs font-semibold text-gray-500 uppercase tracking-wider">
@@ -607,6 +608,109 @@ export default function Caixa() {
                 })}
               </tbody>
             </table>
+          </div>
+
+          {/* MOBILE CARDS VIEW: Exibida em celulares (< md) */}
+          <div
+            className="block md:hidden divide-y divide-gray-100"
+            style={{ borderColor: 'var(--border-color, #f3f4f6)' }}
+          >
+            {movimentacoesFiltradas.map((item) => {
+              const tipo = (item.tipo || 'ENTRADA').toUpperCase();
+              const isEntrada = tipo === 'ENTRADA';
+              const dataFmt = formatDate(item.data_movimentacao || item.data);
+
+              return (
+                <div
+                  key={item.id}
+                  className="p-4 space-y-3 transition-colors"
+                  style={{ backgroundColor: 'var(--bg-surface, #ffffff)' }}
+                  data-testid={`movimentacao-card-${item.id}`}
+                >
+                  {/* Topo do Card: Descrição + Tipo */}
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0 flex-1">
+                      <span
+                        className="font-semibold text-gray-900 block text-sm leading-snug"
+                        style={{ color: 'var(--text-main, #111827)' }}
+                      >
+                        {item.descricao}
+                      </span>
+                      {item.cobranca_id && (
+                        <span className="text-xs text-theme-primary font-medium inline-flex items-center gap-1 mt-1 flex-wrap">
+                          Origem: Cobrança #{String(item.cobranca_id).padStart(4, '0')}
+                          {item.agendamento_id && ` (Agendamento #${item.agendamento_id})`}
+                          {item.orcamento_id && ` [Orçamento #${item.orcamento_id}]`}
+                        </span>
+                      )}
+                    </div>
+                    <div className="shrink-0">
+                      <StatusBadge status={tipo} />
+                    </div>
+                  </div>
+
+                  {/* Micro-grid de Dados: Data, Categoria e Valor */}
+                  <div
+                    className="grid grid-cols-2 gap-2.5 p-3 rounded-xl border text-xs"
+                    style={{
+                      backgroundColor: 'var(--bg-surface-hover, #f9fafb)',
+                      borderColor: 'var(--border-color, #f3f4f6)',
+                    }}
+                  >
+                    <div>
+                      <span
+                        className="text-[10px] uppercase font-semibold text-gray-400 tracking-wider block"
+                        style={{ color: 'var(--text-muted, #9ca3af)' }}
+                      >
+                        Data
+                      </span>
+                      <div
+                        className="flex items-center gap-1.5 mt-0.5 font-medium"
+                        style={{ color: 'var(--text-secondary, #374151)' }}
+                      >
+                        <Calendar className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                        <span>{dataFmt}</span>
+                      </div>
+                    </div>
+
+                    <div>
+                      <span
+                        className="text-[10px] uppercase font-semibold text-gray-400 tracking-wider block"
+                        style={{ color: 'var(--text-muted, #9ca3af)' }}
+                      >
+                        Categoria
+                      </span>
+                      <span
+                        className="inline-flex items-center gap-1 mt-0.5 font-medium"
+                        style={{ color: 'var(--text-secondary, #374151)' }}
+                      >
+                        <Tag className="w-3 h-3 text-gray-400 shrink-0" />
+                        <span className="truncate">{item.categoria || 'Geral'}</span>
+                      </span>
+                    </div>
+
+                    <div
+                      className="col-span-2 pt-2 border-t flex items-center justify-between"
+                      style={{ borderColor: 'var(--border-color, #e5e7eb)' }}
+                    >
+                      <span
+                        className="text-[10px] uppercase font-semibold text-gray-400 tracking-wider"
+                        style={{ color: 'var(--text-muted, #9ca3af)' }}
+                      >
+                        Valor da Operação
+                      </span>
+                      <span
+                        className={`font-bold text-base ${
+                          isEntrada ? 'text-emerald-600' : 'text-rose-600'
+                        }`}
+                      >
+                        {isEntrada ? '+' : '-'} {formatMoney(item.valor)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}

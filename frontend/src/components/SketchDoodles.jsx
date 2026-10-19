@@ -277,6 +277,279 @@ export function OwlMascotDoodle({ className = 'w-28 h-28', variant = 'cool', ...
 }
 
 /**
+ * Mascote Gatinho Aranduê (estilo PKLS com óculos escuros e traço grosso).
+ * Mascote padrão do sistema desenhado à mão.
+ */
+export function CatMascotDoodle({ className = 'w-16 h-16', ...props }) {
+  return (
+    <svg
+      viewBox="0 0 100 100"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={`inline-block select-none overflow-visible ${className}`}
+      aria-label="Mascote Gatinho Aranduê"
+      role="img"
+      {...props}
+    >
+      {/* Silhueta da Cabeça e Orelhas do Gatinho em traço grosso */}
+      <path
+        d="M 22 45 L 18 16 C 17 12, 23 11, 27 15 L 40 28 C 46 25, 54 25, 60 28 L 73 15 C 77 11, 83 12, 82 16 L 78 45 C 84 54, 84 68, 78 78 C 70 90, 30 90, 22 78 C 16 68, 16 54, 22 45 Z"
+        fill="#ffffff"
+        stroke="#18181b"
+        strokeWidth="4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+
+      {/* Orelhas internas */}
+      <path
+        d="M 24 24 L 28 34 M 76 24 L 72 34"
+        stroke="#f59e0b"
+        strokeWidth="3"
+        strokeLinecap="round"
+      />
+
+      {/* Óculos Escuros Estilo PKLS (Cool Cat Sunglasses) */}
+      <rect
+        x="24"
+        y="42"
+        width="22"
+        height="14"
+        rx="4"
+        fill="#18181b"
+        stroke="#18181b"
+        strokeWidth="2"
+      />
+      <rect
+        x="54"
+        y="42"
+        width="22"
+        height="14"
+        rx="4"
+        fill="#18181b"
+        stroke="#18181b"
+        strokeWidth="2"
+      />
+      {/* Ponte dos óculos */}
+      <line
+        x1="44"
+        y1="48"
+        x2="54"
+        y2="48"
+        stroke="#18181b"
+        strokeWidth="3.5"
+        strokeLinecap="round"
+      />
+      {/* Brilho reflexo branco na lente esquerda */}
+      <line
+        x1="27"
+        y1="45"
+        x2="33"
+        y2="45"
+        stroke="#ffffff"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+
+      {/* Narizinho de Gato */}
+      <path
+        d="M 47 62 L 53 62 L 50 66 Z"
+        fill="#18181b"
+        stroke="#18181b"
+        strokeWidth="1.5"
+        strokeLinejoin="round"
+      />
+
+      {/* Focinho / Boquinha de Gato */}
+      <path
+        d="M 44 69 Q 50 73 50 66 Q 50 73 56 69"
+        stroke="#18181b"
+        strokeWidth="3"
+        strokeLinecap="round"
+      />
+
+      {/* Bigodes do Gatinho */}
+      <path
+        d="M 12 56 L 22 58 M 10 64 L 21 63 M 78 58 L 88 56 M 79 63 L 90 64"
+        stroke="#18181b"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+/**
+ * Gatinho Aranduê aconchegado/encostado na borda direita.
+ * Ilustração rica desenhada à mão em estilo cartoon / PKLS para o rodapé da barra lateral.
+ */
+export function SidebarCatDoodle({ className = 'w-28 h-20', ...props }) {
+  return (
+    <svg
+      viewBox="0 0 130 95"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={`inline-block select-none overflow-visible ${className}`}
+      aria-label="Gatinho decorativo encostado na borda"
+      role="img"
+      {...props}
+    >
+      {/* Sombra suave no chão */}
+      <ellipse cx="68" cy="91" rx="52" ry="4" fill="#18181b" opacity="0.12" />
+
+      {/* Rabinho felpudo curvado encostado na borda direita */}
+      <path
+        d="M 112 86 C 122 80, 126 62, 122 50 C 118 42, 108 44, 110 52 C 112 60, 116 68, 106 82"
+        fill="#ffffff"
+        stroke="#18181b"
+        strokeWidth="3.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      {/* Pontinha do rabo com mancha âmbar */}
+      <path
+        d="M 122 50 C 118 42, 108 44, 110 52 C 112 55, 116 60, 118 64 C 120 60, 122 55, 122 50 Z"
+        fill="#f59e0b"
+      />
+
+      {/* Corpo do gatinho gordinho sentado encostado na direita */}
+      <path
+        d="M 52 88 C 42 88, 38 72, 48 58 C 55 48, 70 46, 82 46 C 100 46, 118 58, 116 88 Z"
+        fill="#ffffff"
+        stroke="#18181b"
+        strokeWidth="3.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+
+      {/* Mancha charmosa nas costas */}
+      <path
+        d="M 88 50 C 98 52, 112 60, 114 74 C 108 72, 98 68, 92 60 Z"
+        fill="#fde68a"
+        stroke="#18181b"
+        strokeWidth="2"
+      />
+
+      {/* Cabeça do gatinho */}
+      <ellipse
+        cx="62"
+        cy="44"
+        rx="26"
+        ry="22"
+        fill="#ffffff"
+        stroke="#18181b"
+        strokeWidth="3.5"
+      />
+
+      {/* Orelha Esquerda */}
+      <path
+        d="M 42 29 L 30 10 C 27 6, 36 4, 42 10 L 52 24 Z"
+        fill="#ffffff"
+        stroke="#18181b"
+        strokeWidth="3.5"
+        strokeLinejoin="round"
+      />
+      {/* Orelha Esquerda interna */}
+      <path
+        d="M 37 17 L 34 11 C 33 9, 38 8, 41 11 L 45 19 Z"
+        fill="#f59e0b"
+      />
+
+      {/* Orelha Direita (inclinada encostando perto da borda) */}
+      <path
+        d="M 72 24 L 84 10 C 89 6, 98 9, 95 16 L 84 29 Z"
+        fill="#ffffff"
+        stroke="#18181b"
+        strokeWidth="3.5"
+        strokeLinejoin="round"
+      />
+      {/* Orelha Direita interna */}
+      <path
+        d="M 78 21 L 85 12 C 87 10, 92 12, 90 15 L 83 23 Z"
+        fill="#fed7aa"
+      />
+
+      {/* Tufinho de pelos no topo da cabeça */}
+      <path
+        d="M 58 22 Q 62 17 66 22"
+        stroke="#18181b"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+      />
+
+      {/* Olho Esquerdo (Cartoon expressivo com brilho) */}
+      <ellipse cx="52" cy="42" rx="5.5" ry="6.5" fill="#ffffff" stroke="#18181b" strokeWidth="2.5" />
+      <circle cx="53" cy="42" r="3.5" fill="#18181b" />
+      <circle cx="54.5" cy="40.5" r="1.3" fill="#ffffff" />
+      <circle cx="51.5" cy="43.5" r="0.7" fill="#ffffff" />
+
+      {/* Olho Direito (Cartoon expressivo com brilho) */}
+      <ellipse cx="72" cy="42" rx="5.5" ry="6.5" fill="#ffffff" stroke="#18181b" strokeWidth="2.5" />
+      <circle cx="73" cy="42" r="3.5" fill="#18181b" />
+      <circle cx="74.5" cy="40.5" r="1.3" fill="#ffffff" />
+      <circle cx="71.5" cy="43.5" r="0.7" fill="#ffffff" />
+
+      {/* Sobrancelhas fofas */}
+      <path d="M 47 33 Q 52 31 57 33" stroke="#18181b" strokeWidth="2" strokeLinecap="round" />
+      <path d="M 67 33 Q 72 31 77 33" stroke="#18181b" strokeWidth="2" strokeLinecap="round" />
+
+      {/* Bochechinhas coradas */}
+      <ellipse cx="44" cy="48" rx="3.5" ry="2.2" fill="#fca5a5" opacity="0.85" />
+      <ellipse cx="80" cy="48" rx="3.5" ry="2.2" fill="#fca5a5" opacity="0.85" />
+
+      {/* Narizinho em coraçãozinho/triângulo invertido */}
+      <path d="M 60 48 L 64 48 L 62 51 Z" fill="#f43f5e" stroke="#18181b" strokeWidth="1.2" strokeLinejoin="round" />
+
+      {/* Boquinha de gatinho :3 */}
+      <path
+        d="M 57 52 Q 62 55 62 51 Q 62 55 67 52"
+        stroke="#18181b"
+        strokeWidth="2.2"
+        strokeLinecap="round"
+      />
+
+      {/* Bigodinhos do lado esquerdo */}
+      <path d="M 38 45 L 22 43 M 36 49 L 18 50 M 38 54 L 24 57" stroke="#18181b" strokeWidth="2" strokeLinecap="round" />
+
+      {/* Bigodinhos do lado direito */}
+      <path d="M 86 45 L 102 43 M 88 49 L 106 50 M 86 54 L 100 57" stroke="#18181b" strokeWidth="2" strokeLinecap="round" />
+
+      {/* Patinha Esquerda apoiada na frente */}
+      <path
+        d="M 48 88 C 48 78, 60 78, 60 88"
+        fill="#ffffff"
+        stroke="#18181b"
+        strokeWidth="3"
+        strokeLinecap="round"
+      />
+      <line x1="52" y1="83" x2="52" y2="86" stroke="#18181b" strokeWidth="2" strokeLinecap="round" />
+      <line x1="56" y1="83" x2="56" y2="86" stroke="#18181b" strokeWidth="2" strokeLinecap="round" />
+
+      {/* Patinha Direita apoiada na frente */}
+      <path
+        d="M 66 88 C 66 78, 78 78, 78 88"
+        fill="#ffffff"
+        stroke="#18181b"
+        strokeWidth="3"
+        strokeLinecap="round"
+      />
+      <line x1="70" y1="83" x2="70" y2="86" stroke="#18181b" strokeWidth="2" strokeLinecap="round" />
+      <line x1="74" y1="83" x2="74" y2="86" stroke="#18181b" strokeWidth="2" strokeLinecap="round" />
+
+      {/* Coraçãozinho flutuando perto da orelha */}
+      <g transform="translate(88, 14) scale(0.7) rotate(12)">
+        <path
+          d="M 12 4 C 8 0, 0 2, 0 9 C 0 15, 12 22, 12 22 C 12 22, 24 15, 24 9 C 24 2, 16 0, 12 4 Z"
+          fill="#f43f5e"
+          stroke="#18181b"
+          strokeWidth="2"
+        />
+      </g>
+    </svg>
+  );
+}
+
+/**
  * Mão fazendo sinal da paz com olhos de cartoon no dorso (inspirado no hero do PKLS).
  */
 export function PeaceHandDoodle({ className = 'w-28 h-28', ...props }) {

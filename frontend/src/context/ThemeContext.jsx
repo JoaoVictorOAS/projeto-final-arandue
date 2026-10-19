@@ -25,6 +25,28 @@ const TEMA_PADRAO_FALLBACK = {
   },
 };
 
+// Tema fixo "Âmbar & Café" usado pela Landing Page (isolada do tema do usuário, assim como o Login)
+export const TEMA_COFFEE_LANDING = {
+  id: 'padrao-ambar',
+  slug: 'ambar-cafe',
+  nome: 'Âmbar & Café',
+  modo: 'light',
+  tokens: {
+    bgApp: '#faf5ee',
+    bgSurface: '#ffffff',
+    bgSurfaceHover: '#f5ebe0',
+    border: '#e6ccb2',
+    textMain: '#43281c',
+    textSecondary: '#7f4f24',
+    textMuted: '#a68a72',
+    primary: '#b45309',
+    primaryHover: '#92400e',
+    primaryText: '#ffffff',
+    accent: '#0284c7',
+    status: { success: '#10b981', danger: '#ef4444', warning: '#f59e0b', info: '#3b82f6' },
+  },
+};
+
 const ThemeContext = createContext({});
 
 export function dispararAtualizacaoTema() {

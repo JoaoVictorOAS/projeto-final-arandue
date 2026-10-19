@@ -10,17 +10,15 @@ import {
   Wallet,
   Package,
   Receipt,
-  LogOut,
   X,
-  Building2,
   MessageCircle,
   Bot,
   Settings,
   Sparkles,
 } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
 import { useChat } from '../context/ChatContext';
 import Logo from './Logo';
+import { SidebarCatDoodle } from './SketchDoodles';
 
 const NAV_ITEMS = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true },
@@ -38,7 +36,6 @@ const NAV_ITEMS = [
 ];
 
 export default function Sidebar({ isOpen, setIsOpen }) {
-  const { logout, usuario } = useAuth();
   const { enviando, notificacao } = useChat();
 
   const getNavLinkClasses = (isMobile) => ({ isActive }) =>
@@ -67,10 +64,10 @@ export default function Sidebar({ isOpen, setIsOpen }) {
         style={{ borderColor: 'var(--border-color)' }}
       >
         <div className="flex items-center gap-2">
-          <Logo size="md" subtitle="Gestão MEI" />
-          <span className="font-hand text-xs px-2 py-0.5 rounded-full border border-dashed text-emerald-600 dark:text-emerald-400 -rotate-2 select-none hidden sm:inline-block">
-            100% MEI
-          </span>
+          <Logo
+            size="md"
+            subtitle={<span style={{ color: 'var(--color-primary)' }}>Gestão MEI</span>}
+          />
         </div>
 
         {setIsOpen && (
@@ -147,36 +144,21 @@ export default function Sidebar({ isOpen, setIsOpen }) {
         </NavLink>
       </div>
 
-      {/* Footer Profile & Logout */}
+      {/* Elemento Decorativo: Gatinho encostado na borda direita */}
       <div
-        className="p-4 border-t transition-colors duration-200"
+        className="relative pt-1 px-2 pb-0 flex items-end justify-end select-none overflow-hidden"
         style={{
-          borderColor: 'var(--border-color)',
-          backgroundColor: 'var(--bg-surface-hover, var(--bg-surface))',
+          borderTop: '1px solid var(--border-color)',
+          backgroundColor: 'var(--bg-surface)',
         }}
       >
-        <div className="flex items-center justify-between">
-          <div className="min-w-0 pr-2">
-            <p className="text-xs font-semibold truncate" style={{ color: 'var(--text-main)' }}>
-              {usuario?.nome || 'Empreendedor'}
-            </p>
-            <p
-              className="text-[11px] truncate opacity-75"
-              style={{ color: 'var(--text-secondary, var(--text-main))' }}
-            >
-              {usuario?.email || ''}
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={logout}
-            className="p-2 opacity-70 hover:opacity-100 hover:text-red-600 rounded-lg transition-colors flex-shrink-0"
-            style={{ color: 'var(--text-main)' }}
-            title="Sair"
-            aria-label="Sair da conta"
-          >
-            <LogOut className="w-4 h-4" />
-          </button>
+        <div
+          className="flex items-end justify-end -mr-1 -mb-0.5 transform hover:-translate-y-1 transition-transform duration-200 cursor-default"
+          data-testid="sidebar-mascot-cat"
+          title="Miau! 🐾"
+          aria-hidden="true"
+        >
+          <SidebarCatDoodle className="w-28 h-20" />
         </div>
       </div>
     </div>

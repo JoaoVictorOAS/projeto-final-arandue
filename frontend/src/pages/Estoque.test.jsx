@@ -82,14 +82,14 @@ describe('Módulo de Estoque & Produção', () => {
     render(<Estoque />);
 
     await waitFor(() => {
-      expect(screen.getByText('Farinha de Trigo')).toBeInTheDocument();
-      expect(screen.getByText('Peito de Frango')).toBeInTheDocument();
+      expect(screen.getAllByText('Farinha de Trigo').length).toBeGreaterThan(0);
+      expect(screen.getAllByText('Peito de Frango').length).toBeGreaterThan(0);
     });
 
     // Saldo e Alerta
-    expect(screen.getByText(/5000 g/)).toBeInTheDocument();
-    expect(screen.getByText(/Repor Estoque/i)).toBeInTheDocument();
-    expect(screen.getByText(/Suficiente/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/5000 g/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Repor Estoque/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Suficiente/i).length).toBeGreaterThan(0);
   });
 
   test('deve abrir o modal de novo insumo ao clicar no botão', async () => {

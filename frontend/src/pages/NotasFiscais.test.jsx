@@ -51,10 +51,10 @@ describe('Módulo Fiscal — Notas Fiscais', () => {
     render(<NotasFiscais />);
 
     await waitFor(() => {
-      expect(screen.getByText('#101')).toBeInTheDocument();
-      expect(screen.getByText('Empresa ABC Ltda')).toBeInTheDocument();
-      expect(screen.getByText('#102')).toBeInTheDocument();
-      expect(screen.getByText('Maria da Silva')).toBeInTheDocument();
+      expect(screen.getAllByText('#101').length).toBeGreaterThan(0);
+      expect(screen.getAllByText('Empresa ABC Ltda').length).toBeGreaterThan(0);
+      expect(screen.getAllByText('#102').length).toBeGreaterThan(0);
+      expect(screen.getAllByText('Maria da Silva').length).toBeGreaterThan(0);
     });
 
     // Formatação de valores
@@ -62,8 +62,8 @@ describe('Módulo Fiscal — Notas Fiscais', () => {
     expect(screen.getAllByText(/180,50/).length).toBeGreaterThan(0);
 
     // Badges
-    expect(screen.getByText('Emitida')).toBeInTheDocument();
-    expect(screen.getByText('Cancelada')).toBeInTheDocument();
+    expect(screen.getAllByText('Emitida').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Cancelada').length).toBeGreaterThan(0);
   });
 
   test('deve abrir o modal de emissao ao clicar em Emitir Nova Nota', async () => {
@@ -105,10 +105,10 @@ describe('Módulo Fiscal — Notas Fiscais', () => {
     render(<NotasFiscais />);
 
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: /danfe/i })).toBeInTheDocument();
+      expect(screen.getAllByRole('button', { name: /danfe/i }).length).toBeGreaterThan(0);
     });
 
-    fireEvent.click(screen.getByRole('button', { name: /danfe/i }));
+    fireEvent.click(screen.getAllByRole('button', { name: /danfe/i })[0]);
 
     await waitFor(() => {
       expect(screen.getByText(/DANFE SIMPLIFICADO MEI/i)).toBeInTheDocument();
@@ -133,10 +133,10 @@ describe('Módulo Fiscal — Notas Fiscais', () => {
     render(<NotasFiscais />);
 
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: /cancelar/i })).toBeInTheDocument();
+      expect(screen.getAllByRole('button', { name: /cancelar/i }).length).toBeGreaterThan(0);
     });
 
-    fireEvent.click(screen.getByRole('button', { name: /cancelar/i }));
+    fireEvent.click(screen.getAllByRole('button', { name: /cancelar/i })[0]);
 
     expect(screen.getByRole('heading', { name: /cancelar nota fiscal #101/i })).toBeInTheDocument();
     expect(screen.getByLabelText(/justificativa \/ motivo do cancelamento/i)).toBeInTheDocument();

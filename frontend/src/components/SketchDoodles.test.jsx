@@ -3,6 +3,8 @@ import { render, screen } from '@testing-library/react';
 import { describe, test, expect } from 'vitest';
 import {
   CartoonEyes,
+  CatMascotDoodle,
+  SidebarCatDoodle,
   OwlMascotDoodle,
   PeaceHandDoodle,
   CoffeeCupDoodle,
@@ -20,6 +22,8 @@ describe('SketchDoodles - Elementos Desenhados à Mão', () => {
     const { container } = render(
       <div>
         <CartoonEyes />
+        <CatMascotDoodle />
+        <SidebarCatDoodle />
         <OwlMascotDoodle variant="cool" />
         <OwlMascotDoodle variant="beach" />
         <PeaceHandDoodle />
@@ -31,13 +35,13 @@ describe('SketchDoodles - Elementos Desenhados à Mão', () => {
         <SketchArrow direction="right" />
         <SketchArrow direction="left" />
         <SketchSparkle />
-        <SketchStickerBadge rotate="-6deg">100% MEI</SketchStickerBadge>
+        <SketchStickerBadge rotate="-6deg">MEI</SketchStickerBadge>
       </div>
     );
 
     const svgs = container.querySelectorAll('svg');
     expect(svgs.length).toBeGreaterThanOrEqual(12);
-    expect(screen.getByText('100% MEI')).toBeInTheDocument();
+    expect(screen.getByText('MEI')).toBeInTheDocument();
   });
 
   test('OwlMascotDoodle deve suportar as variantes cool e beach', () => {

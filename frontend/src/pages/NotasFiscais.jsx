@@ -446,7 +446,9 @@ export default function NotasFiscais() {
             </button>
           </div>
         ) : (
-          <div className="overflow-x-auto">
+          <React.Fragment>
+            {/* DESKTOP TABLE VIEW: Exibida em telas médias e grandes (md+) */}
+            <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead className="bg-gray-50 text-gray-600 uppercase text-xs font-semibold border-b border-gray-200">
                 <tr>
@@ -542,6 +544,146 @@ export default function NotasFiscais() {
               </tbody>
             </table>
           </div>
+
+          {/* MOBILE CARDS VIEW: Exibida em celulares (< md) */}
+          <div
+            className="block md:hidden divide-y divide-gray-100"
+            style={{ borderColor: 'var(--border-color, #f3f4f6)' }}
+          >
+            {notas.map((n) => {
+              const tipoInfo = TIPO_LABELS[n.tipo] || {
+                label: n.tipo,
+                badge: 'bg-gray-50 text-gray-700 border-gray-200',
+              };
+
+              return (
+                <div
+                  key={n.id}
+                  className="p-4 space-y-3.5 transition-colors"
+                  style={{ backgroundColor: 'var(--bg-surface, #ffffff)' }}
+                  data-testid={`nota-card-${n.id}`}
+                >
+                  {/* Topo do Card: Número, Tipo e Status */}
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span
+                          className="font-bold text-gray-900 text-sm"
+                          style={{ color: 'var(--text-main, #111827)' }}
+                        >
+                          #{n.numero}
+                        </span>
+                        <span className="text-xs text-gray-400 font-normal">
+                          (Série {n.serie})
+                        </span>
+                        <span
+                          className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold border ${tipoInfo.badge}`}
+                        >
+                          {tipoInfo.label}
+                        </span>
+                      </div>
+                      <h4
+                        className="font-medium text-gray-800 text-xs mt-1 truncate"
+                        style={{ color: 'var(--text-secondary, #374151)' }}
+                      >
+                        {n.tomador_nome || n.destinatario_nome || 'Consumidor Final'}
+                      </h4>
+                      {(n.tomador_documento || n.destinatario_documento) && (
+                        <span className="block text-[11px] text-gray-400 font-normal">
+                          Doc: {n.tomador_documento || n.destinatario_documento}
+                        </span>
+                      )}
+                    </div>
+                    <div className="shrink-0">
+                      {n.status === 'EMITIDA' ? (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
+                          <CheckCircle2 className="w-3.5 h-3.5" />
+                          Emitida
+                        </span>
+                      ) : n.status === 'CANCELADA' ? (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-50 text-red-700 border border-red-200">
+                          <Ban className="w-3.5 h-3.5" />
+                          Cancelada
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-50 text-gray-700 border border-gray-200">
+                          {n.status}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Micro-grid de Dados: Emissão e Valor */}
+                  <div
+                    className="grid grid-cols-2 gap-2.5 p-3 rounded-xl border text-xs"
+                    style={{
+                      backgroundColor: 'var(--bg-surface-hover, #f9fafb)',
+                      borderColor: 'var(--border-color, #f3f4f6)',
+                    }}
+                  >
+                    <div>
+                      <span
+                        className="text-[10px] uppercase font-semibold text-gray-400 tracking-wider block"
+                        style={{ color: 'var(--text-muted, #9ca3af)' }}
+                      >
+                        Data de Emissão
+                      </span>
+                      <span
+                        className="text-gray-700 font-medium mt-0.5 block"
+                        style={{ color: 'var(--text-secondary, #374151)' }}
+                      >
+                        {formatDate(n.data_emissao)}
+                      </span>
+                    </div>
+
+                    <div>
+                      <span
+                        className="text-[10px] uppercase font-semibold text-gray-400 tracking-wider block"
+                        style={{ color: 'var(--text-muted, #9ca3af)' }}
+                      >
+                        Valor Total
+                      </span>
+                      <span
+                        className="font-bold text-sm text-gray-900 mt-0.5 block"
+                        style={{ color: 'var(--text-main, #111827)' }}
+                      >
+                        {formatCurrency(n.valor_total)}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Ações Tácteis Mobile */}
+                  <div className="pt-0.5 flex items-center justify-end gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleVerDanfe(n)}
+                      className="inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium badge-theme-subtle hover:brightness-95 rounded-xl transition min-h-[40px] cursor-pointer"
+                      title="Visualizar DANFE"
+                    >
+                      <Eye className="w-3.5 h-3.5" />
+                      <span>Ver DANFE</span>
+                    </button>
+
+                    {n.status === 'EMITIDA' && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setNotaParaCancelar(n);
+                          setModalCancelarAberto(true);
+                        }}
+                        className="inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-xl transition min-h-[40px] cursor-pointer"
+                        title="Cancelar nota fiscal"
+                      >
+                        <Ban className="w-3.5 h-3.5" />
+                        <span>Cancelar</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+            </div>
+          </React.Fragment>
         )}
       </div>
 
