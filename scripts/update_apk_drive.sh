@@ -33,16 +33,19 @@ echo -e "${BLUE}📱 Aranduê MEI — Build Mobile & Sincronização Google Driv
 echo -e "${BLUE}=====================================================${NC}"
 
 # 1. Configurar variáveis de ambiente do Android e Java
-export JAVA_HOME="${JAVA_HOME:-/home/joaovictor/.local/share/mise/installs/java/21.0.2}"
-export ANDROID_HOME="${ANDROID_HOME:-/home/joaovictor/Android/Sdk}"
-export ANDROID_SDK_ROOT="$ANDROID_HOME"
-
-if [ ! -d "$JAVA_HOME" ]; then
-  if command -v java >/dev/null 2>&1; then
-    JAVA_PATH="$(readlink -f "$(command -v java)")"
-    export JAVA_HOME="$(dirname "$(dirname "$JAVA_PATH")")"
+if [ -z "${JAVA_HOME:-}" ] || [ ! -d "$JAVA_HOME" ]; then
+  if [ -d "/home/joaovictor/.local/share/mise/installs/java/latest" ]; then
+    export JAVA_HOME="/home/joaovictor/.local/share/mise/installs/java/latest"
+  elif [ -d "/home/joaovictor/.local/share/mise/installs/java/21" ]; then
+    export JAVA_HOME="/home/joaovictor/.local/share/mise/installs/java/21"
+  elif [ -d "/home/joaovictor/.local/share/mise/installs/java/21.0.2" ]; then
+    export JAVA_HOME="/home/joaovictor/.local/share/mise/installs/java/21.0.2"
   fi
 fi
+
+export ANDROID_HOME="${ANDROID_HOME:-/home/joaovictor/Android/Sdk}"
+export ANDROID_SDK_ROOT="$ANDROID_HOME"
+export PATH="$JAVA_HOME/bin:$ANDROID_HOME/platform-tools:$PATH"
 
 echo -e "☕ JAVA_HOME: ${GREEN}$JAVA_HOME${NC}"
 echo -e "🤖 ANDROID_HOME: ${GREEN}$ANDROID_HOME${NC}"
@@ -116,6 +119,14 @@ else
   echo -e "     ${GREEN}./scripts/update_apk_drive.sh /seu/caminho/do/GoogleDrive${NC}"
   echo -e "   Ou defina a variável no ambiente:"
   echo -e "     ${GREEN}export GOOGLE_DRIVE_PATH=\"/seu/caminho/do/GoogleDrive\"${NC}"
+fi
+
+# 7. Instalação direta no celular conectado via ADB (se disponível)
+ADB_BIN="$ANDROID_HOME/platform-tools/adb"
+if [ -x "$ADB_BIN" ] && "$ADB_BIN" devices | grep -qE "[a-zA-Z0-9]+\s+device$"; then
+  echo -e "\n${BLUE}📲 [5/5] Dispositivo Android detectado via ADB! Instalando atualização no celular...${NC}"
+  "$ADB_BIN" install -r "$LATEST_APK"
+  echo -e "${GREEN}📱 Aplicativo instalado/atualizado com sucesso no celular!${NC}"
 fi
 
 echo -e "\n${GREEN}🚀 Concluído com sucesso!${NC}\n"

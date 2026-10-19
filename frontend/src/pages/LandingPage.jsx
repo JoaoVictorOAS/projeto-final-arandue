@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { applyThemeToDOM, TEMA_COFFEE_LANDING } from '../context/ThemeContext';
+import { isMobileDevice } from '../utils/device';
 import {
   CartoonEyes,
   OwlMascotDoodle,
@@ -25,6 +26,10 @@ import {
 
 export default function LandingPage() {
   const { estaAutenticado } = useAuth();
+
+  if (isMobileDevice()) {
+    return <Navigate to="/login" replace />;
+  }
 
   // Isola a landing do tema do usuário: força o tema "coffee" (Âmbar & Café) e restaura ao sair
   useEffect(() => {

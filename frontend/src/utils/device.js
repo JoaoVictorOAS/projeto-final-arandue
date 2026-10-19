@@ -14,3 +14,5 @@ export const isMobileEnvironment = () => {
     Capacitor.isNativePlatform();
   return Boolean(isCapacitorNative || window.innerWidth < 768);
 };
+
+export const isMobileDevice = isMobileEnvironment;

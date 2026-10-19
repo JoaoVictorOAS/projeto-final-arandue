@@ -1,11 +1,17 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Menu, LogOut, User, Bell, ExternalLink } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { CartoonEyes } from './SketchDoodles';
 
 export default function Navbar({ onToggleSidebar }) {
   const { usuario, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login', { replace: true });
+  };
 
   const getInitials = (nome) => {
     if (!nome) return 'MEI';
@@ -69,7 +75,7 @@ export default function Navbar({ onToggleSidebar }) {
 
             <button
               type="button"
-              onClick={logout}
+              onClick={handleLogout}
               className="p-2 opacity-70 hover:opacity-100 hover:text-red-600 rounded-lg transition-colors ml-1"
               style={{ color: 'var(--text-main)' }}
               title="Sair do sistema"

@@ -32,7 +32,16 @@ vi.mock('../services/firebase', () => ({
   googleProvider: {},
 }));
 
+let isMobile = false;
+vi.mock('../utils/device', () => ({
+  isMobileDevice: () => isMobile,
+  isMobileEnvironment: () => isMobile,
+}));
+
 describe('LandingPage - Estilo Desenhado à Mão', () => {
+  beforeEach(() => {
+    isMobile = false;
+  });
   beforeEach(() => {
     window.localStorage.clear();
     document.documentElement.removeAttribute('data-theme-id');
@@ -131,6 +140,52 @@ describe('LandingPage - Estilo Desenhado à Mão', () => {
 
     await waitFor(() => {
       expect(screen.getByRole('button', { name: /entrar/i })).toBeInTheDocument();
+    });
+  });
+
+  test('dispositivo móvel não autenticado acessando raiz / deve ser redirecionado para /login e nunca para LandingPage', async () => {
+    isMobile = true;
+    window.localStorage.removeItem('token');
+    window.localStorage.removeItem('usuario');
+
+    render(
+      <MemoryRouter initialEntries={['/']}>
+        <ThemeProvider>
+          <AuthProvider>
+            <ChatProvider>
+              <AppRoutes />
+            </ChatProvider>
+          </AuthProvider>
+        </ThemeProvider>
+      </MemoryRouter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /entrar/i })).toBeInTheDocument();
+      expect(screen.queryByRole('link', { name: /superpoderes ia/i })).not.toBeInTheDocument();
+      expect(screen.queryByRole('link', { name: /demonstração atendente ia/i })).not.toBeInTheDocument();
+    });
+  });
+
+  test('dispositivo móvel tentando acessar rota /landing diretamente deve ser redirecionado para /login', async () => {
+    isMobile = true;
+
+    render(
+      <MemoryRouter initialEntries={['/landing']}>
+        <ThemeProvider>
+          <AuthProvider>
+            <ChatProvider>
+              <AppRoutes />
+            </ChatProvider>
+          </AuthProvider>
+        </ThemeProvider>
+      </MemoryRouter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /entrar/i })).toBeInTheDocument();
+      expect(screen.queryByRole('link', { name: /superpoderes ia/i })).not.toBeInTheDocument();
+      expect(screen.queryByRole('link', { name: /demonstração atendente ia/i })).not.toBeInTheDocument();
     });
   });
 });

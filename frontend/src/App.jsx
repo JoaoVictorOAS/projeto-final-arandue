@@ -21,8 +21,10 @@ import NotasFiscais from './pages/NotasFiscais';
 import Assistente from './pages/Assistente';
 import AtendenteIA from './pages/AtendenteIA';
 import Configuracoes from './pages/Configuracoes';
+import { isMobileDevice } from './utils/device';
 
-// Rota Raiz Inteligente: exibe LandingPage para visitantes não autenticados e o Dashboard dentro de Layout para autenticados
+// Rota Raiz Inteligente: exibe LandingPage para visitantes não autenticados na Web e Dashboard dentro de Layout para autenticados.
+// Em dispositivos móveis (app nativo ou mobile browser), direciona direto para /login.
 export function RootEntryRoute() {
   const { estaAutenticado, carregando } = useAuth();
 
@@ -38,17 +40,27 @@ export function RootEntryRoute() {
   }
 
   if (!estaAutenticado) {
+    if (isMobileDevice()) {
+      return <Navigate to="/login" replace />;
+    }
     return <LandingPage />;
   }
 
   return <Outlet />;
 }
 
+export function PublicLandingRoute() {
+  if (isMobileDevice()) {
+    return <Navigate to="/login" replace />;
+  }
+  return <LandingPage />;
+}
+
 export function AppRoutes() {
   return (
     <Routes>
       {/* Rotas Públicas */}
-      <Route path="/landing" element={<LandingPage />} />
+      <Route path="/landing" element={<PublicLandingRoute />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/atendimento/:slug" element={<AtendenteIA publicMode />} />
