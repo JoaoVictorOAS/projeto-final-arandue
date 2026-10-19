@@ -380,13 +380,13 @@ export function CatMascotDoodle({ className = 'w-16 h-16', ...props }) {
 }
 
 /**
- * Gatinho Aranduê aconchegado/encostado na borda direita.
+ * Gato Empreendedor / Boss Cat contando dinheiro encostado na borda direita.
  * Ilustração rica desenhada à mão em estilo cartoon / PKLS para o rodapé da barra lateral.
  */
-export function SidebarCatDoodle({ className = 'w-28 h-20', ...props }) {
+export function SidebarCatDoodle({ className = 'w-32 h-24', ...props }) {
   return (
     <svg
-      viewBox="0 0 130 95"
+      viewBox="0 0 140 100"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       className={`inline-block select-none overflow-visible ${className}`}
@@ -394,27 +394,12 @@ export function SidebarCatDoodle({ className = 'w-28 h-20', ...props }) {
       role="img"
       {...props}
     >
-      {/* Sombra suave no chão */}
-      <ellipse cx="68" cy="91" rx="52" ry="4" fill="#18181b" opacity="0.12" />
+      {/* Sombra no chão */}
+      <ellipse cx="78" cy="95" rx="56" ry="4" fill="#18181b" opacity="0.15" />
 
-      {/* Rabinho felpudo curvado encostado na borda direita */}
+      {/* Rabo do gato curvado com marra encostado na direita */}
       <path
-        d="M 112 86 C 122 80, 126 62, 122 50 C 118 42, 108 44, 110 52 C 112 60, 116 68, 106 82"
-        fill="#ffffff"
-        stroke="#18181b"
-        strokeWidth="3.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      {/* Pontinha do rabo com mancha âmbar */}
-      <path
-        d="M 122 50 C 118 42, 108 44, 110 52 C 112 55, 116 60, 118 64 C 120 60, 122 55, 122 50 Z"
-        fill="#f59e0b"
-      />
-
-      {/* Corpo do gatinho gordinho sentado encostado na direita */}
-      <path
-        d="M 52 88 C 42 88, 38 72, 48 58 C 55 48, 70 46, 82 46 C 100 46, 118 58, 116 88 Z"
+        d="M 124 90 C 136 82, 138 62, 132 48 C 128 40, 118 42, 120 50 C 122 58, 128 66, 118 84"
         fill="#ffffff"
         stroke="#18181b"
         strokeWidth="3.5"
@@ -422,19 +407,45 @@ export function SidebarCatDoodle({ className = 'w-28 h-20', ...props }) {
         strokeLinejoin="round"
       />
 
-      {/* Mancha charmosa nas costas */}
+      {/* Corpo do gato encostado na parede direita */}
       <path
-        d="M 88 50 C 98 52, 112 60, 114 74 C 108 72, 98 68, 92 60 Z"
-        fill="#fde68a"
+        d="M 52 92 C 40 92, 38 74, 48 58 C 56 46, 76 44, 94 44 C 114 44, 128 58, 126 92 Z"
+        fill="#ffffff"
         stroke="#18181b"
-        strokeWidth="2"
+        strokeWidth="3.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
       />
 
-      {/* Cabeça do gatinho */}
+      {/* Braço direito encostado relaxado na borda */}
+      <path
+        d="M 108 58 C 124 64, 132 74, 130 92"
+        stroke="#18181b"
+        strokeWidth="3.5"
+        strokeLinecap="round"
+      />
+
+      {/* Cordão de ouro no pescoço (estilo patrão / boss) */}
+      <path
+        d="M 58 56 Q 74 68 90 56"
+        stroke="#eab308"
+        strokeWidth="3.5"
+        strokeLinecap="round"
+      />
+      {/* Medalhão de Cifrão $ no peito */}
+      <circle cx="74" cy="65" r="4.5" fill="#facc15" stroke="#18181b" strokeWidth="1.8" />
+      <path
+        d="M 74 62.5 V 67.5 M 72.5 63.5 H 75.5 C 76 63.5, 76 64.5, 74 64.8 C 72 65.2, 72 66.5, 75.5 66.5"
+        stroke="#18181b"
+        strokeWidth="1.2"
+        strokeLinecap="round"
+      />
+
+      {/* Cabeça do gato inclinada com atitude */}
       <ellipse
-        cx="62"
-        cy="44"
-        rx="26"
+        cx="72"
+        cy="38"
+        rx="27"
         ry="22"
         fill="#ffffff"
         stroke="#18181b"
@@ -443,107 +454,110 @@ export function SidebarCatDoodle({ className = 'w-28 h-20', ...props }) {
 
       {/* Orelha Esquerda */}
       <path
-        d="M 42 29 L 30 10 C 27 6, 36 4, 42 10 L 52 24 Z"
+        d="M 50 24 L 38 6 C 34 2, 45 1, 52 8 L 62 18 Z"
         fill="#ffffff"
         stroke="#18181b"
         strokeWidth="3.5"
         strokeLinejoin="round"
       />
-      {/* Orelha Esquerda interna */}
-      <path
-        d="M 37 17 L 34 11 C 33 9, 38 8, 41 11 L 45 19 Z"
-        fill="#f59e0b"
-      />
+      <path d="M 46 14 L 43 9 C 42 7, 47 7, 50 10 L 53 16 Z" fill="#f59e0b" />
 
-      {/* Orelha Direita (inclinada encostando perto da borda) */}
+      {/* Orelha Direita encostando perto da borda */}
       <path
-        d="M 72 24 L 84 10 C 89 6, 98 9, 95 16 L 84 29 Z"
+        d="M 82 18 L 94 6 C 99 2, 108 5, 105 12 L 94 24 Z"
         fill="#ffffff"
         stroke="#18181b"
         strokeWidth="3.5"
         strokeLinejoin="round"
       />
-      {/* Orelha Direita interna */}
-      <path
-        d="M 78 21 L 85 12 C 87 10, 92 12, 90 15 L 83 23 Z"
-        fill="#fed7aa"
-      />
+      <path d="M 88 15 L 95 8 C 97 6, 101 8, 99 12 L 93 18 Z" fill="#f59e0b" />
 
-      {/* Tufinho de pelos no topo da cabeça */}
+      {/* Óculos escuros Wayfarer de patrão */}
       <path
-        d="M 58 22 Q 62 17 66 22"
+        d="M 48 30 L 68 30 L 66 43 C 66 45, 50 46, 48 43 Z"
+        fill="#18181b"
         stroke="#18181b"
         strokeWidth="2.5"
-        strokeLinecap="round"
+        strokeLinejoin="round"
       />
-
-      {/* Olho Esquerdo (Cartoon expressivo com brilho) */}
-      <ellipse cx="52" cy="42" rx="5.5" ry="6.5" fill="#ffffff" stroke="#18181b" strokeWidth="2.5" />
-      <circle cx="53" cy="42" r="3.5" fill="#18181b" />
-      <circle cx="54.5" cy="40.5" r="1.3" fill="#ffffff" />
-      <circle cx="51.5" cy="43.5" r="0.7" fill="#ffffff" />
-
-      {/* Olho Direito (Cartoon expressivo com brilho) */}
-      <ellipse cx="72" cy="42" rx="5.5" ry="6.5" fill="#ffffff" stroke="#18181b" strokeWidth="2.5" />
-      <circle cx="73" cy="42" r="3.5" fill="#18181b" />
-      <circle cx="74.5" cy="40.5" r="1.3" fill="#ffffff" />
-      <circle cx="71.5" cy="43.5" r="0.7" fill="#ffffff" />
-
-      {/* Sobrancelhas fofas */}
-      <path d="M 47 33 Q 52 31 57 33" stroke="#18181b" strokeWidth="2" strokeLinecap="round" />
-      <path d="M 67 33 Q 72 31 77 33" stroke="#18181b" strokeWidth="2" strokeLinecap="round" />
-
-      {/* Bochechinhas coradas */}
-      <ellipse cx="44" cy="48" rx="3.5" ry="2.2" fill="#fca5a5" opacity="0.85" />
-      <ellipse cx="80" cy="48" rx="3.5" ry="2.2" fill="#fca5a5" opacity="0.85" />
-
-      {/* Narizinho em coraçãozinho/triângulo invertido */}
-      <path d="M 60 48 L 64 48 L 62 51 Z" fill="#f43f5e" stroke="#18181b" strokeWidth="1.2" strokeLinejoin="round" />
-
-      {/* Boquinha de gatinho :3 */}
       <path
-        d="M 57 52 Q 62 55 62 51 Q 62 55 67 52"
+        d="M 76 30 L 96 30 L 96 43 C 94 46, 78 45, 76 43 Z"
+        fill="#18181b"
         stroke="#18181b"
-        strokeWidth="2.2"
+        strokeWidth="2.5"
+        strokeLinejoin="round"
+      />
+      <line x1="68" y1="33" x2="76" y2="33" stroke="#18181b" strokeWidth="4" strokeLinecap="round" />
+      {/* Brilho reflexivo cortante branco nas lentes */}
+      <line x1="52" y1="33" x2="62" y2="41" stroke="#ffffff" strokeWidth="2.2" strokeLinecap="round" />
+      <line x1="80" y1="33" x2="90" y2="41" stroke="#ffffff" strokeWidth="2.2" strokeLinecap="round" />
+
+      {/* Focinho */}
+      <path d="M 70 45 L 74 45 L 72 48 Z" fill="#18181b" stroke="#18181b" strokeWidth="1.5" strokeLinejoin="round" />
+
+      {/* Sorriso confiante de canto de boca (smirk) */}
+      <path
+        d="M 66 50 Q 72 52 79 47"
+        stroke="#18181b"
+        strokeWidth="2.8"
         strokeLinecap="round"
       />
+      <path d="M 79 45 L 81 49" stroke="#18181b" strokeWidth="2" strokeLinecap="round" />
 
-      {/* Bigodinhos do lado esquerdo */}
-      <path d="M 38 45 L 22 43 M 36 49 L 18 50 M 38 54 L 24 57" stroke="#18181b" strokeWidth="2" strokeLinecap="round" />
+      {/* Bigodes afiados */}
+      <path d="M 44 42 L 26 40 M 42 47 L 24 49 M 44 52 L 28 57" stroke="#18181b" strokeWidth="2.5" strokeLinecap="round" />
+      <path d="M 98 42 L 116 40 M 100 47 L 118 49 M 98 52 L 114 57" stroke="#18181b" strokeWidth="2.5" strokeLinecap="round" />
 
-      {/* Bigodinhos do lado direito */}
-      <path d="M 86 45 L 102 43 M 88 49 L 106 50 M 86 54 L 100 57" stroke="#18181b" strokeWidth="2" strokeLinecap="round" />
+      {/* MAÇO DE CÉDULAS DE DINHEIRO NAS PATAS (CONTANDO NOTAS) */}
+      {/* Nota de trás (verde escura) */}
+      <g transform="rotate(-15 60 75)">
+        <rect x="42" y="65" width="28" height="15" rx="2" fill="#16a34a" stroke="#18181b" strokeWidth="2" />
+        <circle cx="56" cy="72.5" r="3" fill="#86efac" />
+      </g>
+      {/* Nota do meio (verde viva) */}
+      <g transform="rotate(-4 64 76)">
+        <rect x="46" y="66" width="28" height="15" rx="2" fill="#22c55e" stroke="#18181b" strokeWidth="2" />
+        <circle cx="60" cy="73.5" r="3" fill="#bbf7d0" />
+        <text x="49" y="74" fontSize="7" fontWeight="900" fill="#14532d" fontFamily="sans-serif">$</text>
+        <text x="67" y="74" fontSize="7" fontWeight="900" fill="#14532d" fontFamily="sans-serif">$</text>
+      </g>
+      {/* Nota da frente sendo contada */}
+      <g transform="rotate(10 70 78)">
+        <rect x="52" y="66" width="30" height="16" rx="2" fill="#4ade80" stroke="#18181b" strokeWidth="2.2" />
+        <ellipse cx="67" cy="74" rx="4.5" ry="3.5" fill="#dcfce7" stroke="#15803d" strokeWidth="1" />
+        <text x="65" y="76.5" fontSize="8" fontWeight="bold" fill="#14532d" fontFamily="sans-serif">$</text>
+      </g>
 
-      {/* Patinha Esquerda apoiada na frente */}
+      {/* Pata Esquerda segurando o maço de dinheiro */}
       <path
-        d="M 48 88 C 48 78, 60 78, 60 88"
+        d="M 44 80 C 44 72, 54 72, 56 80 L 52 86 Z"
         fill="#ffffff"
         stroke="#18181b"
-        strokeWidth="3"
-        strokeLinecap="round"
+        strokeWidth="2.8"
+        strokeLinejoin="round"
       />
-      <line x1="52" y1="83" x2="52" y2="86" stroke="#18181b" strokeWidth="2" strokeLinecap="round" />
-      <line x1="56" y1="83" x2="56" y2="86" stroke="#18181b" strokeWidth="2" strokeLinecap="round" />
+      <line x1="47" y1="75" x2="48" y2="79" stroke="#18181b" strokeWidth="1.8" />
+      <line x1="51" y1="75" x2="52" y2="79" stroke="#18181b" strokeWidth="1.8" />
 
-      {/* Patinha Direita apoiada na frente */}
+      {/* Pata Direita contando as notas */}
       <path
-        d="M 66 88 C 66 78, 78 78, 78 88"
+        d="M 76 74 C 80 68, 88 72, 84 80 L 78 82 Z"
         fill="#ffffff"
         stroke="#18181b"
-        strokeWidth="3"
-        strokeLinecap="round"
+        strokeWidth="2.8"
+        strokeLinejoin="round"
       />
-      <line x1="70" y1="83" x2="70" y2="86" stroke="#18181b" strokeWidth="2" strokeLinecap="round" />
-      <line x1="74" y1="83" x2="74" y2="86" stroke="#18181b" strokeWidth="2" strokeLinecap="round" />
+      <line x1="81" y1="72" x2="79" y2="77" stroke="#18181b" strokeWidth="1.8" />
+      <line x1="84" y1="74" x2="82" y2="78" stroke="#18181b" strokeWidth="1.8" />
 
-      {/* Coraçãozinho flutuando perto da orelha */}
-      <g transform="translate(88, 14) scale(0.7) rotate(12)">
-        <path
-          d="M 12 4 C 8 0, 0 2, 0 9 C 0 15, 12 22, 12 22 C 12 22, 24 15, 24 9 C 24 2, 16 0, 12 4 Z"
-          fill="#f43f5e"
-          stroke="#18181b"
-          strokeWidth="2"
-        />
+      {/* Moeda de ouro e nota flutuante de faturamento */}
+      <g transform="translate(24, 62) rotate(-10)">
+        <circle cx="8" cy="8" r="5" fill="#facc15" stroke="#18181b" strokeWidth="1.5" />
+        <text x="6" y="10.5" fontSize="6" fontWeight="bold" fill="#713f12" fontFamily="sans-serif">$</text>
+      </g>
+      <g transform="translate(98, 70) rotate(15)">
+        <rect x="0" y="0" width="14" height="8" rx="1.5" fill="#86efac" stroke="#18181b" strokeWidth="1.5" />
+        <text x="4.5" y="6" fontSize="5" fontWeight="bold" fill="#14532d" fontFamily="sans-serif">$</text>
       </g>
     </svg>
   );

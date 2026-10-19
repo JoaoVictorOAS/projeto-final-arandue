@@ -14,7 +14,6 @@ import {
   MessageCircle,
   Bot,
   Settings,
-  Sparkles,
 } from 'lucide-react';
 import { useChat } from '../context/ChatContext';
 import Logo from './Logo';
@@ -127,7 +126,8 @@ export default function Sidebar({ isOpen, setIsOpen }) {
       </nav>
 
 
-      {/* Elemento Decorativo: Gatinho encostado na borda direita */}
+
+      {/* Elemento Decorativo: Gato empreendedor contando dinheiro encostado na borda direita */}
       <div
         className="relative pt-1 px-2 pb-0 flex items-end justify-end select-none overflow-hidden"
         style={{
@@ -135,12 +135,12 @@ export default function Sidebar({ isOpen, setIsOpen }) {
         }}
       >
         <div
-          className="flex items-end justify-end -mr-1 -mb-0.5 transform hover:-translate-y-1 transition-transform duration-200 cursor-default"
+          className="flex items-end justify-end -mr-2 -mb-0.5 transform hover:-translate-y-1 transition-transform duration-200 cursor-default"
           data-testid="sidebar-mascot-cat"
-          title="Miau! 🐾"
+          title="Contando o lucro do MEI 💰"
           aria-hidden="true"
         >
-          <SidebarCatDoodle className="w-28 h-20" />
+          <SidebarCatDoodle className="w-36 h-26" />
         </div>
       </div>
     </div>

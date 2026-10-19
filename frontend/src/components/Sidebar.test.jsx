@@ -100,12 +100,10 @@ describe('Sidebar - Ícones Laterais e Efeito Hover Web', () => {
     });
   });
 
-  it('deve manter o atalho de vitrine mas não exibir dados de perfil ou logout duplicado no rodapé', () => {
+  it('não deve exibir atalho de vitrine, dados de perfil ou logout duplicado no rodapé', () => {
     renderSidebar('/', true);
 
-    // O atalho de vitrine deve existir
-
-    // Mas os dados de logout e perfil redundante devem estar removidos da sidebar
+    expect(screen.queryByText('Página Inicial / Vitrine')).toBeNull();
     expect(screen.queryByText('admin@mei.com')).toBeNull();
     expect(screen.queryByLabelText('Sair da conta')).toBeNull();
   });
