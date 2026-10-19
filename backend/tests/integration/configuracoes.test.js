@@ -97,9 +97,11 @@ describe('Módulo de Configurações do MEI (/api/configuracoes) - REST & Multi-
       expect(res.body.dados.configurado).toBe(false);
       expect(res.body.dados.ambiente_fiscal).toBe('HOMOLOGACAO');
       expect(res.body.dados.preferencia_resposta).toBe('texto');
+      expect(res.body.dados.voz_assistente).toBe('pt-BR-FranciscaNeural');
       expect(res.body.dados.inscricao_estadual).toBe('ISENTO');
       expect(res.body.dados.numero).toBe('S/N');
     });
+
   });
 
   describe('PUT /api/configuracoes (Validações e Persistência)', () => {
@@ -325,7 +327,38 @@ describe('Módulo de Configurações do MEI (/api/configuracoes) - REST & Multi-
       expect(resPut.statusCode).toBe(200);
       expect(resPut.body.dados.preferencia_resposta).toBe('texto');
     });
+
+    test('deve salvar e persistir modo "ambos" e voz_assistente "pt-BR-AntonioNeural"', async () => {
+      const payloadVoz = {
+        razao_social: 'Alpha Confeitaria MEI LTDA',
+        cnpj: '12345678000195',
+        uf: 'SP',
+        municipio: 'São Paulo',
+        cep: '01001-000',
+        preferencia_resposta: 'ambos',
+        voz_assistente: 'pt-BR-AntonioNeural'
+      };
+
+      const resPut = await request(app)
+        .put('/api/configuracoes')
+        .set('Authorization', `Bearer ${tokenUser1}`)
+        .send(payloadVoz);
+
+      expect(resPut.statusCode).toBe(200);
+      expect(resPut.body.sucesso).toBe(true);
+      expect(resPut.body.dados.preferencia_resposta).toBe('ambos');
+      expect(resPut.body.dados.voz_assistente).toBe('pt-BR-AntonioNeural');
+
+      const resGet = await request(app)
+        .get('/api/configuracoes')
+        .set('Authorization', `Bearer ${tokenUser1}`);
+
+      expect(resGet.statusCode).toBe(200);
+      expect(resGet.body.dados.preferencia_resposta).toBe('ambos');
+      expect(resGet.body.dados.voz_assistente).toBe('pt-BR-AntonioNeural');
+    });
   });
+
 
   describe('Multi-Tenancy e Isolamento de MEIs', () => {
     test('Usuário 2 deve ver configurações default independentes do Usuário 1', async () => {

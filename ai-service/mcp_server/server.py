@@ -287,9 +287,10 @@ async def atualizar_configuracoes_mei(
     telefone_comercial: str = "",
     ambiente_fiscal: str = "HOMOLOGACAO",
     nome_fantasia: str = "",
-    preferencia_resposta: Optional[str] = None
+    preferencia_resposta: Optional[str] = None,
+    voz_assistente: Optional[str] = None
 ) -> Dict[str, Any]:
-    """Atualiza as configurações cadastrais e fiscais do MEI (endereço, CNPJ, UF emissora da SEFAZ, ambiente fiscal, preferência de resposta do assistente: 'texto' ou 'audio')."""
+    """Atualiza as configurações cadastrais e fiscais do MEI (endereço, CNPJ, UF emissora da SEFAZ, ambiente fiscal, preferência de resposta do assistente: 'texto', 'audio' ou 'ambos', voz: 'pt-BR-FranciscaNeural', 'pt-BR-AntonioNeural' ou 'pt-BR-ThalitaNeural')."""
     payload = {
         "razao_social": (razao_social or "").strip(),
         "cnpj": (cnpj or "").strip(),
@@ -310,10 +311,15 @@ async def atualizar_configuracoes_mei(
         payload["nome_fantasia"] = nome_fantasia.strip()
     if preferencia_resposta:
         pref = str(preferencia_resposta).strip().lower()
-        if pref in ("audio", "texto"):
+        if pref in ("audio", "texto", "ambos"):
             payload["preferencia_resposta"] = pref
+    if voz_assistente:
+        voz = str(voz_assistente).strip()
+        if voz in ("pt-BR-FranciscaNeural", "pt-BR-AntonioNeural", "pt-BR-ThalitaNeural"):
+            payload["voz_assistente"] = voz
 
     res = await _put("/configuracoes", payload)
+
     if not res.get("sucesso"):
         return {"sucesso": False, "erro": res.get("erro", "Erro ao atualizar configurações do MEI")}
     return {
