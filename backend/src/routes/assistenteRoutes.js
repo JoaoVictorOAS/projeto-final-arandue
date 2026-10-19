@@ -12,6 +12,7 @@ router.delete('/conversas/:id', assistenteController.excluirConversa);
 
 // Rotas Multimodais (Paridade MCP)
 router.post('/audio/transcrever', assistenteController.transcreverAudio);
+router.post('/audio/sintetizar', assistenteController.sintetizarAudio);
 router.post('/imagem/analisar', assistenteController.analisarImagem);
 router.post('/imagem/lancar-comprovante', assistenteController.lancarComprovanteCaixa);
 

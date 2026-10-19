@@ -311,6 +311,39 @@ const assistenteController = {
         mensagem: error.message || 'Erro ao lançar comprovante no Livro Caixa'
       });
     }
+  },
+
+  async sintetizarAudio(req, res) {
+    try {
+      const usuario_id = req.usuario?.id;
+      const { texto, voz, provedor } = req.body;
+
+      if (!texto || !texto.trim()) {
+        return res.status(400).json({
+          sucesso: false,
+          mensagem: 'O texto para síntese de áudio é obrigatório.'
+        });
+      }
+
+      const resultado = await assistenteService.sintetizarAudio({
+        texto: texto.trim(),
+        voz,
+        provedor,
+        usuario_id
+      });
+
+      return res.status(200).json({
+        sucesso: true,
+        mensagem: 'Áudio sintetizado com sucesso',
+        dados: resultado
+      });
+    } catch (error) {
+      const status = error.statusCode || 500;
+      return res.status(status).json({
+        sucesso: false,
+        mensagem: error.message || 'Erro ao sintetizar áudio com a voz selecionada'
+      });
+    }
   }
 };
 

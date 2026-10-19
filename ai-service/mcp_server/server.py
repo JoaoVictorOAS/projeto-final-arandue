@@ -1648,6 +1648,21 @@ async def transcrever_audio(audio_base64: str, mime_type: Optional[str] = "audio
 
 
 @mcp_server_app.tool()
+async def sintetizar_audio_assistente(
+    texto: str,
+    voz: Optional[str] = "pt-BR-FranciscaNeural",
+    provedor: Optional[str] = "auto"
+) -> Dict[str, Any]:
+    """Sintetiza um texto em áudio neural utilizando ElevenLabs ou Edge-TTS. Retorna o áudio em formato base64 MP3."""
+    payload = {
+        "texto": str(texto).strip(),
+        "voz": str(voz or "pt-BR-FranciscaNeural").strip(),
+        "provedor": str(provedor or "auto").strip()
+    }
+    return await _post("/assistente/audio/sintetizar", payload)
+
+
+@mcp_server_app.tool()
 async def analisar_imagem_documento(
     imagem_base64: str,
     mime_type: Optional[str] = "image/jpeg",

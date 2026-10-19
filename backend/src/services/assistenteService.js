@@ -559,6 +559,79 @@ const assistenteService = {
       throw erro;
     }
     return true;
+  },
+
+  async sintetizarAudio({ texto, voz, provedor, usuario_id }) {
+    if (!texto || !texto.trim()) {
+      const err = new Error('O texto para síntese de áudio é obrigatório.');
+      err.statusCode = 400;
+      throw err;
+    }
+
+    let vozFinal = voz;
+    let provedorFinal = provedor;
+
+    if ((!vozFinal || !provedorFinal) && usuario_id) {
+      try {
+        const pref = await obterPreferenciaAssistente(usuario_id);
+        if (!vozFinal) vozFinal = pref.voz_assistente;
+        if (!provedorFinal) provedorFinal = pref.provedor_tts;
+      } catch {
+        // Usa defaults
+      }
+    }
+
+    vozFinal = vozFinal || 'pt-BR-FranciscaNeural';
+    provedorFinal = provedorFinal || 'auto';
+
+    // 1. Tenta sintetizar via microserviço de IA (ai-service)
+    try {
+      const dados = await aiServiceClient.sintetizarAudio({
+        texto: texto.trim(),
+        voz: vozFinal,
+        provedor: provedorFinal
+      });
+      if (dados && dados.sucesso && dados.audio_base64) {
+        return dados;
+      }
+    } catch (aiErr) {
+      console.warn('[AssistenteService] Falha ao sintetizar via ai-service:', aiErr.message);
+    }
+
+    // 2. Fallback direto via SDK oficial ElevenLabs caso chave esteja configurada
+    const elevenKey = process.env.ELEVENLABS_API_KEY;
+    if (elevenKey && (provedorFinal === 'elevenlabs' || provedorFinal === 'auto')) {
+      try {
+        const { ElevenLabsClient } = require('@elevenlabs/elevenlabs-js');
+        const client = new ElevenLabsClient({ apiKey: elevenKey });
+        const voiceId = vozFinal && !vozFinal.startsWith('pt-BR-') ? vozFinal : '21m00Tcm4TlvDq8ikWAM';
+        const stream = await client.textToSpeech.convert(voiceId, {
+          text: texto.trim(),
+          modelId: process.env.ELEVENLABS_MODEL_ID || 'eleven_multilingual_v2',
+          outputFormat: 'mp3_44100_128',
+        });
+        const chunks = [];
+        for await (const chunk of stream) {
+          chunks.push(chunk);
+        }
+        const buffer = Buffer.concat(chunks);
+        const totalPalavras = texto.trim().split(/\s+/).length;
+        const duracaoEstimada = Math.max(1, Math.round(totalPalavras / 2.5));
+
+        return {
+          sucesso: true,
+          audio_base64: buffer.toString('base64'),
+          mime_type: 'audio/mp3',
+          duracao_estimada_s: duracaoEstimada,
+          voz_utilizada: voiceId,
+          provedor_utilizado: 'elevenlabs'
+        };
+      } catch (sdkErr) {
+        console.warn('[AssistenteService] Falha no fallback direto ElevenLabsClient:', sdkErr.message);
+      }
+    }
+
+    throw new Error('Falha na síntese de áudio. Verifique as credenciais e conexões do serviço de TTS.');
   }
 };
 

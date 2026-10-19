@@ -534,34 +534,58 @@ export default function Configuracoes() {
     }
   };
 
-  const demonstrarVoz = (vozId) => {
+  const demonstrarVoz = async (vozId) => {
     if (typeof window === 'undefined') return;
 
+    const textoMap = {
+      '21m00Tcm4TlvDq8ikWAM': 'Olá! Sou Rachel, a voz ultra-realista da ElevenLabs para o seu assistente Aranduê.',
+      'pNInz6obpgDQGcFmaJgB': 'Olá! Sou Adam, a voz profissional da ElevenLabs para o seu negócio no Aranduê.',
+      'AZnzlk1XvdvUeBnXmlld': 'Oi! Sou Domi, com dinamismo e clareza da ElevenLabs no Aranduê.',
+      'ErXwobaYiN019PkySvjV': 'Olá! Sou Antoni, a voz calma e serena da ElevenLabs para o seu negócio.',
+      'JBFqnCBsd6RMkjVDRZzb': 'Olá! Sou George, narrador e assistente de negócios no Aranduê.',
+      'pt-BR-AntonioNeural': 'Olá! Sou Antonio, a voz profissional do seu assistente Aranduê.',
+      'pt-BR-ThalitaNeural': 'Oi! Sou Thalita, sua parceira ágil e dinâmica no Aranduê.',
+      'pt-BR-FranciscaNeural': 'Olá! Sou Francisca, sua assistente virtual Aranduê para o dia a dia.',
+    };
+    const texto = textoMap[vozId] || 'Olá! Esta é a voz do seu assistente Aranduê.';
+
+    setVozTestando(vozId);
+
+    // 1. Tenta sintetizar diretamente via API da ElevenLabs/Edge pelo Backend
+    try {
+      const vozObj = VOZES_ASSISTENTE.find((v) => v.id === vozId);
+      const res = await api.post('/assistente/audio/sintetizar', {
+        texto,
+        voz: vozId,
+        provedor: vozObj?.provedor || form.provedor_tts || 'auto',
+      });
+      const dados = res.data?.dados;
+      if (dados?.audio_base64) {
+        const audio = new Audio(`data:${dados.mime_type || 'audio/mp3'};base64,${dados.audio_base64}`);
+        audio.onended = () => setVozTestando(null);
+        audio.onerror = () => setVozTestando(null);
+        await audio.play();
+        return;
+      }
+    } catch (apiErr) {
+      console.warn('Falha na síntese via API, usando sintetizador local do navegador:', apiErr);
+    }
+
+    // 2. Fallback local para Web Speech API
     if (window.speechSynthesis) {
       try {
         window.speechSynthesis.cancel();
-        const textoMap = {
-          '21m00Tcm4TlvDq8ikWAM': 'Olá! Sou Rachel, a voz ultra-realista da ElevenLabs para o seu assistente Aranduê.',
-          'pNInz6obpgDQGcFmaJgB': 'Olá! Sou Adam, a voz profissional da ElevenLabs para o seu negócio no Aranduê.',
-          'AZnzlk1XvdvUeBnXmlld': 'Oi! Sou Domi, com dinamismo e clareza da ElevenLabs no Aranduê.',
-          'ErXwobaYiN019PkySvjV': 'Olá! Sou Antoni, a voz calma e serena da ElevenLabs para o seu negócio.',
-          'JBFqnCBsd6RMkjVDRZzb': 'Olá! Sou George, narrador e assistente de negócios no Aranduê.',
-          'pt-BR-AntonioNeural': 'Olá! Sou Antonio, a voz profissional do seu assistente Aranduê.',
-          'pt-BR-ThalitaNeural': 'Oi! Sou Thalita, sua parceira ágil e dinâmica no Aranduê.',
-          'pt-BR-FranciscaNeural': 'Olá! Sou Francisca, sua assistente virtual Aranduê para o dia a dia.',
-        };
-        const texto = textoMap[vozId] || 'Olá! Esta é a voz do seu assistente Aranduê.';
-
         const utterance = new SpeechSynthesisUtterance(texto);
         utterance.lang = 'pt-BR';
-        setVozTestando(vozId);
         utterance.onend = () => setVozTestando(null);
         utterance.onerror = () => setVozTestando(null);
         window.speechSynthesis.speak(utterance);
+        return;
       } catch (e) {
-        setVozTestando(null);
+        // silencioso
       }
     }
+    setVozTestando(null);
   };
 
   const VOZES_ASSISTENTE = [

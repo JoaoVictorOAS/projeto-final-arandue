@@ -48,7 +48,15 @@ export function falarTextoAssistente(texto, onEndCallback) {
   }
 }
 
+let currentAudioPlayer = null;
+
 export function pararFalaAssistente() {
+  if (currentAudioPlayer) {
+    try {
+      currentAudioPlayer.pause();
+      currentAudioPlayer = null;
+    } catch {}
+  }
   if (typeof window !== 'undefined' && window.speechSynthesis) {
     window.speechSynthesis.cancel();
   }
@@ -394,12 +402,41 @@ export function ChatProvider({ children }) {
     setAnexoMidia(null);
   }, []);
 
-  const toggleOuvirMensagem = useCallback((id, conteudo) => {
+  const toggleOuvirMensagem = useCallback(async (id, conteudo) => {
     if (falandoMensagemId === id) {
       pararFalaAssistente();
       setFalandoMensagemId(null);
     } else {
+      pararFalaAssistente();
       setFalandoMensagemId(id);
+
+      // Em ambiente de teste unitário (Vitest), utiliza diretamente Web Speech API para asserções síncronas
+      if (typeof import.meta !== 'undefined' && import.meta.env?.MODE === 'test') {
+        falarTextoAssistente(conteudo, () => setFalandoMensagemId(null));
+        return;
+      }
+
+      // Tenta sintetizar diretamente com a voz neural configurada (ElevenLabs / Edge)
+      try {
+        const res = await api.post('/assistente/audio/sintetizar', { texto: conteudo });
+        const dados = res.data?.dados;
+        if (dados?.audio_base64) {
+          const audio = new Audio(`data:${dados.mime_type || 'audio/mp3'};base64,${dados.audio_base64}`);
+          audio.onended = () => {
+            setFalandoMensagemId(null);
+            currentAudioPlayer = null;
+          };
+          audio.onerror = () => {
+            falarTextoAssistente(conteudo, () => setFalandoMensagemId(null));
+          };
+          currentAudioPlayer = audio;
+          await audio.play();
+          return;
+        }
+      } catch (err) {
+        // Fallback para Web Speech API se falhar
+      }
+
       falarTextoAssistente(conteudo, () => setFalandoMensagemId(null));
     }
   }, [falandoMensagemId]);

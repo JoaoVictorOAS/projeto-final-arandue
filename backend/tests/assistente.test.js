@@ -418,6 +418,32 @@ describe('Rotas do Assistente IA (/api/assistente)', () => {
         provedor: 'auto'
       });
     });
+
+    test('deve sintetizar áudio via POST /api/assistente/audio/sintetizar chamando aiServiceClient ou SDK', async () => {
+      aiServiceClient.sintetizarAudio.mockResolvedValueOnce({
+        sucesso: true,
+        audio_base64: 'audio_base64_rachel_elevenlabs',
+        mime_type: 'audio/mp3',
+        duracao_estimada_s: 1.5,
+        voz_utilizada: '21m00Tcm4TlvDq8ikWAM',
+        provedor_utilizado: 'elevenlabs'
+      });
+
+      const res = await request(app)
+        .post('/api/assistente/audio/sintetizar')
+        .set('Authorization', `Bearer ${tokenUsuario1}`)
+        .send({
+          texto: 'Olá! Sou Rachel da ElevenLabs.',
+          voz: '21m00Tcm4TlvDq8ikWAM',
+          provedor: 'elevenlabs'
+        });
+
+      expect(res.statusCode).toBe(200);
+      expect(res.body.sucesso).toBe(true);
+      expect(res.body.dados.audio_base64).toBe('audio_base64_rachel_elevenlabs');
+      expect(res.body.dados.provedor_utilizado).toBe('elevenlabs');
+    });
   });
 });
+
 
