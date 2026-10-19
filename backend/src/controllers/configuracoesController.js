@@ -400,6 +400,122 @@ const configuracoesController = {
   },
 
   /**
+   * PATCH /api/configuracoes/assistente
+   * Atualiza as preferências do assistente IA (formato de resposta, voz e provedor TTS)
+   * sem exigir o envio de dados fiscais (CNPJ, endereço, etc.).
+   */
+  async atualizarPreferenciasAssistente(req, res) {
+    try {
+      const usuario_id = req.usuario.id;
+      const { preferencia_resposta, voz_assistente, provedor_tts } = req.body;
+
+      if (!preferencia_resposta && !voz_assistente && !provedor_tts) {
+        return res.status(400).json({
+          sucesso: false,
+          mensagem: 'Pelo menos uma preferência (preferencia_resposta, voz_assistente ou provedor_tts) deve ser informada.'
+        });
+      }
+
+      if (preferencia_resposta && !['texto', 'audio', 'ambos'].includes(preferencia_resposta)) {
+        return res.status(400).json({
+          sucesso: false,
+          mensagem: 'preferencia_resposta inválida. Valores aceitos: texto, audio, ambos.'
+        });
+      }
+
+      if (provedor_tts && !['auto', 'elevenlabs', 'edge-tts'].includes(provedor_tts)) {
+        return res.status(400).json({
+          sucesso: false,
+          mensagem: 'provedor_tts inválido. Valores aceitos: auto, elevenlabs, edge-tts.'
+        });
+      }
+
+      let vozSanitizada = null;
+      if (voz_assistente !== undefined && voz_assistente !== null) {
+        if (typeof voz_assistente !== 'string' || !voz_assistente.trim() || voz_assistente.trim().length > 100) {
+          return res.status(400).json({
+            sucesso: false,
+            mensagem: 'voz_assistente deve ser uma string válida de até 100 caracteres.'
+          });
+        }
+        vozSanitizada = voz_assistente.trim();
+      }
+
+      // Verifica se o MEI já possui registro na tabela mei_configuracoes
+      const [rows] = await pool.execute(
+        'SELECT * FROM mei_configuracoes WHERE usuario_id = ?',
+        [usuario_id]
+      );
+
+      if (rows.length > 0) {
+        const config = rows[0];
+        const prefFinal = preferencia_resposta !== undefined ? preferencia_resposta : (config.preferencia_resposta || 'texto');
+        const vozFinal = vozSanitizada !== null ? vozSanitizada : (config.voz_assistente || 'pt-BR-FranciscaNeural');
+        const provFinal = provedor_tts !== undefined ? provedor_tts : (config.provedor_tts || 'auto');
+
+        await pool.execute(
+          `UPDATE mei_configuracoes
+           SET preferencia_resposta = ?, voz_assistente = ?, provedor_tts = ?, atualizado_em = NOW()
+           WHERE usuario_id = ?`,
+          [prefFinal, vozFinal, provFinal, usuario_id]
+        );
+
+        return res.status(200).json({
+          sucesso: true,
+          mensagem: 'Preferências do assistente salvas com sucesso',
+          dados: {
+            usuario_id,
+            preferencia_resposta: prefFinal,
+            voz_assistente: vozFinal,
+            provedor_tts: provFinal,
+            atualizado_em: new Date().toISOString()
+          }
+        });
+      }
+
+      // Caso não possua configurações, insere registro base do usuário
+      const usuario = (await usuarioRepository.buscarPorId(usuario_id)) || req.usuario || {};
+      const prefFinal = preferencia_resposta || 'texto';
+      const vozFinal = vozSanitizada || 'pt-BR-FranciscaNeural';
+      const provFinal = provedor_tts || 'auto';
+
+      await pool.execute(
+        `INSERT INTO mei_configuracoes (
+          usuario_id, razao_social, nome_fantasia, cnpj,
+          cep, logradouro, numero, bairro, municipio, uf, codigo_municipio_ibge,
+          email_comercial, ambiente_fiscal, preferencia_resposta, voz_assistente, provedor_tts
+        ) VALUES (?, ?, ?, '', '', '', 'S/N', '', '', '', '', ?, 'HOMOLOGACAO', ?, ?, ?)`,
+        [
+          usuario_id,
+          usuario.nome || 'MEI',
+          usuario.nome || 'MEI',
+          usuario.email || '',
+          prefFinal,
+          vozFinal,
+          provFinal
+        ]
+      );
+
+      return res.status(200).json({
+        sucesso: true,
+        mensagem: 'Preferências do assistente salvas com sucesso',
+        dados: {
+          usuario_id,
+          preferencia_resposta: prefFinal,
+          voz_assistente: vozFinal,
+          provedor_tts: provFinal,
+          atualizado_em: new Date().toISOString()
+        }
+      });
+    } catch (error) {
+      return res.status(500).json({
+        sucesso: false,
+        mensagem: error.message || 'Erro ao atualizar preferências do assistente'
+      });
+    }
+  },
+
+  /**
    * GET /api/configuracoes/estados
    * Retorna a lista completa das 27 UFs com dados cadastrais e fiscais da SEFAZ.
    */

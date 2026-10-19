@@ -569,4 +569,89 @@ describe('Módulo de Configurações do MEI (/api/configuracoes) - REST & Multi-
       expect(res.body.mensagem).toMatch(/indisponível/i);
     });
   });
+
+  describe('PATCH /api/configuracoes/assistente (Preferências de Resposta e Voz)', () => {
+    test('deve retornar 401 sem token de autenticação', async () => {
+      const res = await request(app)
+        .patch('/api/configuracoes/assistente')
+        .send({ preferencia_resposta: 'audio' });
+
+      expect(res.statusCode).toBe(401);
+      expect(res.body.sucesso).toBe(false);
+    });
+
+    test('deve retornar 400 se nenhum parâmetro for enviado', async () => {
+      const res = await request(app)
+        .patch('/api/configuracoes/assistente')
+        .set('Authorization', `Bearer ${tokenUser1}`)
+        .send({});
+
+      expect(res.statusCode).toBe(400);
+      expect(res.body.sucesso).toBe(false);
+      expect(res.body.mensagem).toMatch(/Pelo menos uma preferência/i);
+    });
+
+    test('deve retornar 400 se preferencia_resposta for inválida', async () => {
+      const res = await request(app)
+        .patch('/api/configuracoes/assistente')
+        .set('Authorization', `Bearer ${tokenUser1}`)
+        .send({ preferencia_resposta: 'telepatia' });
+
+      expect(res.statusCode).toBe(400);
+      expect(res.body.sucesso).toBe(false);
+      expect(res.body.mensagem).toMatch(/preferencia_resposta inválida/i);
+    });
+
+    test('deve retornar 400 se provedor_tts for inválido', async () => {
+      const res = await request(app)
+        .patch('/api/configuracoes/assistente')
+        .set('Authorization', `Bearer ${tokenUser1}`)
+        .send({ provedor_tts: 'inexistente' });
+
+      expect(res.statusCode).toBe(400);
+      expect(res.body.sucesso).toBe(false);
+      expect(res.body.mensagem).toMatch(/provedor_tts inválido/i);
+    });
+
+    test('deve atualizar preferências do assistente com sucesso e persistir sem exigir dados fiscais', async () => {
+      const resPatch = await request(app)
+        .patch('/api/configuracoes/assistente')
+        .set('Authorization', `Bearer ${tokenUser1}`)
+        .send({
+          preferencia_resposta: 'audio',
+          voz_assistente: 'JBFqnCBsd6RMkjVDRZzb',
+          provedor_tts: 'elevenlabs'
+        });
+
+      expect(resPatch.statusCode).toBe(200);
+      expect(resPatch.body.sucesso).toBe(true);
+      expect(resPatch.body.dados.preferencia_resposta).toBe('audio');
+      expect(resPatch.body.dados.voz_assistente).toBe('JBFqnCBsd6RMkjVDRZzb');
+      expect(resPatch.body.dados.provedor_tts).toBe('elevenlabs');
+
+      // Verifica persistência através do GET /api/configuracoes
+      const resGet = await request(app)
+        .get('/api/configuracoes')
+        .set('Authorization', `Bearer ${tokenUser1}`);
+
+      expect(resGet.statusCode).toBe(200);
+      expect(resGet.body.dados.preferencia_resposta).toBe('audio');
+      expect(resGet.body.dados.voz_assistente).toBe('JBFqnCBsd6RMkjVDRZzb');
+      expect(resGet.body.dados.provedor_tts).toBe('elevenlabs');
+    });
+
+    test('deve suportar rota PUT /api/configuracoes/assistente como alias', async () => {
+      const resPut = await request(app)
+        .put('/api/configuracoes/assistente')
+        .set('Authorization', `Bearer ${tokenUser1}`)
+        .send({
+          preferencia_resposta: 'ambos'
+        });
+
+      expect(resPut.statusCode).toBe(200);
+      expect(resPut.body.sucesso).toBe(true);
+      expect(resPut.body.dados.preferencia_resposta).toBe('ambos');
+    });
+  });
 });
+

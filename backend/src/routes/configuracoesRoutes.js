@@ -16,6 +16,8 @@ router.use(authMiddleware);
 
 router.get('/', configuracoesController.obterConfiguracoes);
 router.put('/', configuracoesController.salvarConfiguracoes);
+router.patch('/assistente', configuracoesController.atualizarPreferenciasAssistente);
+router.put('/assistente', configuracoesController.atualizarPreferenciasAssistente);
 router.get('/estados', configuracoesController.listarEstados);
 
 // Gestão de Temas Dinâmicos e Aparência

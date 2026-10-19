@@ -37,6 +37,14 @@ describe('Assistente IA - Capacidades Multimodais (Áudio e Imagem)', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    if (aiServiceClient.sintetizarAudio) {
+      aiServiceClient.sintetizarAudio.mockResolvedValue({
+        sucesso: true,
+        audio_base64: 'fake_tts_base64',
+        mime_type: 'audio/mp3',
+        duracao_estimada_s: 2
+      });
+    }
   });
 
   describe('POST /api/assistente/audio/transcrever', () => {

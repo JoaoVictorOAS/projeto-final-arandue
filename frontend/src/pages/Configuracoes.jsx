@@ -125,6 +125,8 @@ export default function Configuracoes() {
 
   const [vozTestando, setVozTestando] = useState(null);
   const [isIsentoIE, setIsIsentoIE] = useState(true);
+  const [salvandoAssistente, setSalvandoAssistente] = useState(false);
+  const [sucessoSalvarAssistente, setSucessoSalvarAssistente] = useState(false);
 
 
   // Estados do Certificado Digital A1
@@ -531,6 +533,34 @@ export default function Configuracoes() {
       showFeedback('error', msg);
     } finally {
       setSalvando(false);
+    }
+  };
+
+  const salvarPreferenciasAssistente = async (novosValores = {}) => {
+    const novosDados = {
+      preferencia_resposta: novosValores.preferencia_resposta !== undefined ? novosValores.preferencia_resposta : form.preferencia_resposta,
+      voz_assistente: novosValores.voz_assistente !== undefined ? novosValores.voz_assistente : form.voz_assistente,
+      provedor_tts: novosValores.provedor_tts !== undefined ? novosValores.provedor_tts : form.provedor_tts,
+    };
+
+    setForm((prev) => ({
+      ...prev,
+      ...novosDados,
+    }));
+
+    try {
+      setSalvandoAssistente(true);
+      const patchFn = api.patch || api.put;
+      const res = await patchFn('/configuracoes/assistente', novosDados);
+      if (res.data?.sucesso) {
+        setSucessoSalvarAssistente(true);
+        setTimeout(() => setSucessoSalvarAssistente(false), 3000);
+      }
+    } catch (err) {
+      console.error('Erro ao salvar preferências do assistente:', err);
+      showFeedback('error', 'Falha ao salvar as preferências do assistente.');
+    } finally {
+      setSalvandoAssistente(false);
     }
   };
 
@@ -1363,7 +1393,7 @@ export default function Configuracoes() {
           }}
         >
           <div
-            className="border-b pb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2"
+            className="border-b pb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
             style={{ borderColor: 'var(--border-color, #f3f4f6)' }}
           >
             <div>
@@ -1381,13 +1411,39 @@ export default function Configuracoes() {
                 Escolha o formato das respostas no Chat Web e no WhatsApp, além da voz neural utilizada na síntese.
               </p>
             </div>
-            <span className="badge-theme-subtle px-3 py-1 rounded-full text-xs font-semibold">
-              {form.preferencia_resposta === 'ambos'
-                ? '✨ Texto e Áudio (Ambos)'
-                : form.preferencia_resposta === 'audio'
-                ? '🔊 Apenas Áudio'
-                : '📝 Apenas Texto (Padrão)'}
-            </span>
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="badge-theme-subtle px-3 py-1 rounded-full text-xs font-semibold">
+                {form.preferencia_resposta === 'ambos'
+                  ? '✨ Texto e Áudio (Ambos)'
+                  : form.preferencia_resposta === 'audio'
+                  ? '🔊 Apenas Áudio'
+                  : '📝 Apenas Texto (Padrão)'}
+              </span>
+              <button
+                type="button"
+                onClick={() => salvarPreferenciasAssistente()}
+                disabled={salvandoAssistente}
+                className="btn-theme-primary px-3.5 py-1.5 rounded-xl text-xs font-semibold inline-flex items-center gap-1.5 shadow-xs transition-all cursor-pointer"
+                title="Salvar alterações de retorno e voz"
+              >
+                {salvandoAssistente ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    Salvando...
+                  </>
+                ) : sucessoSalvarAssistente ? (
+                  <>
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                    Preferências Salvas!
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-3.5 h-3.5" />
+                    Salvar Preferências
+                  </>
+                )}
+              </button>
+            </div>
           </div>
 
           {/* Seletor de 3 Modos */}
@@ -1412,7 +1468,7 @@ export default function Configuracoes() {
                 value="texto"
                 aria-label="Respostas em Texto (Padrão)"
                 checked={form.preferencia_resposta === 'texto'}
-                onChange={() => setForm({ ...form, preferencia_resposta: 'texto' })}
+                onChange={() => salvarPreferenciasAssistente({ preferencia_resposta: 'texto' })}
                 className="mt-1 h-4 w-4 text-theme-primary focus:ring-theme-primary border-gray-300"
               />
               <div className="flex-1">
@@ -1448,7 +1504,7 @@ export default function Configuracoes() {
                 value="audio"
                 aria-label="Respostas em Áudio (Voz)"
                 checked={form.preferencia_resposta === 'audio'}
-                onChange={() => setForm({ ...form, preferencia_resposta: 'audio' })}
+                onChange={() => salvarPreferenciasAssistente({ preferencia_resposta: 'audio' })}
                 className="mt-1 h-4 w-4 text-theme-primary focus:ring-theme-primary border-gray-300"
               />
               <div className="flex-1">
@@ -1484,7 +1540,7 @@ export default function Configuracoes() {
                 value="ambos"
                 aria-label="Texto e Áudio (Ambos)"
                 checked={form.preferencia_resposta === 'ambos'}
-                onChange={() => setForm({ ...form, preferencia_resposta: 'ambos' })}
+                onChange={() => salvarPreferenciasAssistente({ preferencia_resposta: 'ambos' })}
                 className="mt-1 h-4 w-4 text-theme-primary focus:ring-theme-primary border-gray-300"
               />
               <div className="flex-1">
@@ -1547,7 +1603,7 @@ export default function Configuracoes() {
                   <button
                     key={prov.id}
                     type="button"
-                    onClick={() => setForm({ ...form, provedor_tts: prov.id })}
+                    onClick={() => salvarPreferenciasAssistente({ provedor_tts: prov.id })}
                     className={`px-2.5 py-1 text-xs rounded-lg font-medium transition-all ${
                       form.provedor_tts === prov.id ? 'btn-theme-primary' : ''
                     }`}
@@ -1593,8 +1649,7 @@ export default function Configuracoes() {
                             aria-label={voz.nome}
                             checked={selecionada}
                             onChange={() =>
-                              setForm({
-                                ...form,
+                              salvarPreferenciasAssistente({
                                 voz_assistente: voz.id,
                                 provedor_tts: voz.provedor === 'elevenlabs' ? 'elevenlabs' : (form.provedor_tts === 'elevenlabs' ? 'auto' : form.provedor_tts),
                               })

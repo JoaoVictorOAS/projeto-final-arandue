@@ -334,6 +334,45 @@ async def atualizar_configuracoes_mei(
     }
 
 @mcp_server_app.tool()
+async def configurar_preferencias_assistente(
+    preferencia_resposta: Optional[str] = None,
+    voz_assistente: Optional[str] = None,
+    provedor_tts: Optional[str] = None
+) -> Dict[str, Any]:
+    """Configura as preferências de resposta e síntese de voz do Assistente IA (preferencia_resposta: 'texto', 'audio' ou 'ambos', voz_assistente: Microsoft Edge ou ElevenLabs, e provedor_tts: 'auto', 'elevenlabs' ou 'edge-tts') sem exigir dados fiscais ou CNPJ."""
+    payload: Dict[str, Any] = {}
+    if preferencia_resposta:
+        pref = str(preferencia_resposta).strip().lower()
+        if pref in ("audio", "texto", "ambos"):
+            payload["preferencia_resposta"] = pref
+        else:
+            return {"sucesso": False, "erro": "preferencia_resposta deve ser 'texto', 'audio' ou 'ambos'."}
+    if voz_assistente:
+        voz = str(voz_assistente).strip()
+        if voz:
+            payload["voz_assistente"] = voz
+    if provedor_tts:
+        prov = str(provedor_tts).strip().lower()
+        if prov in ("auto", "elevenlabs", "edge-tts"):
+            payload["provedor_tts"] = prov
+        else:
+            return {"sucesso": False, "erro": "provedor_tts deve ser 'auto', 'elevenlabs' ou 'edge-tts'."}
+
+    if not payload:
+        return {"sucesso": False, "erro": "Pelo menos uma preferência (preferencia_resposta, voz_assistente ou provedor_tts) deve ser informada."}
+
+    res = await _patch("/configuracoes/assistente", payload)
+    if not res.get("sucesso"):
+        return {"sucesso": False, "erro": res.get("erro") or res.get("mensagem", "Erro ao atualizar preferências do assistente.")}
+
+    return {
+        "sucesso": True,
+        "mensagem": "Preferências do assistente atualizadas com sucesso!",
+        "dados": res.get("dados", {})
+    }
+
+
+@mcp_server_app.tool()
 async def consultar_dados_cnpj(cnpj: str) -> Dict[str, Any]:
     """Consulta os dados cadastrais públicos de um CNPJ na Receita Federal / BrasilAPI (razão social, nome fantasia, endereço, etc.)."""
     cnpj_limpo = "".join(c for c in str(cnpj) if c.isdigit())

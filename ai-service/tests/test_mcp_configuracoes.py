@@ -6,6 +6,7 @@ import httpx
 from mcp_server.server import (
     obter_configuracoes_mei,
     atualizar_configuracoes_mei,
+    configurar_preferencias_assistente,
     consultar_dados_cnpj,
 )
 
@@ -20,6 +21,7 @@ def test_mcp_configuracoes_security_no_tenant_parameters():
     ferramentas = [
         obter_configuracoes_mei,
         atualizar_configuracoes_mei,
+        configurar_preferencias_assistente,
         consultar_dados_cnpj,
     ]
     for func in ferramentas:
@@ -331,4 +333,70 @@ async def test_atualizar_configuracoes_mei_com_provedor_elevenlabs():
     assert body["preferencia_resposta"] == "audio"
     assert body["voz_assistente"] == "21m00Tcm4TlvDq8ikWAM"
     assert body["provedor_tts"] == "elevenlabs"
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_configurar_preferencias_assistente_sucesso():
+    resposta_api = {
+        "sucesso": True,
+        "mensagem": "Preferências do assistente salvas com sucesso",
+        "dados": {
+            "usuario_id": 42,
+            "preferencia_resposta": "audio",
+            "voz_assistente": "JBFqnCBsd6RMkjVDRZzb",
+            "provedor_tts": "elevenlabs"
+        }
+    }
+    respx.patch("http://test-node:3001/api/configuracoes/assistente").mock(
+        return_value=httpx.Response(200, json=resposta_api)
+    )
+
+    resultado = await configurar_preferencias_assistente(
+        preferencia_resposta="audio",
+        voz_assistente="JBFqnCBsd6RMkjVDRZzb",
+        provedor_tts="elevenlabs"
+    )
+
+    assert resultado["sucesso"] is True
+    assert resultado["dados"]["preferencia_resposta"] == "audio"
+    assert resultado["dados"]["voz_assistente"] == "JBFqnCBsd6RMkjVDRZzb"
+    assert resultado["dados"]["provedor_tts"] == "elevenlabs"
+
+    req = respx.calls.last.request
+    assert req.headers["authorization"] == "Bearer fake_jwt_token_for_tenant_42"
+    body = json.loads(req.content)
+    assert body["preferencia_resposta"] == "audio"
+    assert body["voz_assistente"] == "JBFqnCBsd6RMkjVDRZzb"
+    assert body["provedor_tts"] == "elevenlabs"
+
+
+@pytest.mark.asyncio
+async def test_configurar_preferencias_assistente_validacao():
+    # Sem nenhum parâmetro
+    res_vazio = await configurar_preferencias_assistente()
+    assert res_vazio["sucesso"] is False
+    assert "informada" in res_vazio["erro"]
+
+    # Modo inválido
+    res_invalido = await configurar_preferencias_assistente(preferencia_resposta="telepatia")
+    assert res_invalido["sucesso"] is False
+    assert "deve ser 'texto', 'audio' ou 'ambos'" in res_invalido["erro"]
+
+    # Provedor inválido
+    res_prov = await configurar_preferencias_assistente(provedor_tts="outro")
+    assert res_prov["sucesso"] is False
+    assert "deve ser 'auto', 'elevenlabs' ou 'edge-tts'" in res_prov["erro"]
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_configurar_preferencias_assistente_erro_backend():
+    respx.patch("http://test-node:3001/api/configuracoes/assistente").mock(
+        return_value=httpx.Response(400, json={"sucesso": False, "mensagem": "Erro interno no banco"})
+    )
+
+    resultado = await configurar_preferencias_assistente(preferencia_resposta="audio")
+    assert resultado["sucesso"] is False
+    assert "Erro interno no banco" in resultado["erro"]
 

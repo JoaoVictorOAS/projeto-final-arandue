@@ -12,6 +12,7 @@ vi.mock('../services/api', () => {
       get: vi.fn(),
       post: vi.fn(),
       put: vi.fn(),
+      patch: vi.fn(),
       delete: vi.fn(),
     },
   };
@@ -20,6 +21,7 @@ vi.mock('../services/api', () => {
 describe('Módulo de Configurações — MEI & SEFAZ Multi-Estado', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    api.patch.mockResolvedValue({ data: { sucesso: true, mensagem: 'Preferências salvas com sucesso' } });
   });
 
   const mockConfigInicial = {
@@ -880,6 +882,82 @@ describe('Módulo de Configurações — MEI & SEFAZ Multi-Estado', () => {
       );
     });
   });
+
+  test('deve salvar preferências do assistente via PATCH /configuracoes/assistente imediatamente ao alterar modo ou clicar em Salvar Preferências', async () => {
+    api.get.mockImplementation((url) => {
+      if (url === '/configuracoes') {
+        return Promise.resolve({
+          data: {
+            ...mockConfigInicial,
+            dados: {
+              ...mockConfigInicial.dados,
+              preferencia_resposta: 'texto',
+              voz_assistente: 'pt-BR-FranciscaNeural',
+              provedor_tts: 'auto',
+            },
+          },
+        });
+      }
+      return Promise.resolve({ data: { sucesso: true, dados: [] } });
+    });
+
+    render(<Configuracoes />);
+
+    expect(await screen.findByRole('heading', { name: /configurações do mei/i })).toBeInTheDocument();
+
+    // Clica no modo Áudio
+    const opcaoAudio = screen.getByLabelText(/respostas em áudio/i);
+    fireEvent.click(opcaoAudio);
+
+    await waitFor(() => {
+      expect(api.patch).toHaveBeenCalledWith(
+        '/configuracoes/assistente',
+        expect.objectContaining({
+          preferencia_resposta: 'audio',
+        })
+      );
+    });
+
+    // Verifica que o botão exibe feedback de sucesso após o auto-save
+    expect(await screen.findByRole('button', { name: /preferências salvas/i })).toBeInTheDocument();
+  });
+
+  test('deve permitir salvar explicitamente através do botão "Salvar Preferências"', async () => {
+    api.get.mockImplementation((url) => {
+      if (url === '/configuracoes') {
+        return Promise.resolve({
+          data: {
+            ...mockConfigInicial,
+            dados: {
+              ...mockConfigInicial.dados,
+              preferencia_resposta: 'ambos',
+              voz_assistente: 'pt-BR-FranciscaNeural',
+              provedor_tts: 'auto',
+            },
+          },
+        });
+      }
+      return Promise.resolve({ data: { sucesso: true, dados: [] } });
+    });
+
+    render(<Configuracoes />);
+
+    expect(await screen.findByRole('heading', { name: /configurações do mei/i })).toBeInTheDocument();
+
+    const btnSalvarPref = screen.getByRole('button', { name: /salvar preferências/i });
+    expect(btnSalvarPref).toBeInTheDocument();
+    fireEvent.click(btnSalvarPref);
+
+    await waitFor(() => {
+      expect(api.patch).toHaveBeenCalledWith(
+        '/configuracoes/assistente',
+        expect.objectContaining({
+          preferencia_resposta: 'ambos',
+        })
+      );
+    });
+  });
 });
+
 
 
