@@ -1,7 +1,7 @@
-const request = require('../backend/node_modules/supertest');
-const app = require('../backend/src/app');
-const pool = require('../backend/src/config/database');
-const jwt = require('../backend/node_modules/jsonwebtoken');
+const request = require('supertest');
+const app = require('../../src/app');
+const pool = require('../../src/config/database');
+const jwt = require('jsonwebtoken');
 
 describe('E2E - Ciclo Completo do Empreendedor Produtor (Estoque, Receita, Caixa e Venda)', () => {
   let token;
