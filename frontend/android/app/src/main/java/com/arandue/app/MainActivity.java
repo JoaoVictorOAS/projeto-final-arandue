@@ -18,6 +18,7 @@ import com.getcapacitor.BridgeActivity;
 public class MainActivity extends BridgeActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        setTheme(R.style.AppTheme_NoActionBar);
         registerPlugin(NativeThemeBarPlugin.class);
         super.onCreate(savedInstanceState);
         Window window = getWindow();
@@ -40,7 +41,7 @@ public class MainActivity extends BridgeActivity {
             controller.setAppearanceLightNavigationBars(true);
         }
 
-        // 3. Aplica a altura do status bar e nav bar como margem no WebView
+        // 3. Aplica a altura do status bar e nav bar como margem no WebView e trava zoom de texto em 100%
         ViewCompat.setOnApplyWindowInsetsListener(window.getDecorView(), (v, windowInsets) -> {
             Insets insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars());
             View webView = getBridge() != null ? getBridge().getWebView() : null;
@@ -54,8 +55,19 @@ public class MainActivity extends BridgeActivity {
                     mlp.rightMargin = insets.right;
                     webView.setLayoutParams(mlp);
                 }
+                if (webView instanceof android.webkit.WebView) {
+                    ((android.webkit.WebView) webView).getSettings().setTextZoom(100);
+                }
             }
             return windowInsets;
         });
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        if (getBridge() != null && getBridge().getWebView() != null) {
+            getBridge().getWebView().getSettings().setTextZoom(100);
+        }
     }
 }
