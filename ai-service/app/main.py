@@ -563,3 +563,36 @@ Responda APENAS o JSON."""
             detail="Não foi possível processar a análise da imagem no momento."
         )
 
+
+class SintetizarAudioRequest(BaseModel):
+    texto: str = Field(..., description="Texto a ser sintetizado em voz")
+    voz: Optional[str] = Field("pt-BR-FranciscaNeural", description="Identificador da voz neural (Francisca, Antonio, Thalita)")
+
+
+class SintetizarAudioResponse(BaseModel):
+    sucesso: bool
+    audio_base64: str
+    mime_type: str = "audio/mp3"
+    duracao_estimada_s: float
+    voz_utilizada: str
+
+
+@app.post(
+    "/audio/sintetizar",
+    response_model=SintetizarAudioResponse,
+    dependencies=[Depends(verify_internal_secret)],
+    summary="Sintetiza texto em voz neural brasileira (MP3)"
+)
+async def sintetizar_audio(payload: SintetizarAudioRequest):
+    try:
+        from app.tts.engine import sintetizar_audio_mp3
+        resultado = await sintetizar_audio_mp3(texto=payload.texto, voz=payload.voz or "pt-BR-FranciscaNeural")
+        return SintetizarAudioResponse(**resultado)
+    except Exception as e:
+        logger.error(f"Erro no endpoint de síntese de áudio: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Falha ao sintetizar áudio: {str(e)}"
+        )
+
+
