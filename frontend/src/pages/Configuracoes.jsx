@@ -117,6 +117,7 @@ export default function Configuracoes() {
     ambiente_fiscal: 'HOMOLOGACAO',
     preferencia_resposta: 'texto',
     voz_assistente: 'pt-BR-FranciscaNeural',
+    provedor_tts: 'auto',
     serie_nfse: 1,
     serie_nfe: 1,
     serie_nfce: 1,
@@ -335,6 +336,7 @@ export default function Configuracoes() {
             ambiente_fiscal: dados.ambiente_fiscal || 'HOMOLOGACAO',
             preferencia_resposta: dados.preferencia_resposta || 'texto',
             voz_assistente: dados.voz_assistente || 'pt-BR-FranciscaNeural',
+            provedor_tts: dados.provedor_tts || 'auto',
             serie_nfse: Number(dados.serie_nfse) || 1,
             serie_nfe: Number(dados.serie_nfe) || 1,
             serie_nfce: Number(dados.serie_nfce) || 1,
@@ -509,6 +511,7 @@ export default function Configuracoes() {
         ambiente_fiscal: form.ambiente_fiscal === 'PRODUCAO' ? 'PRODUCAO' : 'HOMOLOGACAO',
         preferencia_resposta: ['texto', 'audio', 'ambos'].includes(form.preferencia_resposta) ? form.preferencia_resposta : 'texto',
         voz_assistente: form.voz_assistente || 'pt-BR-FranciscaNeural',
+        provedor_tts: ['auto', 'elevenlabs', 'edge-tts'].includes(form.provedor_tts) ? form.provedor_tts : 'auto',
         serie_nfse: Number(form.serie_nfse) || 1,
         serie_nfe: Number(form.serie_nfe) || 1,
         serie_nfce: Number(form.serie_nfce) || 1,
@@ -537,11 +540,17 @@ export default function Configuracoes() {
     if (window.speechSynthesis) {
       try {
         window.speechSynthesis.cancel();
-        const texto = vozId === 'pt-BR-AntonioNeural'
-          ? 'Olá! Sou Antonio, a voz profissional do seu assistente Aranduê.'
-          : vozId === 'pt-BR-ThalitaNeural'
-          ? 'Oi! Sou Thalita, sua parceira ágil e dinâmica no Aranduê.'
-          : 'Olá! Sou Francisca, sua assistente virtual Aranduê para o dia a dia.';
+        const textoMap = {
+          '21m00Tcm4TlvDq8ikWAM': 'Olá! Sou Rachel, a voz ultra-realista da ElevenLabs para o seu assistente Aranduê.',
+          'pNInz6obpgDQGcFmaJgB': 'Olá! Sou Adam, a voz profissional da ElevenLabs para o seu negócio no Aranduê.',
+          'AZnzlk1XvdvUeBnXmlld': 'Oi! Sou Domi, com dinamismo e clareza da ElevenLabs no Aranduê.',
+          'ErXwobaYiN019PkySvjV': 'Olá! Sou Antoni, a voz calma e serena da ElevenLabs para o seu negócio.',
+          'JBFqnCBsd6RMkjVDRZzb': 'Olá! Sou George, narrador e assistente de negócios no Aranduê.',
+          'pt-BR-AntonioNeural': 'Olá! Sou Antonio, a voz profissional do seu assistente Aranduê.',
+          'pt-BR-ThalitaNeural': 'Oi! Sou Thalita, sua parceira ágil e dinâmica no Aranduê.',
+          'pt-BR-FranciscaNeural': 'Olá! Sou Francisca, sua assistente virtual Aranduê para o dia a dia.',
+        };
+        const texto = textoMap[vozId] || 'Olá! Esta é a voz do seu assistente Aranduê.';
 
         const utterance = new SpeechSynthesisUtterance(texto);
         utterance.lang = 'pt-BR';
@@ -557,22 +566,60 @@ export default function Configuracoes() {
 
   const VOZES_ASSISTENTE = [
     {
+      id: '21m00Tcm4TlvDq8ikWAM',
+      nome: 'Rachel',
+      provedor: 'elevenlabs',
+      tag: 'ElevenLabs • Feminina',
+      descricao: 'Voz ultra-realista de última geração, calorosa, natural e acolhedora.',
+    },
+    {
+      id: 'pNInz6obpgDQGcFmaJgB',
+      nome: 'Adam',
+      provedor: 'elevenlabs',
+      tag: 'ElevenLabs • Masculino',
+      descricao: 'Tom corporativo profundo e firme com expressividade de alta definição.',
+    },
+    {
+      id: 'AZnzlk1XvdvUeBnXmlld',
+      nome: 'Domi',
+      provedor: 'elevenlabs',
+      tag: 'ElevenLabs • Jovem',
+      descricao: 'Tom dinâmico, moderno e claro para respostas rápidas e expressivas.',
+    },
+    {
+      id: 'ErXwobaYiN019PkySvjV',
+      nome: 'Antoni',
+      provedor: 'elevenlabs',
+      tag: 'ElevenLabs • Calmo',
+      descricao: 'Voz equilibrada, serena e amigável para orientação clara de negócios.',
+    },
+    {
+      id: 'JBFqnCBsd6RMkjVDRZzb',
+      nome: 'George',
+      provedor: 'elevenlabs',
+      tag: 'ElevenLabs • Narrador',
+      descricao: 'Tom caloroso, envolvente e narrativo com máxima naturalidade.',
+    },
+    {
       id: 'pt-BR-FranciscaNeural',
       nome: 'Francisca',
-      tag: 'Feminina • Padrão',
-      descricao: 'Tom natural, acolhedor e claro para o dia a dia do seu negócio.',
+      provedor: 'edge-tts',
+      tag: 'Edge-TTS • Padrão',
+      descricao: 'Tom brasileiro nativo, acolhedor e ágil para o dia a dia do seu negócio.',
     },
     {
       id: 'pt-BR-AntonioNeural',
       nome: 'Antonio',
-      tag: 'Masculino • Firme',
+      provedor: 'edge-tts',
+      tag: 'Edge-TTS • Firme',
       descricao: 'Tom corporativo, focado e profissional para tomadas de decisão.',
     },
     {
       id: 'pt-BR-ThalitaNeural',
       nome: 'Thalita',
-      tag: 'Feminina • Jovem',
-      descricao: 'Tom jovem, dinâmico e ágil para respostas rápidas e diretas.',
+      provedor: 'edge-tts',
+      tag: 'Edge-TTS • Jovem',
+      descricao: 'Tom jovem, dinâmico e direto com resposta ultrarrápida.',
     },
   ];
 
@@ -1447,7 +1494,56 @@ export default function Configuracoes() {
               </span>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+            {/* Seletor de Provedor TTS */}
+            <div
+              className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 rounded-xl border"
+              style={{
+                backgroundColor: 'var(--bg-surface-hover, #f9fafb)',
+                borderColor: 'var(--border-color, #e5e7eb)',
+              }}
+            >
+              <div>
+                <span className="text-xs font-semibold" style={{ color: 'var(--text-main, #111827)' }}>
+                  Motor de Síntese de Voz (TTS)
+                </span>
+                <p className="text-[11px]" style={{ color: 'var(--text-secondary, #6b7280)' }}>
+                  {form.provedor_tts === 'elevenlabs'
+                    ? 'ElevenLabs Neural HD ativo com fallback transparente para Edge-TTS caso necessário.'
+                    : form.provedor_tts === 'edge-tts'
+                    ? 'Microsoft Edge-TTS nativo ativo (gratuito e de alta velocidade).'
+                    : 'Automático: prioriza ElevenLabs para vozes HD com contingência contínua.'}
+                </p>
+              </div>
+              <div className="flex items-center gap-1.5 flex-wrap">
+                {[
+                  { id: 'auto', label: 'Automático' },
+                  { id: 'elevenlabs', label: 'ElevenLabs HD' },
+                  { id: 'edge-tts', label: 'Edge-TTS' },
+                ].map((prov) => (
+                  <button
+                    key={prov.id}
+                    type="button"
+                    onClick={() => setForm({ ...form, provedor_tts: prov.id })}
+                    className={`px-2.5 py-1 text-xs rounded-lg font-medium transition-all ${
+                      form.provedor_tts === prov.id ? 'btn-theme-primary' : ''
+                    }`}
+                    style={
+                      form.provedor_tts !== prov.id
+                        ? {
+                            backgroundColor: 'var(--bg-surface, #ffffff)',
+                            color: 'var(--text-secondary, #6b7280)',
+                            border: '1px solid var(--border-color, #e5e7eb)',
+                          }
+                        : {}
+                    }
+                  >
+                    {prov.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
               {VOZES_ASSISTENTE.map((voz) => {
                 const selecionada = (form.voz_assistente || 'pt-BR-FranciscaNeural') === voz.id;
                 return (
@@ -1472,7 +1568,13 @@ export default function Configuracoes() {
                             value={voz.id}
                             aria-label={voz.nome}
                             checked={selecionada}
-                            onChange={() => setForm({ ...form, voz_assistente: voz.id })}
+                            onChange={() =>
+                              setForm({
+                                ...form,
+                                voz_assistente: voz.id,
+                                provedor_tts: voz.provedor === 'elevenlabs' ? 'elevenlabs' : (form.provedor_tts === 'elevenlabs' ? 'auto' : form.provedor_tts),
+                              })
+                            }
                             className="h-4 w-4 text-theme-primary focus:ring-theme-primary border-gray-300"
                           />
                           <span className="text-sm font-bold" style={{ color: 'var(--text-main, #111827)' }}>

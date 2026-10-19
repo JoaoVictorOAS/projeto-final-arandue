@@ -8,13 +8,14 @@ const JWT_SECRET = process.env.JWT_SECRET || 'super_secreto_chave_jwt_recode_202
 async function obterPreferenciaAssistente(usuario_id) {
   try {
     const [rows] = await pool.execute(
-      'SELECT preferencia_resposta, voz_assistente FROM mei_configuracoes WHERE usuario_id = ?',
+      'SELECT preferencia_resposta, voz_assistente, provedor_tts FROM mei_configuracoes WHERE usuario_id = ?',
       [usuario_id]
     );
     if (rows && rows.length > 0) {
       return {
         preferencia_resposta: rows[0].preferencia_resposta || 'texto',
-        voz_assistente: rows[0].voz_assistente || 'pt-BR-FranciscaNeural'
+        voz_assistente: rows[0].voz_assistente || 'pt-BR-FranciscaNeural',
+        provedor_tts: rows[0].provedor_tts || 'auto'
       };
     }
   } catch (err) {
@@ -22,7 +23,8 @@ async function obterPreferenciaAssistente(usuario_id) {
   }
   return {
     preferencia_resposta: 'texto',
-    voz_assistente: 'pt-BR-FranciscaNeural'
+    voz_assistente: 'pt-BR-FranciscaNeural',
+    provedor_tts: 'auto'
   };
 }
 
@@ -320,8 +322,8 @@ const assistenteService = {
       throw erroAmigavel;
     }
 
-    // Busca preferências do MEI (áudio, voz)
-    const { preferencia_resposta, voz_assistente } = await obterPreferenciaAssistente(usuario_id);
+    // Busca preferências do MEI (áudio, voz, provedor)
+    const { preferencia_resposta, voz_assistente, provedor_tts } = await obterPreferenciaAssistente(usuario_id);
 
     let audioBase64 = null;
     let midiaMimeType = null;
@@ -332,7 +334,8 @@ const assistenteService = {
       try {
         const dadosAudio = await aiServiceClient.sintetizarAudio({
           texto: respostaAi.resposta,
-          voz: voz_assistente
+          voz: voz_assistente,
+          provedor: provedor_tts
         });
         if (dadosAudio && dadosAudio.audio_base64) {
           audioBase64 = dadosAudio.audio_base64;
@@ -405,7 +408,7 @@ const assistenteService = {
       }
       const respostaAi = await aiServiceClient.enviarMensagem(payloadAi);
 
-      const { preferencia_resposta, voz_assistente } = await obterPreferenciaAssistente(usuario_id);
+      const { preferencia_resposta, voz_assistente, provedor_tts } = await obterPreferenciaAssistente(usuario_id);
 
       let audioBase64 = null;
       let midiaMimeType = null;
@@ -416,7 +419,8 @@ const assistenteService = {
         try {
           const dadosAudio = await aiServiceClient.sintetizarAudio({
             texto: respostaAi.resposta,
-            voz: voz_assistente
+            voz: voz_assistente,
+            provedor: provedor_tts
           });
           if (dadosAudio && dadosAudio.audio_base64) {
             audioBase64 = dadosAudio.audio_base64;

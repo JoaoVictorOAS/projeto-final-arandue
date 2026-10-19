@@ -293,3 +293,42 @@ async def test_consultar_dados_cnpj_nao_encontrado():
 
     assert "erro" in resultado
     assert "não encontrado" in resultado["erro"].lower()
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_atualizar_configuracoes_mei_com_provedor_elevenlabs():
+    resposta_api = {
+        "sucesso": True,
+        "dados": {
+            "id": 1,
+            "razao_social": "JOAO DA SILVA 12345678900",
+            "preferencia_resposta": "audio",
+            "voz_assistente": "21m00Tcm4TlvDq8ikWAM",
+            "provedor_tts": "elevenlabs"
+        }
+    }
+    respx.put("http://test-node:3001/api/configuracoes").mock(
+        return_value=httpx.Response(200, json=resposta_api)
+    )
+
+    resultado = await atualizar_configuracoes_mei(
+        razao_social="JOAO DA SILVA 12345678900",
+        cnpj="12345678000195",
+        uf="SP",
+        municipio="São Paulo",
+        cep="01001000",
+        preferencia_resposta="audio",
+        voz_assistente="21m00Tcm4TlvDq8ikWAM",
+        provedor_tts="elevenlabs"
+    )
+
+    assert resultado["dados"]["preferencia_resposta"] == "audio"
+    assert resultado["dados"]["voz_assistente"] == "21m00Tcm4TlvDq8ikWAM"
+    assert resultado["dados"]["provedor_tts"] == "elevenlabs"
+
+    req = respx.calls.last.request
+    body = json.loads(req.content)
+    assert body["preferencia_resposta"] == "audio"
+    assert body["voz_assistente"] == "21m00Tcm4TlvDq8ikWAM"
+    assert body["provedor_tts"] == "elevenlabs"
+

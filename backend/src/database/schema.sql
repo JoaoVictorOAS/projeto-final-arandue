@@ -407,7 +407,8 @@ CREATE TABLE IF NOT EXISTS mei_configuracoes (
     -- Parâmetros Fiscais e Preferências do Assistente
     ambiente_fiscal ENUM('HOMOLOGACAO', 'PRODUCAO') NOT NULL DEFAULT 'HOMOLOGACAO',
     preferencia_resposta ENUM('texto', 'audio', 'ambos') NOT NULL DEFAULT 'texto',
-    voz_assistente VARCHAR(50) NOT NULL DEFAULT 'pt-BR-FranciscaNeural',
+    voz_assistente VARCHAR(100) NOT NULL DEFAULT 'pt-BR-FranciscaNeural',
+    provedor_tts ENUM('auto', 'elevenlabs', 'edge-tts') NOT NULL DEFAULT 'auto',
     serie_nfse INT NOT NULL DEFAULT 1,
     serie_nfe INT NOT NULL DEFAULT 1,
     serie_nfce INT NOT NULL DEFAULT 1,

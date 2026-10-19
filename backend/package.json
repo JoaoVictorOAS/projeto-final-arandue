@@ -12,6 +12,7 @@
     "whatsapp:reset": "rm -rf .wweb_auth_baileys && mkdir -p .wweb_auth_baileys"
   },
   "dependencies": {
+    "@elevenlabs/elevenlabs-js": "^2.73.0",
     "@whiskeysockets/baileys": "^7.0.0-rc14",
     "bcryptjs": "^3.0.3",
     "cors": "^2.8.6",

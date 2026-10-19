@@ -566,7 +566,8 @@ Responda APENAS o JSON."""
 
 class SintetizarAudioRequest(BaseModel):
     texto: str = Field(..., description="Texto a ser sintetizado em voz")
-    voz: Optional[str] = Field("pt-BR-FranciscaNeural", description="Identificador da voz neural (Francisca, Antonio, Thalita)")
+    voz: Optional[str] = Field("pt-BR-FranciscaNeural", description="Identificador da voz (Francisca, Antonio, Thalita ou ElevenLabs voice ID)")
+    provedor: Optional[str] = Field("auto", description="Provedor de síntese ('auto', 'elevenlabs', 'edge-tts')")
 
 
 class SintetizarAudioResponse(BaseModel):
@@ -575,6 +576,8 @@ class SintetizarAudioResponse(BaseModel):
     mime_type: str = "audio/mp3"
     duracao_estimada_s: float
     voz_utilizada: str
+    provedor_utilizado: Optional[str] = None
+    fallback_ativado: Optional[bool] = None
 
 
 @app.post(
@@ -586,7 +589,11 @@ class SintetizarAudioResponse(BaseModel):
 async def sintetizar_audio(payload: SintetizarAudioRequest):
     try:
         from app.tts.engine import sintetizar_audio_mp3
-        resultado = await sintetizar_audio_mp3(texto=payload.texto, voz=payload.voz or "pt-BR-FranciscaNeural")
+        resultado = await sintetizar_audio_mp3(
+            texto=payload.texto,
+            voz=payload.voz or "pt-BR-FranciscaNeural",
+            provedor=payload.provedor or "auto"
+        )
         return SintetizarAudioResponse(**resultado)
     except Exception as e:
         logger.error(f"Erro no endpoint de síntese de áudio: {e}")

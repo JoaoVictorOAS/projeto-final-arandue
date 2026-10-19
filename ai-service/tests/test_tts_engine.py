@@ -56,3 +56,64 @@ async def test_endpoint_sintetizar_audio_sucesso():
         assert dados["mime_type"] == "audio/mp3"
         assert dados["voz_utilizada"] == "pt-BR-AntonioNeural"
         assert dados["duracao_estimada_s"] > 0
+
+@pytest.mark.asyncio
+async def test_sintetizar_audio_elevenlabs_sucesso(monkeypatch):
+    import httpx
+    monkeypatch.setenv("ELEVENLABS_API_KEY", "test_elevenlabs_key_123")
+
+    fake_mp3_bytes = b"ID3\x04\x00\x00\x00\x00\x00#TSSE\x00\x00\x00\x0f\x00\x00\x03Lavf58.29.100\x00" + b"\xff\xfb\x90\x00" * 30
+
+    async def mock_post(self, url, *args, **kwargs):
+        return httpx.Response(200, content=fake_mp3_bytes, request=httpx.Request("POST", url))
+
+    monkeypatch.setattr(httpx.AsyncClient, "post", mock_post)
+
+    resultado = await sintetizar_audio_mp3(
+        texto="Olá! Teste com ElevenLabs sintetizado.",
+        voz="21m00Tcm4TlvDq8ikWAM",
+        provedor="elevenlabs"
+    )
+
+    assert resultado["sucesso"] is True
+    assert resultado["provedor_utilizado"] == "elevenlabs"
+    assert resultado["voz_utilizada"] == "21m00Tcm4TlvDq8ikWAM"
+    assert len(resultado["audio_base64"]) > 20
+
+@pytest.mark.asyncio
+async def test_sintetizar_audio_elevenlabs_fallback_quando_sem_chave(monkeypatch):
+    monkeypatch.delenv("ELEVENLABS_API_KEY", raising=False)
+
+    # Sem chave de API, deve acionar fallback resiliente para Edge-TTS
+    resultado = await sintetizar_audio_mp3(
+        texto="Fallback para Edge TTS.",
+        voz="21m00Tcm4TlvDq8ikWAM",
+        provedor="elevenlabs"
+    )
+
+    assert resultado["sucesso"] is True
+    assert resultado["provedor_utilizado"] == "edge-tts"
+    assert resultado["fallback_ativado"] is True
+    assert len(resultado["audio_base64"]) > 50
+
+@pytest.mark.asyncio
+async def test_sintetizar_audio_elevenlabs_fallback_quando_erro_api(monkeypatch):
+    import httpx
+    monkeypatch.setenv("ELEVENLABS_API_KEY", "test_elevenlabs_invalid_key")
+
+    async def mock_post_error(self, url, *args, **kwargs):
+        return httpx.Response(401, json={"detail": "Unauthorized"}, request=httpx.Request("POST", url))
+
+    monkeypatch.setattr(httpx.AsyncClient, "post", mock_post_error)
+
+    resultado = await sintetizar_audio_mp3(
+        texto="Fallback após erro 401 na ElevenLabs.",
+        voz="21m00Tcm4TlvDq8ikWAM",
+        provedor="elevenlabs"
+    )
+
+    assert resultado["sucesso"] is True
+    assert resultado["provedor_utilizado"] == "edge-tts"
+    assert resultado["fallback_ativado"] is True
+    assert len(resultado["audio_base64"]) > 50
+

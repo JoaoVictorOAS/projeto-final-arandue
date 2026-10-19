@@ -65,13 +65,16 @@ describe('Conexao e Estrutura do Banco de Dados MySQL', () => {
     expect(fluxoLiquidado.movimentacao_tipo).toBe('ENTRADA');
   });
 
-  test('deve conter as colunas de preferencia_resposta, voz_assistente e audio_base64', async () => {
+  test('deve conter as colunas de preferencia_resposta, voz_assistente, provedor_tts e audio_base64', async () => {
     const [colsConfig] = await pool.execute(
-      "SELECT COLUMN_NAME, COLUMN_TYPE FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'mei_configuracoes' AND COLUMN_NAME IN ('preferencia_resposta', 'voz_assistente')"
+      "SELECT COLUMN_NAME, COLUMN_TYPE FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'mei_configuracoes' AND COLUMN_NAME IN ('preferencia_resposta', 'voz_assistente', 'provedor_tts')"
     );
-    expect(colsConfig.length).toBe(2);
+    expect(colsConfig.length).toBe(3);
     const prefCol = colsConfig.find((c) => c.COLUMN_NAME === 'preferencia_resposta');
     expect(prefCol.COLUMN_TYPE).toContain("'ambos'");
+
+    const provCol = colsConfig.find((c) => c.COLUMN_NAME === 'provedor_tts');
+    expect(provCol.COLUMN_TYPE).toContain("'elevenlabs'");
 
     const [colsMsg] = await pool.execute(
       "SELECT COLUMN_NAME, DATA_TYPE FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'mensagens' AND COLUMN_NAME = 'audio_base64'"

@@ -273,13 +273,14 @@ const aiServiceClient = {
   },
 
   /**
-   * Sintetiza texto em voz neural brasileira utilizando o ai-service.
+   * Sintetiza texto em voz neural utilizando o ai-service (Edge Neural ou ElevenLabs).
    * @param {Object} payload
    * @param {string} payload.texto
    * @param {string} [payload.voz='pt-BR-FranciscaNeural']
+   * @param {string} [payload.provedor='auto']
    * @returns {Promise<Object>}
    */
-  async sintetizarAudio({ texto, voz = 'pt-BR-FranciscaNeural' }) {
+  async sintetizarAudio({ texto, voz = 'pt-BR-FranciscaNeural', provedor = 'auto' }) {
     const url = getAiServiceUrl('/audio/sintetizar');
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 45000);
@@ -293,7 +294,8 @@ const aiServiceClient = {
         },
         body: JSON.stringify({
           texto,
-          voz
+          voz,
+          provedor
         }),
         signal: controller.signal
       });

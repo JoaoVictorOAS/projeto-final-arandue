@@ -47,6 +47,7 @@ const configuracoesController = {
             ambiente_fiscal: config.ambiente_fiscal,
             preferencia_resposta: config.preferencia_resposta || 'texto',
             voz_assistente: config.voz_assistente || 'pt-BR-FranciscaNeural',
+            provedor_tts: config.provedor_tts || 'auto',
             serie_nfse: Number(config.serie_nfse) || 1,
             serie_nfe: Number(config.serie_nfe) || 1,
             serie_nfce: Number(config.serie_nfce) || 1,
@@ -84,6 +85,7 @@ const configuracoesController = {
           ambiente_fiscal: 'HOMOLOGACAO',
           preferencia_resposta: 'texto',
           voz_assistente: 'pt-BR-FranciscaNeural',
+          provedor_tts: 'auto',
           serie_nfse: 1,
           serie_nfe: 1,
           serie_nfce: 1,
@@ -125,6 +127,7 @@ const configuracoesController = {
         ambiente_fiscal,
         preferencia_resposta,
         voz_assistente,
+        provedor_tts,
         serie_nfse,
         serie_nfe,
         serie_nfce,
@@ -183,8 +186,16 @@ const configuracoesController = {
       const ieFinal = (inscricao_estadual && String(inscricao_estadual).trim()) ? String(inscricao_estadual).trim() : 'ISENTO';
       const ambFinal = ambiente_fiscal === 'PRODUCAO' ? 'PRODUCAO' : 'HOMOLOGACAO';
       const prefRespostaFinal = ['texto', 'audio', 'ambos'].includes(preferencia_resposta) ? preferencia_resposta : 'texto';
-      const vozesValidas = ['pt-BR-FranciscaNeural', 'pt-BR-AntonioNeural', 'pt-BR-ThalitaNeural'];
-      const vozFinal = vozesValidas.includes(voz_assistente) ? voz_assistente : 'pt-BR-FranciscaNeural';
+      const vozesValidas = [
+        'pt-BR-FranciscaNeural', 'pt-BR-AntonioNeural', 'pt-BR-ThalitaNeural',
+        '21m00Tcm4TlvDq8ikWAM', 'pNInz6obpgDQGcFmaJgB', 'AZnzlk1XvdvUeBnXmlld',
+        'ErXwobaYiN019PkySvjV', 'EXAVITQu4vr4xnSDxMaL', 'TxGEqnHWrfWFTfGW9XjX'
+      ];
+      const vozFinal = (voz_assistente && typeof voz_assistente === 'string' && (vozesValidas.includes(voz_assistente) || /^[a-zA-Z0-9_-]{15,50}$/.test(voz_assistente)))
+        ? voz_assistente
+        : 'pt-BR-FranciscaNeural';
+      const provedoresValidos = ['auto', 'elevenlabs', 'edge-tts'];
+      const provedorFinal = provedoresValidos.includes(provedor_tts) ? provedor_tts : 'auto';
       const snfse = parseInt(serie_nfse, 10) || 1;
       const snfe = parseInt(serie_nfe, 10) || 1;
       const snfce = parseInt(serie_nfce, 10) || 1;
@@ -193,8 +204,8 @@ const configuracoesController = {
         INSERT INTO mei_configuracoes (
           usuario_id, razao_social, nome_fantasia, cnpj, inscricao_estadual, inscricao_municipal,
           cep, logradouro, numero, complemento, bairro, municipio, uf, codigo_municipio_ibge,
-          email_comercial, telefone_comercial, ambiente_fiscal, preferencia_resposta, voz_assistente, serie_nfse, serie_nfe, serie_nfce, chave_pix
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          email_comercial, telefone_comercial, ambiente_fiscal, preferencia_resposta, voz_assistente, provedor_tts, serie_nfse, serie_nfe, serie_nfce, chave_pix
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ON DUPLICATE KEY UPDATE
           razao_social = VALUES(razao_social),
           nome_fantasia = VALUES(nome_fantasia),
@@ -214,6 +225,7 @@ const configuracoesController = {
           ambiente_fiscal = VALUES(ambiente_fiscal),
           preferencia_resposta = VALUES(preferencia_resposta),
           voz_assistente = VALUES(voz_assistente),
+          provedor_tts = VALUES(provedor_tts),
           serie_nfse = VALUES(serie_nfse),
           serie_nfe = VALUES(serie_nfe),
           serie_nfce = VALUES(serie_nfce),
@@ -242,6 +254,7 @@ const configuracoesController = {
           ambFinal,
           prefRespostaFinal,
           vozFinal,
+          provedorFinal,
           snfse,
           snfe,
           snfce,
@@ -368,6 +381,7 @@ const configuracoesController = {
           ambiente_fiscal: salvo.ambiente_fiscal,
           preferencia_resposta: salvo.preferencia_resposta || prefRespostaFinal,
           voz_assistente: salvo.voz_assistente || vozFinal,
+          provedor_tts: salvo.provedor_tts || provedorFinal,
           serie_nfse: Number(salvo.serie_nfse) || 1,
           serie_nfe: Number(salvo.serie_nfe) || 1,
           serie_nfce: Number(salvo.serie_nfce) || 1,

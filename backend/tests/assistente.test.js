@@ -376,7 +376,8 @@ describe('Rotas do Assistente IA (/api/assistente)', () => {
       expect(res.body.dados.mensagem.transcricao_audio).toBe('Seu saldo consolidado é de R$ 3.200,00.');
       expect(aiServiceClient.sintetizarAudio).toHaveBeenCalledWith({
         texto: 'Seu saldo consolidado é de R$ 3.200,00.',
-        voz: 'pt-BR-AntonioNeural'
+        voz: 'pt-BR-AntonioNeural',
+        provedor: 'auto'
       });
     });
 
@@ -413,7 +414,8 @@ describe('Rotas do Assistente IA (/api/assistente)', () => {
       expect(res.body.dados.mensagem.conteudo).toBe('Você possui 3 agendamentos confirmados para hoje.');
       expect(aiServiceClient.sintetizarAudio).toHaveBeenCalledWith({
         texto: 'Você possui 3 agendamentos confirmados para hoje.',
-        voz: 'pt-BR-ThalitaNeural'
+        voz: 'pt-BR-ThalitaNeural',
+        provedor: 'auto'
       });
     });
   });

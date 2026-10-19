@@ -823,5 +823,63 @@ describe('Módulo de Configurações — MEI & SEFAZ Multi-Estado', () => {
       );
     });
   });
+
+  test('deve renderizar vozes ElevenLabs e permitir selecionar voz Rachel com provedor_tts elevenlabs', async () => {
+    api.get.mockImplementation((url) => {
+      if (url === '/configuracoes') {
+        return Promise.resolve({
+          data: {
+            ...mockConfigInicial,
+            dados: {
+              ...mockConfigInicial.dados,
+              preferencia_resposta: 'audio',
+              voz_assistente: 'pt-BR-FranciscaNeural',
+              provedor_tts: 'auto',
+            },
+          },
+        });
+      }
+      return Promise.resolve({ data: { sucesso: true, dados: [] } });
+    });
+
+    api.put.mockResolvedValue({
+      data: {
+        sucesso: true,
+        mensagem: 'Configurações salvas com sucesso',
+        dados: {
+          ...mockConfigInicial.dados,
+          voz_assistente: '21m00Tcm4TlvDq8ikWAM',
+          provedor_tts: 'elevenlabs',
+        },
+      },
+    });
+
+    render(<Configuracoes />);
+
+    expect(await screen.findByRole('heading', { name: /configurações do mei/i })).toBeInTheDocument();
+
+    // Verifica presença de voz ElevenLabs
+    expect(screen.getByText(/rachel/i)).toBeInTheDocument();
+    expect(screen.getByText(/adam/i)).toBeInTheDocument();
+
+    // Seleciona voz "Rachel"
+    const opcaoRachel = screen.getByLabelText(/rachel/i);
+    fireEvent.click(opcaoRachel);
+
+    // Salva
+    const btnSalvar = screen.getByRole('button', { name: /salvar configurações/i });
+    fireEvent.click(btnSalvar);
+
+    await waitFor(() => {
+      expect(api.put).toHaveBeenCalledWith(
+        '/configuracoes',
+        expect.objectContaining({
+          voz_assistente: '21m00Tcm4TlvDq8ikWAM',
+          provedor_tts: 'elevenlabs',
+        })
+      );
+    });
+  });
 });
+
 

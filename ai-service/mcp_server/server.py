@@ -288,9 +288,10 @@ async def atualizar_configuracoes_mei(
     ambiente_fiscal: str = "HOMOLOGACAO",
     nome_fantasia: str = "",
     preferencia_resposta: Optional[str] = None,
-    voz_assistente: Optional[str] = None
+    voz_assistente: Optional[str] = None,
+    provedor_tts: Optional[str] = None
 ) -> Dict[str, Any]:
-    """Atualiza as configurações cadastrais e fiscais do MEI (endereço, CNPJ, UF emissora da SEFAZ, ambiente fiscal, preferência de resposta do assistente: 'texto', 'audio' ou 'ambos', voz: 'pt-BR-FranciscaNeural', 'pt-BR-AntonioNeural' ou 'pt-BR-ThalitaNeural')."""
+    """Atualiza as configurações cadastrais e fiscais do MEI (endereço, CNPJ, UF emissora da SEFAZ, ambiente fiscal, preferência de resposta: 'texto', 'audio', 'ambos', voz: Microsoft Edge ou ElevenLabs, e provedor TTS: 'auto', 'elevenlabs' ou 'edge-tts')."""
     payload = {
         "razao_social": (razao_social or "").strip(),
         "cnpj": (cnpj or "").strip(),
@@ -315,8 +316,12 @@ async def atualizar_configuracoes_mei(
             payload["preferencia_resposta"] = pref
     if voz_assistente:
         voz = str(voz_assistente).strip()
-        if voz in ("pt-BR-FranciscaNeural", "pt-BR-AntonioNeural", "pt-BR-ThalitaNeural"):
+        if voz:
             payload["voz_assistente"] = voz
+    if provedor_tts:
+        prov = str(provedor_tts).strip().lower()
+        if prov in ("auto", "elevenlabs", "edge-tts"):
+            payload["provedor_tts"] = prov
 
     res = await _put("/configuracoes", payload)
 

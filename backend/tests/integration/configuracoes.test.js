@@ -357,6 +357,37 @@ describe('Módulo de Configurações do MEI (/api/configuracoes) - REST & Multi-
       expect(resGet.body.dados.preferencia_resposta).toBe('ambos');
       expect(resGet.body.dados.voz_assistente).toBe('pt-BR-AntonioNeural');
     });
+
+    test('deve salvar e persistir provedor_tts como "elevenlabs" e voz da ElevenLabs (Rachel)', async () => {
+      const payloadEleven = {
+        razao_social: 'Alpha Confeitaria MEI LTDA',
+        cnpj: '12345678000195',
+        uf: 'SP',
+        municipio: 'São Paulo',
+        cep: '01001-000',
+        preferencia_resposta: 'audio',
+        provedor_tts: 'elevenlabs',
+        voz_assistente: '21m00Tcm4TlvDq8ikWAM'
+      };
+
+      const resPut = await request(app)
+        .put('/api/configuracoes')
+        .set('Authorization', `Bearer ${tokenUser1}`)
+        .send(payloadEleven);
+
+      expect(resPut.statusCode).toBe(200);
+      expect(resPut.body.sucesso).toBe(true);
+      expect(resPut.body.dados.provedor_tts).toBe('elevenlabs');
+      expect(resPut.body.dados.voz_assistente).toBe('21m00Tcm4TlvDq8ikWAM');
+
+      const resGet = await request(app)
+        .get('/api/configuracoes')
+        .set('Authorization', `Bearer ${tokenUser1}`);
+
+      expect(resGet.statusCode).toBe(200);
+      expect(resGet.body.dados.provedor_tts).toBe('elevenlabs');
+      expect(resGet.body.dados.voz_assistente).toBe('21m00Tcm4TlvDq8ikWAM');
+    });
   });
 
 
