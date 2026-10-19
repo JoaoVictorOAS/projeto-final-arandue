@@ -7,20 +7,38 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:1084089085404:android:d5e4eb169311f8deba3319",
+        "mobilesdk_app_id": "1:1084089085404:android:78115ae5b6176dbbba3319",
         "android_client_info": {
           "package_name": "com.arandue.app"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "1084089085404-qp7sbgjjmloq1rpd7gorbnefoeg6f51q.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.arandue.app",
+            "certificate_hash": "7fd331449b827264b220d026b0849ae2cda36b08"
+          }
+        },
+        {
+          "client_id": "1084089085404-tij26l5jpj2mdreh4t648cac7r1ueqmk.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
-          "current_key": "AIzaSyDKj1DF99nOv6YPjKSYw3mOVlGNoIoAfcw"
+          "current_key": "AIzaSyAZIBrxDuYqblimO8vRBnFGXK2l7BmHctE"
         }
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1084089085404-tij26l5jpj2mdreh4t648cac7r1ueqmk.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }
