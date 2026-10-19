@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1084089085404",
+    "project_id": "projeto-final-arandue",
+    "storage_bucket": "projeto-final-arandue.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1084089085404:android:d5e4eb169311f8deba3319",
+        "android_client_info": {
+          "package_name": "com.arandue.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDKj1DF99nOv6YPjKSYw3mOVlGNoIoAfcw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

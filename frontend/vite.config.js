@@ -3,6 +3,9 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig({
   plugins: [react()],
+  optimizeDeps: {
+    include: ['firebase/app', 'firebase/auth'],
+  },
   server: {
     port: 3000,
     proxy: {

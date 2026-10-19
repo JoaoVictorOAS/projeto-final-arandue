@@ -100,7 +100,7 @@ export function AuthProvider({ children }) {
     const payload = {
       email: googleUser.email,
       nome: googleUser.displayName || googleUser.nome || googleUser.email.split('@')[0],
-      foto: googleUser.photoURL || googleUser.foto || null,
+      foto: googleUser.photoURL || googleUser.photoUrl || googleUser.foto || null,
       googleId: googleUser.uid || null,
     };
 

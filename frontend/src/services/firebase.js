@@ -1,4 +1,4 @@
-import { initializeApp } from 'firebase/app';
+import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider } from 'firebase/auth';
 
 const firebaseConfig = {
@@ -11,11 +11,58 @@ const firebaseConfig = {
   measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || 'G-VFQVW9BLCT',
 };
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const googleProvider = new GoogleAuthProvider();
-googleProvider.setCustomParameters({
-  prompt: 'select_account',
+const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+
+let _authInstance = null;
+function getFirebaseAuth() {
+  if (!_authInstance) {
+    try {
+      _authInstance = getAuth(app);
+    } catch (err) {
+      console.warn('[Firebase] Inicialização de Auth deferred:', err?.message);
+      _authInstance = getAuth(app);
+    }
+  }
+  return _authInstance;
+}
+
+try {
+  _authInstance = getAuth(app);
+} catch {
+  // Ignora se o módulo ainda estiver completando o registro de componentes
+}
+
+const auth = new Proxy({}, {
+  get(target, prop) {
+    const instance = getFirebaseAuth();
+    if (!instance) return undefined;
+    const val = Reflect.get(instance, prop);
+    return typeof val === 'function' ? val.bind(instance) : val;
+  },
+  has(target, prop) {
+    const instance = getFirebaseAuth();
+    return instance ? Reflect.has(instance, prop) : false;
+  },
 });
 
-export { app, auth, googleProvider };
+let _googleProvider = null;
+function getGoogleProvider() {
+  if (!_googleProvider) {
+    _googleProvider = new GoogleAuthProvider();
+    _googleProvider.setCustomParameters({
+      prompt: 'select_account',
+    });
+  }
+  return _googleProvider;
+}
+
+const googleProvider = new Proxy({}, {
+  get(target, prop) {
+    const instance = getGoogleProvider();
+    if (!instance) return undefined;
+    const val = Reflect.get(instance, prop);
+    return typeof val === 'function' ? val.bind(instance) : val;
+  },
+});
+
+export { app, auth, googleProvider, getFirebaseAuth, getGoogleProvider };

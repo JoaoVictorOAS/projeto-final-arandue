@@ -12,6 +12,8 @@ import {
   ArrowRight,
 } from 'lucide-react';
 import { signInWithPopup } from 'firebase/auth';
+import { Capacitor } from '@capacitor/core';
+import { FirebaseAuthentication } from '@capacitor-firebase/authentication';
 import Logo from '../components/Logo';
 import { useAuth } from '../context/AuthContext';
 import { sincronizarStatusBarComTema } from '../context/ThemeContext';
@@ -83,17 +85,31 @@ export default function Login() {
     setSubmetendoGoogle(true);
 
     try {
-      const result = await signInWithPopup(auth, googleProvider);
-      const user = result.user;
+      let user;
 
-      if (!user) {
+      if (Capacitor.isNativePlatform()) {
+        const result = await FirebaseAuthentication.signInWithGoogle();
+        user = result.user;
+      } else {
+        const result = await signInWithPopup(auth, googleProvider);
+        user = result.user;
+      }
+
+      if (!user || !user.email) {
         throw new Error('Não foi possível obter os dados da conta Google.');
       }
 
       await loginComGoogle(user);
       navigate('/');
     } catch (err) {
-      if (err.code === 'auth/popup-closed-by-user') {
+      const cancelado =
+        err.code === 'auth/popup-closed-by-user' ||
+        err.code === 'auth/cancelled' ||
+        err.message?.includes('canceled') ||
+        err.message?.includes('cancelled') ||
+        err.message?.includes('16:');
+
+      if (cancelado) {
         setSubmetendoGoogle(false);
         return;
       }
@@ -228,12 +244,6 @@ export default function Login() {
           {/* Logo exibido no topo do formulário em dispositivos móveis */}
           <div className="lg:hidden mb-4 flex flex-col items-center gap-1.5">
             <Logo size="md" showText={true} />
-            <Link
-              to="/landing"
-              className="text-xs font-semibold text-stone-500 hover:text-stone-900 transition-colors"
-            >
-              ← Explorar Landing Page
-            </Link>
           </div>
 
           {/* Cabeçalho do formulário */}
