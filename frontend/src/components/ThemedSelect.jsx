@@ -122,7 +122,7 @@ export default function ThemedSelect({
       {/* Gatilho Principal (Trigger Button) */}
       <button
         type="button"
-        id={id}
+        id={id ? `${id}-btn` : undefined}
         name={name}
         disabled={disabled}
         aria-haspopup="dialog"
@@ -156,11 +156,12 @@ export default function ThemedSelect({
       <select
         tabIndex={-1}
         aria-hidden="true"
+        id={id}
         name={name}
         value={value}
         required={required}
         disabled={disabled}
-        onChange={() => {}}
+        onChange={(e) => handleSelect(e.target.value)}
         className="sr-only opacity-0 pointer-events-none absolute w-0 h-0"
       >
         <option value="">{placeholder}</option>

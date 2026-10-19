@@ -1,4 +1,5 @@
 import React from 'react';
+import ThemedSelect from './ThemedSelect';
 
 /**
  * Reusable FormField component
@@ -31,7 +32,8 @@ export default function FormField({
       {label && (
         <label
           htmlFor={fieldId}
-          className="block text-sm font-semibold text-gray-700"
+          className="block text-sm font-semibold"
+          style={{ color: 'var(--text-main)' }}
         >
           {label}
           {required && <span className="text-rose-500 ml-1" title="Campo obrigatório">*</span>}
@@ -50,29 +52,20 @@ export default function FormField({
           {...props}
         />
       ) : as === 'select' ? (
-        <select
+        <ThemedSelect
           id={fieldId}
           name={name || fieldId}
+          label={label}
           aria-invalid={Boolean(error)}
           aria-describedby={error ? `${fieldId}-error` : helpText ? `${fieldId}-help` : undefined}
           required={required}
-          className={baseInputClasses}
+          error={error}
+          options={options}
+          className={className}
           {...props}
         >
-          {children ? (
-            children
-          ) : (
-            options.map((opt) => {
-              const optVal = typeof opt === 'object' ? opt.value : opt;
-              const optLabel = typeof opt === 'object' ? opt.label : opt;
-              return (
-                <option key={optVal} value={optVal}>
-                  {optLabel}
-                </option>
-              );
-            })
-          )}
-        </select>
+          {children}
+        </ThemedSelect>
       ) : (
         <input
           id={fieldId}
