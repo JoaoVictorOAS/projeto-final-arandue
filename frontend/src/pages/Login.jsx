@@ -17,7 +17,7 @@ import { FirebaseAuthentication } from '@capacitor-firebase/authentication';
 import Logo from '../components/Logo';
 import { useAuth } from '../context/AuthContext';
 import { sincronizarStatusBarComTema } from '../context/ThemeContext';
-import { auth, googleProvider } from '../services/firebase';
+import { getFirebaseAuth, getGoogleProvider } from '../services/firebase';
 import {
   OwlMascotDoodle,
   CartoonEyes,
@@ -91,7 +91,7 @@ export default function Login() {
         const result = await FirebaseAuthentication.signInWithGoogle();
         user = result.user;
       } else {
-        const result = await signInWithPopup(auth, googleProvider);
+        const result = await signInWithPopup(getFirebaseAuth(), getGoogleProvider());
         user = result.user;
       }
 

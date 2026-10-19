@@ -51,6 +51,8 @@ vi.mock('firebase/auth', () => ({
 vi.mock('../services/firebase', () => ({
   auth: {},
   googleProvider: {},
+  getFirebaseAuth: () => ({}),
+  getGoogleProvider: () => ({}),
 }));
 
 describe('Tela de Login', () => {
