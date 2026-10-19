@@ -64,4 +64,20 @@ describe('Conexao e Estrutura do Banco de Dados MySQL', () => {
     expect(fluxoLiquidado.cobranca_status).toBe('PAGO');
     expect(fluxoLiquidado.movimentacao_tipo).toBe('ENTRADA');
   });
+
+  test('deve conter as colunas de preferencia_resposta, voz_assistente e audio_base64', async () => {
+    const [colsConfig] = await pool.execute(
+      "SELECT COLUMN_NAME, COLUMN_TYPE FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'mei_configuracoes' AND COLUMN_NAME IN ('preferencia_resposta', 'voz_assistente')"
+    );
+    expect(colsConfig.length).toBe(2);
+    const prefCol = colsConfig.find((c) => c.COLUMN_NAME === 'preferencia_resposta');
+    expect(prefCol.COLUMN_TYPE).toContain("'ambos'");
+
+    const [colsMsg] = await pool.execute(
+      "SELECT COLUMN_NAME, DATA_TYPE FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'mensagens' AND COLUMN_NAME = 'audio_base64'"
+    );
+    expect(colsMsg.length).toBe(1);
+    expect(colsMsg[0].COLUMN_NAME).toBe('audio_base64');
+  });
 });
+

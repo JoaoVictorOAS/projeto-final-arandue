@@ -202,6 +202,7 @@ CREATE TABLE IF NOT EXISTS mensagens (
     papel ENUM('usuario', 'assistente') NOT NULL,
     tipo_midia ENUM('texto', 'audio', 'imagem') NOT NULL DEFAULT 'texto',
     midia_mime_type VARCHAR(50) NULL,
+    audio_base64 MEDIUMTEXT NULL,
     transcricao_audio TEXT NULL,
     status ENUM('processando', 'concluida', 'erro') NOT NULL DEFAULT 'concluida',
     erro_mensagem VARCHAR(500) NULL,
@@ -405,7 +406,8 @@ CREATE TABLE IF NOT EXISTS mei_configuracoes (
     
     -- Parâmetros Fiscais e Preferências do Assistente
     ambiente_fiscal ENUM('HOMOLOGACAO', 'PRODUCAO') NOT NULL DEFAULT 'HOMOLOGACAO',
-    preferencia_resposta ENUM('texto', 'audio') NOT NULL DEFAULT 'texto',
+    preferencia_resposta ENUM('texto', 'audio', 'ambos') NOT NULL DEFAULT 'texto',
+    voz_assistente VARCHAR(50) NOT NULL DEFAULT 'pt-BR-FranciscaNeural',
     serie_nfse INT NOT NULL DEFAULT 1,
     serie_nfe INT NOT NULL DEFAULT 1,
     serie_nfce INT NOT NULL DEFAULT 1,
