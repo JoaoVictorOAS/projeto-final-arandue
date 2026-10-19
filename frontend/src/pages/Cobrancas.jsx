@@ -708,16 +708,17 @@ export default function Cobrancas() {
           )}
         </div>
       ) : (
-        <div
-          className="bg-white rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden"
-          style={{
-            backgroundColor: 'var(--bg-surface, #ffffff)',
-            borderColor: 'var(--border-color, #e5e7eb)',
-          }}
-        >
+        <>
           {/* DESKTOP TABLE VIEW: Exibida em telas médias e grandes (md+) */}
-          <div className="hidden md:block overflow-x-auto">
-            <table className="w-full text-left border-collapse">
+          <div
+            className="hidden md:block bg-white rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden"
+            style={{
+              backgroundColor: 'var(--bg-surface, #ffffff)',
+              borderColor: 'var(--border-color, #e5e7eb)',
+            }}
+          >
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-gray-50/80 border-b border-gray-200 text-xs font-semibold text-gray-500 uppercase tracking-wider">
                   <th className="py-3.5 px-4">ID</th>
@@ -869,26 +870,27 @@ export default function Cobrancas() {
               </tbody>
             </table>
           </div>
+        </div>
 
-          {/* MOBILE CARDS VIEW: Exibida em smartphones e telas estreitas (< md) */}
-          <div
-            className="block md:hidden divide-y divide-gray-100"
-            style={{ borderColor: 'var(--border-color, #f3f4f6)' }}
-          >
-            {cobrancasFiltradas.map((item) => {
-              const status = computeStatus(item);
-              const cliInfo = getClienteInfo(item);
-              const vencimentoFmt = formatDate(item.vencimento || item.data_vencimento);
-              const pagamentoFmt = formatDate(item.data_pagamento);
-              const isPago = status === 'PAGO';
+        {/* MOBILE CARDS VIEW: Exibida em smartphones e telas estreitas (< md) - Cards destacados e espaçados como em /servicos */}
+        <div className="block md:hidden space-y-4">
+          {cobrancasFiltradas.map((item) => {
+            const status = computeStatus(item);
+            const cliInfo = getClienteInfo(item);
+            const vencimentoFmt = formatDate(item.vencimento || item.data_vencimento);
+            const pagamentoFmt = formatDate(item.data_pagamento);
+            const isPago = status === 'PAGO';
 
-              return (
-                <div
-                  key={item.id}
-                  className="p-4 space-y-3.5 transition-colors"
-                  style={{ backgroundColor: 'var(--bg-surface, #ffffff)' }}
-                  data-testid={`cobranca-card-${item.id}`}
-                >
+            return (
+              <div
+                key={item.id}
+                className="bg-white rounded-2xl p-4 sm:p-5 border border-gray-200/80 shadow-sm hover:shadow-md transition-all space-y-3.5"
+                style={{
+                  backgroundColor: 'var(--bg-surface, #ffffff)',
+                  borderColor: 'var(--border-color, #e5e7eb)',
+                }}
+                data-testid={`cobranca-card-${item.id}`}
+              >
                   {/* Topo do Card: Identificação do Cliente, ID e Status */}
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0 flex-1">
@@ -1060,7 +1062,7 @@ export default function Cobrancas() {
               );
             })}
           </div>
-        </div>
+        </>
       )}
 
       {/* MODAL: Dar Baixa */}

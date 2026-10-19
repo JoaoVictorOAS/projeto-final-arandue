@@ -850,32 +850,50 @@ export default function Estoque() {
           </div>
 
           {/* Tabela de Insumos */}
-          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
-            {loading ? (
-              <div className="p-12 text-center text-gray-500 flex flex-col items-center justify-center gap-2">
-                <Loader2 className="w-6 h-6 animate-spin text-theme-primary" />
-                <p className="text-sm">Carregando estoque de matérias-primas...</p>
-              </div>
-            ) : insumos.length === 0 ? (
-              <div className="p-12 text-center">
-                <Boxes className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                <h3 className="text-base font-semibold text-gray-800">Nenhum insumo encontrado</h3>
-                <p className="text-sm text-gray-500 mt-1 max-w-sm mx-auto">
-                  Cadastre matérias-primas (farinha, frango, embalagens) ou registre compras para iniciar o controle.
-                </p>
-                <button
-                  type="button"
-                  onClick={() => setModalInsumoAberto(true)}
-                  className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-xl btn-theme-primary text-sm font-semibold shadow-sm transition"
-                >
-                  <Plus className="w-4 h-4" />
-                  Cadastrar Primeiro Insumo
-                </button>
-              </div>
-            ) : (
-              <>
-                {/* DESKTOP TABLE VIEW: Exibida em telas médias e grandes (md+) */}
-                <div className="hidden md:block overflow-x-auto">
+          {loading ? (
+            <div
+              className="bg-white rounded-2xl border border-gray-200/80 p-12 text-center text-gray-500 flex flex-col items-center justify-center gap-2 shadow-sm"
+              style={{
+                backgroundColor: 'var(--bg-surface, #ffffff)',
+                borderColor: 'var(--border-color, #e5e7eb)',
+              }}
+            >
+              <Loader2 className="w-6 h-6 animate-spin text-theme-primary" />
+              <p className="text-sm">Carregando estoque de matérias-primas...</p>
+            </div>
+          ) : insumos.length === 0 ? (
+            <div
+              className="bg-white rounded-2xl border border-gray-200/80 p-12 text-center shadow-sm"
+              style={{
+                backgroundColor: 'var(--bg-surface, #ffffff)',
+                borderColor: 'var(--border-color, #e5e7eb)',
+              }}
+            >
+              <Boxes className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+              <h3 className="text-base font-semibold text-gray-800">Nenhum insumo encontrado</h3>
+              <p className="text-sm text-gray-500 mt-1 max-w-sm mx-auto">
+                Cadastre matérias-primas (farinha, frango, embalagens) ou registre compras para iniciar o controle.
+              </p>
+              <button
+                type="button"
+                onClick={() => setModalInsumoAberto(true)}
+                className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-xl btn-theme-primary text-sm font-semibold shadow-sm transition"
+              >
+                <Plus className="w-4 h-4" />
+                Cadastrar Primeiro Insumo
+              </button>
+            </div>
+          ) : (
+            <>
+              {/* DESKTOP TABLE VIEW: Exibida em telas médias e grandes (md+) */}
+              <div
+                className="hidden md:block bg-white rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden"
+                style={{
+                  backgroundColor: 'var(--bg-surface, #ffffff)',
+                  borderColor: 'var(--border-color, #e5e7eb)',
+                }}
+              >
+                <div className="overflow-x-auto">
                   <table className="w-full text-left text-sm">
                     <thead className="bg-gray-50 text-gray-600 uppercase text-xs font-semibold border-b border-gray-200">
                       <tr>
@@ -928,24 +946,25 @@ export default function Estoque() {
                     </tbody>
                   </table>
                 </div>
+              </div>
 
-                {/* MOBILE CARDS VIEW: Exibida em celulares (< md) */}
-                <div
-                  className="block md:hidden divide-y divide-gray-100"
-                  style={{ borderColor: 'var(--border-color, #f3f4f6)' }}
-                >
-                  {insumos.map((insumo) => {
-                    const saldo = Number(insumo.quantidade_atual);
-                    const minimo = Number(insumo.estoque_minimo);
-                    const isAbaixo = saldo <= minimo;
+              {/* MOBILE CARDS VIEW: Exibida em celulares (< md) - Cards destacados e espaçados como em /servicos */}
+              <div className="block md:hidden space-y-4">
+                {insumos.map((insumo) => {
+                  const saldo = Number(insumo.quantidade_atual);
+                  const minimo = Number(insumo.estoque_minimo);
+                  const isAbaixo = saldo <= minimo;
 
-                    return (
-                      <div
-                        key={insumo.id}
-                        className="p-4 space-y-3.5 transition-colors"
-                        style={{ backgroundColor: 'var(--bg-surface, #ffffff)' }}
-                        data-testid={`insumo-card-${insumo.id}`}
-                      >
+                  return (
+                    <div
+                      key={insumo.id}
+                      className="bg-white rounded-2xl p-4 sm:p-5 border border-gray-200/80 shadow-sm hover:shadow-md transition-all space-y-3.5"
+                      style={{
+                        backgroundColor: 'var(--bg-surface, #ffffff)',
+                        borderColor: 'var(--border-color, #e5e7eb)',
+                      }}
+                      data-testid={`insumo-card-${insumo.id}`}
+                    >
                         {/* Topo do Card: Nome e Status */}
                         <div className="flex items-start justify-between gap-2">
                           <div>
@@ -1036,7 +1055,6 @@ export default function Estoque() {
                 </div>
               </>
             )}
-          </div>
         </div>
       )}
 
@@ -1294,13 +1312,15 @@ export default function Estoque() {
 
       {/* ABA 4: Histórico de Movimentações */}
       {activeTab === 'movimentacoes' && (
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
-          <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-            <h3 className="text-base font-bold text-gray-900">Extrato de Movimentações do Estoque</h3>
+        <div className="space-y-4">
+          <div className="flex items-center justify-between px-1">
+            <h3 className="text-base font-bold text-gray-900" style={{ color: 'var(--text-main, #111827)' }}>
+              Extrato de Movimentações do Estoque
+            </h3>
             <button
               type="button"
               onClick={carregarMovimentacoes}
-              className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg"
+              className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition"
               title="Atualizar"
             >
               <RefreshCw className="w-4 h-4" />
@@ -1308,15 +1328,28 @@ export default function Estoque() {
           </div>
 
           {movimentacoes.length === 0 ? (
-            <div className="p-12 text-center text-gray-500">
+            <div
+              className="bg-white rounded-2xl border border-gray-200/80 p-12 text-center text-gray-500 shadow-sm"
+              style={{
+                backgroundColor: 'var(--bg-surface, #ffffff)',
+                borderColor: 'var(--border-color, #e5e7eb)',
+              }}
+            >
               <History className="w-10 h-10 text-gray-300 mx-auto mb-2" />
               <p className="text-sm">Nenhuma movimentação registrada até o momento.</p>
             </div>
           ) : (
             <>
               {/* DESKTOP TABLE VIEW: Exibida em telas médias e grandes (md+) */}
-              <div className="hidden md:block overflow-x-auto">
-                <table className="w-full text-left text-sm">
+              <div
+                className="hidden md:block bg-white rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden"
+                style={{
+                  backgroundColor: 'var(--bg-surface, #ffffff)',
+                  borderColor: 'var(--border-color, #e5e7eb)',
+                }}
+              >
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-sm">
                   <thead className="bg-gray-50 text-gray-600 uppercase text-xs font-semibold border-b border-gray-200">
                     <tr>
                       <th className="px-6 py-3">Data / Hora</th>
@@ -1360,21 +1393,22 @@ export default function Estoque() {
                   </tbody>
                 </table>
               </div>
+            </div>
 
-              {/* MOBILE CARDS VIEW: Exibida em celulares (< md) */}
-              <div
-                className="block md:hidden divide-y divide-gray-100"
-                style={{ borderColor: 'var(--border-color, #f3f4f6)' }}
-              >
-                {movimentacoes.map((m) => {
-                  const isEntrada = m.tipo === 'ENTRADA' || m.tipo === 'ESTORNO';
-                  return (
-                    <div
-                      key={m.id}
-                      className="p-4 space-y-3 transition-colors"
-                      style={{ backgroundColor: 'var(--bg-surface, #ffffff)' }}
-                      data-testid={`mov-estoque-card-${m.id}`}
-                    >
+            {/* MOBILE CARDS VIEW: Exibida em celulares (< md) - Cards destacados e espaçados como em /servicos */}
+            <div className="block md:hidden space-y-4">
+              {movimentacoes.map((m) => {
+                const isEntrada = m.tipo === 'ENTRADA' || m.tipo === 'ESTORNO';
+                return (
+                  <div
+                    key={m.id}
+                    className="bg-white rounded-2xl p-4 sm:p-5 border border-gray-200/80 shadow-sm hover:shadow-md transition-all space-y-3.5"
+                    style={{
+                      backgroundColor: 'var(--bg-surface, #ffffff)',
+                      borderColor: 'var(--border-color, #e5e7eb)',
+                    }}
+                    data-testid={`mov-estoque-card-${m.id}`}
+                  >
                       <div className="flex items-start justify-between gap-2">
                         <div>
                           <h4

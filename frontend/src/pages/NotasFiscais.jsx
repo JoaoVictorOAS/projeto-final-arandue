@@ -423,33 +423,51 @@ export default function NotasFiscais() {
       </div>
 
       {/* Tabela de Notas Fiscais */}
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
-        {loading ? (
-          <div className="p-12 text-center text-gray-500 flex flex-col items-center justify-center gap-2">
-            <Loader2 className="w-6 h-6 animate-spin text-theme-primary" />
-            <p className="text-sm">Carregando documentos fiscais...</p>
-          </div>
-        ) : notas.length === 0 ? (
-          <div className="p-12 text-center">
-            <Receipt className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-            <h3 className="text-base font-semibold text-gray-800">Nenhuma nota fiscal encontrada</h3>
-            <p className="text-sm text-gray-500 mt-1 max-w-sm mx-auto">
-              Emita sua primeira nota fiscal de serviço ou venda em poucos segundos com validação MEI.
-            </p>
-            <button
-              type="button"
-              onClick={() => setModalEmissaoAberto(true)}
-              className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-lg btn-theme-primary text-sm font-medium"
-            >
-              <Plus className="w-4 h-4" />
-              Emitir Primeira Nota
-            </button>
-          </div>
-        ) : (
-          <React.Fragment>
-            {/* DESKTOP TABLE VIEW: Exibida em telas médias e grandes (md+) */}
-            <div className="hidden md:block overflow-x-auto">
-            <table className="w-full text-left text-sm">
+      {loading ? (
+        <div
+          className="bg-white rounded-2xl border border-gray-200/80 p-12 text-center text-gray-500 flex flex-col items-center justify-center gap-2 shadow-sm"
+          style={{
+            backgroundColor: 'var(--bg-surface, #ffffff)',
+            borderColor: 'var(--border-color, #e5e7eb)',
+          }}
+        >
+          <Loader2 className="w-6 h-6 animate-spin text-theme-primary" />
+          <p className="text-sm">Carregando documentos fiscais...</p>
+        </div>
+      ) : notas.length === 0 ? (
+        <div
+          className="bg-white rounded-2xl border border-gray-200/80 p-12 text-center shadow-sm"
+          style={{
+            backgroundColor: 'var(--bg-surface, #ffffff)',
+            borderColor: 'var(--border-color, #e5e7eb)',
+          }}
+        >
+          <Receipt className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+          <h3 className="text-base font-semibold text-gray-800">Nenhuma nota fiscal encontrada</h3>
+          <p className="text-sm text-gray-500 mt-1 max-w-sm mx-auto">
+            Emita sua primeira nota fiscal de serviço ou venda em poucos segundos com validação MEI.
+          </p>
+          <button
+            type="button"
+            onClick={() => setModalEmissaoAberto(true)}
+            className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-xl btn-theme-primary text-sm font-semibold shadow-sm transition"
+          >
+            <Plus className="w-4 h-4" />
+            Emitir Primeira Nota
+          </button>
+        </div>
+      ) : (
+        <>
+          {/* DESKTOP TABLE VIEW: Exibida em telas médias e grandes (md+) */}
+          <div
+            className="hidden md:block bg-white rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden"
+            style={{
+              backgroundColor: 'var(--bg-surface, #ffffff)',
+              borderColor: 'var(--border-color, #e5e7eb)',
+            }}
+          >
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm">
               <thead className="bg-gray-50 text-gray-600 uppercase text-xs font-semibold border-b border-gray-200">
                 <tr>
                   <th className="px-6 py-3.5">Número / Série</th>
@@ -544,25 +562,26 @@ export default function NotasFiscais() {
               </tbody>
             </table>
           </div>
+        </div>
 
-          {/* MOBILE CARDS VIEW: Exibida em celulares (< md) */}
-          <div
-            className="block md:hidden divide-y divide-gray-100"
-            style={{ borderColor: 'var(--border-color, #f3f4f6)' }}
-          >
-            {notas.map((n) => {
-              const tipoInfo = TIPO_LABELS[n.tipo] || {
-                label: n.tipo,
-                badge: 'bg-gray-50 text-gray-700 border-gray-200',
-              };
+        {/* MOBILE CARDS VIEW: Exibida em celulares (< md) - Cards destacados e espaçados como em /servicos */}
+        <div className="block md:hidden space-y-4">
+          {notas.map((n) => {
+            const tipoInfo = TIPO_LABELS[n.tipo] || {
+              label: n.tipo,
+              badge: 'bg-gray-50 text-gray-700 border-gray-200',
+            };
 
-              return (
-                <div
-                  key={n.id}
-                  className="p-4 space-y-3.5 transition-colors"
-                  style={{ backgroundColor: 'var(--bg-surface, #ffffff)' }}
-                  data-testid={`nota-card-${n.id}`}
-                >
+            return (
+              <div
+                key={n.id}
+                className="bg-white rounded-2xl p-4 sm:p-5 border border-gray-200/80 shadow-sm hover:shadow-md transition-all space-y-3.5"
+                style={{
+                  backgroundColor: 'var(--bg-surface, #ffffff)',
+                  borderColor: 'var(--border-color, #e5e7eb)',
+                }}
+                data-testid={`nota-card-${n.id}`}
+              >
                   {/* Topo do Card: Número, Tipo e Status */}
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0 flex-1">
@@ -682,10 +701,9 @@ export default function NotasFiscais() {
                 </div>
               );
             })}
-            </div>
-          </React.Fragment>
-        )}
-      </div>
+          </div>
+        </>
+      )}
 
       {/* MODAL 1: Emissão de Nota Fiscal */}
       <Modal

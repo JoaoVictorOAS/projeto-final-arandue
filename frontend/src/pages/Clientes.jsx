@@ -331,10 +331,17 @@ export default function Clientes() {
           )}
         </div>
       ) : (
-        <div className="bg-white rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden">
+        <>
           {/* Desktop Table */}
-          <div className="hidden md:block overflow-x-auto">
-            <table className="w-full text-left border-collapse text-sm">
+          <div
+            className="hidden md:block bg-white rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden"
+            style={{
+              backgroundColor: 'var(--bg-surface, #ffffff)',
+              borderColor: 'var(--border-color, #e5e7eb)',
+            }}
+          >
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse text-sm">
               <thead>
                 <tr className="bg-gray-50/80 border-b border-gray-100 text-xs font-semibold text-gray-500 uppercase tracking-wider">
                   <th className="py-3.5 px-6">Cliente</th>
@@ -426,75 +433,111 @@ export default function Clientes() {
               </tbody>
             </table>
           </div>
+        </div>
 
-          {/* Mobile Cards */}
-          <div className="block md:hidden divide-y divide-gray-100">
-            {clientes.map((c) => (
-              <div key={c.id} className="p-4 space-y-3">
-                <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <h4 className="font-semibold text-gray-900">{c.nome}</h4>
-                    <span
-                      className={`inline-block mt-1 px-2 py-0.5 rounded-full text-[11px] font-semibold ${
-                        c.ativo !== false && c.ativo !== 0
-                          ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                          : 'bg-gray-100 text-gray-600 border border-gray-200'
-                      }`}
-                    >
-                      {c.ativo !== false && c.ativo !== 0 ? 'Ativo' : 'Inativo'}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <button
-                      type="button"
-                      onClick={() => handleOpenEditModal(c)}
-                      className="p-2 text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg"
-                      aria-label={`Editar ${c.nome}`}
-                    >
-                      <Edit2 className="w-4 h-4" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleOpenDeleteModal(c)}
-                      className="p-2 text-gray-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg"
-                      aria-label={`Excluir ${c.nome}`}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
+        {/* Mobile Cards - Cards destacados e espaçados como em /servicos */}
+        <div className="block md:hidden space-y-4">
+          {clientes.map((c) => (
+            <div
+              key={c.id}
+              className="bg-white rounded-2xl p-4 sm:p-5 border border-gray-200/80 shadow-sm hover:shadow-md transition-all space-y-3.5"
+              style={{
+                backgroundColor: 'var(--bg-surface, #ffffff)',
+                borderColor: 'var(--border-color, #e5e7eb)',
+              }}
+              data-testid={`cliente-card-${c.id}`}
+            >
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <h4
+                    className="font-semibold text-gray-900 text-sm"
+                    style={{ color: 'var(--text-main, #111827)' }}
+                  >
+                    {c.nome}
+                  </h4>
+                  <span
+                    className={`inline-block mt-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${
+                      c.ativo !== false && c.ativo !== 0
+                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                        : 'bg-gray-100 text-gray-600 border border-gray-200'
+                    }`}
+                  >
+                    {c.ativo !== false && c.ativo !== 0 ? 'Ativo' : 'Inativo'}
+                  </span>
                 </div>
-
-                <div className="space-y-1 text-xs text-gray-600">
-                  {c.telefone && (
-                    <div className="flex items-center gap-2">
-                      <Phone className="w-3.5 h-3.5 text-gray-400" />
-                      <span>{c.telefone}</span>
-                    </div>
-                  )}
-                  {c.email && (
-                    <div className="flex items-center gap-2">
-                      <Mail className="w-3.5 h-3.5 text-gray-400" />
-                      <span>{c.email}</span>
-                    </div>
-                  )}
-                  {c.endereco && (
-                    <div className="flex items-center gap-2">
-                      <MapPin className="w-3.5 h-3.5 text-gray-400" />
-                      <span>{c.endereco}</span>
-                    </div>
-                  )}
-                  {c.observacoes && (
-                    <div className="flex items-center gap-2 pt-1 text-gray-500 italic">
-                      <FileText className="w-3.5 h-3.5 text-gray-400" />
-                      <span>{c.observacoes}</span>
-                    </div>
-                  )}
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => handleOpenEditModal(c)}
+                    className="p-2.5 rounded-xl border border-gray-200/80 text-gray-600 hover:text-theme-primary transition"
+                    style={{
+                      backgroundColor: 'var(--bg-surface-hover, #f9fafb)',
+                      borderColor: 'var(--border-color, #e5e7eb)',
+                    }}
+                    title="Editar Cliente"
+                    aria-label={`Editar ${c.nome}`}
+                  >
+                    <Edit2 className="w-4 h-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleOpenDeleteModal(c)}
+                    className="p-2.5 rounded-xl border border-gray-200/80 text-gray-600 hover:text-rose-600 hover:bg-rose-50 transition"
+                    style={{
+                      backgroundColor: 'var(--bg-surface-hover, #f9fafb)',
+                      borderColor: 'var(--border-color, #e5e7eb)',
+                    }}
+                    title="Excluir Cliente"
+                    aria-label={`Excluir ${c.nome}`}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
                 </div>
               </div>
-            ))}
-          </div>
+
+              <div
+                className="space-y-1.5 p-3 rounded-xl border text-xs"
+                style={{
+                  backgroundColor: 'var(--bg-surface-hover, #f9fafb)',
+                  borderColor: 'var(--border-color, #f3f4f6)',
+                }}
+              >
+                {c.telefone && (
+                  <div className="flex items-center gap-2 text-gray-700">
+                    <Phone className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                    <span>{c.telefone}</span>
+                  </div>
+                )}
+                {c.email && (
+                  <div className="flex items-center gap-2 text-gray-700">
+                    <Mail className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                    <span className="truncate">{c.email}</span>
+                  </div>
+                )}
+                {c.endereco && (
+                  <div className="flex items-center gap-2 text-gray-700">
+                    <MapPin className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                    <span className="truncate">{c.endereco}</span>
+                  </div>
+                )}
+                {!c.telefone && !c.email && !c.endereco && (
+                  <span className="text-gray-400 italic">Sem informações de contato cadastradas</span>
+                )}
+                {c.observacoes && (
+                  <div
+                    className="flex items-center gap-2 pt-1.5 border-t text-gray-500 italic text-[11px]"
+                    style={{ borderColor: 'var(--border-color, #e5e7eb)' }}
+                  >
+                    <FileText className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                    <span>{c.observacoes}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
         </div>
-      )}
+      </>
+    )}
 
       {/* Modal de Cadastro / Edição */}
       <Modal

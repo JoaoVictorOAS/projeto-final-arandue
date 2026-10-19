@@ -537,16 +537,17 @@ export default function Orcamentos() {
           </button>
         </div>
       ) : (
-        <div
-          className="bg-white rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden"
-          style={{
-            backgroundColor: 'var(--bg-surface, #ffffff)',
-            borderColor: 'var(--border-color, #e5e7eb)',
-          }}
-        >
+        <>
           {/* DESKTOP TABLE VIEW: Exibida em telas médias e grandes (md+) */}
-          <div className="hidden md:block overflow-x-auto">
-            <table className="w-full text-left text-sm">
+          <div
+            className="hidden md:block bg-white rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden"
+            style={{
+              backgroundColor: 'var(--bg-surface, #ffffff)',
+              borderColor: 'var(--border-color, #e5e7eb)',
+            }}
+          >
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm">
               <thead className="bg-gray-50/75 border-b border-gray-100 text-xs uppercase text-gray-500 font-semibold tracking-wider">
                 <tr>
                   <th scope="col" className="px-5 py-3.5">Número</th>
@@ -725,24 +726,25 @@ export default function Orcamentos() {
               </tbody>
             </table>
           </div>
+        </div>
 
-          {/* MOBILE CARDS VIEW: Exibida em celulares (< md) */}
-          <div
-            className="block md:hidden divide-y divide-gray-100"
-            style={{ borderColor: 'var(--border-color, #f3f4f6)' }}
-          >
-            {orcamentosFiltrados.map((orc) => {
-              const cliente = getCliente(orc.cliente_id);
-              const nomeCliente = cliente?.nome || orc.cliente_nome || `Cliente #${orc.cliente_id}`;
-              const isUpdating = statusUpdatingId === orc.id;
+        {/* MOBILE CARDS VIEW: Exibida em celulares (< md) - Cards destacados e espaçados como em /servicos */}
+        <div className="block md:hidden space-y-4">
+          {orcamentosFiltrados.map((orc) => {
+            const cliente = getCliente(orc.cliente_id);
+            const nomeCliente = cliente?.nome || orc.cliente_nome || `Cliente #${orc.cliente_id}`;
+            const isUpdating = statusUpdatingId === orc.id;
 
-              return (
-                <div
-                  key={orc.id}
-                  className="p-4 space-y-3.5 transition-colors"
-                  style={{ backgroundColor: 'var(--bg-surface, #ffffff)' }}
-                  data-testid={`orcamento-card-${orc.id}`}
-                >
+            return (
+              <div
+                key={orc.id}
+                className="bg-white rounded-2xl p-4 sm:p-5 border border-gray-200/80 shadow-sm hover:shadow-md transition-all space-y-3.5"
+                style={{
+                  backgroundColor: 'var(--bg-surface, #ffffff)',
+                  borderColor: 'var(--border-color, #e5e7eb)',
+                }}
+                data-testid={`orcamento-card-${orc.id}`}
+              >
                   {/* Topo do Card: Número, Cliente e Status */}
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0 flex-1">
@@ -931,7 +933,7 @@ export default function Orcamentos() {
               );
             })}
           </div>
-        </div>
+        </>
       )}
 
       {/* MODAL NOVO ORÇAMENTO */}

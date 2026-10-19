@@ -524,20 +524,30 @@ export default function Caixa() {
           )}
         </div>
       ) : (
-        <div className="bg-white rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-            <h2 className="text-base font-bold text-gray-900 flex items-center gap-2">
-              <FileText className="w-4 h-4 text-theme-primary" />
-              Extrato Detalhado de Movimentações
-            </h2>
-            <span className="text-xs font-semibold text-gray-500">
-              {movimentacoesFiltradas.length} {movimentacoesFiltradas.length === 1 ? 'registro' : 'registros'}
-            </span>
-          </div>
-
+        <>
           {/* DESKTOP TABLE VIEW: Exibida em telas médias e grandes (md+) */}
-          <div className="hidden md:block overflow-x-auto">
-            <table className="w-full text-left border-collapse">
+          <div
+            className="hidden md:block bg-white rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden"
+            style={{
+              backgroundColor: 'var(--bg-surface, #ffffff)',
+              borderColor: 'var(--border-color, #e5e7eb)',
+            }}
+          >
+            <div
+              className="px-6 py-4 border-b border-gray-100 flex items-center justify-between"
+              style={{ borderColor: 'var(--border-color, #e5e7eb)' }}
+            >
+              <h2 className="text-base font-bold text-gray-900 flex items-center gap-2">
+                <FileText className="w-4 h-4 text-theme-primary" />
+                Extrato Detalhado de Movimentações
+              </h2>
+              <span className="text-xs font-semibold text-gray-500">
+                {movimentacoesFiltradas.length} {movimentacoesFiltradas.length === 1 ? 'registro' : 'registros'}
+              </span>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-gray-50/80 border-b border-gray-200 text-xs font-semibold text-gray-500 uppercase tracking-wider">
                   <th className="py-3 px-4">Data</th>
@@ -609,24 +619,35 @@ export default function Caixa() {
               </tbody>
             </table>
           </div>
+        </div>
 
-          {/* MOBILE CARDS VIEW: Exibida em celulares (< md) */}
-          <div
-            className="block md:hidden divide-y divide-gray-100"
-            style={{ borderColor: 'var(--border-color, #f3f4f6)' }}
-          >
-            {movimentacoesFiltradas.map((item) => {
-              const tipo = (item.tipo || 'ENTRADA').toUpperCase();
-              const isEntrada = tipo === 'ENTRADA';
-              const dataFmt = formatDate(item.data_movimentacao || item.data);
+        {/* MOBILE CARDS VIEW: Exibida em celulares (< md) - Cards destacados e espaçados como em /servicos */}
+        <div className="block md:hidden space-y-4">
+          <div className="flex items-center justify-between px-1">
+            <h2 className="text-sm font-bold text-gray-900 flex items-center gap-2" style={{ color: 'var(--text-main, #111827)' }}>
+              <FileText className="w-4 h-4 text-theme-primary" />
+              Extrato de Movimentações
+            </h2>
+            <span className="text-xs font-semibold text-gray-500">
+              {movimentacoesFiltradas.length} {movimentacoesFiltradas.length === 1 ? 'registro' : 'registros'}
+            </span>
+          </div>
 
-              return (
-                <div
-                  key={item.id}
-                  className="p-4 space-y-3 transition-colors"
-                  style={{ backgroundColor: 'var(--bg-surface, #ffffff)' }}
-                  data-testid={`movimentacao-card-${item.id}`}
-                >
+          {movimentacoesFiltradas.map((item) => {
+            const tipo = (item.tipo || 'ENTRADA').toUpperCase();
+            const isEntrada = tipo === 'ENTRADA';
+            const dataFmt = formatDate(item.data_movimentacao || item.data);
+
+            return (
+              <div
+                key={item.id}
+                className="bg-white rounded-2xl p-4 sm:p-5 border border-gray-200/80 shadow-sm hover:shadow-md transition-all space-y-3.5"
+                style={{
+                  backgroundColor: 'var(--bg-surface, #ffffff)',
+                  borderColor: 'var(--border-color, #e5e7eb)',
+                }}
+                data-testid={`movimentacao-card-${item.id}`}
+              >
                   {/* Topo do Card: Descrição + Tipo */}
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0 flex-1">
@@ -712,7 +733,7 @@ export default function Caixa() {
               );
             })}
           </div>
-        </div>
+        </>
       )}
 
       {/* MODAL: Novo Lançamento */}
