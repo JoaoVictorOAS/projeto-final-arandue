@@ -903,5 +903,225 @@ describe('Módulo do Assistente IA', () => {
     fireEvent.click(btnOuvir);
     expect(mockSpeak).toHaveBeenCalled();
   });
+
+  test('deve renderizar o player de áudio e transcrição colapsável quando o assistente responder em modo apenas áudio', async () => {
+    window.HTMLMediaElement.prototype.play = vi.fn().mockResolvedValue(undefined);
+    window.HTMLMediaElement.prototype.pause = vi.fn();
+
+    const mensagensMock = [
+      { id: 1, papel: 'usuario', conteudo: 'Qual meu saldo?', fontes: [] },
+      {
+        id: 2,
+        papel: 'assistente',
+        tipo_midia: 'audio',
+        audio_base64: 'UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=',
+        conteudo: 'Seu saldo atual é de R$ 3.420,50.',
+        status: 'concluida',
+        fontes: [],
+      },
+    ];
+
+    api.get.mockImplementation((url) => {
+      if (url === '/assistente/conversas') {
+        return Promise.resolve({
+          data: {
+            sucesso: true,
+            dados: [{ id: 50, titulo: 'Consulta Saldo Áudio' }],
+          },
+        });
+      }
+      if (url === '/assistente/conversas/50/mensagens') {
+        return Promise.resolve({
+          data: { sucesso: true, dados: mensagensMock },
+        });
+      }
+      return Promise.resolve({ data: { sucesso: true, dados: [] } });
+    });
+
+    render(<Assistente />);
+
+    const conversaBtn = await screen.findByText('Consulta Saldo Áudio');
+    fireEvent.click(conversaBtn);
+
+    // Player de áudio interativo deve estar presente
+    const btnPlay = await screen.findByRole('button', { name: /reproduzir áudio/i });
+    expect(btnPlay).toBeInTheDocument();
+
+    // Botão de transcrição colapsável deve estar presente
+    const btnTranscricao = screen.getByRole('button', { name: /ver transcrição/i });
+    expect(btnTranscricao).toBeInTheDocument();
+
+    // A transcrição deve estar oculta inicialmente no modo áudio
+    expect(screen.queryByText('Seu saldo atual é de R$ 3.420,50.')).not.toBeInTheDocument();
+
+    // Ao clicar em 'Ver transcrição', exibe o texto
+    fireEvent.click(btnTranscricao);
+    expect(await screen.findByText('Seu saldo atual é de R$ 3.420,50.')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /ocultar transcrição/i })).toBeInTheDocument();
+
+    // Ao clicar em 'Ocultar transcrição', esconde o texto novamente
+    fireEvent.click(screen.getByRole('button', { name: /ocultar transcrição/i }));
+    expect(screen.queryByText('Seu saldo atual é de R$ 3.420,50.')).not.toBeInTheDocument();
+  });
+
+  test('deve renderizar player de áudio e texto simultaneamente quando a resposta for no modo ambos', async () => {
+    window.HTMLMediaElement.prototype.play = vi.fn().mockResolvedValue(undefined);
+    window.HTMLMediaElement.prototype.pause = vi.fn();
+
+    const mensagensMock = [
+      { id: 1, papel: 'usuario', conteudo: 'Resumo geral', fontes: [] },
+      {
+        id: 2,
+        papel: 'assistente',
+        tipo_midia: 'texto',
+        audio_base64: 'UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=',
+        conteudo: 'Aqui está seu resumo completo com métricas do mês.',
+        status: 'concluida',
+        fontes: [],
+      },
+    ];
+
+    api.get.mockImplementation((url) => {
+      if (url === '/assistente/conversas') {
+        return Promise.resolve({
+          data: {
+            sucesso: true,
+            dados: [{ id: 51, titulo: 'Consulta Modo Ambos' }],
+          },
+        });
+      }
+      if (url === '/assistente/conversas/51/mensagens') {
+        return Promise.resolve({
+          data: { sucesso: true, dados: mensagensMock },
+        });
+      }
+      return Promise.resolve({ data: { sucesso: true, dados: [] } });
+    });
+
+    render(<Assistente />);
+
+    const conversaBtn = await screen.findByText('Consulta Modo Ambos');
+    fireEvent.click(conversaBtn);
+
+    // Player de áudio deve estar presente
+    const btnPlay = await screen.findByRole('button', { name: /reproduzir áudio/i });
+    expect(btnPlay).toBeInTheDocument();
+
+    // No modo ambos, o texto fica visível imediatamente (sem botão de transcrição colapsável obrigatório)
+    expect(await screen.findByText('Aqui está seu resumo completo com métricas do mês.')).toBeInTheDocument();
+  });
+
+  test('deve permitir reproduzir e pausar o áudio do assistente pelo player interativo', async () => {
+    const playMock = vi.fn().mockResolvedValue(undefined);
+    const pauseMock = vi.fn();
+    window.HTMLMediaElement.prototype.play = playMock;
+    window.HTMLMediaElement.prototype.pause = pauseMock;
+
+    const mensagensMock = [
+      {
+        id: 2,
+        papel: 'assistente',
+        tipo_midia: 'audio',
+        audio_base64: 'UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=',
+        conteudo: 'Resposta em áudio sintetizada.',
+        status: 'concluida',
+        fontes: [],
+      },
+    ];
+
+    api.get.mockImplementation((url) => {
+      if (url === '/assistente/conversas') {
+        return Promise.resolve({
+          data: {
+            sucesso: true,
+            dados: [{ id: 52, titulo: 'Teste Player Áudio' }],
+          },
+        });
+      }
+      if (url === '/assistente/conversas/52/mensagens') {
+        return Promise.resolve({
+          data: { sucesso: true, dados: mensagensMock },
+        });
+      }
+      return Promise.resolve({ data: { sucesso: true, dados: [] } });
+    });
+
+    render(<Assistente />);
+
+    const conversaBtn = await screen.findByText('Teste Player Áudio');
+    fireEvent.click(conversaBtn);
+
+    const btnPlay = await screen.findByRole('button', { name: /reproduzir áudio/i });
+    fireEvent.click(btnPlay);
+
+    // Deve chamar play no elemento de áudio
+    expect(playMock).toHaveBeenCalled();
+
+    // Botão agora deve alternar para pausar áudio
+    const btnPause = await screen.findByRole('button', { name: /pausar áudio/i });
+    expect(btnPause).toBeInTheDocument();
+
+    fireEvent.click(btnPause);
+    expect(pauseMock).toHaveBeenCalled();
+  });
+
+  test('deve atualizar audio_base64 e renderizar player interativo após conclusão de short-polling', async () => {
+    window.HTMLMediaElement.prototype.play = vi.fn().mockResolvedValue(undefined);
+    window.HTMLMediaElement.prototype.pause = vi.fn();
+
+    api.get.mockImplementation((url) => {
+      if (url === '/assistente/conversas') {
+        return Promise.resolve({ data: { sucesso: true, dados: [] } });
+      }
+      if (url === '/assistente/mensagens/888/status') {
+        return Promise.resolve({
+          data: {
+            sucesso: true,
+            dados: {
+              id: 888,
+              status: 'concluida',
+              conteudo: 'Áudio gerado com sucesso via short-polling.',
+              tipo_midia: 'audio',
+              audio_base64: 'UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=',
+              fontes: [],
+            },
+          },
+        });
+      }
+      return Promise.resolve({ data: { sucesso: true, dados: [] } });
+    });
+
+    api.post.mockResolvedValueOnce({
+      data: {
+        sucesso: true,
+        dados: {
+          conversa_id: 300,
+          mensagem: {
+            id: 888,
+            papel: 'assistente',
+            status: 'processando',
+            conteudo: null,
+          },
+        },
+      },
+    });
+
+    render(<Assistente />);
+
+    const input = screen.getByPlaceholderText(/digite sua dúvida contábil ou sobre seu negócio\.\.\./i);
+    fireEvent.change(input, { target: { value: 'Pergunta assíncrona com áudio' } });
+
+    const btnEnviar = screen.getByRole('button', { name: /enviar/i });
+    fireEvent.click(btnEnviar);
+
+    // Após conclusão do polling, o player de áudio deve ser renderizado
+    const btnPlay = await screen.findByRole('button', { name: /reproduzir áudio/i });
+    expect(btnPlay).toBeInTheDocument();
+
+    // E a transcrição colapsável deve estar presente
+    const btnTranscricao = screen.getByRole('button', { name: /ver transcrição/i });
+    expect(btnTranscricao).toBeInTheDocument();
+  });
 });
+
 

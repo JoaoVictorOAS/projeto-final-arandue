@@ -19,6 +19,8 @@ import {
   X,
   Volume2,
   VolumeX,
+  Play,
+  Pause,
 } from 'lucide-react';
 import { ChatContext, ChatProvider, useChat } from '../context/ChatContext';
 
@@ -28,6 +30,158 @@ const SUGESTOES_PADRAO = [
   'Como funciona o desenquadramento do MEI?',
   'Qual a data de vencimento mensal do boleto DAS?',
 ];
+
+function AudioPlayer({ audioBase64, className = '' }) {
+  const audioRef = useRef(null);
+  const [tocando, setTocando] = useState(false);
+  const [tempoAtual, setTempoAtual] = useState(0);
+  const [duracao, setDuracao] = useState(0);
+  const [velocidade, setVelocidade] = useState(1);
+
+  const audioSrc = audioBase64
+    ? audioBase64.startsWith('data:')
+      ? audioBase64
+      : `data:audio/mp3;base64,${audioBase64}`
+    : '';
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    const onTimeUpdate = () => setTempoAtual(audio.currentTime || 0);
+    const onLoadedMetadata = () => setDuracao(audio.duration || 0);
+    const onEnded = () => {
+      setTocando(false);
+      setTempoAtual(0);
+    };
+
+    audio.addEventListener('timeupdate', onTimeUpdate);
+    audio.addEventListener('loadedmetadata', onLoadedMetadata);
+    audio.addEventListener('ended', onEnded);
+
+    return () => {
+      audio.removeEventListener('timeupdate', onTimeUpdate);
+      audio.removeEventListener('loadedmetadata', onLoadedMetadata);
+      audio.removeEventListener('ended', onEnded);
+    };
+  }, [audioSrc]);
+
+  const togglePlay = () => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    if (tocando) {
+      audio.pause();
+      setTocando(false);
+    } else {
+      try {
+        const p = audio.play();
+        if (p && typeof p.then === 'function') {
+          p.then(() => {
+            setTocando(true);
+          }).catch((err) => {
+            console.warn('Erro ao reproduzir áudio:', err);
+          });
+        } else {
+          setTocando(true);
+        }
+      } catch (err) {
+        console.warn('Erro ao reproduzir áudio:', err);
+      }
+    }
+  };
+
+  const handleSeek = (e) => {
+    const novoTempo = parseFloat(e.target.value);
+    setTempoAtual(novoTempo);
+    if (audioRef.current) {
+      audioRef.current.currentTime = novoTempo;
+    }
+  };
+
+  const alternarVelocidade = () => {
+    const proximas = [1, 1.25, 1.5, 2];
+    const idx = proximas.indexOf(velocidade);
+    const novaVelocidade = proximas[(idx + 1) % proximas.length];
+    setVelocidade(novaVelocidade);
+    if (audioRef.current) {
+      audioRef.current.playbackRate = novaVelocidade;
+    }
+  };
+
+  const formatarTempo = (segundos) => {
+    if (!segundos || isNaN(segundos)) return '0:00';
+    const m = Math.floor(segundos / 60);
+    const s = Math.floor(segundos % 60);
+    return `${m}:${s < 10 ? '0' : ''}${s}`;
+  };
+
+  if (!audioSrc) return null;
+
+  return (
+    <div
+      className={`flex items-center gap-2.5 p-2 sm:p-2.5 rounded-xl border shadow-2xs select-none ${className}`}
+      style={{
+        backgroundColor: 'var(--bg-surface-hover)',
+        borderColor: 'var(--border-color)',
+        color: 'var(--text-main)',
+      }}
+    >
+      <audio ref={audioRef} src={audioSrc} preload="metadata" />
+
+      {/* Botão Play / Pause */}
+      <button
+        type="button"
+        onClick={togglePlay}
+        aria-label={tocando ? 'Pausar áudio' : 'Reproduzir áudio'}
+        className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-transform active:scale-95 shadow-xs cursor-pointer hover:opacity-90"
+        style={{
+          backgroundColor: 'var(--color-primary)',
+          color: 'var(--color-primary-text, #ffffff)',
+        }}
+      >
+        {tocando ? <Pause className="w-4 h-4 fill-current" /> : <Play className="w-4 h-4 ml-0.5 fill-current" />}
+      </button>
+
+      {/* Barra de Progresso e Tempo */}
+      <div className="flex-1 min-w-0 flex flex-col justify-center gap-1">
+        <input
+          type="range"
+          min="0"
+          max={duracao || 100}
+          value={tempoAtual}
+          onChange={handleSeek}
+          aria-label="Progresso do áudio"
+          className="w-full h-1.5 rounded-lg appearance-none cursor-pointer"
+          style={{
+            backgroundColor: 'var(--border-color)',
+            accentColor: 'var(--color-primary)',
+          }}
+        />
+        <div className="flex justify-between items-center text-[10px]" style={{ color: 'var(--text-muted)' }}>
+          <span>{formatarTempo(tempoAtual)}</span>
+          <span>{duracao ? formatarTempo(duracao) : 'Áudio'}</span>
+        </div>
+      </div>
+
+      {/* Seletor de Velocidade */}
+      <button
+        type="button"
+        onClick={alternarVelocidade}
+        title="Alterar velocidade de reprodução"
+        aria-label={`Velocidade ${velocidade}x`}
+        className="px-1.5 py-0.5 rounded text-[10px] font-bold border transition-colors hover:opacity-80 flex-shrink-0"
+        style={{
+          backgroundColor: 'var(--bg-surface)',
+          borderColor: 'var(--border-color)',
+          color: 'var(--text-secondary)',
+        }}
+      >
+        {velocidade}x
+      </button>
+    </div>
+  );
+}
 
 function AssistenteView() {
   const {
@@ -64,6 +218,14 @@ function AssistenteView() {
   const [gravando, setGravando] = useState(false);
   const [tempoGravacao, setTempoGravacao] = useState(0);
   const [sidebarConversasAberta, setSidebarConversasAberta] = useState(false);
+  const [transcricoesAbertas, setTranscricoesAbertas] = useState({});
+
+  const alternarTranscricao = (msgId) => {
+    setTranscricoesAbertas((prev) => ({
+      ...prev,
+      [msgId]: !prev[msgId],
+    }));
+  };
 
   // Inicia gravação de áudio pelo microfone
   const iniciarGravacao = async () => {
@@ -372,6 +534,12 @@ function AssistenteView() {
                 <span>Respostas em Áudio</span>
               </span>
             )}
+            {preferenciaResposta === 'ambos' && (
+              <span className="badge-theme-subtle text-[11px] px-2.5 py-0.5 rounded-full font-semibold flex items-center gap-1 flex-shrink-0">
+                <Volume2 className="w-3 h-3 text-theme-primary" />
+                <span>Texto e Áudio</span>
+              </span>
+            )}
           </div>
         </header>
 
@@ -493,7 +661,49 @@ function AssistenteView() {
                             <img src={msg.midia_preview} alt="Pré-visualização" className="max-h-48 rounded-xl object-cover border shadow-xs" style={{ borderColor: 'var(--border-color)' }} />
                           </div>
                         )}
-                        <div className="whitespace-pre-wrap break-words">{msg.conteudo}</div>
+
+                        {/* Player de áudio quando a mensagem possui áudio sintetizado nativo ou gravação */}
+                        {msg.audio_base64 && (
+                          <div className="mb-2">
+                            <AudioPlayer audioBase64={msg.audio_base64} />
+                          </div>
+                        )}
+
+                        {/* Conteúdo: Transcrição colapsável para modo apenas áudio do assistente, ou texto direto */}
+                        {!ehUsuario && msg.tipo_midia === 'audio' && msg.audio_base64 ? (
+                          <div className="pt-1">
+                            <button
+                              type="button"
+                              onClick={() => alternarTranscricao(msg.id || idx)}
+                              className="inline-flex items-center gap-1.5 text-xs font-medium cursor-pointer transition-colors hover:opacity-90"
+                              style={{ color: 'var(--text-secondary)' }}
+                              aria-label={transcricoesAbertas[msg.id || idx] ? 'Ocultar transcrição' : 'Ver transcrição'}
+                            >
+                              <FileText className="w-3.5 h-3.5" style={{ color: 'var(--color-primary)' }} />
+                              <span>{transcricoesAbertas[msg.id || idx] ? 'Ocultar transcrição' : 'Ver transcrição'}</span>
+                              {transcricoesAbertas[msg.id || idx] ? (
+                                <ChevronUp className="w-3 h-3" />
+                              ) : (
+                                <ChevronDown className="w-3 h-3" />
+                              )}
+                            </button>
+
+                            {transcricoesAbertas[msg.id || idx] && msg.conteudo && (
+                              <div
+                                className="mt-2 p-2.5 rounded-xl border text-xs leading-relaxed whitespace-pre-wrap break-words"
+                                style={{
+                                  backgroundColor: 'var(--bg-surface-hover)',
+                                  borderColor: 'var(--border-color)',
+                                  color: 'var(--text-main)',
+                                }}
+                              >
+                                {msg.conteudo}
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="whitespace-pre-wrap break-words">{msg.conteudo}</div>
+                        )}
                       </div>
 
                       {/* Exibição de Fontes Citadas pelo RAG */}
@@ -547,8 +757,8 @@ function AssistenteView() {
                         </div>
                       )}
 
-                      {/* Ação de ouvir em voz alta / parar fala para mensagens do assistente */}
-                      {!ehUsuario && (msg.status === 'concluida' || !msg.status) && msg.conteudo && (
+                      {/* Ação de ouvir em voz alta / parar fala para mensagens do assistente (quando não há áudio sintetizado nativo) */}
+                      {!ehUsuario && (msg.status === 'concluida' || !msg.status) && msg.conteudo && !msg.audio_base64 && (
                         <div className="flex items-center gap-2 pt-0.5">
                           <button
                             type="button"

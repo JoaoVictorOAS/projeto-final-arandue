@@ -189,6 +189,9 @@ export function ChatProvider({ children }) {
                       ...m,
                       status: 'concluida',
                       conteudo: dadosMsg.conteudo,
+                      tipo_midia: dadosMsg.tipo_midia || m.tipo_midia,
+                      audio_base64: dadosMsg.audio_base64 || m.audio_base64,
+                      transcricao_audio: dadosMsg.transcricao_audio || m.transcricao_audio,
                       fontes: dadosMsg.fontes || [],
                       tools_usadas: dadosMsg.tools_usadas || [],
                     }
@@ -202,8 +205,8 @@ export function ChatProvider({ children }) {
             // Se o assistente executou ferramenta de tema ou alterou o tema visual, atualiza o tema imediatamente
             verificarEAtualizarTema(dadosMsg.tools_usadas, dadosMsg.conteudo, carregarTemas);
 
-            // Se a preferência for áudio, reproduz em voz alta
-            if (preferenciaResposta === 'audio' && dadosMsg.conteudo) {
+            // Se a preferência for áudio e NÃO houver áudio sintetizado nativo, usa o fallback de Web Speech
+            if (preferenciaResposta === 'audio' && dadosMsg.conteudo && !dadosMsg.audio_base64) {
               setFalandoMensagemId(dadosMsg.id);
               falarTextoAssistente(dadosMsg.conteudo, () => setFalandoMensagemId(null));
             }
@@ -371,7 +374,7 @@ export function ChatProvider({ children }) {
           setMensagens((prev) => [...prev, msgAssistente]);
           setEnviando(false);
           verificarEAtualizarTema(msgAssistente?.tools_usadas, msgAssistente?.conteudo, carregarTemas);
-          if (preferenciaResposta === 'audio' && msgAssistente?.conteudo) {
+          if (preferenciaResposta === 'audio' && msgAssistente?.conteudo && !msgAssistente?.audio_base64) {
             setFalandoMensagemId(msgAssistente.id);
             falarTextoAssistente(msgAssistente.conteudo, () => setFalandoMensagemId(null));
           }
