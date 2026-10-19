@@ -10,11 +10,11 @@ describe('Autenticação API (/api/auth)', () => {
   };
 
   beforeAll(async () => {
-    await pool.execute("DELETE FROM usuarios WHERE email LIKE '%teste%'");
+    await pool.execute("DELETE FROM usuarios WHERE email LIKE '%teste%' OR email LIKE '%nao.cadastrado%'");
   });
 
   afterAll(async () => {
-    await pool.execute("DELETE FROM usuarios WHERE email LIKE '%teste%'");
+    await pool.execute("DELETE FROM usuarios WHERE email LIKE '%teste%' OR email LIKE '%nao.cadastrado%'");
     await pool.end();
   });
 
@@ -195,23 +195,19 @@ describe('Autenticação API (/api/auth)', () => {
   });
 
   describe('POST /api/auth/google', () => {
-    test('deve autenticar e registrar novo usuário via Google (200)', async () => {
+    test('deve rejeitar login via Google caso o usuário não possua cadastro prévio (404)', async () => {
       const googleUser = {
-        email: 'novo.google.teste@mei.com',
-        nome: 'Empreendedor Google Teste'
+        email: 'nao.cadastrado.google@mei.com',
+        nome: 'Empreendedor Sem Cadastro'
       };
 
       const res = await request(app)
         .post('/api/auth/google')
         .send(googleUser);
 
-      expect(res.statusCode).toBe(200);
-      expect(res.body.sucesso).toBe(true);
-      expect(res.body.mensagem).toBe('Autenticado com sucesso via Google');
-      expect(res.body.dados.token).toBeDefined();
-      expect(res.body.dados.usuario).toBeDefined();
-      expect(res.body.dados.usuario.email).toBe(googleUser.email);
-      expect(res.body.dados.usuario.nome).toBe(googleUser.nome);
+      expect(res.statusCode).toBe(404);
+      expect(res.body.sucesso).toBe(false);
+      expect(res.body.mensagem).toMatch(/nenhum cadastro encontrado para este e-mail/i);
     });
 
     test('deve autenticar usuário existente via Google retornando seu JWT (200)', async () => {

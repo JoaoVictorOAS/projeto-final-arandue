@@ -175,26 +175,11 @@ const authService = {
       throw erro;
     }
 
-    let usuario = await usuarioRepository.buscarPorEmail(emailLimpo);
+    const usuario = await usuarioRepository.buscarPorEmail(emailLimpo);
     if (!usuario) {
-      const nomeFinal = (nome && typeof nome === 'string' && nome.trim())
-        ? nome.trim()
-        : emailLimpo.split('@')[0];
-
-      const senhaAleatoria = `oauth_google_${Date.now()}_${Math.random().toString(36).substring(2, 10)}`;
-      const senhaHash = await bcrypt.hash(senhaAleatoria, 10);
-
-      const novoUsuario = await usuarioRepository.criar({
-        nome: nomeFinal,
-        email: emailLimpo,
-        senhaHash
-      });
-
-      usuario = {
-        id: novoUsuario.id,
-        nome: novoUsuario.nome,
-        email: novoUsuario.email
-      };
+      const erro = new Error('Nenhum cadastro encontrado para este e-mail. Por favor, crie sua conta antes de acessar via Google.');
+      erro.statusCode = 404;
+      throw erro;
     }
 
     const token = jwt.sign(
