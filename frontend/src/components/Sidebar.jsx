@@ -126,29 +126,11 @@ export default function Sidebar({ isOpen, setIsOpen }) {
         })}
       </nav>
 
-      {/* Atalho Vitrine / Landing Page */}
-      <div className="px-4 py-2 border-t" style={{ borderColor: 'var(--border-color)' }}>
-        <NavLink
-          to="/landing"
-          onClick={() => setIsOpen && setIsOpen(false)}
-          className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold border border-dashed opacity-80 hover:opacity-100 hover:scale-[1.01] transition-all"
-          style={{
-            borderColor: 'var(--border-color)',
-            color: 'var(--text-secondary, var(--text-main))',
-            backgroundColor: 'var(--bg-surface-hover, transparent)',
-          }}
-        >
-          <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-          <span className="flex-1">Página Inicial / Vitrine</span>
-          <span className="font-hand text-[11px] text-amber-600 dark:text-amber-400">ver ↗</span>
-        </NavLink>
-      </div>
 
       {/* Elemento Decorativo: Gatinho encostado na borda direita */}
       <div
         className="relative pt-1 px-2 pb-0 flex items-end justify-end select-none overflow-hidden"
         style={{
-          borderTop: '1px solid var(--border-color)',
           backgroundColor: 'var(--bg-surface)',
         }}
       >

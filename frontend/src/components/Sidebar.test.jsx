@@ -104,7 +104,6 @@ describe('Sidebar - Ícones Laterais e Efeito Hover Web', () => {
     renderSidebar('/', true);
 
     // O atalho de vitrine deve existir
-    expect(screen.getAllByText('Página Inicial / Vitrine').length).toBeGreaterThan(0);
 
     // Mas os dados de logout e perfil redundante devem estar removidos da sidebar
     expect(screen.queryByText('admin@mei.com')).toBeNull();
