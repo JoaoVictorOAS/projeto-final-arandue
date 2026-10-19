@@ -566,14 +566,34 @@ class WhatsAppService {
       // 6. Converte o Markdown rico da IA para a formatação do WhatsApp
       const conteudoBruto = resultado?.mensagem?.conteudo || 'Solicitação processada com sucesso.';
       const respostaFormatada = converterMarkdownParaWhatsApp(conteudoBruto);
-      const audioBase64 = resultado?.mensagem?.audio_base64;
+      let audioBase64 = resultado?.mensagem?.audio_base64;
       const preferencia = resultado?.preferencia_resposta || resultado?.mensagem?.preferencia_resposta || 'texto';
+
+      // Contingência: se o áudio não veio na resposta do assistente, sintetiza sob demanda para envio ao WhatsApp
+      if (!audioBase64 && conteudoBruto && typeof assistenteService.sintetizarAudio === 'function') {
+        try {
+          const prefs = typeof assistenteService.obterPreferenciaAssistente === 'function'
+            ? await assistenteService.obterPreferenciaAssistente(usuario.id)
+            : { voz_assistente: 'pt-BR-FranciscaNeural', provedor_tts: 'auto' };
+
+          const ttsRes = await assistenteService.sintetizarAudio({
+            texto: conteudoBruto,
+            voz: prefs?.voz_assistente,
+            provedor: prefs?.provedor_tts
+          });
+          if (ttsRes?.audio_base64) {
+            audioBase64 = ttsRes.audio_base64;
+          }
+        } catch (ttsFallbackErr) {
+          console.warn('[WhatsApp] Falha ao sintetizar áudio de contingência:', ttsFallbackErr.message);
+        }
+      }
 
       // 7. Finaliza indicador de digitação e envia a resposta com proteção anti-loop prévia
       await this.sock.sendPresenceUpdate('paused', jid);
 
-      // Envia nota de voz PTT caso o modo seja 'audio' ou 'ambos' e o áudio esteja disponível
-      if (audioBase64 && (preferencia === 'audio' || preferencia === 'ambos')) {
+      // Envia nota de voz PTT caso o áudio esteja disponível
+      if (audioBase64) {
         const audioBuffer = Buffer.from(audioBase64, 'base64');
         const sentAudio = await this.sock.sendMessage(jid, {
           audio: audioBuffer,
@@ -582,11 +602,15 @@ class WhatsAppService {
         });
         if (sentAudio?.key?.id) {
           this.mensagensEnviadasPeloBot.add(sentAudio.key.id);
+          if (this.mensagensEnviadasPeloBot.size > 500) {
+            const primeiro = this.mensagensEnviadasPeloBot.values().next().value;
+            this.mensagensEnviadasPeloBot.delete(primeiro);
+          }
         }
       }
 
-      // Envia texto formatado quando o modo for 'texto', 'ambos' ou caso o áudio não tenha sido gerado
-      if (preferencia === 'texto' || preferencia === 'ambos' || !audioBase64) {
+      // Envia texto formatado quando a preferência não for exclusivamente 'audio' (ou caso o áudio não esteja disponível)
+      if (preferencia !== 'audio' || !audioBase64) {
         this.textosEnviadosPeloBot.add(respostaFormatada.trim());
         if (this.textosEnviadosPeloBot.size > 200) {
           const primeiroTexto = this.textosEnviadosPeloBot.values().next().value;

@@ -280,7 +280,9 @@ const assistenteService = {
         tenantToken,
         mensagemLimpa: textoMensagem,
         historicoRecente,
-        midia
+        midia,
+        canal,
+        tipoMidiaEfetivo
       }).catch(err => {
         console.error(`[Assistente] Erro de background na mensagem ${msgAssistenteId}:`, err);
       });
@@ -330,9 +332,15 @@ const assistenteService = {
     let transcricaoAudioResposta = null;
     let tipoMidiaResposta = 'texto';
 
-    if (preferencia_resposta === 'audio' || preferencia_resposta === 'ambos') {
+    const deveSintetizarAudio =
+      preferencia_resposta === 'audio' ||
+      preferencia_resposta === 'ambos' ||
+      canal === 'whatsapp' ||
+      tipoMidiaEfetivo === 'audio';
+
+    if (deveSintetizarAudio) {
       try {
-        const dadosAudio = await aiServiceClient.sintetizarAudio({
+        const dadosAudio = await assistenteService.sintetizarAudio({
           texto: respostaAi.resposta,
           voz: voz_assistente,
           provedor: provedor_tts
@@ -340,7 +348,7 @@ const assistenteService = {
         if (dadosAudio && dadosAudio.audio_base64) {
           audioBase64 = dadosAudio.audio_base64;
           midiaMimeType = dadosAudio.mime_type || 'audio/mp3';
-          if (preferencia_resposta === 'audio') {
+          if (preferencia_resposta === 'audio' || (canal === 'whatsapp' && preferencia_resposta === 'audio')) {
             tipoMidiaResposta = 'audio';
             transcricaoAudioResposta = respostaAi.resposta;
           }
@@ -394,7 +402,9 @@ const assistenteService = {
     tenantToken,
     mensagemLimpa,
     historicoRecente,
-    midia = null
+    midia = null,
+    canal = 'web',
+    tipoMidiaEfetivo = 'texto'
   }) {
     try {
       const payloadAi = {
@@ -415,9 +425,15 @@ const assistenteService = {
       let transcricaoAudioResposta = null;
       let tipoMidiaResposta = 'texto';
 
-      if (preferencia_resposta === 'audio' || preferencia_resposta === 'ambos') {
+      const deveSintetizarAudio =
+        preferencia_resposta === 'audio' ||
+        preferencia_resposta === 'ambos' ||
+        canal === 'whatsapp' ||
+        tipoMidiaEfetivo === 'audio';
+
+      if (deveSintetizarAudio) {
         try {
-          const dadosAudio = await aiServiceClient.sintetizarAudio({
+          const dadosAudio = await assistenteService.sintetizarAudio({
             texto: respostaAi.resposta,
             voz: voz_assistente,
             provedor: provedor_tts
@@ -425,7 +441,7 @@ const assistenteService = {
           if (dadosAudio && dadosAudio.audio_base64) {
             audioBase64 = dadosAudio.audio_base64;
             midiaMimeType = dadosAudio.mime_type || 'audio/mp3';
-            if (preferencia_resposta === 'audio') {
+            if (preferencia_resposta === 'audio' || (canal === 'whatsapp' && preferencia_resposta === 'audio')) {
               tipoMidiaResposta = 'audio';
               transcricaoAudioResposta = respostaAi.resposta;
             }
@@ -604,7 +620,10 @@ const assistenteService = {
       try {
         const { ElevenLabsClient } = require('@elevenlabs/elevenlabs-js');
         const client = new ElevenLabsClient({ apiKey: elevenKey });
-        const voiceId = vozFinal && !vozFinal.startsWith('pt-BR-') ? vozFinal : '21m00Tcm4TlvDq8ikWAM';
+        let voiceId = vozFinal && !vozFinal.startsWith('pt-BR-') ? vozFinal : 'JBFqnCBsd6RMkjVDRZzb';
+        if (voiceId === '21m00Tcm4TlvDq8ikWAM') {
+          voiceId = 'JBFqnCBsd6RMkjVDRZzb';
+        }
         const stream = await client.textToSpeech.convert(voiceId, {
           text: texto.trim(),
           modelId: process.env.ELEVENLABS_MODEL_ID || 'eleven_multilingual_v2',
@@ -632,7 +651,8 @@ const assistenteService = {
     }
 
     throw new Error('Falha na síntese de áudio. Verifique as credenciais e conexões do serviço de TTS.');
-  }
+  },
+  obterPreferenciaAssistente
 };
 
 module.exports = assistenteService;

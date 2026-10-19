@@ -22,6 +22,14 @@
           }
         },
         {
+          "client_id": "1084089085404-seb6hll1fbjalaeejdklcoapllq1sust.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.arandue.app",
+            "certificate_hash": "c7f3db8afb536300d159cc4f3f713e74e61c0658"
+          }
+        },
+        {
           "client_id": "1084089085404-tij26l5jpj2mdreh4t648cac7r1ueqmk.apps.googleusercontent.com",
           "client_type": 3
         }
