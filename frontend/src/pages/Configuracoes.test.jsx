@@ -757,4 +757,71 @@ describe('Módulo de Configurações — MEI & SEFAZ Multi-Estado', () => {
       );
     });
   });
+
+  test('deve renderizar os 3 modos de retorno (Texto, Áudio, Ambos) e vozes neurais, permitindo salvar modo "ambos" e voz "antonio"', async () => {
+    api.get.mockImplementation((url) => {
+      if (url === '/configuracoes') {
+        return Promise.resolve({
+          data: {
+            ...mockConfigInicial,
+            dados: {
+              ...mockConfigInicial.dados,
+              preferencia_resposta: 'texto',
+              voz_assistente: 'pt-BR-FranciscaNeural',
+            },
+          },
+        });
+      }
+      return Promise.resolve({ data: { sucesso: true, dados: [] } });
+    });
+
+    api.put.mockResolvedValue({
+      data: {
+        sucesso: true,
+        mensagem: 'Configurações salvas com sucesso',
+        dados: {
+          ...mockConfigInicial.dados,
+          preferencia_resposta: 'ambos',
+          voz_assistente: 'pt-BR-AntonioNeural',
+        },
+      },
+    });
+
+    render(<Configuracoes />);
+
+    expect(await screen.findByRole('heading', { name: /configurações do mei/i })).toBeInTheDocument();
+
+    // Verifica presença das 3 opções de modo
+    expect(screen.getByText(/respostas em texto \(padrão\)/i)).toBeInTheDocument();
+    expect(screen.getByText(/respostas em áudio/i)).toBeInTheDocument();
+    expect(screen.getByText(/texto e áudio \(ambos\)/i)).toBeInTheDocument();
+
+    // Verifica presença das 3 vozes neurais
+    expect(screen.getByText(/francisca/i)).toBeInTheDocument();
+    expect(screen.getByText(/antonio/i)).toBeInTheDocument();
+    expect(screen.getByText(/thalita/i)).toBeInTheDocument();
+
+    // Seleciona modo "Ambos"
+    const opcaoAmbos = screen.getByLabelText(/texto e áudio \(ambos\)/i);
+    fireEvent.click(opcaoAmbos);
+
+    // Seleciona voz "Antonio"
+    const opcaoAntonio = screen.getByLabelText(/antonio/i);
+    fireEvent.click(opcaoAntonio);
+
+    // Salva
+    const btnSalvar = screen.getByRole('button', { name: /salvar configurações/i });
+    fireEvent.click(btnSalvar);
+
+    await waitFor(() => {
+      expect(api.put).toHaveBeenCalledWith(
+        '/configuracoes',
+        expect.objectContaining({
+          preferencia_resposta: 'ambos',
+          voz_assistente: 'pt-BR-AntonioNeural',
+        })
+      );
+    });
+  });
 });
+

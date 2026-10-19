@@ -34,7 +34,12 @@ import {
   ArrowRight,
   Volume2,
   FileText,
+  Play,
+  Mic,
+  Headphones,
+  VolumeX,
 } from 'lucide-react';
+
 import api from '../services/api';
 import { useTheme } from '../context/ThemeContext';
 import ThemedSelect from '../components/ThemedSelect';
@@ -111,12 +116,15 @@ export default function Configuracoes() {
     telefone_comercial: '',
     ambiente_fiscal: 'HOMOLOGACAO',
     preferencia_resposta: 'texto',
+    voz_assistente: 'pt-BR-FranciscaNeural',
     serie_nfse: 1,
     serie_nfe: 1,
     serie_nfce: 1,
   });
 
+  const [vozTestando, setVozTestando] = useState(null);
   const [isIsentoIE, setIsIsentoIE] = useState(true);
+
 
   // Estados do Certificado Digital A1
   const [certStatus, setCertStatus] = useState({
@@ -326,6 +334,7 @@ export default function Configuracoes() {
             telefone_comercial: dados.telefone_comercial || '',
             ambiente_fiscal: dados.ambiente_fiscal || 'HOMOLOGACAO',
             preferencia_resposta: dados.preferencia_resposta || 'texto',
+            voz_assistente: dados.voz_assistente || 'pt-BR-FranciscaNeural',
             serie_nfse: Number(dados.serie_nfse) || 1,
             serie_nfe: Number(dados.serie_nfe) || 1,
             serie_nfce: Number(dados.serie_nfce) || 1,
@@ -498,7 +507,8 @@ export default function Configuracoes() {
         email_comercial: form.email_comercial?.trim() || '',
         telefone_comercial: form.telefone_comercial?.trim() || '',
         ambiente_fiscal: form.ambiente_fiscal === 'PRODUCAO' ? 'PRODUCAO' : 'HOMOLOGACAO',
-        preferencia_resposta: form.preferencia_resposta === 'audio' ? 'audio' : 'texto',
+        preferencia_resposta: ['texto', 'audio', 'ambos'].includes(form.preferencia_resposta) ? form.preferencia_resposta : 'texto',
+        voz_assistente: form.voz_assistente || 'pt-BR-FranciscaNeural',
         serie_nfse: Number(form.serie_nfse) || 1,
         serie_nfe: Number(form.serie_nfe) || 1,
         serie_nfce: Number(form.serie_nfce) || 1,
@@ -521,7 +531,53 @@ export default function Configuracoes() {
     }
   };
 
+  const demonstrarVoz = (vozId) => {
+    if (typeof window === 'undefined') return;
+
+    if (window.speechSynthesis) {
+      try {
+        window.speechSynthesis.cancel();
+        const texto = vozId === 'pt-BR-AntonioNeural'
+          ? 'Olá! Sou Antonio, a voz profissional do seu assistente Aranduê.'
+          : vozId === 'pt-BR-ThalitaNeural'
+          ? 'Oi! Sou Thalita, sua parceira ágil e dinâmica no Aranduê.'
+          : 'Olá! Sou Francisca, sua assistente virtual Aranduê para o dia a dia.';
+
+        const utterance = new SpeechSynthesisUtterance(texto);
+        utterance.lang = 'pt-BR';
+        setVozTestando(vozId);
+        utterance.onend = () => setVozTestando(null);
+        utterance.onerror = () => setVozTestando(null);
+        window.speechSynthesis.speak(utterance);
+      } catch (e) {
+        setVozTestando(null);
+      }
+    }
+  };
+
+  const VOZES_ASSISTENTE = [
+    {
+      id: 'pt-BR-FranciscaNeural',
+      nome: 'Francisca',
+      tag: 'Feminina • Padrão',
+      descricao: 'Tom natural, acolhedor e claro para o dia a dia do seu negócio.',
+    },
+    {
+      id: 'pt-BR-AntonioNeural',
+      nome: 'Antonio',
+      tag: 'Masculino • Firme',
+      descricao: 'Tom corporativo, focado e profissional para tomadas de decisão.',
+    },
+    {
+      id: 'pt-BR-ThalitaNeural',
+      nome: 'Thalita',
+      tag: 'Feminina • Jovem',
+      descricao: 'Tom jovem, dinâmico e ágil para respostas rápidas e diretas.',
+    },
+  ];
+
   if (loading) {
+
     return (
       <div className="p-12 text-center text-gray-500 flex flex-col items-center justify-center gap-2">
         <Loader2 className="w-8 h-8 animate-spin text-theme-primary" />
@@ -1227,9 +1283,9 @@ export default function Configuracoes() {
           </div>
         </div>
 
-        {/* CARD 5.1: Preferência de Retorno do Assistente IA */}
+        {/* CARD 5.1: Preferência de Retorno do Assistente IA & Voz Neural */}
         <div
-          className="p-6 rounded-2xl border shadow-sm space-y-4"
+          className="p-6 rounded-2xl border shadow-sm space-y-6"
           style={{
             backgroundColor: 'var(--bg-surface, #ffffff)',
             borderColor: 'var(--border-color, #e5e7eb)',
@@ -1251,26 +1307,31 @@ export default function Configuracoes() {
                 className="text-xs mt-0.5"
                 style={{ color: 'var(--text-secondary, #6b7280)' }}
               >
-                Escolha se você prefere receber as respostas do Assistente Aranduê em texto ou lidas em voz alta (áudio).
+                Escolha o formato das respostas no Chat Web e no WhatsApp, além da voz neural utilizada na síntese.
               </p>
             </div>
             <span className="badge-theme-subtle px-3 py-1 rounded-full text-xs font-semibold">
-              {form.preferencia_resposta === 'audio' ? '🔊 Áudio Ativado' : '📝 Texto (Padrão)'}
+              {form.preferencia_resposta === 'ambos'
+                ? '✨ Texto e Áudio (Ambos)'
+                : form.preferencia_resposta === 'audio'
+                ? '🔊 Apenas Áudio'
+                : '📝 Apenas Texto (Padrão)'}
             </span>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {/* Opção 1: Texto */}
+          {/* Seletor de 3 Modos */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+            {/* Modo 1: Apenas Texto */}
             <label
               htmlFor="pref-retorno-texto"
-              className={`flex items-start gap-3.5 p-4 rounded-xl border cursor-pointer transition-all ${
-                form.preferencia_resposta !== 'audio'
+              className={`flex items-start gap-3 p-4 rounded-xl border cursor-pointer transition-all ${
+                form.preferencia_resposta === 'texto'
                   ? 'border-2 shadow-xs'
                   : 'hover:opacity-90 opacity-80'
               }`}
               style={{
                 backgroundColor: 'var(--bg-surface, #ffffff)',
-                borderColor: form.preferencia_resposta !== 'audio' ? 'var(--color-primary)' : 'var(--border-color, #e5e7eb)',
+                borderColor: form.preferencia_resposta === 'texto' ? 'var(--color-primary)' : 'var(--border-color, #e5e7eb)',
               }}
             >
               <input
@@ -1279,7 +1340,7 @@ export default function Configuracoes() {
                 name="preferencia_resposta"
                 value="texto"
                 aria-label="Respostas em Texto (Padrão)"
-                checked={form.preferencia_resposta !== 'audio'}
+                checked={form.preferencia_resposta === 'texto'}
                 onChange={() => setForm({ ...form, preferencia_resposta: 'texto' })}
                 className="mt-1 h-4 w-4 text-theme-primary focus:ring-theme-primary border-gray-300"
               />
@@ -1296,10 +1357,10 @@ export default function Configuracoes() {
               </div>
             </label>
 
-            {/* Opção 2: Áudio */}
+            {/* Modo 2: Apenas Áudio */}
             <label
               htmlFor="pref-retorno-audio"
-              className={`flex items-start gap-3.5 p-4 rounded-xl border cursor-pointer transition-all ${
+              className={`flex items-start gap-3 p-4 rounded-xl border cursor-pointer transition-all ${
                 form.preferencia_resposta === 'audio'
                   ? 'border-2 shadow-xs'
                   : 'hover:opacity-90 opacity-80'
@@ -1327,12 +1388,132 @@ export default function Configuracoes() {
                   </span>
                 </div>
                 <p className="text-xs mt-1" style={{ color: 'var(--text-secondary, #6b7280)' }}>
-                  O assistente lê as respostas automaticamente em voz alta no navegador assim que concluídas.
+                  O assistente envia áudio direto. O texto fica armazenado como transcrição colapsável sob demanda.
+                </p>
+              </div>
+            </label>
+
+            {/* Modo 3: Ambos */}
+            <label
+              htmlFor="pref-retorno-ambos"
+              className={`flex items-start gap-3 p-4 rounded-xl border cursor-pointer transition-all ${
+                form.preferencia_resposta === 'ambos'
+                  ? 'border-2 shadow-xs'
+                  : 'hover:opacity-90 opacity-80'
+              }`}
+              style={{
+                backgroundColor: 'var(--bg-surface, #ffffff)',
+                borderColor: form.preferencia_resposta === 'ambos' ? 'var(--color-primary)' : 'var(--border-color, #e5e7eb)',
+              }}
+            >
+              <input
+                id="pref-retorno-ambos"
+                type="radio"
+                name="preferencia_resposta"
+                value="ambos"
+                aria-label="Texto e Áudio (Ambos)"
+                checked={form.preferencia_resposta === 'ambos'}
+                onChange={() => setForm({ ...form, preferencia_resposta: 'ambos' })}
+                className="mt-1 h-4 w-4 text-theme-primary focus:ring-theme-primary border-gray-300"
+              />
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-theme-primary" />
+                  <span className="text-sm font-semibold" style={{ color: 'var(--text-main, #111827)' }}>
+                    Texto e Áudio (Ambos)
+                  </span>
+                </div>
+                <p className="text-xs mt-1" style={{ color: 'var(--text-secondary, #6b7280)' }}>
+                  O assistente sintetiza a nota de voz e envia também o texto formatado completo para máxima agilidade.
                 </p>
               </div>
             </label>
           </div>
+
+          {/* Seletor de Vozes Neurais */}
+          <div className="pt-4 border-t space-y-3" style={{ borderColor: 'var(--border-color, #f3f4f6)' }}>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+              <div>
+                <h3 className="text-sm font-bold flex items-center gap-2" style={{ color: 'var(--text-main, #111827)' }}>
+                  <Headphones className="w-4 h-4 text-theme-primary" />
+                  Voz do Assistente (Síntese Neural Brasileira)
+                </h3>
+                <p className="text-xs" style={{ color: 'var(--text-secondary, #6b7280)' }}>
+                  Personalidade vocal do assistente para reprodução de mensagens no navegador e notas de voz no WhatsApp.
+                </p>
+              </div>
+              <span className="badge-theme-subtle px-2.5 py-0.5 rounded-full text-xs font-medium">
+                Vozes Neurais de Alta Fidelidade
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+              {VOZES_ASSISTENTE.map((voz) => {
+                const selecionada = (form.voz_assistente || 'pt-BR-FranciscaNeural') === voz.id;
+                return (
+                  <label
+                    key={voz.id}
+                    htmlFor={`voz-${voz.nome.toLowerCase()}`}
+                    className={`flex flex-col justify-between p-4 rounded-xl border cursor-pointer transition-all ${
+                      selecionada ? 'border-2 shadow-xs' : 'hover:opacity-90 opacity-80'
+                    }`}
+                    style={{
+                      backgroundColor: 'var(--bg-surface, #ffffff)',
+                      borderColor: selecionada ? 'var(--color-primary)' : 'var(--border-color, #e5e7eb)',
+                    }}
+                  >
+                    <div>
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          <input
+                            id={`voz-${voz.nome.toLowerCase()}`}
+                            type="radio"
+                            name="voz_assistente"
+                            value={voz.id}
+                            aria-label={voz.nome}
+                            checked={selecionada}
+                            onChange={() => setForm({ ...form, voz_assistente: voz.id })}
+                            className="h-4 w-4 text-theme-primary focus:ring-theme-primary border-gray-300"
+                          />
+                          <span className="text-sm font-bold" style={{ color: 'var(--text-main, #111827)' }}>
+                            {voz.nome}
+                          </span>
+                        </div>
+                        <span className="badge-theme-subtle px-2 py-0.5 rounded-md text-[10px] font-semibold">
+                          {voz.tag}
+                        </span>
+                      </div>
+                      <p className="text-xs mt-2" style={{ color: 'var(--text-secondary, #6b7280)' }}>
+                        {voz.descricao}
+                      </p>
+                    </div>
+
+                    <div className="pt-3 mt-3 border-t flex justify-end" style={{ borderColor: 'var(--border-color, #f3f4f6)' }}>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          demonstrarVoz(voz.id);
+                        }}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border transition-all"
+                        style={{
+                          backgroundColor: 'var(--bg-surface-hover, #f3f4f6)',
+                          borderColor: 'var(--border-color, #e5e7eb)',
+                          color: 'var(--text-main, #111827)',
+                        }}
+                      >
+                        <Play className="w-3.5 h-3.5 text-theme-primary" />
+                        {vozTestando === voz.id ? 'Reproduzindo...' : 'Ouvir demonstração'}
+                      </button>
+                    </div>
+                  </label>
+                );
+              })}
+            </div>
+          </div>
         </div>
+
+
 
         {/* CARD 6: Aparência & Temas do Sistema */}
         <div
