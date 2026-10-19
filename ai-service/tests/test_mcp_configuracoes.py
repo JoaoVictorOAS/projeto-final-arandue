@@ -147,6 +147,43 @@ async def test_atualizar_configuracoes_mei_sucesso():
 
 @pytest.mark.asyncio
 @respx.mock
+async def test_atualizar_configuracoes_mei_com_preferencia_resposta():
+    resposta_api = {
+        "sucesso": True,
+        "mensagem": "Configurações salvas com sucesso",
+        "dados": {
+            "id": 1,
+            "razao_social": "JOAO DA SILVA 12345678900",
+            "cnpj": "12345678000195",
+            "uf": "SP",
+            "municipio": "São Paulo",
+            "cep": "01001000",
+            "preferencia_resposta": "audio",
+            "configurado": True
+        }
+    }
+    respx.put("http://test-node:3001/api/configuracoes").mock(
+        return_value=httpx.Response(200, json=resposta_api)
+    )
+
+    resultado = await atualizar_configuracoes_mei(
+        razao_social="JOAO DA SILVA 12345678900",
+        cnpj="12345678000195",
+        uf="SP",
+        municipio="São Paulo",
+        cep="01001000",
+        preferencia_resposta="audio"
+    )
+
+    assert resultado["sucesso"] is True
+    assert resultado["dados"]["preferencia_resposta"] == "audio"
+
+    req = respx.calls.last.request
+    payload_enviado = json.loads(req.content)
+    assert payload_enviado["preferencia_resposta"] == "audio"
+
+@pytest.mark.asyncio
+@respx.mock
 async def test_atualizar_configuracoes_mei_erro_validacao():
     respx.put("http://test-node:3001/api/configuracoes").mock(
         return_value=httpx.Response(400, json={

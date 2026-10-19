@@ -702,4 +702,59 @@ describe('Módulo de Configurações — MEI & SEFAZ Multi-Estado', () => {
 
     expect(window.URL.createObjectURL).toHaveBeenCalled();
   });
+
+  test('deve permitir alterar e salvar a preferência de resposta do assistente (Áudio vs Texto)', async () => {
+    api.get.mockImplementation((url) => {
+      if (url === '/configuracoes') {
+        return Promise.resolve({
+          data: {
+            ...mockConfigInicial,
+            dados: {
+              ...mockConfigInicial.dados,
+              preferencia_resposta: 'texto',
+            },
+          },
+        });
+      }
+      return Promise.resolve({ data: { sucesso: true, dados: [] } });
+    });
+
+    api.put.mockResolvedValue({
+      data: {
+        sucesso: true,
+        mensagem: 'Configurações salvas com sucesso',
+        dados: {
+          ...mockConfigInicial.dados,
+          preferencia_resposta: 'audio',
+        },
+      },
+    });
+
+    render(<Configuracoes />);
+
+    // Aguarda carregamento
+    expect(await screen.findByRole('heading', { name: /configurações do mei/i })).toBeInTheDocument();
+
+    // Verifica presença da seção de Preferência do Assistente
+    expect(screen.getByText(/preferência de retorno do assistente/i)).toBeInTheDocument();
+    expect(screen.getByText(/respostas em áudio \(voz\)/i)).toBeInTheDocument();
+    expect(screen.getByText(/respostas em texto \(padrão\)/i)).toBeInTheDocument();
+
+    // Clica na opção de Áudio
+    const opcaoAudio = screen.getByLabelText(/respostas em áudio/i);
+    fireEvent.click(opcaoAudio);
+
+    // Clica em Salvar
+    const btnSalvar = screen.getByRole('button', { name: /salvar configurações/i });
+    fireEvent.click(btnSalvar);
+
+    await waitFor(() => {
+      expect(api.put).toHaveBeenCalledWith(
+        '/configuracoes',
+        expect.objectContaining({
+          preferencia_resposta: 'audio',
+        })
+      );
+    });
+  });
 });

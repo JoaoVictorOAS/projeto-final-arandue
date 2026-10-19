@@ -32,6 +32,8 @@ import {
   HelpCircle,
   Bot,
   ArrowRight,
+  Volume2,
+  FileText,
 } from 'lucide-react';
 import api from '../services/api';
 import { useTheme } from '../context/ThemeContext';
@@ -108,6 +110,7 @@ export default function Configuracoes() {
     email_comercial: '',
     telefone_comercial: '',
     ambiente_fiscal: 'HOMOLOGACAO',
+    preferencia_resposta: 'texto',
     serie_nfse: 1,
     serie_nfe: 1,
     serie_nfce: 1,
@@ -322,6 +325,7 @@ export default function Configuracoes() {
             email_comercial: dados.email_comercial || '',
             telefone_comercial: dados.telefone_comercial || '',
             ambiente_fiscal: dados.ambiente_fiscal || 'HOMOLOGACAO',
+            preferencia_resposta: dados.preferencia_resposta || 'texto',
             serie_nfse: Number(dados.serie_nfse) || 1,
             serie_nfe: Number(dados.serie_nfe) || 1,
             serie_nfce: Number(dados.serie_nfce) || 1,
@@ -494,6 +498,7 @@ export default function Configuracoes() {
         email_comercial: form.email_comercial?.trim() || '',
         telefone_comercial: form.telefone_comercial?.trim() || '',
         ambiente_fiscal: form.ambiente_fiscal === 'PRODUCAO' ? 'PRODUCAO' : 'HOMOLOGACAO',
+        preferencia_resposta: form.preferencia_resposta === 'audio' ? 'audio' : 'texto',
         serie_nfse: Number(form.serie_nfse) || 1,
         serie_nfe: Number(form.serie_nfe) || 1,
         serie_nfce: Number(form.serie_nfce) || 1,
@@ -1219,6 +1224,113 @@ export default function Configuracoes() {
                 Vincular WhatsApp
               </button>
             </div>
+          </div>
+        </div>
+
+        {/* CARD 5.1: Preferência de Retorno do Assistente IA */}
+        <div
+          className="p-6 rounded-2xl border shadow-sm space-y-4"
+          style={{
+            backgroundColor: 'var(--bg-surface, #ffffff)',
+            borderColor: 'var(--border-color, #e5e7eb)',
+          }}
+        >
+          <div
+            className="border-b pb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2"
+            style={{ borderColor: 'var(--border-color, #f3f4f6)' }}
+          >
+            <div>
+              <h2
+                className="text-lg font-bold flex items-center gap-2"
+                style={{ color: 'var(--text-main, #111827)' }}
+              >
+                <Bot className="w-5 h-5 text-theme-primary" />
+                Preferência de Retorno do Assistente
+              </h2>
+              <p
+                className="text-xs mt-0.5"
+                style={{ color: 'var(--text-secondary, #6b7280)' }}
+              >
+                Escolha se você prefere receber as respostas do Assistente Aranduê em texto ou lidas em voz alta (áudio).
+              </p>
+            </div>
+            <span className="badge-theme-subtle px-3 py-1 rounded-full text-xs font-semibold">
+              {form.preferencia_resposta === 'audio' ? '🔊 Áudio Ativado' : '📝 Texto (Padrão)'}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Opção 1: Texto */}
+            <label
+              htmlFor="pref-retorno-texto"
+              className={`flex items-start gap-3.5 p-4 rounded-xl border cursor-pointer transition-all ${
+                form.preferencia_resposta !== 'audio'
+                  ? 'border-2 shadow-xs'
+                  : 'hover:opacity-90 opacity-80'
+              }`}
+              style={{
+                backgroundColor: 'var(--bg-surface, #ffffff)',
+                borderColor: form.preferencia_resposta !== 'audio' ? 'var(--color-primary)' : 'var(--border-color, #e5e7eb)',
+              }}
+            >
+              <input
+                id="pref-retorno-texto"
+                type="radio"
+                name="preferencia_resposta"
+                value="texto"
+                aria-label="Respostas em Texto (Padrão)"
+                checked={form.preferencia_resposta !== 'audio'}
+                onChange={() => setForm({ ...form, preferencia_resposta: 'texto' })}
+                className="mt-1 h-4 w-4 text-theme-primary focus:ring-theme-primary border-gray-300"
+              />
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <FileText className="w-4 h-4 text-theme-primary" />
+                  <span className="text-sm font-semibold" style={{ color: 'var(--text-main, #111827)' }}>
+                    Respostas em Texto (Padrão)
+                  </span>
+                </div>
+                <p className="text-xs mt-1" style={{ color: 'var(--text-secondary, #6b7280)' }}>
+                  O assistente responde com texto estruturado, tabelas e dados para leitura no seu próprio ritmo.
+                </p>
+              </div>
+            </label>
+
+            {/* Opção 2: Áudio */}
+            <label
+              htmlFor="pref-retorno-audio"
+              className={`flex items-start gap-3.5 p-4 rounded-xl border cursor-pointer transition-all ${
+                form.preferencia_resposta === 'audio'
+                  ? 'border-2 shadow-xs'
+                  : 'hover:opacity-90 opacity-80'
+              }`}
+              style={{
+                backgroundColor: 'var(--bg-surface, #ffffff)',
+                borderColor: form.preferencia_resposta === 'audio' ? 'var(--color-primary)' : 'var(--border-color, #e5e7eb)',
+              }}
+            >
+              <input
+                id="pref-retorno-audio"
+                type="radio"
+                name="preferencia_resposta"
+                value="audio"
+                aria-label="Respostas em Áudio (Voz)"
+                checked={form.preferencia_resposta === 'audio'}
+                onChange={() => setForm({ ...form, preferencia_resposta: 'audio' })}
+                className="mt-1 h-4 w-4 text-theme-primary focus:ring-theme-primary border-gray-300"
+              />
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <Volume2 className="w-4 h-4 text-theme-primary" />
+                  <span className="text-sm font-semibold" style={{ color: 'var(--text-main, #111827)' }}>
+                    Respostas em Áudio (Voz)
+                  </span>
+                </div>
+                <p className="text-xs mt-1" style={{ color: 'var(--text-secondary, #6b7280)' }}>
+                  O assistente lê as respostas automaticamente em voz alta no navegador assim que concluídas.
+                </p>
+              </div>
+            </label>
           </div>
         </div>
 

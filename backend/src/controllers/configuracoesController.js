@@ -45,6 +45,7 @@ const configuracoesController = {
             email_comercial: config.email_comercial || '',
             telefone_comercial: config.telefone_comercial || '',
             ambiente_fiscal: config.ambiente_fiscal,
+            preferencia_resposta: config.preferencia_resposta || 'texto',
             serie_nfse: Number(config.serie_nfse) || 1,
             serie_nfe: Number(config.serie_nfe) || 1,
             serie_nfce: Number(config.serie_nfce) || 1,
@@ -80,6 +81,7 @@ const configuracoesController = {
           email_comercial: usuario.email || '',
           telefone_comercial: '',
           ambiente_fiscal: 'HOMOLOGACAO',
+          preferencia_resposta: 'texto',
           serie_nfse: 1,
           serie_nfe: 1,
           serie_nfce: 1,
@@ -119,6 +121,7 @@ const configuracoesController = {
         email_comercial,
         telefone_comercial,
         ambiente_fiscal,
+        preferencia_resposta,
         serie_nfse,
         serie_nfe,
         serie_nfce,
@@ -176,6 +179,7 @@ const configuracoesController = {
       const numFinal = (numero && String(numero).trim()) ? String(numero).trim() : 'S/N';
       const ieFinal = (inscricao_estadual && String(inscricao_estadual).trim()) ? String(inscricao_estadual).trim() : 'ISENTO';
       const ambFinal = ambiente_fiscal === 'PRODUCAO' ? 'PRODUCAO' : 'HOMOLOGACAO';
+      const prefRespostaFinal = (preferencia_resposta === 'audio') ? 'audio' : 'texto';
       const snfse = parseInt(serie_nfse, 10) || 1;
       const snfe = parseInt(serie_nfe, 10) || 1;
       const snfce = parseInt(serie_nfce, 10) || 1;
@@ -184,8 +188,8 @@ const configuracoesController = {
         INSERT INTO mei_configuracoes (
           usuario_id, razao_social, nome_fantasia, cnpj, inscricao_estadual, inscricao_municipal,
           cep, logradouro, numero, complemento, bairro, municipio, uf, codigo_municipio_ibge,
-          email_comercial, telefone_comercial, ambiente_fiscal, serie_nfse, serie_nfe, serie_nfce, chave_pix
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          email_comercial, telefone_comercial, ambiente_fiscal, preferencia_resposta, serie_nfse, serie_nfe, serie_nfce, chave_pix
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ON DUPLICATE KEY UPDATE
           razao_social = VALUES(razao_social),
           nome_fantasia = VALUES(nome_fantasia),
@@ -203,6 +207,7 @@ const configuracoesController = {
           email_comercial = VALUES(email_comercial),
           telefone_comercial = VALUES(telefone_comercial),
           ambiente_fiscal = VALUES(ambiente_fiscal),
+          preferencia_resposta = VALUES(preferencia_resposta),
           serie_nfse = VALUES(serie_nfse),
           serie_nfe = VALUES(serie_nfe),
           serie_nfce = VALUES(serie_nfce),
@@ -229,6 +234,7 @@ const configuracoesController = {
           email_comercial ? String(email_comercial).trim() : null,
           telefone_comercial ? String(telefone_comercial).trim() : null,
           ambFinal,
+          prefRespostaFinal,
           snfse,
           snfe,
           snfce,
@@ -236,6 +242,9 @@ const configuracoesController = {
         ]);
       } catch (err) {
         if (err.code === 'ER_BAD_FIELD_ERROR' || err.message?.includes('Unknown column')) {
+          try {
+            await pool.execute("ALTER TABLE mei_configuracoes ADD COLUMN preferencia_resposta ENUM('texto', 'audio') NOT NULL DEFAULT 'texto'");
+          } catch {}
           try {
             await pool.execute('ALTER TABLE mei_configuracoes ADD COLUMN chave_pix VARCHAR(180) NULL');
             await pool.execute(queryUpsertComChave, [
@@ -256,6 +265,7 @@ const configuracoesController = {
               email_comercial ? String(email_comercial).trim() : null,
               telefone_comercial ? String(telefone_comercial).trim() : null,
               ambFinal,
+              prefRespostaFinal,
               snfse,
               snfe,
               snfce,
@@ -266,8 +276,8 @@ const configuracoesController = {
               INSERT INTO mei_configuracoes (
                 usuario_id, razao_social, nome_fantasia, cnpj, inscricao_estadual, inscricao_municipal,
                 cep, logradouro, numero, complemento, bairro, municipio, uf, codigo_municipio_ibge,
-                email_comercial, telefone_comercial, ambiente_fiscal, serie_nfse, serie_nfe, serie_nfce
-              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                email_comercial, telefone_comercial, ambiente_fiscal, preferencia_resposta, serie_nfse, serie_nfe, serie_nfce
+              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
               ON DUPLICATE KEY UPDATE
                 razao_social = VALUES(razao_social),
                 nome_fantasia = VALUES(nome_fantasia),
@@ -285,6 +295,7 @@ const configuracoesController = {
                 email_comercial = VALUES(email_comercial),
                 telefone_comercial = VALUES(telefone_comercial),
                 ambiente_fiscal = VALUES(ambiente_fiscal),
+                preferencia_resposta = VALUES(preferencia_resposta),
                 serie_nfse = VALUES(serie_nfse),
                 serie_nfe = VALUES(serie_nfe),
                 serie_nfce = VALUES(serie_nfce),
@@ -308,6 +319,7 @@ const configuracoesController = {
               email_comercial ? String(email_comercial).trim() : null,
               telefone_comercial ? String(telefone_comercial).trim() : null,
               ambFinal,
+              prefRespostaFinal,
               snfse,
               snfe,
               snfce
@@ -346,6 +358,7 @@ const configuracoesController = {
           email_comercial: salvo.email_comercial || '',
           telefone_comercial: salvo.telefone_comercial || '',
           ambiente_fiscal: salvo.ambiente_fiscal,
+          preferencia_resposta: salvo.preferencia_resposta || prefRespostaFinal,
           serie_nfse: Number(salvo.serie_nfse) || 1,
           serie_nfe: Number(salvo.serie_nfe) || 1,
           serie_nfce: Number(salvo.serie_nfce) || 1,

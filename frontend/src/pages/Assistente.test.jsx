@@ -844,5 +844,64 @@ describe('Módulo do Assistente IA', () => {
       expect(document.documentElement.style.getPropertyValue('--bg-app')).toBe('#0f172a');
     });
   });
+
+  test('deve acionar a síntese de voz (Web Speech API) quando preferencia_resposta for "audio" ou ao clicar no botão de ouvir', async () => {
+    const mockSpeak = vi.fn();
+    const mockCancel = vi.fn();
+    window.speechSynthesis = {
+      speak: mockSpeak,
+      cancel: mockCancel,
+    };
+    window.SpeechSynthesisUtterance = vi.fn().mockImplementation(function (text) {
+      this.text = text;
+      this.lang = 'pt-BR';
+    });
+
+    const mensagensMock = [
+      { id: 1, papel: 'usuario', conteudo: 'Qual meu saldo atual?', fontes: [] },
+      { id: 2, papel: 'assistente', status: 'concluida', conteudo: 'Seu saldo atual em caixa é de R$ 1.500,00.', fontes: [] },
+    ];
+
+    api.get.mockImplementation((url) => {
+      if (url === '/configuracoes') {
+        return Promise.resolve({
+          data: {
+            sucesso: true,
+            dados: { preferencia_resposta: 'audio' },
+          },
+        });
+      }
+      if (url === '/assistente/conversas') {
+        return Promise.resolve({
+          data: {
+            sucesso: true,
+            dados: [{ id: 99, titulo: 'Consulta de Caixa', atualizado_em: '2026-10-07T12:00:00Z' }],
+          },
+        });
+      }
+      if (url === '/assistente/conversas/99/mensagens') {
+        return Promise.resolve({
+          data: { sucesso: true, dados: mensagensMock },
+        });
+      }
+      return Promise.resolve({ data: { sucesso: true, dados: [] } });
+    });
+
+    render(<Assistente />);
+
+    // Clica na conversa existente
+    const conversaBtn = await screen.findByText('Consulta de Caixa');
+    fireEvent.click(conversaBtn);
+
+    // Mensagem do assistente é exibida
+    expect(await screen.findByText(/Seu saldo atual em caixa é de R\$ 1\.500,00\./i)).toBeInTheDocument();
+
+    // Botão de ouvir resposta por voz deve estar presente
+    const btnOuvir = screen.getByRole('button', { name: /ouvir resposta/i });
+    expect(btnOuvir).toBeInTheDocument();
+
+    fireEvent.click(btnOuvir);
+    expect(mockSpeak).toHaveBeenCalled();
+  });
 });
 

@@ -20,6 +20,40 @@ export function verificarEAtualizarTema(toolsUsadas, conteudo, carregarTemasFn) 
   }
 }
 
+export function falarTextoAssistente(texto, onEndCallback) {
+  if (typeof window === 'undefined' || !window.speechSynthesis || !texto) return;
+  try {
+    window.speechSynthesis.cancel();
+    const textoLimpo = texto
+      .replace(/```[\s\S]*?```/g, '')
+      .replace(/`([^`]+)`/g, '$1')
+      .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+      .replace(/[*_~#>]/g, '')
+      .replace(/\n+/g, ' ')
+      .trim();
+
+    if (!textoLimpo) return;
+
+    const utterance = new SpeechSynthesisUtterance(textoLimpo);
+    utterance.lang = 'pt-BR';
+    utterance.rate = 1.05;
+    if (onEndCallback) {
+      utterance.onend = onEndCallback;
+      utterance.onerror = onEndCallback;
+    }
+    window.speechSynthesis.speak(utterance);
+  } catch (err) {
+    console.warn('Erro ao reproduzir síntese de voz:', err);
+    if (onEndCallback) onEndCallback();
+  }
+}
+
+export function pararFalaAssistente() {
+  if (typeof window !== 'undefined' && window.speechSynthesis) {
+    window.speechSynthesis.cancel();
+  }
+}
+
 const ChatContext = createContext({});
 
 export function ChatProvider({ children }) {
@@ -30,6 +64,8 @@ export function ChatProvider({ children }) {
   const [conversaAtivaId, setConversaAtivaId] = useState(null);
   const [mensagens, setMensagens] = useState([]);
   const [mensagemInput, setMensagemInput] = useState('');
+  const [preferenciaResposta, setPreferenciaResposta] = useState('texto');
+  const [falandoMensagemId, setFalandoMensagemId] = useState(null);
   const [carregandoConversas, setCarregandoConversas] = useState(true);
   const [carregandoMensagens, setCarregandoMensagens] = useState(false);
   const [enviando, setEnviando] = useState(false);
@@ -51,8 +87,38 @@ export function ChatProvider({ children }) {
   useEffect(() => {
     return () => {
       pararPolling();
+      pararFalaAssistente();
     };
   }, [pararPolling]);
+
+  // Carrega a preferência de resposta do assistente (texto ou áudio)
+  const carregarPreferenciaResposta = useCallback(async () => {
+    let token = null;
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        token = window.localStorage.getItem('token');
+      }
+    } catch {}
+
+    const isTest =
+      (typeof import.meta !== 'undefined' && import.meta.env?.MODE === 'test') ||
+      (typeof process !== 'undefined' && process.env?.NODE_ENV === 'test');
+
+    if (!token && !isTest) return;
+
+    try {
+      const res = await api.get('/configuracoes');
+      if (res.data?.dados?.preferencia_resposta) {
+        setPreferenciaResposta(res.data.dados.preferencia_resposta);
+      }
+    } catch {
+      // Silencioso
+    }
+  }, []);
+
+  useEffect(() => {
+    carregarPreferenciaResposta();
+  }, [carregarPreferenciaResposta]);
 
   // Carrega histórico de conversas
   const carregarConversas = useCallback(async (silencioso = false) => {
@@ -136,6 +202,12 @@ export function ChatProvider({ children }) {
             // Se o assistente executou ferramenta de tema ou alterou o tema visual, atualiza o tema imediatamente
             verificarEAtualizarTema(dadosMsg.tools_usadas, dadosMsg.conteudo, carregarTemas);
 
+            // Se a preferência for áudio, reproduz em voz alta
+            if (preferenciaResposta === 'audio' && dadosMsg.conteudo) {
+              setFalandoMensagemId(dadosMsg.id);
+              falarTextoAssistente(dadosMsg.conteudo, () => setFalandoMensagemId(null));
+            }
+
             // Se o usuário não estiver na página do assistente, dispara notificação
             if (typeof window !== 'undefined' && window.location.pathname !== '/assistente') {
               setNotificacao({
@@ -168,7 +240,7 @@ export function ChatProvider({ children }) {
         console.error('Erro no short-polling da mensagem:', err);
       }
     }, POLLING_INTERVAL_MS);
-  }, [pararPolling, carregarConversas, POLLING_INTERVAL_MS, carregarTemas]);
+  }, [pararPolling, carregarConversas, POLLING_INTERVAL_MS, carregarTemas, preferenciaResposta]);
 
   // Carrega mensagens da conversa selecionada
   const selecionarConversa = useCallback(async (conversaId) => {
@@ -299,6 +371,10 @@ export function ChatProvider({ children }) {
           setMensagens((prev) => [...prev, msgAssistente]);
           setEnviando(false);
           verificarEAtualizarTema(msgAssistente?.tools_usadas, msgAssistente?.conteudo, carregarTemas);
+          if (preferenciaResposta === 'audio' && msgAssistente?.conteudo) {
+            setFalandoMensagemId(msgAssistente.id);
+            falarTextoAssistente(msgAssistente.conteudo, () => setFalandoMensagemId(null));
+          }
         }
       }
     } catch (err) {
@@ -309,11 +385,21 @@ export function ChatProvider({ children }) {
       setErro(mensagemErro);
       setEnviando(false);
     }
-  }, [mensagemInput, anexoMidia, enviando, conversaAtivaId, carregarConversas, iniciarPolling, carregarTemas]);
+  }, [mensagemInput, anexoMidia, enviando, conversaAtivaId, carregarConversas, iniciarPolling, carregarTemas, preferenciaResposta]);
 
   const limparAnexoMidia = useCallback(() => {
     setAnexoMidia(null);
   }, []);
+
+  const toggleOuvirMensagem = useCallback((id, conteudo) => {
+    if (falandoMensagemId === id) {
+      pararFalaAssistente();
+      setFalandoMensagemId(null);
+    } else {
+      setFalandoMensagemId(id);
+      falarTextoAssistente(conteudo, () => setFalandoMensagemId(null));
+    }
+  }, [falandoMensagemId]);
 
   return (
     <ChatContext.Provider
@@ -324,6 +410,12 @@ export function ChatProvider({ children }) {
         mensagens,
         mensagemInput,
         anexoMidia,
+        preferenciaResposta,
+        setPreferenciaResposta,
+        falandoMensagemId,
+        toggleOuvirMensagem,
+        pararFala: pararFalaAssistente,
+        carregarPreferenciaResposta,
         carregandoConversas,
         carregandoMensagens,
         enviando,

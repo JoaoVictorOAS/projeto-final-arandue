@@ -403,8 +403,9 @@ CREATE TABLE IF NOT EXISTS mei_configuracoes (
     email_comercial VARCHAR(180) NULL,
     telefone_comercial VARCHAR(20) NULL,
     
-    -- Parâmetros Fiscais
+    -- Parâmetros Fiscais e Preferências do Assistente
     ambiente_fiscal ENUM('HOMOLOGACAO', 'PRODUCAO') NOT NULL DEFAULT 'HOMOLOGACAO',
+    preferencia_resposta ENUM('texto', 'audio') NOT NULL DEFAULT 'texto',
     serie_nfse INT NOT NULL DEFAULT 1,
     serie_nfe INT NOT NULL DEFAULT 1,
     serie_nfce INT NOT NULL DEFAULT 1,

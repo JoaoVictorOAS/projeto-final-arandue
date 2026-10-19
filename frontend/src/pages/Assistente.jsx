@@ -18,6 +18,7 @@ import {
   MicOff,
   X,
   Volume2,
+  VolumeX,
 } from 'lucide-react';
 import { ChatContext, ChatProvider, useChat } from '../context/ChatContext';
 
@@ -35,6 +36,9 @@ function AssistenteView() {
     mensagens,
     mensagemInput,
     anexoMidia,
+    preferenciaResposta,
+    falandoMensagemId,
+    toggleOuvirMensagem,
     carregandoConversas,
     carregandoMensagens,
     enviando,
@@ -362,6 +366,12 @@ function AssistenteView() {
                 Canal WhatsApp
               </span>
             )}
+            {preferenciaResposta === 'audio' && (
+              <span className="badge-theme-subtle text-[11px] px-2.5 py-0.5 rounded-full font-semibold flex items-center gap-1 flex-shrink-0">
+                <Volume2 className="w-3 h-3 text-theme-primary" />
+                <span>Respostas em Áudio</span>
+              </span>
+            )}
           </div>
         </header>
 
@@ -534,6 +544,36 @@ function AssistenteView() {
                               );
                             })}
                           </div>
+                        </div>
+                      )}
+
+                      {/* Ação de ouvir em voz alta / parar fala para mensagens do assistente */}
+                      {!ehUsuario && (msg.status === 'concluida' || !msg.status) && msg.conteudo && (
+                        <div className="flex items-center gap-2 pt-0.5">
+                          <button
+                            type="button"
+                            onClick={() => toggleOuvirMensagem(msg.id || idx, msg.conteudo)}
+                            aria-label={falandoMensagemId === (msg.id || idx) ? 'Parar leitura de voz' : 'Ouvir resposta em voz alta'}
+                            title={falandoMensagemId === (msg.id || idx) ? 'Parar leitura' : 'Ouvir resposta'}
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-all border shadow-2xs hover:opacity-90 cursor-pointer"
+                            style={{
+                              backgroundColor: falandoMensagemId === (msg.id || idx) ? 'var(--color-primary)' : 'var(--bg-surface)',
+                              borderColor: 'var(--border-color)',
+                              color: falandoMensagemId === (msg.id || idx) ? 'var(--color-primary-text, #ffffff)' : 'var(--text-secondary)',
+                            }}
+                          >
+                            {falandoMensagemId === (msg.id || idx) ? (
+                              <>
+                                <VolumeX className="w-3.5 h-3.5" />
+                                <span>Parar leitura</span>
+                              </>
+                            ) : (
+                              <>
+                                <Volume2 className="w-3.5 h-3.5 text-theme-primary" />
+                                <span>Ouvir resposta</span>
+                              </>
+                            )}
+                          </button>
                         </div>
                       )}
                     </div>

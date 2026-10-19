@@ -96,6 +96,7 @@ describe('Módulo de Configurações do MEI (/api/configuracoes) - REST & Multi-
       expect(res.body.dados.email_comercial).toBe('alpha.config@mei.com');
       expect(res.body.dados.configurado).toBe(false);
       expect(res.body.dados.ambiente_fiscal).toBe('HOMOLOGACAO');
+      expect(res.body.dados.preferencia_resposta).toBe('texto');
       expect(res.body.dados.inscricao_estadual).toBe('ISENTO');
       expect(res.body.dados.numero).toBe('S/N');
     });
@@ -277,6 +278,52 @@ describe('Módulo de Configurações do MEI (/api/configuracoes) - REST & Multi-
       expect(res.body.dados.nome_fantasia).toBe('Alpha Alta Confeitaria');
       expect(res.body.dados.ambiente_fiscal).toBe('PRODUCAO');
       expect(res.body.dados.serie_nfse).toBe(3);
+    });
+
+    test('deve salvar e persistir preferencia_resposta do assistente como "audio"', async () => {
+      const payloadAudio = {
+        razao_social: 'Alpha Confeitaria MEI LTDA',
+        cnpj: '12345678000195',
+        uf: 'SP',
+        municipio: 'São Paulo',
+        cep: '01001-000',
+        preferencia_resposta: 'audio'
+      };
+
+      const resPut = await request(app)
+        .put('/api/configuracoes')
+        .set('Authorization', `Bearer ${tokenUser1}`)
+        .send(payloadAudio);
+
+      expect(resPut.statusCode).toBe(200);
+      expect(resPut.body.sucesso).toBe(true);
+      expect(resPut.body.dados.preferencia_resposta).toBe('audio');
+
+      const resGet = await request(app)
+        .get('/api/configuracoes')
+        .set('Authorization', `Bearer ${tokenUser1}`);
+
+      expect(resGet.statusCode).toBe(200);
+      expect(resGet.body.dados.preferencia_resposta).toBe('audio');
+    });
+
+    test('deve atualizar preferencia_resposta de volta para "texto"', async () => {
+      const payloadTexto = {
+        razao_social: 'Alpha Confeitaria MEI LTDA',
+        cnpj: '12345678000195',
+        uf: 'SP',
+        municipio: 'São Paulo',
+        cep: '01001-000',
+        preferencia_resposta: 'texto'
+      };
+
+      const resPut = await request(app)
+        .put('/api/configuracoes')
+        .set('Authorization', `Bearer ${tokenUser1}`)
+        .send(payloadTexto);
+
+      expect(resPut.statusCode).toBe(200);
+      expect(resPut.body.dados.preferencia_resposta).toBe('texto');
     });
   });
 

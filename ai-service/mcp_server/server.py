@@ -286,9 +286,10 @@ async def atualizar_configuracoes_mei(
     email_comercial: str = "",
     telefone_comercial: str = "",
     ambiente_fiscal: str = "HOMOLOGACAO",
-    nome_fantasia: str = ""
+    nome_fantasia: str = "",
+    preferencia_resposta: Optional[str] = None
 ) -> Dict[str, Any]:
-    """Atualiza as configurações cadastrais e fiscais do MEI (endereço, CNPJ, UF emissora da SEFAZ, ambiente fiscal)."""
+    """Atualiza as configurações cadastrais e fiscais do MEI (endereço, CNPJ, UF emissora da SEFAZ, ambiente fiscal, preferência de resposta do assistente: 'texto' ou 'audio')."""
     payload = {
         "razao_social": (razao_social or "").strip(),
         "cnpj": (cnpj or "").strip(),
@@ -307,6 +308,10 @@ async def atualizar_configuracoes_mei(
     }
     if nome_fantasia:
         payload["nome_fantasia"] = nome_fantasia.strip()
+    if preferencia_resposta:
+        pref = str(preferencia_resposta).strip().lower()
+        if pref in ("audio", "texto"):
+            payload["preferencia_resposta"] = pref
 
     res = await _put("/configuracoes", payload)
     if not res.get("sucesso"):
