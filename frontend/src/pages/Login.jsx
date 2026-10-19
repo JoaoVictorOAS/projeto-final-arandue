@@ -270,17 +270,17 @@ export default function Login() {
               type="button"
               onClick={handleGoogleLogin}
               disabled={submetendoGoogle || submetendo}
-              className="w-full py-2.5 px-4 rounded-xl border border-stone-300 hover:border-stone-400 bg-white hover:bg-stone-50 text-stone-800 font-semibold text-xs sm:text-sm transition-colors flex items-center justify-center gap-2.5 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm focus:outline-none focus:ring-2 focus:ring-stone-900/10"
+              className="group w-full py-3 px-4 rounded-xl border border-stone-200 hover:border-stone-300 bg-white text-stone-700 font-semibold text-sm transition-all duration-200 flex items-center justify-center gap-3 shadow-[0_1px_2px_rgba(0,0,0,0.06),0_1px_3px_rgba(0,0,0,0.08)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.10)] hover:-translate-y-0.5 active:translate-y-0 active:shadow-sm disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none focus:outline-none focus-visible:ring-2 focus-visible:ring-[#4285F4]/40"
             >
               {submetendoGoogle ? (
                 <>
-                  <div className="w-4 h-4 border-2 border-stone-800 border-t-transparent rounded-full animate-spin" />
+                  <div className="w-5 h-5 border-2 border-[#4285F4] border-t-transparent rounded-full animate-spin" />
                   <span>Conectando com o Google...</span>
                 </>
               ) : (
                 <>
                   {/* SVG Oficial Google */}
-                  <svg className="w-4 h-4 flex-shrink-0" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 flex-shrink-0 transition-transform duration-200 group-hover:scale-110" viewBox="0 0 24 24" aria-hidden="true">
                     <path
                       fill="#4285F4"
                       d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"

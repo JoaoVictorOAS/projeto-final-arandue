@@ -51,6 +51,7 @@ function getGoogleProvider() {
     _googleProvider = new GoogleAuthProvider();
     _googleProvider.setCustomParameters({
       prompt: 'select_account',
+      hl: 'pt-BR',
     });
   }
   return _googleProvider;
