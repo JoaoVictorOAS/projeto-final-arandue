@@ -111,6 +111,91 @@ describe('WhatsAppService - Gateway do WhatsApp com Assistente IA', () => {
       });
     });
 
+    it('deve enviar nota de voz PTT no WhatsApp quando preferencia_resposta for "audio"', async () => {
+      const mockUsuario = {
+        id: 42,
+        nome: 'João da Silva',
+        email: 'joao@mei.com',
+        whatsapp: '5511988887777'
+      };
+
+      usuarioRepository.buscarPorTelefoneOuWhatsapp.mockResolvedValue(mockUsuario);
+      conversaRepository.buscarConversaAtivaPorCanal.mockResolvedValue({ id: 101, titulo: 'WhatsApp' });
+      assistenteService.enviarMensagem.mockResolvedValue({
+        conversa_id: 101,
+        preferencia_resposta: 'audio',
+        mensagem: {
+          conteudo: 'Seu saldo atual é de R$ 2.450,00.',
+          tipo_midia: 'audio',
+          audio_base64: Buffer.from('fake-audio-bytes').toString('base64'),
+          midia_mime_type: 'audio/mp3',
+          preferencia_resposta: 'audio'
+        }
+      });
+
+      await whatsappService.processarMensagemRecebida('5511988887777@s.whatsapp.net', 'Saldo');
+
+      // Deve ter enviado mensagem com áudio PTT
+      expect(mockSock.sendMessage).toHaveBeenCalledWith(
+        '5511988887777@s.whatsapp.net',
+        expect.objectContaining({
+          audio: expect.any(Buffer),
+          mimetype: 'audio/mp4; codecs=opus',
+          ptt: true
+        })
+      );
+      // Não deve ter enviado mensagem de texto separada (modo apenas áudio)
+      expect(mockSock.sendMessage).not.toHaveBeenCalledWith(
+        '5511988887777@s.whatsapp.net',
+        expect.objectContaining({
+          text: expect.any(String)
+        })
+      );
+    });
+
+    it('deve enviar nota de voz PTT seguida de texto formatado quando preferencia_resposta for "ambos"', async () => {
+      const mockUsuario = {
+        id: 42,
+        nome: 'João da Silva',
+        email: 'joao@mei.com',
+        whatsapp: '5511988887777'
+      };
+
+      usuarioRepository.buscarPorTelefoneOuWhatsapp.mockResolvedValue(mockUsuario);
+      conversaRepository.buscarConversaAtivaPorCanal.mockResolvedValue({ id: 101, titulo: 'WhatsApp' });
+      assistenteService.enviarMensagem.mockResolvedValue({
+        conversa_id: 101,
+        preferencia_resposta: 'ambos',
+        mensagem: {
+          conteudo: 'Olá João! Seu saldo atual em caixa é **R$ 2.450,00**.',
+          tipo_midia: 'texto',
+          audio_base64: Buffer.from('fake-audio-bytes').toString('base64'),
+          midia_mime_type: 'audio/mp3',
+          preferencia_resposta: 'ambos'
+        }
+      });
+
+      await whatsappService.processarMensagemRecebida('5511988887777@s.whatsapp.net', 'Saldo');
+
+      // Deve enviar áudio PTT
+      expect(mockSock.sendMessage).toHaveBeenCalledWith(
+        '5511988887777@s.whatsapp.net',
+        expect.objectContaining({
+          audio: expect.any(Buffer),
+          mimetype: 'audio/mp4; codecs=opus',
+          ptt: true
+        })
+      );
+      // E também deve enviar mensagem de texto formatada
+      expect(mockSock.sendMessage).toHaveBeenCalledWith(
+        '5511988887777@s.whatsapp.net',
+        expect.objectContaining({
+          text: 'Olá João! Seu saldo atual em caixa é *R$ 2.450,00*.'
+        })
+      );
+    });
+
+
     it('deve criar uma nova conversa do canal whatsapp se nenhuma conversa ativa existir', async () => {
       const mockUsuario = { id: 7, nome: 'Maria Lima', email: 'maria@mei.com' };
 

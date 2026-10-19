@@ -87,11 +87,12 @@ const conversaRepository = {
     erro_mensagem = null,
     tipo_midia = 'texto',
     midia_mime_type = null,
-    transcricao_audio = null
+    transcricao_audio = null,
+    audio_base64 = null
   ) {
     const sql = `
-      INSERT INTO mensagens (conversa_id, papel, tipo_midia, midia_mime_type, transcricao_audio, conteudo, status, erro_mensagem, fontes, tools_usadas, rag_backend)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO mensagens (conversa_id, papel, tipo_midia, midia_mime_type, audio_base64, transcricao_audio, conteudo, status, erro_mensagem, fontes, tools_usadas, rag_backend)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
     const fontesJson = fontes ? JSON.stringify(fontes) : null;
     const toolsJson = tools_usadas ? JSON.stringify(tools_usadas) : null;
@@ -101,6 +102,7 @@ const conversaRepository = {
       papel,
       tipo_midia || 'texto',
       midia_mime_type || null,
+      audio_base64 || null,
       transcricao_audio || null,
       conteudo,
       status,
@@ -128,7 +130,10 @@ const conversaRepository = {
       rag_backend = null,
       status = 'concluida',
       erro_mensagem = null,
-      transcricao_audio = null
+      transcricao_audio = null,
+      audio_base64 = null,
+      tipo_midia = null,
+      midia_mime_type = null
     }
   ) {
     const sql = `
@@ -139,7 +144,10 @@ const conversaRepository = {
           fontes = ?,
           tools_usadas = ?,
           rag_backend = ?,
-          transcricao_audio = COALESCE(?, transcricao_audio)
+          transcricao_audio = COALESCE(?, transcricao_audio),
+          audio_base64 = COALESCE(?, audio_base64),
+          tipo_midia = COALESCE(?, tipo_midia),
+          midia_mime_type = COALESCE(?, midia_mime_type)
       WHERE id = ?
     `;
     const fontesJson = fontes ? JSON.stringify(fontes) : null;
@@ -153,6 +161,9 @@ const conversaRepository = {
       toolsJson,
       rag_backend,
       transcricao_audio,
+      audio_base64,
+      tipo_midia,
+      midia_mime_type,
       mensagem_id
     ]);
 
@@ -172,7 +183,7 @@ const conversaRepository = {
    */
   async buscarMensagemPorId(mensagem_id, usuario_id) {
     const sql = `
-      SELECT m.id, m.conversa_id, m.papel, m.tipo_midia, m.midia_mime_type, m.transcricao_audio, m.conteudo, m.status, m.erro_mensagem, m.fontes, m.tools_usadas, m.rag_backend, m.criado_em
+      SELECT m.id, m.conversa_id, m.papel, m.tipo_midia, m.midia_mime_type, m.audio_base64, m.transcricao_audio, m.conteudo, m.status, m.erro_mensagem, m.fontes, m.tools_usadas, m.rag_backend, m.criado_em
       FROM mensagens m
       INNER JOIN conversas c ON c.id = m.conversa_id
       WHERE m.id = ? AND c.usuario_id = ?
@@ -198,7 +209,7 @@ const conversaRepository = {
     }
 
     const sql = `
-      SELECT id, papel, tipo_midia, midia_mime_type, transcricao_audio, conteudo, status, erro_mensagem, fontes, tools_usadas, rag_backend, criado_em
+      SELECT id, papel, tipo_midia, midia_mime_type, audio_base64, transcricao_audio, conteudo, status, erro_mensagem, fontes, tools_usadas, rag_backend, criado_em
       FROM mensagens
       WHERE conversa_id = ?
       ORDER BY criado_em ASC
@@ -211,6 +222,7 @@ const conversaRepository = {
       tools_usadas: typeof r.tools_usadas === 'string' ? JSON.parse(r.tools_usadas) : r.tools_usadas
     }));
   }
+
 };
 
 module.exports = conversaRepository;

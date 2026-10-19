@@ -339,5 +339,83 @@ describe('Rotas do Assistente IA (/api/assistente)', () => {
       expect(resStatus.body.dados.status).toBe('erro');
       expect(resStatus.body.dados.erro_mensagem).toMatch(/Falha de timeout/i);
     });
+
+    test('deve sintetizar áudio via aiServiceClient e retornar audio_base64 quando preferencia_resposta for "audio"', async () => {
+      // Configura usuário com preferência "audio" e voz Antonio
+      await pool.execute(
+        `INSERT INTO mei_configuracoes (usuario_id, razao_social, cnpj, cep, logradouro, bairro, municipio, uf, codigo_municipio_ibge, preferencia_resposta, voz_assistente)
+         VALUES (?, 'MEI Audio Teste', '11222333000199', '01001000', 'Rua Teste', 'Bairro', 'São Paulo', 'SP', '3550308', 'audio', 'pt-BR-AntonioNeural')
+         ON DUPLICATE KEY UPDATE preferencia_resposta = 'audio', voz_assistente = 'pt-BR-AntonioNeural'`,
+        [usuario1Id]
+      );
+
+      aiServiceClient.enviarMensagem.mockResolvedValueOnce({
+        resposta: 'Seu saldo consolidado é de R$ 3.200,00.',
+        fontes: [],
+        tools_usadas: [],
+        rag_backend: 'none'
+      });
+
+      aiServiceClient.sintetizarAudio.mockResolvedValueOnce({
+        sucesso: true,
+        audio_base64: 'base64_audio_antonio_teste',
+        mime_type: 'audio/mp3',
+        duracao_estimada_s: 2.5,
+        voz_utilizada: 'pt-BR-AntonioNeural'
+      });
+
+      const res = await request(app)
+        .post('/api/assistente/mensagens')
+        .set('Authorization', `Bearer ${tokenUsuario1}`)
+        .send({ mensagem: 'Quanto tenho em caixa?' });
+
+      expect(res.statusCode).toBe(200);
+      expect(res.body.sucesso).toBe(true);
+      expect(res.body.dados.mensagem.tipo_midia).toBe('audio');
+      expect(res.body.dados.mensagem.audio_base64).toBe('base64_audio_antonio_teste');
+      expect(res.body.dados.mensagem.transcricao_audio).toBe('Seu saldo consolidado é de R$ 3.200,00.');
+      expect(aiServiceClient.sintetizarAudio).toHaveBeenCalledWith({
+        texto: 'Seu saldo consolidado é de R$ 3.200,00.',
+        voz: 'pt-BR-AntonioNeural'
+      });
+    });
+
+    test('deve sintetizar áudio via aiServiceClient e retornar audio_base64 e conteudo integral quando preferencia_resposta for "ambos"', async () => {
+      await pool.execute(
+        `UPDATE mei_configuracoes SET preferencia_resposta = 'ambos', voz_assistente = 'pt-BR-ThalitaNeural' WHERE usuario_id = ?`,
+        [usuario1Id]
+      );
+
+      aiServiceClient.enviarMensagem.mockResolvedValueOnce({
+        resposta: 'Você possui 3 agendamentos confirmados para hoje.',
+        fontes: [],
+        tools_usadas: [],
+        rag_backend: 'none'
+      });
+
+      aiServiceClient.sintetizarAudio.mockResolvedValueOnce({
+        sucesso: true,
+        audio_base64: 'base64_audio_thalita_teste',
+        mime_type: 'audio/mp3',
+        duracao_estimada_s: 2.1,
+        voz_utilizada: 'pt-BR-ThalitaNeural'
+      });
+
+      const res = await request(app)
+        .post('/api/assistente/mensagens')
+        .set('Authorization', `Bearer ${tokenUsuario1}`)
+        .send({ mensagem: 'Quantos agendamentos tenho hoje?' });
+
+      expect(res.statusCode).toBe(200);
+      expect(res.body.sucesso).toBe(true);
+      expect(res.body.dados.mensagem.tipo_midia).toBe('texto');
+      expect(res.body.dados.mensagem.audio_base64).toBe('base64_audio_thalita_teste');
+      expect(res.body.dados.mensagem.conteudo).toBe('Você possui 3 agendamentos confirmados para hoje.');
+      expect(aiServiceClient.sintetizarAudio).toHaveBeenCalledWith({
+        texto: 'Você possui 3 agendamentos confirmados para hoje.',
+        voz: 'pt-BR-ThalitaNeural'
+      });
+    });
   });
 });
+

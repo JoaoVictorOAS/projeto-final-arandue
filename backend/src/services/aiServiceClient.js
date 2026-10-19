@@ -270,7 +270,55 @@ const aiServiceClient = {
       }
       throw err;
     }
+  },
+
+  /**
+   * Sintetiza texto em voz neural brasileira utilizando o ai-service.
+   * @param {Object} payload
+   * @param {string} payload.texto
+   * @param {string} [payload.voz='pt-BR-FranciscaNeural']
+   * @returns {Promise<Object>}
+   */
+  async sintetizarAudio({ texto, voz = 'pt-BR-FranciscaNeural' }) {
+    const url = getAiServiceUrl('/audio/sintetizar');
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 45000);
+
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Internal-Secret': INTERNAL_SERVICE_SECRET
+        },
+        body: JSON.stringify({
+          texto,
+          voz
+        }),
+        signal: controller.signal
+      });
+
+      clearTimeout(timeout);
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        const erro = new Error(errorData.detail || `Falha na síntese de áudio (status ${response.status})`);
+        erro.statusCode = response.status || 500;
+        throw erro;
+      }
+
+      return await response.json();
+    } catch (err) {
+      clearTimeout(timeout);
+      if (err.name === 'AbortError') {
+        const erroTimeout = new Error('Tempo limite excedido na síntese de áudio');
+        erroTimeout.statusCode = 504;
+        throw erroTimeout;
+      }
+      throw err;
+    }
   }
 };
+
 
 module.exports = aiServiceClient;

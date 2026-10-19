@@ -566,23 +566,43 @@ class WhatsAppService {
       // 6. Converte o Markdown rico da IA para a formatação do WhatsApp
       const conteudoBruto = resultado?.mensagem?.conteudo || 'Solicitação processada com sucesso.';
       const respostaFormatada = converterMarkdownParaWhatsApp(conteudoBruto);
+      const audioBase64 = resultado?.mensagem?.audio_base64;
+      const preferencia = resultado?.preferencia_resposta || resultado?.mensagem?.preferencia_resposta || 'texto';
 
       // 7. Finaliza indicador de digitação e envia a resposta com proteção anti-loop prévia
       await this.sock.sendPresenceUpdate('paused', jid);
-      this.textosEnviadosPeloBot.add(respostaFormatada.trim());
-      if (this.textosEnviadosPeloBot.size > 200) {
-        const primeiroTexto = this.textosEnviadosPeloBot.values().next().value;
-        this.textosEnviadosPeloBot.delete(primeiroTexto);
-      }
 
-      const sent = await this.sock.sendMessage(jid, { text: respostaFormatada });
-      if (sent?.key?.id) {
-        this.mensagensEnviadasPeloBot.add(sent.key.id);
-        if (this.mensagensEnviadasPeloBot.size > 500) {
-          const primeiro = this.mensagensEnviadasPeloBot.values().next().value;
-          this.mensagensEnviadasPeloBot.delete(primeiro);
+      // Envia nota de voz PTT caso o modo seja 'audio' ou 'ambos' e o áudio esteja disponível
+      if (audioBase64 && (preferencia === 'audio' || preferencia === 'ambos')) {
+        const audioBuffer = Buffer.from(audioBase64, 'base64');
+        const sentAudio = await this.sock.sendMessage(jid, {
+          audio: audioBuffer,
+          mimetype: 'audio/mp4; codecs=opus',
+          ptt: true
+        });
+        if (sentAudio?.key?.id) {
+          this.mensagensEnviadasPeloBot.add(sentAudio.key.id);
         }
       }
+
+      // Envia texto formatado quando o modo for 'texto', 'ambos' ou caso o áudio não tenha sido gerado
+      if (preferencia === 'texto' || preferencia === 'ambos' || !audioBase64) {
+        this.textosEnviadosPeloBot.add(respostaFormatada.trim());
+        if (this.textosEnviadosPeloBot.size > 200) {
+          const primeiroTexto = this.textosEnviadosPeloBot.values().next().value;
+          this.textosEnviadosPeloBot.delete(primeiroTexto);
+        }
+
+        const sent = await this.sock.sendMessage(jid, { text: respostaFormatada });
+        if (sent?.key?.id) {
+          this.mensagensEnviadasPeloBot.add(sent.key.id);
+          if (this.mensagensEnviadasPeloBot.size > 500) {
+            const primeiro = this.mensagensEnviadasPeloBot.values().next().value;
+            this.mensagensEnviadasPeloBot.delete(primeiro);
+          }
+        }
+      }
+
 
       if (process.env.NODE_ENV !== 'test') {
         const preview = respostaFormatada.length > 120 ? respostaFormatada.slice(0, 117) + '...' : respostaFormatada;

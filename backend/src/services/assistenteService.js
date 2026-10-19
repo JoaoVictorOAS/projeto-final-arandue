@@ -1,8 +1,31 @@
 const jwt = require('jsonwebtoken');
+const pool = require('../config/database');
 const conversaRepository = require('../repositories/conversaRepository');
 const aiServiceClient = require('./aiServiceClient');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'super_secreto_chave_jwt_recode_2026';
+
+async function obterPreferenciaAssistente(usuario_id) {
+  try {
+    const [rows] = await pool.execute(
+      'SELECT preferencia_resposta, voz_assistente FROM mei_configuracoes WHERE usuario_id = ?',
+      [usuario_id]
+    );
+    if (rows && rows.length > 0) {
+      return {
+        preferencia_resposta: rows[0].preferencia_resposta || 'texto',
+        voz_assistente: rows[0].voz_assistente || 'pt-BR-FranciscaNeural'
+      };
+    }
+  } catch (err) {
+    // Fallback silencioso para padrão caso tabela ou registro não estejam acessíveis
+  }
+  return {
+    preferencia_resposta: 'texto',
+    voz_assistente: 'pt-BR-FranciscaNeural'
+  };
+}
+
 
 // Armazenamento em memória para Rate Limit (20 mensagens a cada 10 minutos por usuário)
 const userRateLimits = new Map();
@@ -297,6 +320,33 @@ const assistenteService = {
       throw erroAmigavel;
     }
 
+    // Busca preferências do MEI (áudio, voz)
+    const { preferencia_resposta, voz_assistente } = await obterPreferenciaAssistente(usuario_id);
+
+    let audioBase64 = null;
+    let midiaMimeType = null;
+    let transcricaoAudioResposta = null;
+    let tipoMidiaResposta = 'texto';
+
+    if (preferencia_resposta === 'audio' || preferencia_resposta === 'ambos') {
+      try {
+        const dadosAudio = await aiServiceClient.sintetizarAudio({
+          texto: respostaAi.resposta,
+          voz: voz_assistente
+        });
+        if (dadosAudio && dadosAudio.audio_base64) {
+          audioBase64 = dadosAudio.audio_base64;
+          midiaMimeType = dadosAudio.mime_type || 'audio/mp3';
+          if (preferencia_resposta === 'audio') {
+            tipoMidiaResposta = 'audio';
+            transcricaoAudioResposta = respostaAi.resposta;
+          }
+        }
+      } catch (ttsErr) {
+        console.warn('[Assistente] Falha na síntese de áudio TTS:', ttsErr.message);
+      }
+    }
+
     // Salva a resposta do assistente
     const msgId = await conversaRepository.salvarMensagem(
       idConversaAtiva,
@@ -305,19 +355,30 @@ const assistenteService = {
       respostaAi.fontes || [],
       respostaAi.tools_usadas || [],
       respostaAi.rag_backend || 'none',
-      'concluida'
+      'concluida',
+      null,
+      tipoMidiaResposta,
+      midiaMimeType,
+      transcricaoAudioResposta,
+      audioBase64
     );
 
     return {
       conversa_id: idConversaAtiva,
+      preferencia_resposta,
       mensagem: {
         id: msgId,
         conversa_id: idConversaAtiva,
         papel: 'assistente',
+        tipo_midia: tipoMidiaResposta,
+        midia_mime_type: midiaMimeType,
+        audio_base64: audioBase64,
+        transcricao_audio: transcricaoAudioResposta,
         status: 'concluida',
         conteudo: respostaAi.resposta,
         fontes: respostaAi.fontes || [],
         tools_usadas: respostaAi.tools_usadas || [],
+        preferencia_resposta,
         criado_em: new Date().toISOString()
       }
     };
@@ -344,12 +405,42 @@ const assistenteService = {
       }
       const respostaAi = await aiServiceClient.enviarMensagem(payloadAi);
 
+      const { preferencia_resposta, voz_assistente } = await obterPreferenciaAssistente(usuario_id);
+
+      let audioBase64 = null;
+      let midiaMimeType = null;
+      let transcricaoAudioResposta = null;
+      let tipoMidiaResposta = 'texto';
+
+      if (preferencia_resposta === 'audio' || preferencia_resposta === 'ambos') {
+        try {
+          const dadosAudio = await aiServiceClient.sintetizarAudio({
+            texto: respostaAi.resposta,
+            voz: voz_assistente
+          });
+          if (dadosAudio && dadosAudio.audio_base64) {
+            audioBase64 = dadosAudio.audio_base64;
+            midiaMimeType = dadosAudio.mime_type || 'audio/mp3';
+            if (preferencia_resposta === 'audio') {
+              tipoMidiaResposta = 'audio';
+              transcricaoAudioResposta = respostaAi.resposta;
+            }
+          }
+        } catch (ttsErr) {
+          console.warn('[Assistente] Falha na síntese de áudio TTS em background:', ttsErr.message);
+        }
+      }
+
       await conversaRepository.atualizarMensagem(msgAssistenteId, {
         conteudo: respostaAi.resposta,
         fontes: respostaAi.fontes || [],
         tools_usadas: respostaAi.tools_usadas || [],
         rag_backend: respostaAi.rag_backend || 'none',
-        status: 'concluida'
+        status: 'concluida',
+        audio_base64: audioBase64,
+        tipo_midia: tipoMidiaResposta,
+        midia_mime_type: midiaMimeType,
+        transcricao_audio: transcricaoAudioResposta
       });
     } catch (err) {
       console.error(`[Assistente] Falha no processamento em segundo plano da mensagem ${msgAssistenteId}:`, err);
@@ -361,6 +452,7 @@ const assistenteService = {
       });
     }
   },
+
 
   async transcreverAudio(usuario_id, { audio_base64, mime_type = 'audio/ogg' }) {
     if (!usuario_id) {
@@ -412,6 +504,10 @@ const assistenteService = {
       id: msg.id,
       conversa_id: msg.conversa_id,
       papel: msg.papel,
+      tipo_midia: msg.tipo_midia,
+      midia_mime_type: msg.midia_mime_type,
+      audio_base64: msg.audio_base64,
+      transcricao_audio: msg.transcricao_audio,
       status: msg.status,
       erro_mensagem: msg.erro_mensagem,
       conteudo: msg.conteudo,
@@ -419,6 +515,7 @@ const assistenteService = {
       tools_usadas: msg.tools_usadas || [],
       criado_em: msg.criado_em
     };
+
   },
 
   async listarConversas(usuario_id) {
