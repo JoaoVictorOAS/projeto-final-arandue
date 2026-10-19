@@ -475,14 +475,14 @@ export default function Agenda() {
         </div>
 
         {/* Filtro por Status */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pt-1 border-t border-gray-100">
+        <div className="flex items-center gap-1.5 overflow-x-auto pt-1.5 pb-2 sm:pb-1 border-t border-gray-100">
           <span className="text-xs font-semibold text-gray-400 mr-1 uppercase">Status:</span>
           {['TODOS', 'PENDENTE', 'CONFIRMADO', 'CONCLUIDO', 'CANCELADO'].map((st) => (
             <button
               key={st}
               type="button"
               onClick={() => setFiltroStatus(st)}
-              className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition whitespace-nowrap ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition whitespace-nowrap ${
                 filtroStatus === st
                   ? 'tab-theme-active shadow-xs'
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'

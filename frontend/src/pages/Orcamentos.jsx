@@ -488,13 +488,13 @@ export default function Orcamentos() {
         </div>
 
         {/* Abas / Filtro de Status */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0">
+        <div className="flex items-center gap-1.5 overflow-x-auto pt-1 pb-2 md:pb-1">
           {['TODOS', 'RASCUNHO', 'ENVIADO', 'APROVADO', 'RECUSADO'].map((st) => (
             <button
               key={st}
               type="button"
               onClick={() => setStatusFiltro(st)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition whitespace-nowrap ${
+              className={`px-3.5 py-2 rounded-lg text-xs font-semibold transition whitespace-nowrap ${
                 statusFiltro === st
                   ? 'tab-theme-active shadow-xs'
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'

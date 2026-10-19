@@ -1225,11 +1225,23 @@ export default function Configuracoes() {
         </div>
 
         {/* CARD 6: Aparência & Temas do Sistema */}
-        <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-6">
-          <div className="border-b border-gray-100 pb-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div
+          className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-6"
+          style={{
+            backgroundColor: 'var(--bg-surface, #ffffff)',
+            borderColor: 'var(--border-color, #e5e7eb)',
+          }}
+        >
+          <div
+            className="border-b border-gray-100 pb-4 flex flex-col md:flex-row md:items-center justify-between gap-4"
+            style={{ borderColor: 'var(--border-color, #f3f4f6)' }}
+          >
             <div>
               <div className="flex items-center gap-2.5 flex-wrap">
-                <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                <h2
+                  className="text-lg font-bold flex items-center gap-2"
+                  style={{ color: 'var(--text-main, #111827)' }}
+                >
                   <Palette className="w-5 h-5 text-theme-primary" />
                   Aparência & Temas do Sistema
                 </h2>
@@ -1239,45 +1251,70 @@ export default function Configuracoes() {
                   <button
                     type="button"
                     onClick={() => setMostrarPopoverTema(!mostrarPopoverTema)}
-                    className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 dark:bg-indigo-950/40 dark:hover:bg-indigo-900/50 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 transition-colors cursor-pointer"
+                    className="badge-theme-subtle hover:brightness-95 inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-xl transition-all cursor-pointer shadow-xs"
                     aria-label="Como alterar o tema pelo assistente"
                     title="Dica: use o Assistente IA para mudar o tema"
                   >
-                    <Sparkles className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+                    <Sparkles className="w-3.5 h-3.5 text-theme-primary" />
                     <span>Alterar pelo Assistente</span>
                     <HelpCircle className="w-3.5 h-3.5 opacity-70" />
                   </button>
 
                   {mostrarPopoverTema && (
                     <div
-                      className="absolute left-0 mt-2 z-50 w-80 p-4 bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-indigo-100 dark:border-indigo-800 text-left animate-fade-in"
+                      className="absolute left-0 mt-2 z-50 w-80 p-4 rounded-2xl shadow-xl border text-left animate-fade-in"
+                      style={{
+                        backgroundColor: 'var(--bg-surface, #ffffff)',
+                        borderColor: 'var(--border-color, #e5e7eb)',
+                        color: 'var(--text-main, #111827)',
+                      }}
                       role="tooltip"
                     >
-                      <div className="flex items-start justify-between gap-2 mb-2">
-                        <div className="flex items-center gap-1.5 text-indigo-700 dark:text-indigo-300 font-bold text-xs">
-                          <Bot className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                      <div className="flex items-start justify-between gap-2 mb-2.5">
+                        <div
+                          className="flex items-center gap-1.5 font-bold text-xs"
+                          style={{ color: 'var(--color-primary)' }}
+                        >
+                          <Bot className="w-4 h-4 text-theme-primary shrink-0" />
                           <span>Altere o tema com o Assistente IA</span>
                         </div>
                         <button
                           type="button"
                           onClick={() => setMostrarPopoverTema(false)}
-                          className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 rounded-md"
+                          className="p-1 rounded-lg transition-colors"
+                          style={{ color: 'var(--text-muted, #9ca3af)' }}
                           aria-label="Fechar aviso de tema"
                         >
                           <X className="w-3.5 h-3.5" />
                         </button>
                       </div>
-                      <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed mb-3">
-                        Você pode pedir diretamente ao <strong>Assistente IA</strong> para alterar ou criar temas sob medida para seu negócio!
+                      <p
+                        className="text-xs leading-relaxed mb-3"
+                        style={{ color: 'var(--text-secondary, #4b5563)' }}
+                      >
+                        Você pode pedir diretamente ao <strong style={{ color: 'var(--text-main, #111827)' }}>Assistente IA</strong> para alterar ou criar temas sob medida para seu negócio!
                       </p>
-                      <div className="bg-indigo-50/70 dark:bg-indigo-950/50 p-2.5 rounded-lg border border-indigo-100 dark:border-indigo-900/60 text-[11px] text-indigo-800 dark:text-indigo-200 space-y-1 mb-3">
-                        <p className="font-semibold text-indigo-900 dark:text-indigo-100">Exemplos de pedidos no chat:</p>
-                        <p className="italic">"Mude o tema para verde esmeralda"</p>
-                        <p className="italic">"Crie um tema noturno moderno para minha barbearia"</p>
+                      <div
+                        className="p-3 rounded-xl border text-[11px] space-y-1 mb-3"
+                        style={{
+                          backgroundColor: 'var(--bg-surface-hover, #f9fafb)',
+                          borderColor: 'var(--border-color, #e5e7eb)',
+                          color: 'var(--text-secondary, #374151)',
+                        }}
+                      >
+                        <p className="font-semibold" style={{ color: 'var(--text-main, #111827)' }}>
+                          Exemplos de pedidos no chat:
+                        </p>
+                        <p className="italic font-medium" style={{ color: 'var(--color-primary)' }}>
+                          &ldquo;Mude o tema para verde esmeralda&rdquo;
+                        </p>
+                        <p className="italic font-medium" style={{ color: 'var(--color-primary)' }}>
+                          &ldquo;Crie um tema noturno moderno para minha barbearia&rdquo;
+                        </p>
                       </div>
                       <Link
                         to="/assistente"
-                        className="inline-flex items-center justify-center gap-1.5 w-full py-1.5 px-3 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors shadow-xs"
+                        className="btn-theme-primary inline-flex items-center justify-center gap-1.5 w-full py-2 px-3 text-xs font-semibold rounded-xl shadow-xs transition"
                       >
                         <span>Abrir Assistente IA</span>
                         <ArrowRight className="w-3.5 h-3.5" />
@@ -1287,7 +1324,10 @@ export default function Configuracoes() {
                 </div>
               </div>
 
-              <p className="text-xs text-gray-500 mt-0.5">
+              <p
+                className="text-xs mt-0.5"
+                style={{ color: 'var(--text-secondary, #6b7280)' }}
+              >
                 Personalize as cores, modo visual e estilo de todo o ERP Aranduê com contraste WCAG garantido.
               </p>
             </div>
@@ -1296,9 +1336,14 @@ export default function Configuracoes() {
             <div className="flex items-center gap-2.5 flex-wrap">
               <label
                 htmlFor="upload-tema-json"
-                className="inline-flex items-center gap-2 px-3.5 py-2 text-xs font-semibold text-gray-700 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-xl cursor-pointer transition-colors"
+                className="inline-flex items-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-xl cursor-pointer transition-colors border"
+                style={{
+                  backgroundColor: 'var(--bg-surface-hover, #f9fafb)',
+                  borderColor: 'var(--border-color, #e5e7eb)',
+                  color: 'var(--text-main, #374151)',
+                }}
               >
-                <Upload className="w-4 h-4 text-gray-600" />
+                <Upload className="w-4 h-4 text-theme-primary" />
                 <span>Importar Tema (.json)</span>
                 <input
                   id="upload-tema-json"
@@ -1362,18 +1407,31 @@ export default function Configuracoes() {
                       key={tema.id || tema.slug}
                       className={`relative rounded-2xl p-4 transition-all flex flex-col justify-between ${
                         isAtivo
-                          ? 'border-2 border-indigo-500 bg-indigo-50/30 shadow-md ring-2 ring-indigo-200'
-                          : 'border border-gray-200 bg-white hover:border-gray-300 hover:shadow-xs'
+                          ? 'border-2 shadow-md'
+                          : 'border hover:shadow-xs'
                       }`}
+                      style={{
+                        backgroundColor: 'var(--bg-surface, #ffffff)',
+                        borderColor: isAtivo ? 'var(--color-primary)' : 'var(--border-color, #e5e7eb)',
+                        boxShadow: isAtivo ? '0 0 0 2px var(--color-primary)' : undefined,
+                      }}
                     >
                       <div>
                         {/* Cabeçalho do Card */}
                         <div className="flex items-start justify-between gap-2 mb-2">
                           <div className="min-w-0">
-                            <h4 className="text-sm font-bold text-gray-900 truncate" title={tema.nome}>
+                            <h4
+                              className="text-sm font-bold truncate"
+                              style={{ color: 'var(--text-main, #111827)' }}
+                              title={tema.nome}
+                            >
                               {tema.nome}
                             </h4>
-                            <p className="text-[11px] text-gray-500 line-clamp-1 mt-0.5" title={tema.descricao}>
+                            <p
+                              className="text-[11px] line-clamp-1 mt-0.5"
+                              style={{ color: 'var(--text-secondary, #6b7280)' }}
+                              title={tema.descricao}
+                            >
                               {tema.descricao || (tema.eh_sistema ? 'Tema nativo do sistema' : 'Tema personalizado')}
                             </p>
                           </div>

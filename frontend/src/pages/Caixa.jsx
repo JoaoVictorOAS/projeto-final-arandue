@@ -444,14 +444,14 @@ export default function Caixa() {
         </div>
 
         {/* Filtros: Tipo e Mês */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
+        <div className="flex items-center gap-2 overflow-x-auto pt-1 pb-2 sm:pb-1">
           {/* Filtro Mês */}
           {mesesDisponiveis.length > 0 && (
             <select
               value={filtroMes}
               onChange={(e) => setFiltroMes(e.target.value)}
               aria-label="Filtrar por mês"
-              className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-gray-50 border border-gray-200 text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+              className="px-3.5 py-2 text-xs font-semibold rounded-lg bg-gray-50 border border-gray-200 text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
             >
               <option value="TODOS">Todos os Meses</option>
               {mesesDisponiveis.map((m) => {
@@ -476,7 +476,7 @@ export default function Caixa() {
                 key={item.id}
                 type="button"
                 onClick={() => setFiltroTipo(item.id)}
-                className={`px-3 py-1 text-xs font-semibold rounded-lg transition whitespace-nowrap ${
+                className={`px-3.5 py-1.5 text-xs font-semibold rounded-lg transition whitespace-nowrap ${
                   filtroTipo === item.id
                     ? 'bg-white text-gray-900 shadow-sm'
                     : 'text-gray-600 hover:text-gray-900'

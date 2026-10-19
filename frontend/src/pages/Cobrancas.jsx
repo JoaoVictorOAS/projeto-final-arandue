@@ -644,7 +644,7 @@ export default function Cobrancas() {
         </div>
 
         {/* Status Filter Buttons */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
+        <div className="flex items-center gap-1.5 overflow-x-auto pt-1 pb-2 sm:pb-1">
           {[
             { id: 'TODOS', label: 'Todos' },
             { id: 'PENDENTE', label: 'Pendentes' },
@@ -655,7 +655,7 @@ export default function Cobrancas() {
               key={item.id}
               type="button"
               onClick={() => setFiltroStatus(item.id)}
-              className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition whitespace-nowrap ${
+              className={`px-3.5 py-2 text-xs font-semibold rounded-lg transition whitespace-nowrap ${
                 filtroStatus === item.id
                   ? 'tab-theme-active shadow-sm'
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
